@@ -73,8 +73,6 @@ class PacketProcessor(object):
                 if utils.is_ipv4_addr(ip):
                     ip_set.add(ip)
 
-        utils.log('[DNS]', device_mac, ':', domain, '->', ip_set)
-
         with self._host_state.lock:
             self._host_state.pending_dns_responses.append({
                 'domain': domain,

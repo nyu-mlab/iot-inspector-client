@@ -29,6 +29,8 @@ class DataUploader(object):
         self._thread = threading.Thread(target=self._upload_thread)
         self._thread.daemon = True
 
+        self._last_upload_ts = time.time()
+
     def _upload_thread(self):
 
         while True:
@@ -41,7 +43,7 @@ class DataUploader(object):
 
             utils.safe_run(self._upload_data)
 
-    def _upload_data(self):
+    def _prepare_upload_data(self):
 
         # Remove all pending tasks
         with self._host_state.lock:
@@ -70,31 +72,68 @@ class DataUploader(object):
             device_mac = pkt['device_mac']
             device_oui = device_mac.replace(':', '').lower()[0:6]
             device_id = self._get_device_id(device_mac)
-            device_key = (device_id, device_oui, pkt['device_ip'])
+            device_key = json.dumps((device_id, device_oui, pkt['device_ip']))
 
             device_flow_dict = flow_dict.setdefault(device_key, {})
 
-            flow_key = (
+            flow_key = json.dumps((
                 pkt['remote_ip'], pkt['remote_port'],
                 pkt['direction'], pkt['protocol']
-            )
+            ))
             device_flow_dict.setdefault(flow_key, 0)
             device_flow_dict[flow_key] += pkt['length']
 
             byte_count += pkt['length']
 
-        utils.log('[UPLOAD] DNS:', dns_dict)
-        utils.log('[UPLOAD] Flows:', flow_dict)
+        return (dns_dict, flow_dict, byte_count)
+
+    def _upload_data(self):
+
+        (dns_dict, flow_dict, byte_count) = self._prepare_upload_data()
+
+        # Prepare POST
+        user_key = self._host_state.user_key
+        url = server_config.SUBMIT_URL.format(user_key=user_key)
+        post_data = urllib.urlencode({
+            'dns': json.dumps(dns_dict),
+            'flows': json.dumps(flow_dict)
+        })
+
+        # Try uploading across 5 attempts
+        for attempt in range(5):
+
+            status_text = 'Uploading data to cloud...\n'
+            if attempt > 0:
+                status_text += ' (Attempt {} of 5)'.format(attempt + 1)
+                self._update_ui_status(status_text)
+
+            utils.log('[UPLOAD]', status_text)
+
+            response = urllib2.urlopen(url, post_data).read()
+            utils.log('[UPLOAD] Gets back server response:', response)
+            if response.strip() == 'SUCCESS':
+                break
+            time.sleep((attempt + 1) ** 2)
 
         # Report stats to UI
+        current_ts = time.time()
+        delta_sec = current_ts - self._last_upload_ts
+        self._last_upload_ts = current_ts
+
+        self._update_ui_status(
+            'Currently capturing ' +
+            '{:,}'.format(int(byte_count / 1000.0 / delta_sec)) +
+            ' KB/s of traffic\nacross ' +
+            '{}'.format(len(flow_dict)) +
+            ' active devices on your local network.\n'
+        )
+
+        utils.log('[UPLOAD] DNS:', ' '.join(dns_dict.keys()))
+
+    def _update_ui_status(self, value):
+
         with self._host_state.lock:
-            self._host_state.status_text.set(
-                'Currently capturing ' +
-                '{:,}'.format(int(byte_count / 1000.0 / UPLOAD_INTERVAL)) +
-                ' KB/s of traffic\nacross ' +
-                '{}'.format(len(flow_dict)) +
-                ' active devices on your local network.\n'
-            )
+            self._host_state.status_text.set(value)
 
     def start(self):
 
