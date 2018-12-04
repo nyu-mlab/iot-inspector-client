@@ -24,6 +24,7 @@ class HostState(object):
         self.pending_pkts = []
         self.status_text = None
         self.device_blacklist = []
+        self.has_consent = False
 
     def set_ip_mac_mapping(self, ip, mac):
 

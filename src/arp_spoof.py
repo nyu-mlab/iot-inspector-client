@@ -39,17 +39,25 @@ class ArpSpoof(object):
 
         while True:
 
+            time.sleep(1)
+
             with self._lock:
                 if not self._active:
                     return
 
-            time.sleep(1)
+            with self._host_state.lock:
+                if not self._host_state.has_consent:
+                    utils.log('[ARP Spoof] No consent; no spoofing.')
+                    continue
 
             # Get ARP cache
             ip_mac_dict = self._host_state.get_ip_mac_dict_copy()
             gateway_ip = self._host_state.gateway_ip
 
-            utils.log('[ARP Spoof] Cache:', str(ip_mac_dict))
+            utils.log('[ARP Spoof] Cache:', ip_mac_dict)
+            utils.log(
+                '[ARP Spoof] Blacklist:', self._host_state.device_blacklist
+            )
 
             # Get gateway MAC addr
             try:
@@ -68,8 +76,12 @@ class ArpSpoof(object):
                     utils.get_device_id(victim_mac, self._host_state)
                 victim_mac_last_four_bytes = \
                     victim_mac.lower().replace(':', '')[-4:]
-                if victim_mac_last_four_bytes in self._host_state.blacklist \
-                        or victim_device_id in self._host_state.blacklist:
+                is_in_blacklist = (
+                    victim_mac_last_four_bytes in
+                    self._host_state.device_blacklist or
+                    victim_device_id in self._host_state.device_blacklist
+                )
+                if is_in_blacklist:
                     utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                     continue
 

@@ -39,6 +39,9 @@ class DataUploader(object):
                 break
             time.sleep(2)
 
+        with self._host_state.lock:
+            self._host_state.has_consent = True
+
         # Continuously upload data
         while True:
 
@@ -102,7 +105,7 @@ class DataUploader(object):
         utils.log('[DATA] Get blacklist result:', blacklist)
 
         with self._host_state.lock:
-            self._host_state.blacklist = json.loads(blacklist)
+            self._host_state.device_blacklist = json.loads(blacklist)
 
     def _prepare_upload_data(self):
 
