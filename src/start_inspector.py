@@ -17,7 +17,7 @@ from data_upload import DataUploader
 import subprocess
 
 
-LAUNCH_WEB_BROWSER_UPON_START = False
+LAUNCH_WEB_BROWSER_UPON_START = True
 
 
 def main():
