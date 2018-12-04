@@ -3,13 +3,13 @@ Anonymizes and uploads DNS and flow data to cloud.
 
 """
 import time
+import datetime
 import threading
 import utils
 import urllib
 import urllib2
 import json
 import server_config
-import hashlib
 from host_state import HostState
 
 
@@ -33,6 +33,13 @@ class DataUploader(object):
 
     def _upload_thread(self):
 
+        # Loop until initialized
+        while True:
+            if utils.safe_run(self._upload_initialization):
+                break
+            time.sleep(2)
+
+        # Continuously upload data
         while True:
 
             time.sleep(UPLOAD_INTERVAL)
@@ -42,6 +49,60 @@ class DataUploader(object):
                     return
 
             utils.safe_run(self._upload_data)
+
+    def _upload_initialization(self):
+
+        if not self._check_consent_form():
+            return False
+
+        self._get_blacklist()
+
+        return self._update_utc_offset()
+
+    def _update_utc_offset(self):
+
+        ts = time.time()
+
+        utc_offset = int(
+            (datetime.datetime.fromtimestamp(ts) -
+                datetime.datetime.utcfromtimestamp(ts)).total_seconds()
+        )
+
+        utc_offset_url = server_config.UTC_OFFSET_URL.format(
+            user_key=self._host_state.user_key,
+            offset_seconds=utc_offset
+        )
+
+        utils.log('[DATA] Update UTC offset:', utc_offset_url)
+        status = urllib2.urlopen(utc_offset_url).read().strip()
+        utils.log('[DATA] Update UTC offset status:', status)
+
+        return 'SUCCESS' == status
+
+    def _check_consent_form(self):
+
+        check_consent_url = server_config.CHECK_CONSENT_URL.format(
+            user_key=self._host_state.user_key
+        )
+
+        utils.log('[DATA] Check consent:', check_consent_url)
+        status = urllib2.urlopen(check_consent_url).read().strip()
+        utils.log('[DATA] Check consent status:', status)
+
+        return 'True' == status
+
+    def _get_blacklist(self):
+
+        get_blacklist_url = server_config.GET_BLACKLIST_URL.format(
+            user_key=self._host_state.user_key
+        )
+
+        utils.log('[DATA] Get blacklist:', get_blacklist_url)
+        blacklist = urllib2.urlopen(get_blacklist_url).read().strip()
+        utils.log('[DATA] Get blacklist result:', blacklist)
+
+        with self._host_state.lock:
+            self._host_state.blacklist = json.loads(blacklist)
 
     def _prepare_upload_data(self):
 
@@ -71,7 +132,7 @@ class DataUploader(object):
 
             device_mac = pkt['device_mac']
             device_oui = device_mac.replace(':', '').lower()[0:6]
-            device_id = self._get_device_id(device_mac)
+            device_id = utils.get_device_id(device_mac, self._host_state)
             device_key = json.dumps((device_id, device_oui, pkt['device_ip']))
 
             device_flow_dict = flow_dict.setdefault(device_key, {})
@@ -111,8 +172,17 @@ class DataUploader(object):
 
             response = urllib2.urlopen(url, post_data).read()
             utils.log('[UPLOAD] Gets back server response:', response)
-            if response.strip() == 'SUCCESS':
-                break
+
+            # Update blacklist
+            try:
+                response_dict = json.loads(response)
+                if response_dict['status'] == 'SUCCESS':
+                    with self._host_state.lock:
+                        self._host_state.device_blacklist = \
+                            response_dict['blacklist']
+                    break
+            except Exception:
+                pass
             time.sleep((attempt + 1) ** 2)
 
         # Report stats to UI
@@ -132,8 +202,11 @@ class DataUploader(object):
 
     def _update_ui_status(self, value):
 
+        utils.log('[DATA] Update UI:', value)
+
         with self._host_state.lock:
-            self._host_state.status_text.set(value)
+            if self._host_state.status_text:
+                self._host_state.status_text.set(value)
 
     def start(self):
 
@@ -155,8 +228,3 @@ class DataUploader(object):
 
         utils.log('[Data] Stopped.')
 
-    def _get_device_id(self, device_mac):
-
-        s = str(device_mac) + str(self._host_state.secret_salt)
-
-        return hashlib.sha256(s).hexdigest()[0:10]

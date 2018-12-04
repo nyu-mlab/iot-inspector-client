@@ -23,6 +23,7 @@ class HostState(object):
         self.pending_dns_responses = []
         self.pending_pkts = []
         self.status_text = None
+        self.device_blacklist = []
 
     def set_ip_mac_mapping(self, ip, mac):
 

@@ -58,10 +58,19 @@ class ArpSpoof(object):
                 continue
 
             # Spoof individual devices on the network.
-            # TODO: Do not spoof blacklisted devices.
             for (victim_ip, victim_mac) in ip_mac_dict.items():
 
                 if victim_ip == gateway_ip:
+                    continue
+
+                # Check against blacklist.
+                victim_device_id = \
+                    utils.get_device_id(victim_mac, self._host_state)
+                victim_mac_last_four_bytes = \
+                    victim_mac.lower().replace(':', '')[-4:]
+                if victim_mac_last_four_bytes in self._host_state.blacklist \
+                        or victim_device_id in self._host_state.blacklist:
+                    utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                     continue
 
                 utils.safe_run(

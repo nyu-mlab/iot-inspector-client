@@ -13,7 +13,7 @@ def start_main_ui(url, host_state):
     window = Tk()
     window.title('Princeton IoT Inspector')
     window.geometry('600x400')
-    # window.attributes("-topmost", True)
+    window.attributes("-topmost", True)
     window.grid_columnconfigure(0, weight=1)
 
     Label(

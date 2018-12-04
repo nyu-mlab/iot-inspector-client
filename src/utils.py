@@ -14,6 +14,7 @@ import sys
 import re
 import json
 import uuid
+import hashlib
 
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
@@ -176,3 +177,11 @@ def safe_run(func, args=[], kwargs={}):
             log(err_msg)
 
         return _SafeRunError()
+
+
+def get_device_id(device_mac, host_state):
+
+    device_mac = str(device_mac).lower().replace(':', '')
+    s = device_mac + str(host_state.secret_salt)
+
+    return hashlib.sha256(s).hexdigest()[0:10]
