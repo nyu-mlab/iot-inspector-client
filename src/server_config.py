@@ -1,6 +1,6 @@
 
 
-BASE_URL = 'http://iot.hdanny.org:5001'
+BASE_URL = 'https://iot-inspector-report.cs.princeton.edu'
 
 NEW_USER_URL = BASE_URL + '/generate_user_key'
 
