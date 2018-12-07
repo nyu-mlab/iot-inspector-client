@@ -16,6 +16,9 @@ class PacketProcessor(object):
 
     def process_packet(self, pkt):
 
+        with self._host_state.lock:
+            self._host_state.packet_count += 1
+
         if sc.ARP in pkt:
             return self._process_arp(pkt)
 

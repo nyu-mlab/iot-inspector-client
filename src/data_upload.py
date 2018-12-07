@@ -160,7 +160,8 @@ class DataUploader(object):
         url = server_config.SUBMIT_URL.format(user_key=user_key)
         post_data = urllib.urlencode({
             'dns': json.dumps(dns_dict),
-            'flows': json.dumps(flow_dict)
+            'flows': json.dumps(flow_dict),
+            'client_version': self._host_state.client_version
         })
 
         # Try uploading across 5 attempts
@@ -202,6 +203,13 @@ class DataUploader(object):
         )
 
         utils.log('[UPLOAD] DNS:', ' '.join(dns_dict.keys()))
+
+        utils.log(
+            '[UPLOAD] Total packets in past epoch:',
+            self._host_state.packet_count
+        )
+        with self._host_state.lock:
+            self._host_state.packet_count = 0
 
     def _update_ui_status(self, value):
 

@@ -5,6 +5,9 @@ Global shared state about the host.
 import threading
 
 
+CLIENT_VERSION = '0.1'
+
+
 class HostState(object):
 
     def __init__(self):
@@ -16,6 +19,7 @@ class HostState(object):
         self.packet_processor = None
         self.user_key = None
         self.secret_salt = None
+        self.client_version = CLIENT_VERSION
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()
@@ -25,6 +29,7 @@ class HostState(object):
         self.status_text = None
         self.device_blacklist = []
         self.has_consent = False
+        self.packet_count = 0
 
     def set_ip_mac_mapping(self, ip, mac):
 
