@@ -6,6 +6,7 @@ import scapy.all as sc
 import threading
 import utils
 from host_state import HostState
+import time
 
 
 class PacketCapture(object):
@@ -31,14 +32,20 @@ class PacketCapture(object):
 
     def _capture_packets(self):
 
-        utils.restart_upon_crash(sc.sniff, kwargs={
-            'prn': self._host_state.packet_processor.process_packet,
-            'stop_filter': lambda _: not self._is_active(),
-            'filter': 'arp or (host not {} and ether host {})'.format(
-                self._host_state.host_ip,
-                self._host_state.host_mac
-            )
-        })
+        while True:
+
+            result = utils.safe_run(sc.sniff, kwargs={
+                'prn': self._host_state.packet_processor.process_packet,
+                'stop_filter': lambda _: not self._is_active(),
+                'filter': 'arp or (host not {} and ether host {})'.format(
+                    self._host_state.host_ip,
+                    self._host_state.host_mac
+                ),
+                'timeout': 30
+            })
+
+            if isinstance(result, utils._SafeRunError):
+                time.sleep(1)
 
     def _is_active(self):
 
