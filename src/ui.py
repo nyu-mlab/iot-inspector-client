@@ -36,4 +36,7 @@ def start_main_ui(url, host_state):
         text="Close this window to stop the capture."
     ).grid(column=0, row=2)
 
+    with host_state.lock:
+        host_state.ui_is_ready = True
+
     window.mainloop()

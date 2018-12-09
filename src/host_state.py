@@ -30,6 +30,7 @@ class HostState(object):
         self.device_blacklist = []
         self.has_consent = False
         self.packet_count = 0
+        self.ui_is_ready = False
 
     def set_ip_mac_mapping(self, ip, mac):
 

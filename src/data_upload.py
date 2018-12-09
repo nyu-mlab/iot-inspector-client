@@ -33,14 +33,28 @@ class DataUploader(object):
 
     def _upload_thread(self):
 
+        # Wait till UI is ready
+        while True:
+            time.sleep(1)
+            with self._host_state.lock:
+                if self._host_state.ui_is_ready:
+                    break
+
         # Loop until initialized
         while True:
             if utils.safe_run(self._upload_initialization):
                 break
+            self._update_ui_status(
+                'Please sign the consent form in the browser window.'
+            )
             time.sleep(2)
 
         with self._host_state.lock:
             self._host_state.has_consent = True
+
+        self._update_ui_status(
+            'Collecting network traffic from your network.'
+        )
 
         # Continuously upload data
         while True:
