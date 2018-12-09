@@ -16,6 +16,10 @@ class PacketProcessor(object):
 
     def process_packet(self, pkt):
 
+        utils.safe_run(self._process_packet_helper, args=[pkt])
+
+    def _process_packet_helper(self, pkt):
+
         with self._host_state.lock:
             self._host_state.packet_count += 1
 

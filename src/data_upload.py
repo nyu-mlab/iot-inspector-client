@@ -155,13 +155,16 @@ class DataUploader(object):
 
         (dns_dict, flow_dict, byte_count) = self._prepare_upload_data()
 
+        delta_sec = time.time() - self._last_upload_ts
+
         # Prepare POST
         user_key = self._host_state.user_key
         url = server_config.SUBMIT_URL.format(user_key=user_key)
         post_data = urllib.urlencode({
             'dns': json.dumps(dns_dict),
             'flows': json.dumps(flow_dict),
-            'client_version': self._host_state.client_version
+            'client_version': self._host_state.client_version,
+            'duration': str(delta_sec)
         })
 
         # Try uploading across 5 attempts
@@ -181,6 +184,7 @@ class DataUploader(object):
             try:
                 response_dict = json.loads(response)
                 if response_dict['status'] == 'SUCCESS':
+                    self._last_upload_ts = time.time()
                     with self._host_state.lock:
                         self._host_state.device_blacklist = \
                             response_dict['blacklist']
@@ -190,10 +194,6 @@ class DataUploader(object):
             time.sleep((attempt + 1) ** 2)
 
         # Report stats to UI
-        current_ts = time.time()
-        delta_sec = current_ts - self._last_upload_ts
-        self._last_upload_ts = current_ts
-
         self._update_ui_status(
             'Currently capturing ' +
             '{:,}'.format(int(byte_count / 1000.0 / delta_sec)) +
