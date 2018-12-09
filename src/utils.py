@@ -19,6 +19,8 @@ import hashlib
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
+sc.conf.verb = 0
+
 
 def is_ipv4_addr(value):
 
@@ -68,8 +70,6 @@ def log(*args):
 
     log_str = '[%s] ' % datetime.datetime.today()
     log_str += ' '.join([str(v) for v in args])
-
-    print log_str
 
     log_file_path = os.path.join(
         os.path.expanduser('~'),

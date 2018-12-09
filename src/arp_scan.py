@@ -43,7 +43,7 @@ class ArpScan(object):
                 ip = self._ip_prefix + str(ix)
                 arp_pkt = sc.Ether(dst="ff:ff:ff:ff:ff:ff") / \
                     sc.ARP(pdst=ip, hwdst="ff:ff:ff:ff:ff:ff")
-                sc.sendp(arp_pkt)
+                sc.sendp(arp_pkt, verbose=0)
 
                 with self._lock:
                     if not self._active:

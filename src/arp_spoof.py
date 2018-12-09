@@ -111,8 +111,8 @@ class ArpSpoof(object):
         victim_arp.hwdst = victim_mac
         victim_arp.pdst = victim_ip
 
-        sc.send(victim_arp)
-        sc.send(gateway_arp)
+        sc.send(victim_arp, verbose=0)
+        sc.send(gateway_arp, verbose=0)
 
     def stop(self):
 

@@ -15,6 +15,7 @@ from packet_capture import PacketCapture
 from arp_spoof import ArpSpoof
 from data_upload import DataUploader
 import subprocess
+import sys
 
 
 LAUNCH_WEB_BROWSER_UPON_START = True
@@ -54,8 +55,15 @@ def main():
 
     utils.log('Initialized:', state.__dict__)
 
-    # Enable kernal forwarding. TODO: Add OS support.
-    cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=1']
+    # Enable kernal forwarding.
+    os_platform = sys.platform
+    if os_platform.startswith('darwin'):
+        cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=1']
+    elif os_platform.startswith('linux'):
+        cmd = ['sysctl' '-w' 'net.ipv4.ip_forward=1']
+    else:
+        raise RuntimeError('Unsupported platform.')
+
     assert subprocess.call(cmd) == 0
 
     # Continously discover devices
@@ -80,6 +88,13 @@ def main():
     except KeyboardInterrupt:
         pass
 
+    # Disable kernal forwarding.
+    if os_platform.startswith('darwin'):
+        cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=0']
+    elif os_platform.startswith('linux'):
+        cmd = ['sysctl' '-w' 'net.ipv4.ip_forward=1']
+    assert subprocess.call(cmd) == 0
+
     utils.log('[MAIN] Done.')
 
 
@@ -89,4 +104,4 @@ def is_root():
 
 
 if __name__ == '__main__':
-    main()
+    utils.safe_run(main)
