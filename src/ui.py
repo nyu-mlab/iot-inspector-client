@@ -33,7 +33,9 @@ def start_main_ui(url, host_state):
 
     Label(
         window,
-        text="Close this window to stop the capture."
+        text="Keep this window open\n" +
+             "so that we can continuously analyze your network.\n" +
+             "\n\nTo stop the analysis, simply close this window."
     ).grid(column=0, row=2)
 
     with host_state.lock:

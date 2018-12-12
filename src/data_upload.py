@@ -53,7 +53,7 @@ class DataUploader(object):
             self._host_state.has_consent = True
 
         self._update_ui_status(
-            'Collecting network traffic from your network.'
+            'Continuously analyzing your network.\n'
         )
 
         # Continuously upload data
@@ -208,7 +208,7 @@ class DataUploader(object):
 
         # Report stats to UI
         self._update_ui_status(
-            'Currently capturing ' +
+            'Currently analyzing ' +
             '{:,}'.format(int(byte_count / 1000.0 / delta_sec)) +
             ' KB/s of traffic\nacross ' +
             '{}'.format(len(flow_dict)) +
