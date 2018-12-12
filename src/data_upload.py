@@ -150,7 +150,7 @@ class DataUploader(object):
             device_mac = pkt['device_mac']
             device_oui = device_mac.replace(':', '').lower()[0:6]
             device_id = utils.get_device_id(device_mac, self._host_state)
-            if device_id not in self._host_state.whitelist:
+            if device_id not in self._host_state.device_whitelist:
                 continue
 
             device_key = json.dumps((device_id, device_oui, pkt['device_ip']))
