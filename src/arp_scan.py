@@ -37,10 +37,11 @@ class ArpScan(object):
     def _arp_scan_thread_helper(self):
 
         while True:
-            for ix in range(1, 255):
+
+            for ip in utils.get_network_ip_range():
 
                 time.sleep(0.05)
-                ip = self._ip_prefix + str(ix)
+
                 arp_pkt = sc.Ether(dst="ff:ff:ff:ff:ff:ff") / \
                     sc.ARP(pdst=ip, hwdst="ff:ff:ff:ff:ff:ff")
                 sc.sendp(arp_pkt, verbose=0)
