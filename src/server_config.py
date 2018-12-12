@@ -11,5 +11,3 @@ SUBMIT_URL = BASE_URL + '/submit_data/{user_key}'
 UTC_OFFSET_URL = BASE_URL + '/submit_utc_offset/{user_key}/{offset_seconds}'
 
 CHECK_CONSENT_URL = BASE_URL + '/check_consent/{user_key}'
-
-GET_WHITELIST_URL = BASE_URL + '/get_whitelist/{user_key}'

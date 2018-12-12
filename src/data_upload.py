@@ -72,8 +72,6 @@ class DataUploader(object):
         if not self._check_consent_form():
             return False
 
-        self._get_whitelist()
-
         return self._update_utc_offset()
 
     def _update_utc_offset(self):
@@ -107,19 +105,6 @@ class DataUploader(object):
         utils.log('[DATA] Check consent status:', status)
 
         return 'True' == status
-
-    def _get_whitelist(self):
-
-        get_whitelist_url = server_config.GET_WHITELIST_URL.format(
-            user_key=self._host_state.user_key
-        )
-
-        utils.log('[DATA] Get whitelist:', get_whitelist_url)
-        whitelist = urllib2.urlopen(get_whitelist_url).read().strip()
-        utils.log('[DATA] Get whitelist result:', whitelist)
-
-        with self._host_state.lock:
-            self._host_state.device_whitelist = json.loads(whitelist)
 
     def _prepare_upload_data(self):
 
