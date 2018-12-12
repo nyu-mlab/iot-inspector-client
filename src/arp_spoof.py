@@ -1,8 +1,6 @@
 """
 Based on ARP packets received, sends out spoofed ARP packets.
 
-TODO: Do not spoof blacklisted devices.
-
 """
 from host_state import HostState
 import scapy.all as sc
@@ -56,7 +54,7 @@ class ArpSpoof(object):
 
             utils.log('[ARP Spoof] Cache:', ip_mac_dict)
             utils.log(
-                '[ARP Spoof] Blacklist:', self._host_state.device_blacklist
+                '[ARP Spoof] Whitelist:', self._host_state.device_whitelist
             )
 
             # Get gateway MAC addr
@@ -71,17 +69,17 @@ class ArpSpoof(object):
                 if victim_ip == gateway_ip:
                     continue
 
-                # Check against blacklist.
+                # Check against whitelist.
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
                 victim_mac_last_four_bytes = \
                     victim_mac.lower().replace(':', '')[-4:]
-                is_in_blacklist = (
+                is_in_whitelist = (
                     victim_mac_last_four_bytes in
-                    self._host_state.device_blacklist or
-                    victim_device_id in self._host_state.device_blacklist
+                    self._host_state.device_whitelist or
+                    victim_device_id in self._host_state.device_whitelist
                 )
-                if is_in_blacklist:
+                if not is_in_whitelist:
                     utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                     continue
 

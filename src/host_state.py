@@ -27,7 +27,7 @@ class HostState(object):
         self.pending_dns_responses = []
         self.pending_pkts = []
         self.status_text = None
-        self.device_blacklist = []
+        self.device_whitelist = []
         self.has_consent = False
         self.packet_count = 0
         self.ui_is_ready = False

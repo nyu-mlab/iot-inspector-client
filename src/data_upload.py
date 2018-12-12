@@ -72,7 +72,7 @@ class DataUploader(object):
         if not self._check_consent_form():
             return False
 
-        self._get_blacklist()
+        self._get_whitelist()
 
         return self._update_utc_offset()
 
@@ -108,18 +108,18 @@ class DataUploader(object):
 
         return 'True' == status
 
-    def _get_blacklist(self):
+    def _get_whitelist(self):
 
-        get_blacklist_url = server_config.GET_BLACKLIST_URL.format(
+        get_whitelist_url = server_config.GET_WHITELIST_URL.format(
             user_key=self._host_state.user_key
         )
 
-        utils.log('[DATA] Get blacklist:', get_blacklist_url)
-        blacklist = urllib2.urlopen(get_blacklist_url).read().strip()
-        utils.log('[DATA] Get blacklist result:', blacklist)
+        utils.log('[DATA] Get whitelist:', get_whitelist_url)
+        whitelist = urllib2.urlopen(get_whitelist_url).read().strip()
+        utils.log('[DATA] Get whitelist result:', whitelist)
 
         with self._host_state.lock:
-            self._host_state.device_blacklist = json.loads(blacklist)
+            self._host_state.device_whitelist = json.loads(whitelist)
 
     def _prepare_upload_data(self):
 
@@ -150,8 +150,10 @@ class DataUploader(object):
             device_mac = pkt['device_mac']
             device_oui = device_mac.replace(':', '').lower()[0:6]
             device_id = utils.get_device_id(device_mac, self._host_state)
-            device_key = json.dumps((device_id, device_oui, pkt['device_ip']))
+            if device_id not in self._host_state.whitelist:
+                continue
 
+            device_key = json.dumps((device_id, device_oui, pkt['device_ip']))
             device_flow_dict = flow_dict.setdefault(device_key, {})
 
             flow_key = json.dumps((
@@ -163,11 +165,22 @@ class DataUploader(object):
 
             byte_count += pkt['length']
 
-        return (dns_dict, flow_dict, byte_count)
+        # Collect arp_cache
+        ip_mac_dict = self._host_state.get_ip_mac_dict_copy()
+        arp_cache = []
+        for (ip, mac) in ip_mac_dict.iteritems():
+            arp_cache.append({
+                'device_ip': ip,
+                'device_id': utils.get_device_id(mac, self._host_state),
+                'device_oui': mac.replace(':', '').lower()[0:6]
+            })
+
+        return (dns_dict, flow_dict, byte_count, arp_cache)
 
     def _upload_data(self):
 
-        (dns_dict, flow_dict, byte_count) = self._prepare_upload_data()
+        (dns_dict, flow_dict, byte_count, arp_cache) = \
+            self._prepare_upload_data()
 
         delta_sec = time.time() - self._last_upload_ts
 
@@ -177,6 +190,7 @@ class DataUploader(object):
         post_data = urllib.urlencode({
             'dns': json.dumps(dns_dict),
             'flows': json.dumps(flow_dict),
+            'arp_cache': json.dumps(arp_cache),
             'client_version': self._host_state.client_version,
             'duration': str(delta_sec)
         })
@@ -194,14 +208,14 @@ class DataUploader(object):
             response = urllib2.urlopen(url, post_data).read()
             utils.log('[UPLOAD] Gets back server response:', response)
 
-            # Update blacklist
+            # Update whitelist
             try:
                 response_dict = json.loads(response)
                 if response_dict['status'] == 'SUCCESS':
                     self._last_upload_ts = time.time()
                     with self._host_state.lock:
-                        self._host_state.device_blacklist = \
-                            response_dict['blacklist']
+                        self._host_state.device_whitelist = \
+                            response_dict['whitelist']
                     break
             except Exception:
                 pass
