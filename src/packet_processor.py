@@ -4,6 +4,7 @@ Processes individual packets.
 """
 from host_state import HostState
 import scapy.all as sc
+from scapy.layers import http
 import utils
 
 
@@ -154,6 +155,16 @@ class PacketProcessor(object):
         if is_gateway_traffic:
             return
 
+        # Check user agent
+        ua = None
+        if pkt_dict['remote_port'] == 80 and protocol == 'tcp':
+            try:
+                ua = pkt[http.HTTPRequest].fields['User-Agent']
+            except Exception:
+                pass
+
         # Send data to cloud
         with self._host_state.lock:
             self._host_state.pending_pkts.append(pkt_dict)
+            if ua:
+                self._host_state.ua_set.add((pkt_dict['device_mac'], ua))

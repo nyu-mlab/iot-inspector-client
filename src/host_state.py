@@ -26,6 +26,7 @@ class HostState(object):
         self.ip_mac_dict = {}
         self.pending_dns_responses = []
         self.pending_pkts = []
+        self.ua_set = set()
         self.status_text = None
         self.device_whitelist = []
         self.has_consent = False

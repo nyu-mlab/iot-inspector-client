@@ -113,9 +113,11 @@ class DataUploader(object):
 
             dns_responses = self._host_state.pending_dns_responses
             pkts = self._host_state.pending_pkts
+            ua_list = list(self._host_state.ua_set)
 
             self._host_state.pending_dns_responses = []
             self._host_state.pending_pkts = []
+            self._host_state.ua_set = set()
 
         # Aggregate all DNS responses. Build a mapping of domain -> ip_list.
         dns_dict = {}
@@ -160,11 +162,17 @@ class DataUploader(object):
                 'device_oui': mac.replace(':', '').lower()[0:6]
             })
 
-        return (dns_dict, flow_dict, byte_count, arp_cache)
+        # Turn device_mac into device_id in ua_list
+        ua_list = [
+            (utils.get_device_id(mac, self._host_state), ua)
+            for (mac, ua) in ua_list
+        ]
+
+        return (dns_dict, flow_dict, byte_count, arp_cache, ua_list)
 
     def _upload_data(self):
 
-        (dns_dict, flow_dict, byte_count, arp_cache) = \
+        (dns_dict, flow_dict, byte_count, arp_cache, ua_list) = \
             self._prepare_upload_data()
 
         delta_sec = time.time() - self._last_upload_ts
@@ -176,6 +184,7 @@ class DataUploader(object):
             'dns': json.dumps(dns_dict),
             'flows': json.dumps(flow_dict),
             'arp_cache': json.dumps(arp_cache),
+            'ua_list': json.dumps(ua_list),
             'client_version': self._host_state.client_version,
             'duration': str(delta_sec)
         })
