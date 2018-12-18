@@ -4,8 +4,10 @@ Processes individual packets.
 """
 from host_state import HostState
 import scapy.all as sc
+import scapy.layers.ssl_tls as ssl
 from scapy.layers import http
 import utils
+import traceback
 
 
 class PacketProcessor(object):
@@ -162,6 +164,27 @@ class PacketProcessor(object):
                 ua = pkt[http.HTTPRequest].fields['User-Agent']
             except Exception:
                 pass
+
+        # Identify SNI
+        if protocol == 'tcp' and pkt_dict['direction'] == 'outbound':
+            if ssl.SSL in pkt:
+                try:
+                    sni = str(
+                        pkt[ssl.SSL]
+                        .records[0]
+                        .payload[ssl.TLSExtServerNameIndication]
+                        .server_names[0]
+                        .data
+                    )
+                except Exception:
+                    pass
+                else:
+                    with self._host_state.lock:
+                        self._host_state.pending_dns_responses.append({
+                            'domain': sni,
+                            'ip_set': set([pkt_dict['remote_ip']])
+                        })
+                    utils.log('[UPLOAD] SNI:', sni)
 
         # Send data to cloud
         with self._host_state.lock:
