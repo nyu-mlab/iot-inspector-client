@@ -3,7 +3,7 @@ Processes individual packets.
 
 """
 from host_state import HostState
-import scapy_ssl_tls.ssl_tls as ssl_tls
+import scapy_ssl_tls.ssl_tls as ssl_tls # noqa
 import scapy_http.http as http
 import scapy.all as sc
 import utils
