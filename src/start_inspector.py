@@ -61,7 +61,7 @@ def main():
     if os_platform.startswith('darwin'):
         cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=1']
     elif os_platform.startswith('linux'):
-        cmd = ['sysctl' '-w' 'net.ipv4.ip_forward=1']
+        cmd = ['sysctl', '-w', 'net.ipv4.ip_forward=1']
     else:
         raise RuntimeError('Unsupported platform.')
 
@@ -93,7 +93,7 @@ def main():
     if os_platform.startswith('darwin'):
         cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=0']
     elif os_platform.startswith('linux'):
-        cmd = ['sysctl' '-w' 'net.ipv4.ip_forward=1']
+        cmd = ['sysctl', '-w', 'net.ipv4.ip_forward=0']
     assert subprocess.call(cmd) == 0
 
     utils.log('[MAIN] Done.')
