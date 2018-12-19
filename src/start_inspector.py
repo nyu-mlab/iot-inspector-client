@@ -32,7 +32,8 @@ def main():
 
     # Open a web browser only if non-root
     if not is_root() and LAUNCH_WEB_BROWSER_UPON_START:
-        webbrowser.open_new_tab(url)
+        if 'no_browser' not in sys.argv:
+            webbrowser.open_new_tab(url)
 
     # Run as root
     elevate()

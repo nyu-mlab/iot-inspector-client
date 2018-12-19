@@ -4,8 +4,10 @@ Simple windowed UI.
 See example: https://likegeeks.com/python-gui-examples-tkinter-tutorial/
 
 """
-
-from tkinter import *
+try:
+    from tkinter import *
+except ImportError:
+    from Tkinter import *
 
 
 def start_main_ui(url, host_state):

@@ -3,11 +3,10 @@ Processes individual packets.
 
 """
 from host_state import HostState
+import scapy_ssl_tls.ssl_tls as ssl_tls
+import scapy_http.http as http
 import scapy.all as sc
-import scapy.layers.ssl_tls as ssl
-from scapy.layers import http
 import utils
-import traceback
 
 
 class PacketProcessor(object):
@@ -164,30 +163,40 @@ class PacketProcessor(object):
                 ua = pkt[http.HTTPRequest].fields['User-Agent']
             except Exception:
                 pass
+            else:
+                utils.log('[UPLOAD] User-Agent:', ua)
 
         # Identify SNI
         if protocol == 'tcp' and pkt_dict['direction'] == 'outbound':
-            if ssl.SSL in pkt:
-                try:
-                    sni = str(
-                        pkt[ssl.SSL]
-                        .records[0]
-                        .payload[ssl.TLSExtServerNameIndication]
-                        .server_names[0]
-                        .data
-                    )
-                except Exception:
-                    pass
-                else:
-                    with self._host_state.lock:
-                        self._host_state.pending_dns_responses.append({
-                            'domain': sni,
-                            'ip_set': set([pkt_dict['remote_ip']])
-                        })
-                    utils.log('[UPLOAD] SNI:', sni)
+            sni = _get_sni(pkt)
+            if sni is not None:
+                with self._host_state.lock:
+                    self._host_state.pending_dns_responses.append({
+                        'domain': sni,
+                        'ip_set': set([pkt_dict['remote_ip']])
+                    })
+                utils.log('[UPLOAD] SNI:', sni)
 
         # Send data to cloud
         with self._host_state.lock:
             self._host_state.pending_pkts.append(pkt_dict)
             if ua:
                 self._host_state.ua_set.add((pkt_dict['device_mac'], ua))
+
+
+def _get_sni(pkt):
+
+    for ix in range(4, 100):
+
+        try:
+            layer = pkt[ix]
+        except IndexError:
+            return
+
+        try:
+            if layer.name == 'TLS Extension Servername Indication':
+                return str(layer.server_names[0].data)
+        except Exception:
+            pass
+
+    return
