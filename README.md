@@ -4,19 +4,26 @@
 
 ### Installation
 
-First, execute the following commands in your terminal to download the source code.
+Install the prerequisits.
+
+1. `sudo apt install python-pip python-tk git`
+2. `sudo pip install virtualenv`
+
+### Running IoT Inspector
 
 1. `git clone git@github.com:noise-lab/iot-inspector-client.git`
 2. `cd iot-inspector-client/src`
 
-Next, install the prerequisits
+If this is the first time running IoT Inspector, do the following:
 
-1. `sudo apt install python-pip python-tk`
-2. `sudo pip install virtualenv`
-3. `pip install elevate scapy netaddr scapy-ssl_tls scapy-http`
+3. `virtualenv env`
+4. `source env/bin/activate`
+5. `pip install elevate scapy netaddr scapy-ssl_tls scapy-http`
+6. `python start_inspector.py`
 
-### Running IoT Inspector
+If this is not the first time, do the following
 
-Run `python start_inspector.py` and enter the `sudo` password as prompted on the command line.
+3. `source env/bin/activate`
+4. `python start_inspector.py`
 
-At the same time, a browser window will appear that allows you to view the inspection report.
+Once you run `python start_inspector.py`, you will be prompted to enter your `sudo` password on the command line. At the same time, a browser window will appear that allows you to view the inspection report.
