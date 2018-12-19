@@ -35,8 +35,14 @@ def main():
         if 'no_browser' not in sys.argv:
             webbrowser.open_new_tab(url)
 
+    os_platform = sys.platform
+
     # Run as root
-    elevate()
+    if os_platform.startswith('linux'):
+        elevate(graphical=False)
+    else:
+        elevate()
+
     assert is_root()
 
     utils.log('[MAIN] Starting.')
@@ -57,7 +63,6 @@ def main():
     utils.log('Initialized:', state.__dict__)
 
     # Enable kernal forwarding.
-    os_platform = sys.platform
     if os_platform.startswith('darwin'):
         cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=1']
     elif os_platform.startswith('linux'):
