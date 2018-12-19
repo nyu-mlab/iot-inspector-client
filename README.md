@@ -11,7 +11,7 @@ Install the prerequisits.
 
 ### Running IoT Inspector
 
-1. `git clone git@github.com:noise-lab/iot-inspector-client.git`
+1. `git clone https://github.com/noise-lab/iot-inspector-client.git`
 2. `cd iot-inspector-client/src`
 
 If this is the first time running IoT Inspector, do the following:
