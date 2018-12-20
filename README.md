@@ -58,3 +58,8 @@ Tested on Ubuntu 17.10 and 18.04.
 2. Start IoT Inspector: `bash ubuntu-start-inspector.sh`
 
 Once you run `python start_inspector.py`, you will be prompted to enter your `sudo` password on the command line. At the same time, a browser window will appear that allows you to view the inspection report.
+
+
+# Getting Started on Windows
+
+We are still working on a Windows 10 version. Stay tuned.
