@@ -1,12 +1,12 @@
 # Princeton IoT Inspector
 
-## Getting Started
+---
 
-### Mac OS
+## Getting Started on Mac OS
 
 Tested on macOS High Sierra.
 
-#### Installation
+### Installation
 
 1. Download the app: https://iot-inspector.princeton.edu/downloads/inspector_mac.zip
 2. Double-click on the downloaded zip file to uncompress it.
@@ -24,21 +24,22 @@ Tested on macOS High Sierra.
 
 6. You'll be prompted to enter the admin password for IoT Inspector to work.
 
-#### Running IoT Inspector
+### Running IoT Inspector
 
 Note that the next time you run IoT Inspector, you can simply double-click on the "start_inspector.app" icon (Step 3) while skipping Steps 4 and 5.
 
+---
 
-### Ubuntu
+## Getting Started on Ubuntu
 
 Tested on Ubuntu 17.10 and 18.04.
 
-#### Installation
+### Installation
 
 1. Download the installation script: `wget https://raw.githubusercontent.com/noise-lab/iot-inspector-client/master/ubuntu-install.sh`
 2. Run the installation script: `bash ubuntu-install.sh`
 
-### Running IoT Inspector
+## Running IoT Inspector
 
 1. Enter IoT Inspector's director: `cd iot-inspector-client`
 2. Start IoT Inspector: `bash ubuntu-start-inspector.sh`
