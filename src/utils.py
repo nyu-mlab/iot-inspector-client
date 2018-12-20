@@ -4,7 +4,7 @@ Misc functions.
 """
 import server_config
 import os
-import urllib2
+import requests
 import scapy.all as sc
 import time
 import threading
@@ -43,10 +43,7 @@ def get_user_config():
     except Exception:
         pass
 
-    try:
-        user_key = urllib2.urlopen(server_config.NEW_USER_URL).read()
-    except IOError:
-        raise IOError('Unable to create new user.')
+    user_key = requests.get(server_config.NEW_USER_URL).text
 
     secret_salt = str(uuid.uuid4())
 

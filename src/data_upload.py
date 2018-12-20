@@ -6,8 +6,7 @@ import time
 import datetime
 import threading
 import utils
-import urllib
-import urllib2
+import requests
 import json
 import server_config
 from host_state import HostState
@@ -89,7 +88,7 @@ class DataUploader(object):
         )
 
         utils.log('[DATA] Update UTC offset:', utc_offset_url)
-        status = urllib2.urlopen(utc_offset_url).read().strip()
+        status = requests.get(utc_offset_url).text.strip()
         utils.log('[DATA] Update UTC offset status:', status)
 
         return 'SUCCESS' == status
@@ -101,7 +100,7 @@ class DataUploader(object):
         )
 
         utils.log('[DATA] Check consent:', check_consent_url)
-        status = urllib2.urlopen(check_consent_url).read().strip()
+        status = requests.get(check_consent_url).text.strip()
         utils.log('[DATA] Check consent status:', status)
 
         return 'True' == status
@@ -180,14 +179,14 @@ class DataUploader(object):
         # Prepare POST
         user_key = self._host_state.user_key
         url = server_config.SUBMIT_URL.format(user_key=user_key)
-        post_data = urllib.urlencode({
+        post_data = {
             'dns': json.dumps(dns_dict),
             'flows': json.dumps(flow_dict),
             'arp_cache': json.dumps(arp_cache),
             'ua_list': json.dumps(ua_list),
             'client_version': self._host_state.client_version,
             'duration': str(delta_sec)
-        })
+        }
 
         # Try uploading across 5 attempts
         for attempt in range(5):
@@ -199,7 +198,7 @@ class DataUploader(object):
 
             utils.log('[UPLOAD]', status_text)
 
-            response = urllib2.urlopen(url, post_data).read()
+            response = requests.post(url, data=post_data).text
             utils.log('[UPLOAD] Gets back server response:', response)
 
             # Update whitelist
