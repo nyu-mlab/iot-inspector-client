@@ -33,7 +33,7 @@ def get_user_config():
 
     user_config_file = os.path.join(
         os.path.expanduser('~'),
-        'iot_insepctor_config.json'
+        'iot_inspector_config.json'
     )
 
     try:
@@ -74,7 +74,7 @@ def log(*args):
 
     log_file_path = os.path.join(
         os.path.expanduser('~'),
-        'iot_insepctor_logs.txt'
+        'iot_inspector_logs.txt'
     )
 
     with open(log_file_path, 'a') as fp:
