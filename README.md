@@ -1,5 +1,12 @@
 # Princeton IoT Inspector Client Software
 
+## Mac
+
+1. Download the app: https://iot-inspector.princeton.edu/downloads/inspector_mac.zip
+2. Double-click on the downloaded zip file to uncompress it.
+3. You'll see an uncompressed file, `start_inspector.app`.
+
+
 ## Ubuntu
 
 Tested on Ubuntu 17.10 and 18.04.
