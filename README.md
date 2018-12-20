@@ -14,6 +14,7 @@ These features will help you identify potential problems, including
 
 For details, see https://iot-inspector.princeton.edu/.
 
+<br><br><br><br>
 
 ## Getting Started on Mac OS
 
@@ -41,7 +42,7 @@ Tested on macOS High Sierra.
 
 Note that the next time you run IoT Inspector, you can simply double-click on the "start_inspector.app" icon (Step 3) while skipping Steps 4 and 5.
 
-
+<br><br><br><br>
 
 ## Getting Started on Ubuntu
 
@@ -59,6 +60,7 @@ Tested on Ubuntu 17.10 and 18.04.
 
 Once you run `python start_inspector.py`, you will be prompted to enter your `sudo` password on the command line. At the same time, a browser window will appear that allows you to view the inspection report.
 
+<br><br><br><br>
 
 ## Getting Started on Windows
 
