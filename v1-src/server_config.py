@@ -4,7 +4,7 @@ BASE_URL = 'https://iot-inspector-report.cs.princeton.edu'
 
 NEW_USER_URL = BASE_URL + '/generate_user_key'
 
-REPORT_URL = BASE_URL + '/report/{user_key}'
+REPORT_URL = BASE_URL + '/report/{user_key}?auto_refresh=on'
 
 SUBMIT_URL = BASE_URL + '/submit_data/{user_key}'
 
