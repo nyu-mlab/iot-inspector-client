@@ -134,13 +134,10 @@ class PacketProcessor(object):
             return
 
         host_mac = self._host_state.host_mac
-        ip_prefix = self._host_state.ip_prefix
 
         # Only look at flows where this host pretends to be the gateway
-        host_gateway_inbound = pkt_dict['src_mac'] == host_mac and \
-            pkt_dict['dst_ip'].startswith(ip_prefix)
-        host_gateway_outbound = pkt_dict['dst_mac'] == host_mac and \
-            pkt_dict['src_ip'].startswith(ip_prefix)
+        host_gateway_inbound = pkt_dict['src_mac'] == host_mac
+        host_gateway_outbound = pkt_dict['dst_mac'] == host_mac
         if not (host_gateway_inbound or host_gateway_outbound):
             return
 

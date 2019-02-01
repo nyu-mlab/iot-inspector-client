@@ -33,7 +33,6 @@ def start(webserver_context):
     assert utils.is_ipv4_addr(state.gateway_ip)
     assert utils.is_ipv4_addr(state.host_ip)
 
-    state.ip_prefix = '.'.join(state.gateway_ip.split('.')[0:3]) + '.'
     state.packet_processor = PacketProcessor(state)
 
     utils.log('Initialized:', state.__dict__)

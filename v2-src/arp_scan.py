@@ -14,7 +14,6 @@ class ArpScan(object):
     def __init__(self, host_state):
 
         assert isinstance(host_state, HostState)
-        self._ip_prefix = host_state.ip_prefix
         self._host_state = host_state
 
         self._lock = threading.Lock()

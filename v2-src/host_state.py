@@ -15,7 +15,6 @@ class HostState(object):
         self.host_ip = None
         self.host_mac = None
         self.gateway_ip = None
-        self.ip_prefix = None
         self.packet_processor = None
         self.user_key = None
         self.secret_salt = None

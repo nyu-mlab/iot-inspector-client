@@ -55,6 +55,7 @@ def kill_existing_inspector():
 
 
 def elevate_process():
+    """TODO: Not tested on Windows."""
 
     os_platform = sys.platform
     if os_platform.startswith('linux'):
