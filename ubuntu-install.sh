@@ -11,6 +11,7 @@ sudo pip install virtualenv
 # Install prerequisits in virtual environment
 virtualenv env
 source env/bin/activate
+pip install requests
 pip install elevate netaddr
 pip install scapy
 pip install scapy-http
