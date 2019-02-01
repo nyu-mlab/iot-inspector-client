@@ -77,14 +77,7 @@ class ArpSpoof(object):
                 # Check against whitelist.
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
-                victim_mac_last_four_bytes = \
-                    victim_mac.lower().replace(':', '')[-4:]
-                is_in_whitelist = (
-                    victim_mac_last_four_bytes in
-                    self._host_state.device_whitelist or
-                    victim_device_id in self._host_state.device_whitelist
-                )
-                if not is_in_whitelist:
+                if victim_device_id not in self._host_state.device_whitelist:
                     utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                     continue
 

@@ -242,8 +242,7 @@ class DataUploader(object):
         utils.log('[DATA] Update UI:', value)
 
         with self._host_state.lock:
-            if self._host_state.status_text:
-                self._host_state.status_text = value
+            self._host_state.status_text = value
 
     def start(self):
 
