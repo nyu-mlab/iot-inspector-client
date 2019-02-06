@@ -90,24 +90,32 @@ def get_host_ip(timeout=10):
     return get_default_route(timeout)[2]
 
 
-def get_default_route(timeout=10):
-    """Returns (gateway_ip, iface, host_ip)."""
+def _get_routes():
 
-    start_time = time.time()
-
-    while time.time() - start_time <= timeout:
+    while True:
 
         sc.conf.route.resync()
+        routes = sc.conf.route.routes
+        if routes:
+            return routes
+
+        time.sleep(1)
+
+
+def get_default_route():
+    """Returns (gateway_ip, iface, host_ip)."""
+
+    while True:
+
+        routes = _get_routes()
 
         # Look for network = 0.0.0.0, netmask = 0.0.0.0
-        for default_route in sc.conf.route.routes:
+        for default_route in routes:
             if default_route[0] == 0 and default_route[1] == 0:
                 return default_route[2:5]
 
         log('get_default_route: retrying')
         time.sleep(1)
-
-    raise TimeoutError('get_default_route timed out')
 
 
 def get_network_ip_range():
@@ -116,7 +124,7 @@ def get_network_ip_range():
 
     ip_set = set()
 
-    for default_route in sc.conf.route.routes:
+    for default_route in _get_routes():
 
         network = default_route[0]
         netmask = default_route[1]
