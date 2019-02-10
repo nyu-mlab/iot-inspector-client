@@ -19,6 +19,9 @@ def start(webserver_context):
     # cloud.
     config_dict = utils.get_user_config()
 
+    if '--local_test_mode' in sys.argv:
+        utils.LOCAL_TEST_MODE = True
+
     utils.log('[MAIN] Starting.')
 
     # Set up environment
@@ -46,8 +49,9 @@ def start(webserver_context):
     packet_capture_thread.start()
 
     # Continously spoof ARP
-    arp_spoof_thread = ArpSpoof(state)
-    arp_spoof_thread.start()
+    if '--no_spoofing' not in sys.argv:
+        arp_spoof_thread = ArpSpoof(state)
+        arp_spoof_thread.start()
 
     # Continuously upload data
     data_upload_thread = DataUploader(state)

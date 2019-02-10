@@ -19,7 +19,10 @@ context = {
 
 def start_thread():
 
-    th = threading.Thread(target=app.run, kwargs={'port': 46241})
+    th = threading.Thread(
+        target=app.run,
+        kwargs={'port': 46241}
+    )
     th.daemon = True
     th.start()
 
@@ -56,6 +59,17 @@ def get_user_key():
                 return host_state.user_key
 
     return ''
+
+
+@app.route('/start_fast_arp_discovery', methods=['GET'])
+def start_fast_arp_discovery():
+
+    host_state = context['host_state']
+    if host_state is not None:
+        with host_state.lock:
+            host_state.fast_arp_scan = True
+
+    return 'OK'
 
 
 @app.route('/start_inspecting_traffic', methods=['GET'])

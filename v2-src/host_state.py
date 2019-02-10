@@ -3,6 +3,8 @@ Global shared state about the host.
 
 """
 import threading
+import utils
+import time
 
 
 CLIENT_VERSION = '0.1'
@@ -19,19 +21,25 @@ class HostState(object):
         self.user_key = None
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
-        self.is_inspecting_traiffc = True
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()
-        self.ip_mac_dict = {}
-        self.pending_dns_responses = []
-        self.pending_dns_requests = []
-        self.pending_pkts = []
-        self.ua_set = set()
+        self.ip_mac_dict = {}  # IP -> MAC
+        self.pending_dhcp_dict = {}  # device_id -> hostname
+        self.pending_dns_dict = {}  # (device_id, domain) -> ip_set
+        self.pending_flow_dict = {}  # flow_key -> flow_stats
+        self.pending_ua_dict = {}  # device_id -> ua_set
         self.status_text = None
         self.device_whitelist = []
         self.has_consent = False
-        self.packet_count = 0
+        self.byte_count = 0
+        self.is_inspecting_traffic = True
+        self.fast_arp_scan = True  # Persists for first 5 mins
+
+        # Constantly checks for IP changes on this host
+        thread = threading.Thread(target=self.update_ip_thread)
+        thread.daemon = True
+        thread.start()
 
     def set_ip_mac_mapping(self, ip, mac):
 
@@ -42,3 +50,19 @@ class HostState(object):
 
         with self.lock:
             return dict(self.ip_mac_dict)
+
+    def is_inspecting(self):
+
+        with self.lock:
+            return self.is_inspecting_traffic
+
+    def update_ip_thread(self):
+
+        while True:
+
+            try:
+                self.gateway_ip, _, self.host_ip = utils.get_default_route()
+            except Exception:
+                pass
+
+            time.sleep(15)

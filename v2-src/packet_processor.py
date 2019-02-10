@@ -22,32 +22,58 @@ class PacketProcessor(object):
 
     def _process_packet_helper(self, pkt):
 
-        with self._host_state.lock:
-            self._host_state.packet_count += 1
-
         if sc.ARP in pkt:
             return self._process_arp(pkt)
 
-        # Must have Ether frame.
-        if sc.Ether not in pkt:
+        if sc.DHCP in pkt:
+            return self._process_dhcp(pkt)
+
+        # Must have Ether frame and IP frame.
+        if not (sc.Ether in pkt and sc.IP in pkt):
             return
 
-        # No broadcast
-        if sc.IP not in pkt:
+        # Ignore traffic to and from this host's IP
+        if self._host_state.host_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
             return
 
         # DNS
         if sc.DNS in pkt:
-            if sc.DNSQR in pkt:
-                return self._process_dns_request(pkt)
-            elif sc.DNSRR in pkt and pkt[sc.DNS].an:
-                return self._process_dns_response(pkt)
+            self._process_dns(pkt)
+
+        # Ignore traffic to and from the gateway's IP
+        if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
+            return
+
+        # Get gateway's MAC
+        try:
+            with self._host_state.lock:
+                gateway_mac = self._host_state.ip_mac_dict[
+                    self._host_state.gateway_ip
+                ]
+        except KeyError:
+            return
+
+        # Communication must be between this host's MAC (acting as a gateway)
+        # and a non-gateway device
+        src_mac = pkt[sc.Ether].src
+        dst_mac = pkt[sc.Ether].dst
+        host_mac = self._host_state.host_mac
+        this_host_as_gateway = (
+            (src_mac == host_mac and dst_mac != gateway_mac) or
+            (dst_mac == host_mac and src_mac != gateway_mac)
+        )
+        if not this_host_as_gateway:
+            return
 
         # TCP/UDP
         if sc.TCP in pkt:
-            return self._process_tcp_udp(pkt, 'tcp')
-        if sc.UDP in pkt:
-            return self._process_tcp_udp(pkt, 'udp')
+            protocol = 'tcp'
+        elif sc.UDP in pkt:
+            protocol = 'udp'
+        else:
+            return
+
+        return self._process_tcp_udp_flow(pkt, protocol)
 
     def _process_arp(self, pkt):
         """
@@ -61,53 +87,80 @@ class PacketProcessor(object):
                 utils.log('[ARP] Added:', pkt.psrc, '->', pkt.hwsrc)
 
         except AttributeError:
-            pass
+            return
 
-    def parse_domain_from_dns(self, pkt):
+    def _process_dhcp(self, pkt):
+        """
+        Extracts the client hostname from DHCP Request packets.
 
-        domain = pkt[sc.DNS].qd.qname.lower()
-        device_mac = pkt[sc.Ether].dst
+        """
+        try:
+            if pkt[sc.Ether].dst != 'ff:ff:ff:ff:ff:ff':
+                return
 
-        # No DNS requests from this host
-        if device_mac == self._host_state.host_mac:
+            device_mac = pkt[sc.Ether].src
+
+            device_hostname = dict(
+                [t for t in pkt[sc.DHCP].options if isinstance(t, tuple)]
+            )['hostname']
+
+        except AttributeError:
+            return
+
+        device_id = utils.get_device_id(device_mac, self._host_state)
+        with self._host_state.lock:
+            self._host_state.pending_dhcp_dict[device_id] = \
+                device_hostname
+
+    def _process_dns(self, pkt):
+
+        src_mac = pkt[sc.Ether].src
+        dst_mac = pkt[sc.Ether].dst
+
+        # Find device ID
+        if pkt[sc.DNS].qr == 0:
+            # DNS request
+            if dst_mac == self._host_state.host_mac:
+                device_mac = src_mac
+            else:
+                return
+        else:
+            # DNS response
+            if src_mac == self._host_state.host_mac:
+                device_mac = dst_mac
+            else:
+                return
+
+        device_id = utils.get_device_id(device_mac, self._host_state)
+
+        # Parse domain
+        try:
+            domain = pkt[sc.DNSQR].qname.lower()
+        except AttributeError:
             return
 
         # Remove trailing dot from domain
         if domain.endswith('.'):
             domain = domain[0:-1]
 
-        return domain
-
-    def _process_dns_request(self, pkt):
-
-        domain = self.parse_domain_from_dns(pkt)
-        if domain is None:
-            return
-
-        with self._host_state.lock:
-            self._host_state.pending_dns_requests.append(domain)
-
-    def _process_dns_response(self, pkt):
-
-        domain = self.parse_domain_from_dns(pkt)
-        if domain is None:
-            return
+        # Parse DNS response
         ip_set = set()
-        for ix in range(pkt[sc.DNS].ancount):
-            # Extracts A-records
-            if pkt[sc.DNSRR][ix].type == 1:
-                # Extracts IPv4 addr in A-record
-                ip = pkt[sc.DNSRR][ix].rdata
-                if utils.is_ipv4_addr(ip):
-                    ip_set.add(ip)
+        if sc.DNSRR in pkt and pkt[sc.DNS].an:
+            for ix in range(pkt[sc.DNS].ancount):
+                # Extracts A-records
+                if pkt[sc.DNSRR][ix].type == 1:
+                    # Extracts IPv4 addr in A-record
+                    ip = pkt[sc.DNSRR][ix].rdata
+                    if utils.is_ipv4_addr(ip):
+                        ip_set.add(ip)
 
         with self._host_state.lock:
-            self._host_state.pending_dns_responses.append({
-                'domain': domain,
-                'ip_set': ip_set
-            })
+            current_ip_set = self._host_state \
+                .pending_dns_dict.setdefault((device_id, domain), set())
+            ip_set = ip_set | current_ip_set
+            self._host_state.pending_dns_dict[(device_id, domain)] = ip_set
 
-    def _process_tcp_udp(self, pkt, protocol):
+    def _process_tcp_udp_flow(self, pkt, protocol):
 
         if protocol == 'tcp':
             layer = sc.TCP
@@ -116,88 +169,147 @@ class PacketProcessor(object):
         else:
             return
 
-        pkt_dict = {
-            'length': len(pkt),
-            'protocol': protocol,
-            'src_mac': pkt[sc.Ether].src,
-            'dst_mac': pkt[sc.Ether].dst,
-            'src_ip': pkt[sc.IP].src,
-            'dst_ip': pkt[sc.IP].dst,
-            'src_port': pkt[layer].sport,
-            'dst_port': pkt[layer].dport,
-        }
+        # Parse packet
+        src_mac = pkt[sc.Ether].src
+        dst_mac = pkt[sc.Ether].dst
+        src_ip = pkt[sc.IP].src
+        dst_ip = pkt[sc.IP].dst
+        src_port = pkt[layer].sport
+        dst_port = pkt[layer].dport
 
         # No broadcast
-        if pkt_dict['dst_mac'] == 'ff:ff:ff:ff:ff:ff':
+        if dst_mac == 'ff:ff:ff:ff:ff:ff' or dst_ip == '255.255.255.255':
             return
-        if pkt_dict['dst_ip'] == '255.255.255.255':
-            return
-
-        host_mac = self._host_state.host_mac
 
         # Only look at flows where this host pretends to be the gateway
-        host_gateway_inbound = pkt_dict['src_mac'] == host_mac
-        host_gateway_outbound = pkt_dict['dst_mac'] == host_mac
+        host_mac = self._host_state.host_mac
+        host_gateway_inbound = (src_mac == host_mac)
+        host_gateway_outbound = (dst_mac == host_mac)
         if not (host_gateway_inbound or host_gateway_outbound):
             return
 
-        # Reformat pkt to use the device vs remote notation
-        if pkt_dict['src_mac'] == host_mac:
-            pkt_dict = {
-                'direction': 'inbound',
-                'length': len(pkt),
-                'protocol': protocol,
-                'device_mac': pkt_dict['dst_mac'],
-                'device_ip': pkt_dict['dst_ip'],
-                'remote_ip': pkt_dict['src_ip'],
-                'remote_port': pkt_dict['src_port']
-            }
-        elif pkt_dict['dst_mac'] == host_mac:
-            pkt_dict = {
-                'direction': 'outbound',
-                'length': len(pkt),
-                'protocol': protocol,
-                'device_mac': pkt_dict['src_mac'],
-                'device_ip': pkt_dict['src_ip'],
-                'remote_ip': pkt_dict['dst_ip'],
-                'remote_port': pkt_dict['dst_port']
-            }
+        # Extract TCP sequence and ack numbers for us to estimate flow size
+        # later
+        tcp_seq = None
+        tcp_ack = None
+
+        try:
+            tcp_layer = pkt[sc.TCP]
+            tcp_seq = tcp_layer.seq
+            if tcp_layer.ack > 0:
+                tcp_ack = tcp_layer.ack
+        except Exception:
+            pass
+
+        # Determine flow direction
+        if src_mac == host_mac:
+            direction = 'inbound'
+            device_mac = dst_mac
+            device_ip = dst_ip
+            device_port = dst_port
+            remote_ip = src_ip
+            remote_port = src_port
+        elif dst_mac == host_mac:
+            direction = 'outbound'
+            device_mac = src_mac
+            device_ip = src_ip
+            device_port = src_port
+            remote_ip = dst_ip
+            remote_port = dst_port
         else:
             return
 
-        # Ignore gateway
-        is_gateway_traffic = self._host_state.gateway_ip in (
-            pkt_dict['device_ip'], pkt_dict['remote_ip']
+        # Anonymize device mac
+        device_id = utils.get_device_id(device_mac, self._host_state)
+
+        # Construct flow key
+        flow_key = (
+            device_id, device_ip, device_port, remote_ip, remote_port, protocol
         )
-        if is_gateway_traffic:
+
+        # Initialize flow_stats. Note: TCP byte counts may include out-of-order
+        # packets and RSTs. On the other hand, TCP sequence number shows how
+        # many unique bytes are transmitted in a flow; this number does not
+        # consider the size of headers (Eth + IP + TCP = 66 bytes in my
+        # experiment), out-of-order packets, or RSTs.
+        flow_stats = {
+            'inbound_byte_count': 0,
+            'inbound_tcp_seq_min_max': (None, None),
+            'inbound_tcp_ack_min_max': (None, None),
+            'outbound_byte_count': 0,
+            'outbound_tcp_seq_min_max': (None, None),
+            'outbound_tcp_ack_min_max': (None, None)
+        }
+        with self._host_state.lock:
+            flow_stats = self._host_state.pending_flow_dict \
+                .setdefault(flow_key, flow_stats)
+
+        # Construct flow_stats
+        flow_stats[direction + '_byte_count'] += len(pkt)
+        flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(
+            flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
+        flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
+            flow_stats[direction + '_tcp_ack_min_max'], tcp_ack)
+
+        # Extract UA and Host
+        if remote_port == 80 and protocol == 'tcp':
+            self._process_http(pkt, device_id, remote_ip)
+
+        # Extract SNI from TLS client handshake
+        if protocol == 'tcp' and direction == 'outbound':
+            self._process_tls(pkt, device_id, remote_ip)
+
+        with self._host_state.lock:
+            self._host_state.byte_count += len(pkt)
+
+    def _process_http(self, pkt, device_id, remote_ip):
+
+        self._process_http_user_agent(pkt, device_id)
+        self._process_http_host(pkt, device_id, remote_ip)
+
+    def _process_http_user_agent(self, pkt, device_id):
+
+        try:
+            ua = pkt[http.HTTPRequest].fields['User-Agent']
+        except Exception:
             return
 
-        # Check user agent
-        ua = None
-        if pkt_dict['remote_port'] == 80 and protocol == 'tcp':
-            try:
-                ua = pkt[http.HTTPRequest].fields['User-Agent']
-            except Exception:
-                pass
-            else:
-                utils.log('[UPLOAD] User-Agent:', ua)
-
-        # Identify SNI
-        if protocol == 'tcp' and pkt_dict['direction'] == 'outbound':
-            sni = _get_sni(pkt)
-            if sni is not None:
-                with self._host_state.lock:
-                    self._host_state.pending_dns_responses.append({
-                        'domain': sni,
-                        'ip_set': set([pkt_dict['remote_ip']])
-                    })
-                utils.log('[UPLOAD] SNI:', sni)
-
-        # Send data to cloud
         with self._host_state.lock:
-            self._host_state.pending_pkts.append(pkt_dict)
-            if ua:
-                self._host_state.ua_set.add((pkt_dict['device_mac'], ua))
+            self._host_state \
+                .pending_ua_dict \
+                .setdefault(device_id, set()) \
+                .add(ua)
+
+        utils.log('[UPLOAD] User-Agent:', ua)
+
+    def _process_http_host(self, pkt, device_id, remote_ip):
+
+        try:
+            http_host = pkt[http.HTTPRequest].fields['Host']
+        except Exception:
+            return
+
+        with self._host_state.lock:
+            self._host_state \
+                .pending_dns_dict \
+                .setdefault((device_id, http_host), set()) \
+                .add(remote_ip)
+
+        utils.log('[UPLOAD] HTTP host:', http_host)
+
+    def _process_tls(self, pkt, device_id, remote_ip):
+
+        sni = _get_sni(pkt)
+        if sni is None:
+            return
+
+        with self._host_state.lock:
+            self._host_state \
+                .pending_dns_dict \
+                .setdefault((device_id, sni), set()) \
+                .add(remote_ip)
+
+        utils.log('[UPLOAD] SNI:', sni)
 
 
 def _get_sni(pkt):

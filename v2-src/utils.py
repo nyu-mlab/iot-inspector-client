@@ -22,6 +22,8 @@ IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
 sc.conf.verb = 0
 
+LOCAL_TEST_MODE = False
+
 
 def is_ipv4_addr(value):
 
@@ -220,3 +222,40 @@ def get_device_id(device_mac, host_state):
     s = device_mac + str(host_state.secret_salt)
 
     return hashlib.sha256(s).hexdigest()[0:10]
+
+
+def smart_min(v1, v2):
+    """
+    Returns min value even if one of the value is None.
+
+    By default min(None, x) == None per Python default behavior.
+
+    """
+
+    if v1 is None:
+        return v2
+
+    if v2 is None:
+        return v1
+
+    return min(v1, v2)
+
+
+def get_min_max_tuple(min_max_tuple, value):
+    """
+    Returns a new min_max_tuple with value considered.
+
+    For example:
+
+        min_max_tuple = (2, 3)
+        print get_min_max_tuple(min_max_tuple, 4)
+
+    We get back (2, 4).
+
+    """
+    min_v, max_v = min_max_tuple
+
+    min_v = smart_min(min_v, value)
+    max_v = max(max_v, value)
+
+    return (min_v, max_v)

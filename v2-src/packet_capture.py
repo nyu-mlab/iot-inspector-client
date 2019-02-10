@@ -34,20 +34,21 @@ class PacketCapture(object):
 
         while self._is_active():
 
-            with self._host_state.lock:
-                if not self._host_state.is_inspecting_traiffc:
-                    time.sleep(2)
-                    continue
+            if not self._host_state.is_inspecting():
+                time.sleep(2)
+                continue
 
             result = utils.safe_run(sc.sniff, kwargs={
                 'prn': self._host_state.packet_processor.process_packet,
                 'stop_filter':
                     lambda _:
                         not self._is_active() or
-                        not self._is_inspecting_traffic(),
-                'filter': 'arp or (host not {} and ether host {})'.format(
-                    self._host_state.host_ip,
-                    self._host_state.host_mac),
+                        not self._host_state.is_inspecting(),
+                'filter': 'arp' +
+                    ' or (host not {} and ether host {})'.format(
+                        self._host_state.host_ip,
+                        self._host_state.host_mac) +
+                    ' or (port 67 or port 68)',
                 'timeout': 30
             })
 
@@ -58,11 +59,6 @@ class PacketCapture(object):
 
         with self._lock:
             return self._active
-
-    def _is_inspecting_traffic(self):
-
-        with self._host_state.lock:
-            return self._host_state.is_inspecting_traiffc
 
     def stop(self):
 

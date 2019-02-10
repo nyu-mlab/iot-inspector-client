@@ -37,10 +37,9 @@ class ArpSpoof(object):
 
         while True:
 
-            with self._host_state.lock:
-                if not self._host_state.is_inspecting_traiffc:
-                    time.sleep(2)
-                    continue
+            if not self._host_state.is_inspecting():
+                time.sleep(2)
+                continue
 
             time.sleep(1)
 
@@ -78,8 +77,9 @@ class ArpSpoof(object):
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
                 if victim_device_id not in self._host_state.device_whitelist:
-                    utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
-                    continue
+                    if not utils.LOCAL_TEST_MODE:
+                        utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
+                        continue
 
                 utils.safe_run(
                     self._arp_spoof,

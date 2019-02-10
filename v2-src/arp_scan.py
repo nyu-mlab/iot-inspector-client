@@ -17,7 +17,7 @@ class ArpScan(object):
         self._host_state = host_state
 
         self._lock = threading.Lock()
-        self._active = True
+        self._active = False
 
         self._thread = threading.Thread(target=self._arp_scan_thread)
         self._thread.daemon = True
@@ -36,16 +36,35 @@ class ArpScan(object):
 
     def _arp_scan_thread_helper(self):
 
+        fast_scan_start_ts = None
+
         while True:
 
-            with self._host_state.lock:
-                if not self._host_state.is_inspecting_traiffc:
-                    time.sleep(2)
-                    continue
+            if not self._host_state.is_inspecting():
+                time.sleep(1)
+                continue
 
             for ip in utils.get_network_ip_range():
 
-                time.sleep(0.1)
+                sleep_time = 1
+
+                # Whether we should scan fast or slow
+                with self._host_state.lock:
+                    fast_arp_scan = self._host_state.fast_arp_scan
+
+                # If fast scan, we do it for at most 5 mins
+                if fast_arp_scan:
+                    sleep_time = 0.1
+                    if fast_scan_start_ts is None:
+                        fast_scan_start_ts = time.time()
+                    else:
+                        if time.time() - fast_scan_start_ts > 300:
+                            fast_scan_start_ts = None
+                            sleep_time = 1
+                            with self._host_state.lock:
+                                self._host_state.fast_arp_scan = False
+
+                time.sleep(sleep_time)
 
                 arp_pkt = sc.Ether(dst="ff:ff:ff:ff:ff:ff") / \
                     sc.ARP(pdst=ip, hwdst="ff:ff:ff:ff:ff:ff")
@@ -57,12 +76,9 @@ class ArpScan(object):
 
     def stop(self):
 
-        utils.log('[ARP Scanning] Stopping.')
-
         with self._lock:
             self._active = False
 
         self._thread.join()
 
         utils.log('[ARP Scanning] Stopped.')
-
