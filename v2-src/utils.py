@@ -53,7 +53,14 @@ def get_user_config():
     except Exception:
         pass
 
-    user_key = requests.get(server_config.NEW_USER_URL).text
+    while True:
+        user_key = requests.get(server_config.NEW_USER_URL).text.strip()
+
+        # Make sure we're not getting server's error messages
+        if len(user_key) == 32:
+            break
+
+        time.sleep(1)
 
     secret_salt = str(uuid.uuid4())
 
