@@ -15,9 +15,8 @@ pip install Flask
 pip install flask_cors
 pip install requests
 pip install elevate netaddr
-pip install scapy
-pip install scapy-http
 pip install scapy-ssl_tls
+pip install scapy-http
 
 # Download sample profile
 cd ~
