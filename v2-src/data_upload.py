@@ -121,11 +121,15 @@ class DataUploader(object):
 
             self._last_upload_ts = time.time()
 
-        # Turn IP -> MAC dict into IP -> (device_id, device_oui) dict
+        # Turn IP -> MAC dict into IP -> (device_id, device_oui) dict, ignoring
+        # gateway's IP.
         ip_device_dict = {}
         for (ip, mac) in ip_mac_dict.iteritems():
+            # Never include the gateway
+            if ip == self._host_state.gateway_ip:
+                continue
             device_id = utils.get_device_id(mac, self._host_state)
-            oui = mac.replace(':', '').lower()[0:6]
+            oui = utils.get_oui(mac)
             ip_device_dict[ip] = (device_id, oui)
 
         # Process flow_stats
@@ -209,7 +213,7 @@ class DataUploader(object):
                     if response_dict['status'] == 'SUCCESS':
                         with self._host_state.lock:
                             self._host_state.device_whitelist = \
-                                response_dict['whitelist']
+                                response_dict['inspected_devices']
                         break
                 except Exception:
                     pass

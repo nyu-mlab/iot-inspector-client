@@ -32,6 +32,18 @@ class PacketProcessor(object):
         if not (sc.Ether in pkt and sc.IP in pkt):
             return
 
+        src_mac = pkt[sc.Ether].src
+        dst_mac = pkt[sc.Ether].dst
+
+        src_oui = utils.get_oui(src_mac)
+        dst_oui = utils.get_oui(dst_mac)
+
+        # Include only devices for internal testing (if set)
+        if utils.TEST_OUI_LIST:
+            if not (src_oui in utils.TEST_OUI_LIST or
+                    dst_oui in utils.TEST_OUI_LIST):
+                return
+
         # Ignore traffic to and from this host's IP
         if self._host_state.host_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
             return
@@ -55,8 +67,6 @@ class PacketProcessor(object):
 
         # Communication must be between this host's MAC (acting as a gateway)
         # and a non-gateway device
-        src_mac = pkt[sc.Ether].src
-        dst_mac = pkt[sc.Ether].dst
         host_mac = self._host_state.host_mac
         this_host_as_gateway = (
             (src_mac == host_mac and dst_mac != gateway_mac) or
@@ -205,14 +215,12 @@ class PacketProcessor(object):
         if src_mac == host_mac:
             direction = 'inbound'
             device_mac = dst_mac
-            device_ip = dst_ip
             device_port = dst_port
             remote_ip = src_ip
             remote_port = src_port
         elif dst_mac == host_mac:
             direction = 'outbound'
             device_mac = src_mac
-            device_ip = src_ip
             device_port = src_port
             remote_ip = dst_ip
             remote_port = dst_port
@@ -224,7 +232,7 @@ class PacketProcessor(object):
 
         # Construct flow key
         flow_key = (
-            device_id, device_ip, device_port, remote_ip, remote_port, protocol
+            device_id, device_port, remote_ip, remote_port, protocol
         )
 
         # Initialize flow_stats. Note: TCP byte counts may include out-of-order

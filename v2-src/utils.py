@@ -22,7 +22,15 @@ IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
 sc.conf.verb = 0
 
+# If true, we won't upload any data to the cloud.
 LOCAL_TEST_MODE = False
+
+# If non empty, then only devices with the following MAC addresses with be
+# inspected. Do not populate this list in production. For internal testing.
+TEST_OUI_LIST = [
+    'd83134',  # Roku
+    '74f61c',  # Danny's Pixel phone
+]
 
 
 def is_ipv4_addr(value):
@@ -259,3 +267,8 @@ def get_min_max_tuple(min_max_tuple, value):
     max_v = max(max_v, value)
 
     return (min_v, max_v)
+
+
+def get_oui(mac):
+
+    return mac.replace(':', '').lower()[0:6]
