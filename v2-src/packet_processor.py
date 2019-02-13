@@ -114,7 +114,7 @@ class PacketProcessor(object):
                 [t for t in pkt[sc.DHCP].options if isinstance(t, tuple)]
             )['hostname']
 
-        except AttributeError:
+        except Exception:
             return
 
         device_id = utils.get_device_id(device_mac, self._host_state)
