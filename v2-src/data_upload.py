@@ -113,11 +113,13 @@ class DataUploader(object):
             flow_dict = self._host_state.pending_flow_dict
             ua_dict = self._host_state.pending_ua_dict
             ip_mac_dict = self._host_state.ip_mac_dict
+            tls_dict = self._host_state.pending_tls_dict
 
             self._host_state.pending_dhcp_dict = {}
             self._host_state.pending_dns_dict = {}
             self._host_state.pending_flow_dict = {}
             self._host_state.pending_ua_dict = {}
+            self._host_state.pending_tls_dict = {}
 
             self._last_upload_ts = time.time()
 
@@ -178,6 +180,7 @@ class DataUploader(object):
             'ua_dict': jsonify_dict(ua_dict),
             'dhcp_dict': jsonify_dict(dhcp_dict),
             'client_version': self._host_state.client_version,
+            'tls_dict': jsonify_dict(tls_dict),
             'duration': str(window_duration)
         })
 

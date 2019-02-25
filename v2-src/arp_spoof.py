@@ -81,6 +81,11 @@ class ArpSpoof(object):
                         utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                         continue
 
+                if utils.TEST_OUI_LIST:
+                    victim_mac_oui = utils.get_oui(victim_mac)
+                    if victim_mac_oui not in utils.TEST_OUI_LIST:
+                        continue
+
                 utils.safe_run(
                     self._arp_spoof,
                     args=(victim_mac, victim_ip, gateway_mac, gateway_ip)

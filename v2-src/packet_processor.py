@@ -7,6 +7,7 @@ import scapy_ssl_tls.ssl_tls as ssl_tls # noqa
 import scapy_http.http as http
 import scapy.all as sc
 import utils
+import hashlib
 
 
 class PacketProcessor(object):
@@ -306,33 +307,111 @@ class PacketProcessor(object):
         utils.log('[UPLOAD] HTTP host:', http_host)
 
     def _process_tls(self, pkt, device_id, remote_ip):
+        """Analyzes client hellos and parses SNI and fingerprints."""
 
-        sni = _get_sni(pkt)
-        if sni is None:
+        fingerprint = get_tls_fingerprint(pkt)
+
+        if not fingerprint:
             return
 
+        fingerprint['device_id'] = device_id
+
+        # Upload SNI
+        if fingerprint['sni']:
+
+            with self._host_state.lock:
+                self._host_state \
+                    .pending_dns_dict \
+                    .setdefault((device_id, fingerprint['sni']), set()) \
+                    .add(remote_ip)
+
+            utils.log('[UPLOAD] SNI:', fingerprint['sni'])
+
+        # Upload fingerprint dict
         with self._host_state.lock:
-            self._host_state \
-                .pending_dns_dict \
-                .setdefault((device_id, sni), set()) \
-                .add(remote_ip)
-
-        utils.log('[UPLOAD] SNI:', sni)
+            self._host_state.pending_tls_dict[fingerprint['hash']] = \
+                fingerprint
 
 
-def _get_sni(pkt):
+def is_grease(int_value):
+    """
+    Returns if a value is GREASE.
 
-    for ix in range(4, 100):
+    See https://tools.ietf.org/html/draft-ietf-tls-grease-01
+
+    """
+    hex_str = hex(int_value)[2:].lower()
+    if len(hex_str) < 4:
+        return False
+
+    first_byte = hex_str[0:2]
+    last_byte = hex_str[-2:]
+
+    return (
+        first_byte[1] == 'a' and
+        last_byte[1] == 'a' and
+        first_byte == last_byte
+    )
+
+
+def get_tls_fingerprint(pkt):
+    """
+    Referenced papers:
+
+     - https://tlsfingerprint.io/static/frolov2019.pdf
+     - https://zakird.com/papers/https_interception.pdf
+
+    """
+    fingerprint = {}
+
+    for ix in range(3, 100):
 
         try:
             layer = pkt[ix]
         except IndexError:
-            return
+            break
 
-        try:
-            if layer.name == 'TLS Extension Servername Indication':
-                return str(layer.server_names[0].data)
-        except Exception:
-            pass
+        if layer.name == 'TLS Client Hello':
 
-    return
+            extensions = getattr(layer, 'extensions', [])
+            extension_types = []
+            sni = None
+
+            # Remove GREASE values from cipher_suites
+            cipher_suites = getattr(layer, 'cipher_suites', [])
+            cipher_suites = [v for v in cipher_suites if not is_grease(v)]
+
+            # Extract SNI, per
+            # https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-1
+            for ex in extensions:
+                try:
+                    # Remove grease values
+                    if is_grease(ex.type):
+                        continue
+                    extension_types.append(ex.type)
+                    if ex.type == 0:
+                        sni = str(ex.server_names[0].data)
+                except Exception:
+                    pass
+
+            version = getattr(layer, 'version', None)
+
+            fingerprint_hash = hashlib.sha256(
+                str(version) +
+                str(set(cipher_suites)) +
+                str(set(extension_types))
+            ).hexdigest()[0:10]
+
+            fingerprint.update({
+                'hash': fingerprint_hash,
+                'version': version,
+                'cipher_suites': cipher_suites,
+                'compression_methods':
+                    getattr(layer, 'compression_methods', None),
+                'extension_types': extension_types,
+                'extension_details': repr(extensions),
+                'sni': sni
+            })
+            break
+
+    return fingerprint
