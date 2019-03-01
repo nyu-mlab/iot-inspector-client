@@ -9,6 +9,7 @@ from arp_scan import ArpScan
 from packet_capture import PacketCapture
 from arp_spoof import ArpSpoof
 from data_upload import DataUploader
+from netdisco import NetdiscoWrapper
 import subprocess
 import sys
 
@@ -44,6 +45,10 @@ def start(webserver_context):
     arp_scan_thread = ArpScan(state)
     arp_scan_thread.start()
 
+    # Continuously gather SSDP data
+    netdisco_thread = NetdiscoWrapper(state)
+    netdisco_thread.start()
+
     # Continuously capture packets
     packet_capture_thread = PacketCapture(state)
     packet_capture_thread.start()
@@ -60,23 +65,23 @@ def start(webserver_context):
 
 def enable_ip_forwarding():
 
-    os_platform = sys.platform
-    if os_platform.startswith('darwin'):
+    os_platform = utils.get_os()
+
+    if os_platform == 'mac':
         cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=1']
-    elif os_platform.startswith('linux'):
+    elif os_platform == 'linux':
         cmd = ['sysctl', '-w', 'net.ipv4.ip_forward=1']
-    else:
-        raise RuntimeError('Unsupported platform.')
 
     assert subprocess.call(cmd) == 0
 
 
 def disable_ip_forwarding():
 
-    os_platform = sys.platform
-    if os_platform.startswith('darwin'):
+    os_platform = utils.get_os()
+
+    if os_platform == 'mac':
         cmd = ['/usr/sbin/sysctl', '-w', 'net.inet.ip.forwarding=0']
-    elif os_platform.startswith('linux'):
+    elif os_platform == 'linux':
         cmd = ['sysctl', '-w', 'net.ipv4.ip_forward=0']
 
     assert subprocess.call(cmd) == 0

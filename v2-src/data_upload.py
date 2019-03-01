@@ -114,25 +114,27 @@ class DataUploader(object):
             ua_dict = self._host_state.pending_ua_dict
             ip_mac_dict = self._host_state.ip_mac_dict
             tls_dict = self._host_state.pending_tls_dict
+            netdisco_dict = self._host_state.pending_netdisco_dict
 
             self._host_state.pending_dhcp_dict = {}
             self._host_state.pending_dns_dict = {}
             self._host_state.pending_flow_dict = {}
             self._host_state.pending_ua_dict = {}
             self._host_state.pending_tls_dict = {}
+            self._host_state.pending_netdisco_dict = {}
 
             self._last_upload_ts = time.time()
 
-        # Turn IP -> MAC dict into IP -> (device_id, device_oui) dict, ignoring
+        # Turn IP -> MAC dict into device_id -> (ip, device_oui) dict, ignoring
         # gateway's IP.
-        ip_device_dict = {}
+        device_dict = {}
         for (ip, mac) in ip_mac_dict.iteritems():
             # Never include the gateway
             if ip == self._host_state.gateway_ip:
                 continue
             device_id = utils.get_device_id(mac, self._host_state)
             oui = utils.get_oui(mac)
-            ip_device_dict[ip] = (device_id, oui)
+            device_dict[device_id] = (ip, oui)
 
         # Process flow_stats
         for flow_key in flow_dict:
@@ -176,11 +178,12 @@ class DataUploader(object):
         return (window_duration, {
             'dns_dict': jsonify_dict(dns_dict),
             'flow_dict': jsonify_dict(flow_dict),
-            'ip_device_dict': jsonify_dict(ip_device_dict),
+            'device_dict': jsonify_dict(device_dict),
             'ua_dict': jsonify_dict(ua_dict),
             'dhcp_dict': jsonify_dict(dhcp_dict),
             'client_version': self._host_state.client_version,
             'tls_dict': jsonify_dict(tls_dict),
+            'netdisco_dict': jsonify_dict(netdisco_dict),
             'duration': str(window_duration)
         })
 

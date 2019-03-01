@@ -30,6 +30,7 @@ class HostState(object):
         self.pending_flow_dict = {}  # flow_key -> flow_stats
         self.pending_ua_dict = {}  # device_id -> ua_set
         self.pending_tls_dict = {}  # hash -> fingerprint
+        self.pending_netdisco_dict = {}  # device_id -> device_info_list
         self.status_text = None
         self.device_whitelist = []
         self.has_consent = False

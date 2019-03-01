@@ -28,8 +28,8 @@ LOCAL_TEST_MODE = False
 # If non empty, then only devices with the following MAC addresses with be
 # inspected. Do not populate this list in production. For internal testing.
 TEST_OUI_LIST = [
-    'd83134',  # Roku
-    '74f61c',  # Danny's Pixel phone
+    # 'd83134',  # Roku
+    # '74f61c',  # Danny's Pixel phone
 ]
 
 
@@ -279,3 +279,17 @@ def get_min_max_tuple(min_max_tuple, value):
 def get_oui(mac):
 
     return mac.replace(':', '').lower()[0:6]
+
+
+def get_os():
+    """Returns 'mac', 'linux', or 'windows'. Raises RuntimeError otherwise."""
+
+    os_platform = sys.platform
+
+    if os_platform.startswith('darwin'):
+        return 'mac'
+
+    if os_platform.startswith('linux'):
+        return 'linux'
+
+    raise RuntimeError('Unsupported operating system.')
