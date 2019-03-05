@@ -10,6 +10,7 @@ import requests
 import json
 import server_config
 from host_state import HostState
+import traceback
 
 
 UPLOAD_INTERVAL = 5
@@ -194,6 +195,9 @@ class DataUploader(object):
         url = server_config.SUBMIT_URL.format(user_key=user_key)
         (window_duration, post_data) = self._prepare_upload_data()
 
+        if window_duration < 1:
+            return
+
         # Try uploading across 5 attempts
         for attempt in range(5):
 
@@ -204,9 +208,10 @@ class DataUploader(object):
 
             utils.log('[UPLOAD]', status_text)
 
-            if utils.LOCAL_TEST_MODE:
-                utils.log('[DEBUG] Uploaded this:')
-                utils.log(json.dumps(post_data, sort_keys=True, indent=2))
+            # # Print what's being uploaded
+            # if utils.LOCAL_TEST_MODE:
+            #     utils.log('[DEBUG] Uploaded this:')
+            #     utils.log(json.dumps(post_data, sort_keys=True, indent=2))
 
             # Upload data via POST
             response = requests.post(url, data=post_data).text
@@ -215,13 +220,13 @@ class DataUploader(object):
             # Update whitelist
             try:
                 response_dict = json.loads(response)
-                if response_dict['status'] == 'SUCCESS':
+                if response_dict['status'] == 'success':
                     with self._host_state.lock:
                         self._host_state.device_whitelist = \
                             response_dict['inspected_devices']
                     break
             except Exception:
-                pass
+                utils.log('[UPLOAD] Failed. Retrying:', traceback.format_exc())
             time.sleep((attempt + 1) ** 2)
 
         # Report stats to UI

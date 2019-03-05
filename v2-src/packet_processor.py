@@ -95,7 +95,6 @@ class PacketProcessor(object):
         try:
             if pkt.op == 2 and pkt.hwsrc != self._host_state.host_mac:
                 self._host_state.set_ip_mac_mapping(pkt.psrc, pkt.hwsrc)
-                utils.log('[ARP] Added:', pkt.psrc, '->', pkt.hwsrc)
 
         except AttributeError:
             return
