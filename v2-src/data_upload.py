@@ -207,23 +207,22 @@ class DataUploader(object):
             if utils.LOCAL_TEST_MODE:
                 utils.log('[DEBUG] Uploaded this:')
                 utils.log(json.dumps(post_data, sort_keys=True, indent=2))
-                break
 
-            else:
-                response = requests.post(url, data=post_data).text
-                utils.log('[UPLOAD] Gets back server response:', response)
+            # Upload data via POST
+            response = requests.post(url, data=post_data).text
+            utils.log('[UPLOAD] Gets back server response:', response)
 
-                # Update whitelist
-                try:
-                    response_dict = json.loads(response)
-                    if response_dict['status'] == 'SUCCESS':
-                        with self._host_state.lock:
-                            self._host_state.device_whitelist = \
-                                response_dict['inspected_devices']
-                        break
-                except Exception:
-                    pass
-                time.sleep((attempt + 1) ** 2)
+            # Update whitelist
+            try:
+                response_dict = json.loads(response)
+                if response_dict['status'] == 'SUCCESS':
+                    with self._host_state.lock:
+                        self._host_state.device_whitelist = \
+                            response_dict['inspected_devices']
+                    break
+            except Exception:
+                pass
+            time.sleep((attempt + 1) ** 2)
 
         # Report stats to UI
         with self._host_state.lock:
@@ -300,4 +299,4 @@ def jsonify_dict(input_dict):
             v = list(v)
         output_dict[k] = v
 
-    return output_dict
+    return json.dumps(output_dict)
