@@ -53,6 +53,7 @@ class DataUploader(object):
         while True:
 
             if not self._host_state.is_inspecting():
+                self._update_ui_status('Paused inspection.')
                 time.sleep(2)
                 continue
 
@@ -237,7 +238,7 @@ class DataUploader(object):
         self._update_ui_status(
             'Currently analyzing ' +
             '{:,}'.format(int(byte_count * 8.0 / 1000.0 / window_duration)) +
-            ' Kbps of traffic'
+            ' Kbps of traffic.'
         )
 
         utils.log(
