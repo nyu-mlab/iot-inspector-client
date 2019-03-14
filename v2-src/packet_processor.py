@@ -127,17 +127,22 @@ class PacketProcessor(object):
         src_mac = pkt[sc.Ether].src
         dst_mac = pkt[sc.Ether].dst
 
+        src_ip = pkt[sc.IP].src
+        dst_ip = pkt[sc.IP].dst
+
         # Find device ID
         if pkt[sc.DNS].qr == 0:
             # DNS request
             if dst_mac == self._host_state.host_mac:
                 device_mac = src_mac
+                resolver_ip = dst_ip
             else:
                 return
         else:
             # DNS response
             if src_mac == self._host_state.host_mac:
                 device_mac = dst_mac
+                resolver_ip = src_ip
             else:
                 return
 
@@ -165,10 +170,11 @@ class PacketProcessor(object):
                         ip_set.add(ip)
 
         with self._host_state.lock:
+            dns_key = (device_id, domain, resolver_ip)
             current_ip_set = self._host_state \
-                .pending_dns_dict.setdefault((device_id, domain), set())
+                .pending_dns_dict.setdefault(dns_key, set())
             ip_set = ip_set | current_ip_set
-            self._host_state.pending_dns_dict[(device_id, domain)] = ip_set
+            self._host_state.pending_dns_dict[dns_key] = ip_set
 
     def _process_tcp_udp_flow(self, pkt, protocol):
 
@@ -300,7 +306,7 @@ class PacketProcessor(object):
         with self._host_state.lock:
             self._host_state \
                 .pending_dns_dict \
-                .setdefault((device_id, http_host), set()) \
+                .setdefault((device_id, http_host, 'http-host'), set()) \
                 .add(remote_ip)
 
         utils.log('[UPLOAD] HTTP host:', http_host)
@@ -321,7 +327,7 @@ class PacketProcessor(object):
             with self._host_state.lock:
                 self._host_state \
                     .pending_dns_dict \
-                    .setdefault((device_id, fingerprint['sni']), set()) \
+                    .setdefault((device_id, fingerprint['sni'], 'sni'), set())\
                     .add(remote_ip)
 
             utils.log('[UPLOAD] SNI:', fingerprint['sni'])
