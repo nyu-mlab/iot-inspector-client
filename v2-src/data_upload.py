@@ -54,6 +54,8 @@ class DataUploader(object):
 
             if not self._host_state.is_inspecting():
                 self._update_ui_status('Paused inspection.')
+                with self._host_state.lock:
+                    self._clear_host_state_pending_data()
                 time.sleep(2)
                 continue
 
@@ -102,6 +104,15 @@ class DataUploader(object):
 
         return 'True' == status
 
+    def _clear_host_state_pending_data(self):
+
+        self._host_state.pending_dhcp_dict = {}
+        self._host_state.pending_dns_dict = {}
+        self._host_state.pending_flow_dict = {}
+        self._host_state.pending_ua_dict = {}
+        self._host_state.pending_tls_dict = {}
+        self._host_state.pending_netdisco_dict = {}
+
     def _prepare_upload_data(self):
         """Returns (window_duration, a dictionary of data to post)."""
 
@@ -118,12 +129,7 @@ class DataUploader(object):
             tls_dict = self._host_state.pending_tls_dict
             netdisco_dict = self._host_state.pending_netdisco_dict
 
-            self._host_state.pending_dhcp_dict = {}
-            self._host_state.pending_dns_dict = {}
-            self._host_state.pending_flow_dict = {}
-            self._host_state.pending_ua_dict = {}
-            self._host_state.pending_tls_dict = {}
-            self._host_state.pending_netdisco_dict = {}
+            self._clear_host_state_pending_data()
 
             self._last_upload_ts = time.time()
 
