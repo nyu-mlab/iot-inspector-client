@@ -415,7 +415,9 @@ def get_tls_fingerprint(pkt):
                     getattr(layer, 'compression_methods', None),
                 'extension_types': extension_types,
                 'extension_details': repr(extensions),
-                'sni': sni
+                'sni': sni,
+                'remote_ip': pkt[sc.IP].dst,
+                'remote_port': pkt[sc.TCP].dport
             })
             break
 
