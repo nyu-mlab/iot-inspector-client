@@ -83,9 +83,8 @@ class ArpSpoof(object):
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
                 if victim_device_id not in self._host_state.device_whitelist:
-                    if not utils.LOCAL_TEST_MODE:
-                        utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
-                        continue
+                    utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
+                    continue
 
                 if utils.TEST_OUI_LIST:
                     victim_mac_oui = utils.get_oui(victim_mac)

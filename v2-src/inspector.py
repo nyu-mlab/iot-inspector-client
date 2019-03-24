@@ -20,9 +20,6 @@ def start(webserver_context):
     # cloud.
     config_dict = utils.get_user_config()
 
-    if '--local_test_mode' in sys.argv:
-        utils.LOCAL_TEST_MODE = True
-
     utils.log('[MAIN] Starting.')
 
     # Set up environment

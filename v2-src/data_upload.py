@@ -34,12 +34,9 @@ class DataUploader(object):
     def _upload_thread(self):
 
         # Loop until initialized
-        while True and not utils.LOCAL_TEST_MODE:
+        while True:
             if utils.safe_run(self._upload_initialization):
                 break
-            self._update_ui_status(
-                'Please sign the consent form in the browser window.'
-            )
             time.sleep(2)
 
         with self._host_state.lock:
@@ -70,9 +67,6 @@ class DataUploader(object):
     def _upload_initialization(self):
         """Returns True if successfully initialized."""
 
-        if not self._check_consent_form():
-            return False
-
         # Send client's timezone to server
         ts = time.time()
 
@@ -91,18 +85,6 @@ class DataUploader(object):
         utils.log('[DATA] Update UTC offset status:', status)
 
         return 'SUCCESS' == status
-
-    def _check_consent_form(self):
-
-        check_consent_url = server_config.CHECK_CONSENT_URL.format(
-            user_key=self._host_state.user_key
-        )
-
-        utils.log('[DATA] Check consent:', check_consent_url)
-        status = requests.get(check_consent_url).text.strip()
-        utils.log('[DATA] Check consent status:', status)
-
-        return 'True' == status
 
     def _clear_host_state_pending_data(self):
 
@@ -214,11 +196,6 @@ class DataUploader(object):
                 self._update_ui_status(status_text)
 
             utils.log('[UPLOAD]', status_text)
-
-            # # Print what's being uploaded
-            # if utils.LOCAL_TEST_MODE:
-            #     utils.log('[DEBUG] Uploaded this:')
-            #     utils.log(json.dumps(post_data, sort_keys=True, indent=2))
 
             # Upload data via POST
             response = requests.post(url, data=post_data).text

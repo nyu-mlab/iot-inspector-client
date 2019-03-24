@@ -22,9 +22,6 @@ IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
 sc.conf.verb = 0
 
-# If true, we won't upload any data to the cloud.
-LOCAL_TEST_MODE = False
-
 # If non empty, then only devices with the following MAC addresses with be
 # inspected. Do not populate this list in production. For internal testing.
 TEST_OUI_LIST = [
