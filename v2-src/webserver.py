@@ -2,6 +2,10 @@ from flask import Flask
 from flask_cors import CORS
 import inspector
 import threading
+import utils
+
+
+PORT = 46241
 
 
 app = Flask(__name__)
@@ -19,12 +23,14 @@ context = {
 
 def start_thread():
 
-    th = threading.Thread(
-        target=app.run,
-        kwargs={'port': 46241}
-    )
+    th = threading.Thread(target=_monitor_web_server)
     th.daemon = True
     th.start()
+
+
+def _monitor_web_server():
+
+    utils.restart_upon_crash(app.run, kwargs={'port': PORT})
 
 
 @app.route('/get_status_text', methods=['GET'])

@@ -15,7 +15,9 @@ def main():
     assert os.getuid() == 0
 
     utils.log('[HTTP] Terminating existing processes.')
-    kill_existing_inspector()
+    if not kill_existing_inspector():
+        utils.log('[HTTP] Unable to end existing process. Exiting.')
+        return
 
     utils.log('[HTTP] Starting webserver.')
     webserver.start_thread()
@@ -46,12 +48,26 @@ def kill_existing_inspector():
         with open(pid_file) as fp:
             pid = int(fp.read().strip())
     except Exception:
-        return
+        pass
+    else:
+        # Kill existing process
+        killed = False
+        for _ in range(60):
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                killed = True
+                break
+            else:
+                time.sleep(1)
+                utils.log('[HTTP] Waiting for existing process to end.')
+        if not killed:
+            return False
 
-    os.kill(pid, signal.SIGTERM)
-
-    with open(pid_file) as fp:
+    with open(pid_file, 'w') as fp:
         fp.write(str(os.getpid()))
+
+    return True
 
 
 def elevate_process():
