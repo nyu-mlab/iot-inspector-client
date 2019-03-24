@@ -233,7 +233,7 @@ def get_device_id(device_mac, host_state):
     device_mac = str(device_mac).lower().replace(':', '')
     s = device_mac + str(host_state.secret_salt)
 
-    return hashlib.sha256(s).hexdigest()[0:10]
+    return 's' + hashlib.sha256(s).hexdigest()[0:10]
 
 
 def smart_min(v1, v2):
