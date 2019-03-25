@@ -3,6 +3,7 @@ from flask_cors import CORS
 import inspector
 import threading
 import utils
+import server_config
 
 
 PORT = 46241
@@ -11,7 +12,7 @@ PORT = 46241
 app = Flask(__name__)
 cors = CORS(
     app,
-    resources={r"/*": {"origins": "https://inspector.cs.princeton.edu"}}
+    resources={r"/*": {"origins": server_config.BASE_URL}}
 )
 
 

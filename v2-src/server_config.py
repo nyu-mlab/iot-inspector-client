@@ -1,6 +1,10 @@
+import sys
 
 
-BASE_URL = 'https://inspector.cs.princeton.edu'
+if '--test' in sys.argv:
+    BASE_URL = 'https://iot-inspector-report.cs.princeton.edu'
+else:
+    BASE_URL = 'https://inspector.cs.princeton.edu'
 
 NEW_USER_URL = BASE_URL + '/generate_user_key'
 
