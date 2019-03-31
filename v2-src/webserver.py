@@ -4,6 +4,7 @@ import inspector
 import threading
 import utils
 import server_config
+import time
 
 
 PORT = 46241
@@ -51,6 +52,7 @@ def is_inspecting_traffic():
     host_state = context['host_state']
     if host_state is not None:
         with host_state.lock:
+            host_state.last_ui_contact_ts = time.time()
             return str(host_state.is_inspecting_traffic).lower()
 
     return 'false'

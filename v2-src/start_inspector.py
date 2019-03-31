@@ -45,6 +45,11 @@ def main():
     utils.safe_run(inspector.start, args=(webserver.context,))
 
     while not webserver.context['quit']:
+        host_state = webserver.context['host_state']
+        if host_state:
+            with host_state.lock:
+                if host_state.quit:
+                    break
         try:
             time.sleep(2)
         except KeyboardInterrupt:
