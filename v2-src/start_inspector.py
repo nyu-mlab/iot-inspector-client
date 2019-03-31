@@ -6,9 +6,27 @@ import utils
 import signal
 import webserver
 import time
+import webbrowser
+import server_config
 
 
 def main():
+
+    if os.getuid() != 0:
+        webbrowser.open(server_config.INIT_URL)
+
+    print '\n' * 100
+    print """
+        ===========================
+          Princeton IoT Inspector
+        ===========================
+
+        View the IoT Inspector report at:
+        https://inspector.cs.princeton.edu
+
+        Close this window when you are done.
+
+    """
 
     # The whole process should be run as root.
     elevate_process()
@@ -35,6 +53,14 @@ def main():
     inspector.disable_ip_forwarding()
 
     utils.log('[HTTP] Quit.')
+
+    print '\n' * 100
+    print """
+        Princeton IoT Inspector has terminated.
+
+        Feel free to close this window.
+
+    """
 
 
 def kill_existing_inspector():
