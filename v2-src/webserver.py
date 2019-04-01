@@ -35,8 +35,19 @@ def _monitor_web_server():
     utils.restart_upon_crash(app.run, kwargs={'port': PORT})
 
 
+def log_http_request(request_name):
+
+    host_state = context['host_state']
+    if host_state is not None:
+        utils.log('[HTTP] request:', request_name)
+        with host_state.lock:
+            host_state.last_ui_contact_ts = time.time()
+
+
 @app.route('/get_status_text', methods=['GET'])
 def get_status_text():
+
+    log_http_request('/get_status_text')
 
     host_state = context['host_state']
     if host_state is not None:
@@ -49,10 +60,11 @@ def get_status_text():
 @app.route('/is_inspecting_traffic', methods=['GET'])
 def is_inspecting_traffic():
 
+    log_http_request('/is_inspecting_traffic')
+
     host_state = context['host_state']
     if host_state is not None:
         with host_state.lock:
-            host_state.last_ui_contact_ts = time.time()
             return str(host_state.is_inspecting_traffic).lower()
 
     return 'false'
@@ -60,6 +72,8 @@ def is_inspecting_traffic():
 
 @app.route('/get_user_key', methods=['GET'])
 def get_user_key():
+
+    log_http_request('/get_user_key')
 
     host_state = context['host_state']
     if host_state is not None:
@@ -73,6 +87,8 @@ def get_user_key():
 @app.route('/start_fast_arp_discovery', methods=['GET'])
 def start_fast_arp_discovery():
 
+    log_http_request('/start_fast_arp_discovery')
+
     host_state = context['host_state']
     if host_state is not None:
         with host_state.lock:
@@ -83,6 +99,8 @@ def start_fast_arp_discovery():
 
 @app.route('/start_inspecting_traffic', methods=['GET'])
 def start_inspecting_traffic():
+
+    log_http_request('/start_inspecting_traffic')
 
     inspector.enable_ip_forwarding()
 
@@ -98,6 +116,8 @@ def start_inspecting_traffic():
 @app.route('/pause_inspecting_traffic', methods=['GET'])
 def pause_inspecting_traffic():
 
+    log_http_request('/pause_inspecting_traffic')
+
     inspector.disable_ip_forwarding()
 
     host_state = context['host_state']
@@ -110,6 +130,8 @@ def pause_inspecting_traffic():
 
 @app.route('/exit', methods=['GET'])
 def exit_inspector():
+
+    log_http_request('/exit')
 
     inspector.disable_ip_forwarding()
 

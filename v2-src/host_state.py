@@ -37,7 +37,7 @@ class HostState(object):
         self.byte_count = 0
         self.is_inspecting_traffic = True
         self.fast_arp_scan = True  # Persists for first 5 mins
-        self.last_ui_contact_ts = None  # ts of calling /is_inspecting_traffic
+        self.last_ui_contact_ts = time.time()  # ts of /is_inspecting_traffic
         self.quit = False
 
         # Constantly checks for IP changes on this host
