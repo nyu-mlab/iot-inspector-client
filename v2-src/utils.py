@@ -30,6 +30,12 @@ TEST_OUI_LIST = [
 ]
 
 
+# Make sure Inspector's directory exits
+home_dir = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector')
+if not os.path.isdir(home_dir):
+    os.mkdir(home_dir)
+
+
 def is_ipv4_addr(value):
 
     return IPv4_REGEX.match(value)
@@ -40,6 +46,7 @@ def get_user_config():
 
     user_config_file = os.path.join(
         os.path.expanduser('~'),
+        'princeton-iot-inspector',
         'iot_inspector_config.json'
     )
 
@@ -85,6 +92,7 @@ def log(*args):
 
     log_file_path = os.path.join(
         os.path.expanduser('~'),
+        'princeton-iot-inspector',
         'iot_inspector_logs.txt'
     )
 

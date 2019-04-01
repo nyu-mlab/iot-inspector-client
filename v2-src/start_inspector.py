@@ -1,19 +1,18 @@
 import os
-from elevate import elevate
 import inspector
 import sys
 import utils
 import signal
 import webserver
 import time
-import webbrowser
-import server_config
 
 
 def main():
 
+    # The whole process should be run as root.
     if os.getuid() != 0:
-        webbrowser.open(server_config.INIT_URL)
+        print >>sys.stderr, 'Please run as root.'
+        sys.exit(1)
 
     print '\n' * 100
     print """
@@ -27,10 +26,6 @@ def main():
         Close this window when you are done.
 
     """
-
-    # The whole process should be run as root.
-    elevate_process()
-    assert os.getuid() == 0
 
     utils.log('[HTTP] Terminating existing processes.')
     if not kill_existing_inspector():
