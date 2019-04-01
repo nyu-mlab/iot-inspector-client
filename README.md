@@ -26,9 +26,15 @@ Tested on macOS High Sierra.
 2. Double-click on the downloaded zip file to uncompress it.
 3. You'll see an uncompressed file, "start_inspector.app", as shown below:
 
+<img src="https://iot-inspector.princeton.edu/static/instructions/mac/01.png" width="400" />
+
 4. Right click on the file and click "Open" from the menu:
 
+<img src="https://iot-inspector.princeton.edu/static/instructions/mac/02.png" width="400" />
+
 5. Click the "Open" button on the dialog box:
+
+<img src="https://iot-inspector.princeton.edu/static/instructions/mac/03.png" width="400" />
 
 
 6. You'll be prompted to enter the admin password for IoT Inspector to work.
