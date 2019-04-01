@@ -105,17 +105,26 @@ class ArpSpoof(object):
     def _arp_spoof(self, victim_mac, victim_ip, gateway_mac, gateway_ip):
         """Sends out spoofed packets for a single target."""
 
+        with self._host_state.lock:
+            spoof_arp = self._host_state.spoof_arp
+
         gateway_arp = sc.ARP()
         gateway_arp.op = 2
         gateway_arp.psrc = victim_ip
         gateway_arp.hwdst = gateway_mac
         gateway_arp.pdst = gateway_ip
+        if not spoof_arp:
+            gateway_arp.hwsrc = victim_mac
+            utils.log('[Arp Spoof] Restoring', victim_ip, '->', gateway_ip)
 
         victim_arp = sc.ARP()
         victim_arp.op = 2
         victim_arp.psrc = gateway_ip
         victim_arp.hwdst = victim_mac
         victim_arp.pdst = victim_ip
+        if not spoof_arp:
+            victim_arp.hwsrc = gateway_mac
+            utils.log('[Arp Spoof] Restoring', gateway_ip, '->', victim_ip)
 
         sc.send(victim_arp, verbose=0)
         sc.send(gateway_arp, verbose=0)

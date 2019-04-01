@@ -27,15 +27,15 @@ def main():
 
     """
 
-    utils.log('[HTTP] Terminating existing processes.')
+    utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():
-        utils.log('[HTTP] Unable to end existing process. Exiting.')
+        utils.log('[Main] Unable to end existing process. Exiting.')
         return
 
-    utils.log('[HTTP] Starting webserver.')
+    utils.log('[Main] Starting webserver.')
     webserver.start_thread()
 
-    utils.log('[HTTP] Starting inspector.')
+    utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
     utils.safe_run(inspector.start, args=(webserver.context,))
 
@@ -50,9 +50,18 @@ def main():
         except KeyboardInterrupt:
             break
 
+    utils.log('[Main] Restoring ARP...')
+
+    host_state = webserver.context['host_state']
+    if host_state:
+        with host_state.lock:
+            host_state.spoof_arp = False
+
+    time.sleep(10)
+
     inspector.disable_ip_forwarding()
 
-    utils.log('[HTTP] Quit.')
+    utils.log('[Main] Quit.')
 
     print '\n' * 100
     print """
@@ -86,7 +95,7 @@ def kill_existing_inspector():
                 break
             else:
                 time.sleep(1)
-                utils.log('[HTTP] Waiting for existing process to end.')
+                utils.log('[Main] Waiting for existing process to end.')
         if not killed:
             return False
 

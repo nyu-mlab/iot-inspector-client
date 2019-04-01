@@ -39,6 +39,7 @@ class HostState(object):
         self.fast_arp_scan = True  # Persists for first 5 mins
         self.last_ui_contact_ts = time.time()  # ts of /is_inspecting_traffic
         self.quit = False
+        self.spoof_arp = True
 
         # Constantly checks for IP changes on this host
         thread = threading.Thread(target=self.update_ip_thread)
