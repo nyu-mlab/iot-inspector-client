@@ -22,7 +22,7 @@ Tested on macOS High Sierra.
 
 ### Installation
 
-1. Download the app: https://iot-inspector.princeton.edu/downloads/inspector_mac.zip
+1. Download the app: https://raw.githubusercontent.com/noise-lab/iot-inspector-client/master/v2-src/dist/start_inspector_mac.zip
 2. Double-click on the downloaded zip file to uncompress it.
 3. You'll see an uncompressed file, "start_inspector.app", as shown below:
 
