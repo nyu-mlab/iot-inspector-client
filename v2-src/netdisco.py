@@ -49,7 +49,10 @@ class NetdiscoWrapper(object):
         else:
             raise RuntimeError
 
-        return os.path.join(os.path.expanduser('~'), exe_name)
+        return os.path.join(
+            os.path.expanduser('~'),
+            'princeton-iot-inspector',
+            exe_name)
 
     def _download_netdisco_binary(self):
 

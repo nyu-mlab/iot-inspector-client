@@ -76,6 +76,7 @@ def kill_existing_inspector():
 
     pid_file = os.path.join(
         os.path.expanduser('~'),
+        'princeton-iot-inspector',
         'iot_inspector_pid.txt'
     )
 
@@ -103,16 +104,6 @@ def kill_existing_inspector():
         fp.write(str(os.getpid()))
 
     return True
-
-
-def elevate_process():
-    """TODO: Not tested on Windows."""
-
-    os_platform = sys.platform
-    if os_platform.startswith('linux'):
-        elevate(graphical=False)
-    else:
-        elevate()
 
 
 if __name__ == '__main__':
