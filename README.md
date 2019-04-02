@@ -45,7 +45,12 @@ Note that the next time you run IoT Inspector, you can simply double-click on th
 
 <br><br><br><br>
 
+## Getting Started on Ubuntu
 
-## Getting Started on Windows and Ubuntu
+IoT Inspector is written in Python. With the right packages, you can technically run it yourself. We will provide detailed instructions in the coming weeks.
 
-We are still working on a Windows 10 and a Ubuntu version. Stay tuned.
+<br><br><br><br>
+
+## Getting Started on Windows
+
+We are still working on a Windows 10 version. Stay tuned.
