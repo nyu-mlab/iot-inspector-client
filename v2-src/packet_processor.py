@@ -170,7 +170,7 @@ class PacketProcessor(object):
                         ip_set.add(ip)
 
         with self._host_state.lock:
-            dns_key = (device_id, domain, resolver_ip)
+            dns_key = (device_id, domain, resolver_ip, 0)
             current_ip_set = self._host_state \
                 .pending_dns_dict.setdefault(dns_key, set())
             ip_set = ip_set | current_ip_set
@@ -303,10 +303,13 @@ class PacketProcessor(object):
         except Exception:
             return
 
+        device_port = pkt[sc.TCP].sport
+
         with self._host_state.lock:
             self._host_state \
                 .pending_dns_dict \
-                .setdefault((device_id, http_host, 'http-host'), set()) \
+                .setdefault(
+                    (device_id, http_host, 'http-host', device_port), set()) \
                 .add(remote_ip)
 
         utils.log('[UPLOAD] HTTP host:', http_host)
@@ -321,13 +324,17 @@ class PacketProcessor(object):
 
         fingerprint['device_id'] = device_id
 
+        device_port = pkt[sc.TCP].sport
+
         # Upload SNI
         if fingerprint['sni']:
 
             with self._host_state.lock:
                 self._host_state \
                     .pending_dns_dict \
-                    .setdefault((device_id, fingerprint['sni'], 'sni'), set())\
+                    .setdefault(
+                        (device_id, fingerprint['sni'], 'sni', device_port),
+                        set())\
                     .add(remote_ip)
 
             utils.log('[UPLOAD] SNI:', fingerprint['sni'])
