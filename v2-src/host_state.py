@@ -63,11 +63,24 @@ class HostState(object):
 
     def update_ip_thread(self):
 
+        prev_gateway_ip = None
+        prev_host_ip = None
+
         while True:
 
             try:
                 self.gateway_ip, _, self.host_ip = utils.get_default_route()
             except Exception:
                 pass
+
+            # Upon network changes, clear ARP cache.
+            if self.gateway_ip != prev_gateway_ip or \
+                    self.host_ip != prev_host_ip:
+
+                with self.lock:
+                    self.ip_mac_dict = {}
+
+                prev_gateway_ip = self.gateway_ip
+                prev_host_ip = self.host_ip
 
             time.sleep(15)
