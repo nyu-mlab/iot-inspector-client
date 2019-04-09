@@ -44,10 +44,7 @@ class NetdiscoWrapper(object):
 
     def _get_netdisco_path(self):
 
-        if self._os == 'mac':
-            exe_name = 'iot-inspector-netdisco'
-        else:
-            raise RuntimeError
+        exe_name = 'iot-inspector-netdisco'
 
         return os.path.join(
             os.path.expanduser('~'),
