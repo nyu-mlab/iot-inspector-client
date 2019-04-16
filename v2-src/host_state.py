@@ -7,7 +7,7 @@ import utils
 import time
 
 
-CLIENT_VERSION = '0.3'
+CLIENT_VERSION = '0.4'
 
 
 class HostState(object):

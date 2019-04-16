@@ -183,7 +183,8 @@ class DataUploader(object):
             'client_version': self._host_state.client_version,
             'tls_dict': jsonify_dict(tls_dict),
             'netdisco_dict': jsonify_dict(netdisco_dict),
-            'duration': str(window_duration)
+            'duration': str(window_duration),
+            'client_ts': str(int(time.time()))
         })
 
     def _upload_data(self):
