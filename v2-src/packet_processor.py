@@ -105,22 +105,55 @@ class PacketProcessor(object):
 
         """
         try:
-            if pkt[sc.Ether].dst != 'ff:ff:ff:ff:ff:ff':
-                return
-
-            device_mac = pkt[sc.Ether].src
-
-            device_hostname = dict(
+            option_dict = dict(
                 [t for t in pkt[sc.DHCP].options if isinstance(t, tuple)]
-            )['hostname']
+            )
 
         except Exception:
             return
 
-        device_id = utils.get_device_id(device_mac, self._host_state)
+        device_hostname = option_dict.setdefault('hostname', '')
+        resolver_ip = option_dict.setdefault('name_server', '')
+
         with self._host_state.lock:
-            self._host_state.pending_dhcp_dict[device_id] = \
-                device_hostname
+
+            if device_hostname:
+
+                # Must be a DHCP Request broadcast
+                if pkt[sc.Ether].dst != 'ff:ff:ff:ff:ff:ff':
+                    return
+
+                device_mac = pkt[sc.Ether].src
+                device_id = utils.get_device_id(device_mac, self._host_state)
+
+                self._host_state.pending_dhcp_dict[device_id] = \
+                    device_hostname
+                utils.log('[UPLOAD] DHCP Hostname:', device_hostname)
+
+            if resolver_ip:
+
+                # DHCP Offer broadcast
+                if pkt[sc.Ether].dst == 'ff:ff:ff:ff:ff:ff':
+                    device_id = 'broadcast'
+
+                # DHCP ACK from router to device. The following block may not
+                # actually be called at all, because the router is likely to
+                # send the ACK packet directly to the device (rather than arp
+                # spoofed)
+                else:
+                    device_ip = pkt[sc.IP].dst
+                    try:
+                        device_mac = self._host_state.ip_mac_dict[device_ip]
+                    except KeyError:
+                        return
+                    device_id = utils.get_device_id(
+                        device_mac, self._host_state)
+
+                self._host_state.pending_resolver_dict[device_id] = \
+                    resolver_ip
+
+                utils.log(
+                    '[UPLOAD] DHCP Resolver:', device_id, '-', resolver_ip)
 
     def _process_dns(self, pkt):
 

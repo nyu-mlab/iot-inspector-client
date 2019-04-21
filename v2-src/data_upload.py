@@ -98,6 +98,7 @@ class DataUploader(object):
     def _clear_host_state_pending_data(self):
 
         self._host_state.pending_dhcp_dict = {}
+        self._host_state.pending_resolver_dict = {}
         self._host_state.pending_dns_dict = {}
         self._host_state.pending_flow_dict = {}
         self._host_state.pending_ua_dict = {}
@@ -114,6 +115,7 @@ class DataUploader(object):
 
             dns_dict = self._host_state.pending_dns_dict
             dhcp_dict = self._host_state.pending_dhcp_dict
+            resolver_dict = self._host_state.pending_resolver_dict
             flow_dict = self._host_state.pending_flow_dict
             ua_dict = self._host_state.pending_ua_dict
             ip_mac_dict = self._host_state.ip_mac_dict
@@ -180,6 +182,7 @@ class DataUploader(object):
             'device_dict': jsonify_dict(device_dict),
             'ua_dict': jsonify_dict(ua_dict),
             'dhcp_dict': jsonify_dict(dhcp_dict),
+            'resolver_dict': jsonify_dict(resolver_dict),
             'client_version': self._host_state.client_version,
             'tls_dict': jsonify_dict(tls_dict),
             'netdisco_dict': jsonify_dict(netdisco_dict),
