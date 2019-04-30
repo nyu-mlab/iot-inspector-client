@@ -8,6 +8,8 @@ import scapy_http.http as http
 import scapy.all as sc
 import utils
 import hashlib
+import time
+import re
 
 
 class PacketProcessor(object):
@@ -303,8 +305,8 @@ class PacketProcessor(object):
             self._process_http(pkt, device_id, remote_ip)
 
         # Extract SNI from TLS client handshake
-        if protocol == 'tcp' and direction == 'outbound':
-            self._process_tls(pkt, device_id, remote_ip)
+        if protocol == 'tcp':
+            self._process_tls(pkt, device_id)
 
         with self._host_state.lock:
             self._host_state.byte_count += len(pkt)
@@ -347,35 +349,36 @@ class PacketProcessor(object):
 
         utils.log('[UPLOAD] HTTP host:', http_host)
 
-    def _process_tls(self, pkt, device_id, remote_ip):
+    def _process_tls(self, pkt, device_id):
         """Analyzes client hellos and parses SNI and fingerprints."""
 
-        fingerprint = get_tls_fingerprint(pkt)
+        tls_dict = get_tls_dict(pkt, self._host_state)
 
-        if not fingerprint:
+        if not tls_dict:
             return
 
-        fingerprint['device_id'] = device_id
-
-        device_port = pkt[sc.TCP].sport
+        tls_dict['device_id'] = device_id
 
         # Upload SNI
-        if fingerprint['sni']:
+        if 'client_hello' in tls_dict and tls_dict['client_hello']['sni']:
+
+            sni = tls_dict['client_hello']['sni']
+            remote_ip = tls_dict['client_hello']['remote_ip']
+            device_port = tls_dict['client_hello']['device_port']
 
             with self._host_state.lock:
                 self._host_state \
                     .pending_dns_dict \
                     .setdefault(
-                        (device_id, fingerprint['sni'], 'sni', device_port),
+                        (device_id, sni, 'sni', device_port),
                         set())\
                     .add(remote_ip)
 
-            utils.log('[UPLOAD] SNI:', fingerprint['sni'])
+            utils.log('[UPLOAD] SNI:', sni)
 
         # Upload fingerprint dict
         with self._host_state.lock:
-            self._host_state.pending_tls_dict[fingerprint['hash']] = \
-                fingerprint
+            self._host_state.pending_tls_dict_list.append(tls_dict)
 
 
 def is_grease(int_value):
@@ -399,15 +402,16 @@ def is_grease(int_value):
     )
 
 
-def get_tls_fingerprint(pkt):
+def get_tls_dict(pkt, host_state):
     """
     Referenced papers:
 
      - https://tlsfingerprint.io/static/frolov2019.pdf
      - https://zakird.com/papers/https_interception.pdf
+     - https://conferences.sigcomm.org/imc/2018/papers/imc18-final193.pdf
 
     """
-    fingerprint = {}
+    tls_dict = {}
 
     for ix in range(3, 100):
 
@@ -417,48 +421,116 @@ def get_tls_fingerprint(pkt):
             break
 
         if layer.name == 'TLS Client Hello':
+            tls_dict['client_hello'] = get_client_hello(pkt, layer)
 
-            extensions = getattr(layer, 'extensions', [])
-            extension_types = []
-            sni = None
+        if layer.name == 'TLS Server Hello':
+            tls_dict['server_hello'] = get_server_hello(pkt, layer, host_state)
 
-            # Remove GREASE values from cipher_suites
-            cipher_suites = getattr(layer, 'cipher_suites', [])
-            cipher_suites = [v for v in cipher_suites if not is_grease(v)]
+        if layer.name == 'TLS Certificate List':
+            if pkt[sc.IP].src in host_state.get_ip_mac_dict_copy():
+                tls_dict['client_cert'] = get_client_cert(pkt, layer)
 
-            # Extract SNI, per
-            # https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-1
-            for ex in extensions:
-                try:
-                    # Remove grease values
-                    if is_grease(ex.type):
-                        continue
-                    extension_types.append(ex.type)
-                    if ex.type == 0:
-                        sni = str(ex.server_names[0].data)
-                except Exception:
-                    pass
+    return tls_dict
 
-            version = getattr(layer, 'version', None)
 
-            fingerprint_hash = hashlib.sha256(
-                str(version) +
-                str(set(cipher_suites)) +
-                str(set(extension_types))
-            ).hexdigest()[0:10]
+def get_client_hello(pkt, layer):
 
-            fingerprint.update({
-                'hash': fingerprint_hash,
-                'version': version,
-                'cipher_suites': cipher_suites,
-                'compression_methods':
-                    getattr(layer, 'compression_methods', None),
-                'extension_types': extension_types,
-                'extension_details': repr(extensions),
-                'sni': sni,
-                'remote_ip': pkt[sc.IP].dst,
-                'remote_port': pkt[sc.TCP].dport
-            })
-            break
+    extensions = getattr(layer, 'extensions', [])
+    extension_types = []
+    sni = None
 
-    return fingerprint
+    # Remove GREASE values from cipher_suites
+    cipher_suites = getattr(layer, 'cipher_suites', [])
+    length_before_removing_grease = len(cipher_suites)
+    cipher_suites = [v for v in cipher_suites if not is_grease(v)]
+    length_after_removing_grease = len(cipher_suites)
+    cipher_suite_uses_grease = \
+        (length_before_removing_grease != length_after_removing_grease)
+
+    # Extract SNI, per
+    # https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-1
+    extension_uses_grease = False
+    for ex in extensions:
+        try:
+            # Remove grease values
+            if is_grease(ex.type):
+                extension_uses_grease = True
+                continue
+            extension_types.append(ex.type)
+            if ex.type == 0:
+                sni = str(ex.server_names[0].data)
+        except Exception:
+            pass
+
+    version = getattr(layer, 'version', None)
+
+    return {
+        'type': 'client_hello',
+        'version': version,
+        'cipher_suites': cipher_suites,
+        'cipher_suite_uses_grease': cipher_suite_uses_grease,
+        'compression_methods':
+            getattr(layer, 'compression_methods', None),
+        'extension_types': extension_types,
+        'extension_details': repr(extensions),
+        'extension_uses_grease': extension_uses_grease,
+        'sni': sni,
+        'remote_ip': pkt[sc.IP].dst,
+        'remote_port': pkt[sc.TCP].dport,
+        'device_ip': pkt[sc.IP].src,
+        'device_port': pkt[sc.TCP].sport,
+        'client_ts': time.time()
+    }
+
+
+def get_server_hello(pkt, layer, host_state):
+
+    if pkt[sc.IP].src in host_state.get_ip_mac_dict_copy():
+        device_ip = pkt[sc.IP].src
+        remote_ip = pkt[sc.IP].dst
+        device_port = pkt[sc.TCP].sport
+        remote_port = pkt[sc.TCP].dport
+    else:
+        device_ip = pkt[sc.IP].dst
+        remote_ip = pkt[sc.IP].src
+        device_port = pkt[sc.TCP].dport
+        remote_port = pkt[sc.TCP].sport
+
+    return {
+        'type': 'server_hello',
+        'version': getattr(layer, 'version', None),
+        'cipher_suite': getattr(layer, 'cipher_suite', None),
+        'device_ip': device_ip,
+        'device_port': device_port,
+        'remote_ip': remote_ip,
+        'remote_port': remote_port,
+        'client_ts': time.time()
+    }
+
+
+def get_client_cert(pkt, layer):
+
+    layer_str = repr(layer)
+
+    pubkey = ''
+    signature = ''
+
+    match = re.search(r'( pubkey=<[^>]+>)', layer_str)
+    if match:
+        pubkey = hashlib.sha256(match.group(1)).hexdigest()
+
+    match = re.search(r'( signature=<[^>]+>)', layer_str)
+    if match:
+        signature = hashlib.sha256(match.group(1)).hexdigest()
+
+    return {
+        'type': 'client_cert',
+        'pubkey': pubkey,
+        'signature': signature,
+        'hash': hashlib.sha256(layer_str).hexdigest(),
+        'remote_ip': pkt[sc.IP].dst,
+        'remote_port': pkt[sc.TCP].dport,
+        'device_ip': pkt[sc.IP].src,
+        'device_port': pkt[sc.TCP].sport,
+        'client_ts': time.time()
+    }

@@ -7,7 +7,7 @@ import utils
 import time
 
 
-CLIENT_VERSION = '0.5'
+CLIENT_VERSION = '0.6'
 
 
 class HostState(object):
@@ -30,7 +30,7 @@ class HostState(object):
         self.pending_dns_dict = {}  # (device_id, domain) -> ip_set
         self.pending_flow_dict = {}  # flow_key -> flow_stats
         self.pending_ua_dict = {}  # device_id -> ua_set
-        self.pending_tls_dict = {}  # hash -> fingerprint
+        self.pending_tls_dict_list = []  # List of tls_dict
         self.pending_netdisco_dict = {}  # device_id -> device_info_list
         self.status_text = None
         self.device_whitelist = []

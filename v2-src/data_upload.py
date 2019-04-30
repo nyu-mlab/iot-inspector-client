@@ -102,7 +102,7 @@ class DataUploader(object):
         self._host_state.pending_dns_dict = {}
         self._host_state.pending_flow_dict = {}
         self._host_state.pending_ua_dict = {}
-        self._host_state.pending_tls_dict = {}
+        self._host_state.pending_tls_dict_list = []
         self._host_state.pending_netdisco_dict = {}
 
     def _prepare_upload_data(self):
@@ -119,7 +119,7 @@ class DataUploader(object):
             flow_dict = self._host_state.pending_flow_dict
             ua_dict = self._host_state.pending_ua_dict
             ip_mac_dict = self._host_state.ip_mac_dict
-            tls_dict = self._host_state.pending_tls_dict
+            tls_dict_list = self._host_state.pending_tls_dict_list
             netdisco_dict = self._host_state.pending_netdisco_dict
 
             self._clear_host_state_pending_data()
@@ -184,7 +184,7 @@ class DataUploader(object):
             'dhcp_dict': jsonify_dict(dhcp_dict),
             'resolver_dict': jsonify_dict(resolver_dict),
             'client_version': self._host_state.client_version,
-            'tls_dict': jsonify_dict(tls_dict),
+            'tls_dict_list': json.dumps(tls_dict_list),
             'netdisco_dict': jsonify_dict(netdisco_dict),
             'duration': str(window_duration),
             'client_ts': str(int(time.time()))
