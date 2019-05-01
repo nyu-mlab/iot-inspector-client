@@ -173,7 +173,8 @@ class DataUploader(object):
             # Keep only the byte count fields
             flow_dict[flow_key] = {
                 'inbound_byte_count': flow_stats['inbound_byte_count'],
-                'outbound_byte_count': flow_stats['outbound_byte_count']
+                'outbound_byte_count': flow_stats['outbound_byte_count'],
+                'syn_originator': flow_stats['syn_originator']
             }
 
         return (window_duration, {

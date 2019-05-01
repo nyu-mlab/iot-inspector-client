@@ -287,7 +287,8 @@ class PacketProcessor(object):
             'inbound_tcp_ack_min_max': (None, None),
             'outbound_byte_count': 0,
             'outbound_tcp_seq_min_max': (None, None),
-            'outbound_tcp_ack_min_max': (None, None)
+            'outbound_tcp_ack_min_max': (None, None),
+            'syn_originator': None
         }
         with self._host_state.lock:
             flow_stats = self._host_state.pending_flow_dict \
@@ -299,6 +300,20 @@ class PacketProcessor(object):
             flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
         flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
             flow_stats[direction + '_tcp_ack_min_max'], tcp_ack)
+
+        # Who initiated the SYN packet
+        syn_originator = None
+        try:
+            if pkt[sc.TCP].flags == 2:
+                if src_ip == remote_ip:
+                    syn_originator = 'remote'
+                else:
+                    syn_originator = 'local'
+        except Exception:
+            pass
+
+        if syn_originator and flow_stats['syn_originator'] is None:
+            flow_stats['syn_originator'] = syn_originator
 
         # Extract UA and Host
         if remote_port == 80 and protocol == 'tcp':
