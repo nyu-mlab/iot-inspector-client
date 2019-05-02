@@ -2,7 +2,7 @@
 
 # Start!
 echo "Starting IoT Inspector..."
-sudo python2 start_inspector.py persistent
+sudo -E python2 start_inspector.py persistent
 
 # Update software
 echo "Updating software..."
