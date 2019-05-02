@@ -12,6 +12,7 @@ from data_upload import DataUploader
 from netdisco import NetdiscoWrapper
 import subprocess
 import sys
+import logging
 
 
 def start(webserver_context):
@@ -58,6 +59,35 @@ def start(webserver_context):
     # Continuously upload data
     data_upload_thread = DataUploader(state)
     data_upload_thread.start()
+
+    # Suppress scapy warnings
+    try:
+        logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+    except Exception:
+        pass
+
+    if state.persistent_mode:
+        path = 'persistent/' + state.user_key
+        caution = 'This is your private link. Do not share.'
+    else:
+        path = ''
+        caution = ''
+
+    print '\n' * 100
+    print """
+        ===========================
+          Princeton IoT Inspector
+        ===========================
+
+        View the IoT Inspector report at:
+
+        https://inspector.cs.princeton.edu/{0}
+
+        {1}
+
+        Hit Control + C to terminate this process and stop data collection.
+
+    """.format(path, caution)
 
 
 def enable_ip_forwarding():

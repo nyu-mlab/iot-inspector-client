@@ -5,9 +5,10 @@ Global shared state about the host.
 import threading
 import utils
 import time
+import sys
 
 
-CLIENT_VERSION = '0.7'
+CLIENT_VERSION = '0.8'
 
 
 class HostState(object):
@@ -21,6 +22,7 @@ class HostState(object):
         self.user_key = None
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
+        self.persistent_mode = ('persistent' in sys.argv)
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()

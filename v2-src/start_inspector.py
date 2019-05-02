@@ -14,19 +14,6 @@ def main():
         print >>sys.stderr, 'Please run as root.'
         sys.exit(1)
 
-    print '\n' * 100
-    print """
-        ===========================
-          Princeton IoT Inspector
-        ===========================
-
-        View the IoT Inspector report at:
-        https://inspector.cs.princeton.edu
-
-        Close this window when you are done.
-
-    """
-
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():
         utils.log('[Main] Unable to end existing process. Exiting.')

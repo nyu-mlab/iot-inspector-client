@@ -54,7 +54,8 @@ class DataUploader(object):
                 last_ui_contact_ts = self._host_state.last_ui_contact_ts
                 if last_ui_contact_ts:
                     time_delta = time.time() - last_ui_contact_ts
-                    if time_delta > 15:
+                    if time_delta > 15 and \
+                            not self._host_state.persistent_mode:
                         self._host_state.quit = True
                         return
 
