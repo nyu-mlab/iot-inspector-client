@@ -13,11 +13,9 @@ git clone https://github.com/noise-lab/iot-inspector-client
 
 # Install python dependencies
 cd ~/princeton-iot-inspector/iot-inspector-client/v2-src
-chmod +x linux-install-dependencies.sh
-./linux-install-dependencies.sh
+bash ./linux-install-dependencies.sh
 
-# Mark linux start script as executable
-chmod +x linux-start-inspector.sh
+# Create symbolic link for the main entry script
 ln -s ~/princeton-iot-inspector/iot-inspector-client/v2-src/linux-start-inspector.sh ~/princeton-iot-inspector/linux-start-inspector.sh
 
 echo "=================================================================="
