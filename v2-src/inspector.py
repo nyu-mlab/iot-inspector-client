@@ -81,7 +81,7 @@ def start(webserver_context):
             pretty_user_key += char
 
         path = 'persistent/' + pretty_user_key
-        caution = 'This is your private link. Do not share.'
+        caution = 'This is your private link. Open it only on trusted computers.' # noqa
     else:
         path = ''
         caution = ''
