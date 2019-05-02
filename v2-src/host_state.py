@@ -8,7 +8,7 @@ import time
 import sys
 
 
-CLIENT_VERSION = '0.8'
+CLIENT_VERSION = '0.9'
 
 
 class HostState(object):

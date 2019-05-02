@@ -1,1 +1,1 @@
-549a4d8f0e7a35cb88e1e2973144e2fe605283cec9f0c9d135557fff1f07538f  dist/start_inspector_mac.zip
+cf310cf1151ad546492eebf76a058384c8f61bf7373f355f134755ca26898baf  dist/start_inspector_mac.zip
