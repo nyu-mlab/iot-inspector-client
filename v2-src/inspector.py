@@ -66,6 +66,12 @@ def start(webserver_context):
     except Exception:
         pass
 
+    # Suppress flask messages
+    try:
+        logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    except Exception:
+        pass
+
     if state.persistent_mode:
         path = 'persistent/' + state.user_key
         caution = 'This is your private link. Do not share.'

@@ -35,6 +35,7 @@ def main():
         try:
             time.sleep(2)
         except KeyboardInterrupt:
+            print ''
             break
 
     utils.log('[Main] Restoring ARP...')
@@ -44,7 +45,9 @@ def main():
         with host_state.lock:
             host_state.spoof_arp = False
 
-    time.sleep(10)
+    for t in range(10):
+        print 'Cleaning up ({})...'.format(10 - t)
+        time.sleep(1)
 
     inspector.disable_ip_forwarding()
 
