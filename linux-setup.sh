@@ -5,7 +5,7 @@ sudo apt update
 sudo apt install python-pip python3-pip git
 
 # Create inspector directory
-mkdir ~/princeton-iot-inspector
+mkdir -p ~/princeton-iot-inspector
 
 # Download source
 cd ~/princeton-iot-inspector
