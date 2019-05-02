@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # The following line works for Debian only.
+sudo apt update
 sudo apt install python-pip python3-pip git
 
 # Create inspector directory
