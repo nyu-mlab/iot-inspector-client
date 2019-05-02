@@ -25,7 +25,7 @@ def start(webserver_context):
 
     # Set up environment
     state = HostState()
-    state.user_key = config_dict['user_key']
+    state.user_key = config_dict['user_key'].replace('-', '')
     state.secret_salt = config_dict['secret_salt']
     state.host_mac = utils.get_my_mac()
     state.gateway_ip, _, state.host_ip = utils.get_default_route()
@@ -73,7 +73,14 @@ def start(webserver_context):
         pass
 
     if state.persistent_mode:
-        path = 'persistent/' + state.user_key
+        # Insert a dash every four characters to make user-key easier to type
+        pretty_user_key = ''
+        for (ix, char) in enumerate(state.user_key):
+            if (ix > 0) and (ix % 4 == 0):
+                pretty_user_key += '-'
+            pretty_user_key += char
+
+        path = 'persistent/' + pretty_user_key
         caution = 'This is your private link. Do not share.'
     else:
         path = ''

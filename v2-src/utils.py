@@ -66,6 +66,7 @@ def get_user_config():
 
         time.sleep(1)
 
+    user_key = user_key.replace('-', '')
     secret_salt = str(uuid.uuid4())
 
     with open(user_config_file, 'w') as fp:
