@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # The following line works for Debian only.
-sudo apt update
-sudo apt install python-pip python3-pip git
+apt update
+apt install python-pip python3-pip git
 
 # Create inspector directory
 mkdir ~/princeton-iot-inspector
@@ -24,6 +24,7 @@ echo "=================================================================="
 echo ""
 echo "Setup complete."
 echo ""
-echo "To start, run ~/princeton-iot-inspector/linux-start-inspector.sh."
+echo "To start, run: "
+echo "  sudo ~/princeton-iot-inspector/linux-start-inspector.sh"
 echo ""
 echo "=================================================================="
