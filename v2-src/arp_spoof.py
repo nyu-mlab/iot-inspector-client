@@ -7,10 +7,7 @@ import scapy.all as sc
 import threading
 import utils
 import time
-
-
-# Min seconds between successive spoofed packets
-MIN_ARP_SPOOF_INTERVAL = 0.01
+import itertools
 
 
 class ArpSpoof(object):
@@ -43,8 +40,6 @@ class ArpSpoof(object):
                 time.sleep(2)
                 continue
 
-            time.sleep(1)
-
             with self._lock:
                 if not self._active:
                     return
@@ -52,6 +47,7 @@ class ArpSpoof(object):
             with self._host_state.lock:
                 if not self._host_state.has_consent:
                     utils.log('[ARP Spoof] No consent; no spoofing.')
+                    time.sleep(1)
                     continue
 
             # Get ARP cache
@@ -73,7 +69,10 @@ class ArpSpoof(object):
             except KeyError:
                 continue
 
-            # Spoof individual devices on the network.
+            # A list of devices that we will later do all-pairs ARP spoofing
+            arp_spoof_list = [(gateway_mac, gateway_ip)]
+
+            # Get a list of devices that we're inspecting
             for (victim_ip, victim_mac) in ip_mac_dict.items():
 
                 if victim_ip == gateway_ip:
@@ -83,7 +82,6 @@ class ArpSpoof(object):
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
                 if victim_device_id not in self._host_state.device_whitelist:
-                    utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
                     continue
 
                 if utils.TEST_OUI_LIST:
@@ -91,16 +89,32 @@ class ArpSpoof(object):
                     if victim_mac_oui not in utils.TEST_OUI_LIST:
                         continue
 
-                utils.safe_run(
-                    self._arp_spoof,
-                    args=(victim_mac, victim_ip, gateway_mac, gateway_ip)
-                )
+                arp_spoof_list += [(victim_mac, victim_ip)]
 
-                with self._lock:
-                    if not self._active:
-                        return
+            # All pairs ARP spoofing
+            all_device_pairs = list(itertools.combinations(arp_spoof_list, 2))
 
-                time.sleep(max(MIN_ARP_SPOOF_INTERVAL, 2.0 / len(ip_mac_dict)))
+            if all_device_pairs:
+                for (device_1, device_2) in all_device_pairs:
+
+                    with self._lock:
+                        if not self._active:
+                            return
+
+                    (mac_1, ip_1) = device_1
+                    (mac_2, ip_2) = device_2
+
+                    utils.safe_run(
+                        self._arp_spoof,
+                        args=(mac_1, ip_1, mac_2, ip_2)
+                    )
+
+                    # Sleep for the following time so that we can send out one
+                    # pair of ARP spoofing packets for every device pair every
+                    # two seconds
+                    time.sleep(2.0 / len(all_device_pairs))
+            else:
+                time.sleep(1)
 
     def _arp_spoof(self, victim_mac, victim_ip, gateway_mac, gateway_ip):
         """Sends out spoofed packets for a single target."""
