@@ -5,12 +5,17 @@ import utils
 import signal
 import webserver
 import time
-
+import ctypes
 
 def main():
 
-    # The whole process should be run as root.
-    if os.getuid() != 0:
+    # The whole process should be run as root or administrator.
+    try:
+        is_admin = os.getuid() == 0
+    except AttributeError:
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+    if not is_admin:
         print >>sys.stderr, 'Please run as root.'
         sys.exit(1)
 

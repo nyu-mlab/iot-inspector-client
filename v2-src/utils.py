@@ -298,4 +298,7 @@ def get_os():
     if os_platform.startswith('linux'):
         return 'linux'
 
+    if os_platform.startswith('win'):
+        return 'windows'
+
     raise RuntimeError('Unsupported operating system.')
