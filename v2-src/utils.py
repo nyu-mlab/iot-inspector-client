@@ -16,6 +16,7 @@ import json
 import uuid
 import hashlib
 import netaddr
+from scapy.arch.windows import NetworkInterface
 
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
@@ -181,13 +182,15 @@ def get_my_mac_set(iface_filter=None):
     """Returns a set of MAC addresses of the current host."""
 
     out_set = set()
+    if type(iface_filter) == NetworkInterface:
+        out_set.add(iface_filter.mac)
 
     for iface in sc.get_if_list():
         if iface_filter is not None and iface != iface_filter:
             continue
         try:
             mac = sc.get_if_hwaddr(iface)
-        except Exception:
+        except Exception as e:
             continue
         else:
             out_set.add(mac)
