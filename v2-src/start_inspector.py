@@ -6,12 +6,11 @@ import signal
 import webserver
 import time
 
-
 def main():
 
     # The whole process should be run as root.
     if os.getuid() != 0:
-        print >>sys.stderr, 'Please run as root.'
+        sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 
     utils.log('[Main] Terminating existing processes.')

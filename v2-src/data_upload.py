@@ -130,7 +130,7 @@ class DataUploader(object):
         # Turn IP -> MAC dict into device_id -> (ip, device_oui) dict, ignoring
         # gateway's IP.
         device_dict = {}
-        for (ip, mac) in ip_mac_dict.iteritems():
+        for (ip, mac) in ip_mac_dict.items():
             # Never include the gateway
             if ip == self._host_state.gateway_ip:
                 continue
@@ -296,7 +296,7 @@ def jsonify_dict(input_dict):
     """
     output_dict = {}
 
-    for (k, v) in input_dict.iteritems():
+    for (k, v) in input_dict.items():
         if isinstance(k, tuple):
             k = json.dumps(k)
         if isinstance(v, set):

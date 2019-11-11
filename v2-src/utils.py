@@ -98,8 +98,7 @@ def log(*args):
     )
 
     with open(log_file_path, 'a') as fp:
-        print >> fp, log_str
-
+        fp.write(log_str + '\n')
 
 def get_gateway_ip(timeout=10):
     """Returns the IP address of the gateway."""
@@ -231,7 +230,7 @@ def safe_run(func, args=[], kwargs={}):
         err_msg += str(traceback.format_exc()) + '\n\n\n'
 
         with _lock:
-            print >> sys.stderr, err_msg
+            sys.stderr.write(err_msg + '\n')
             log(err_msg)
 
         return _SafeRunError()
@@ -242,7 +241,7 @@ def get_device_id(device_mac, host_state):
     device_mac = str(device_mac).lower().replace(':', '')
     s = device_mac + str(host_state.secret_salt)
 
-    return 's' + hashlib.sha256(s).hexdigest()[0:10]
+    return 's' + hashlib.sha256(s.encode('utf-8')).hexdigest()[0:10]
 
 
 def smart_min(v1, v2):
