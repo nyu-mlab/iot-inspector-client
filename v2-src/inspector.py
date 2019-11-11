@@ -86,8 +86,8 @@ def start(webserver_context):
         path = ''
         caution = ''
 
-    print '\n' * 100
-    print """
+    print('\n' * 100)
+    print("""
         ===========================
           Princeton IoT Inspector
         ===========================
@@ -100,7 +100,7 @@ def start(webserver_context):
 
         Hit Control + C to terminate this process and stop data collection.
 
-    """.format(path, caution)
+    """).format(path, caution)
 
 
 def enable_ip_forwarding():

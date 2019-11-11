@@ -222,7 +222,7 @@ def safe_run(func, args=[], kwargs={}):
     try:
         return func(*args, **kwargs)
 
-    except Exception, e:
+    except Exception as e:
 
         err_msg = '=' * 80 + '\n'
         err_msg += 'Time: %s\n' % datetime.datetime.today()
