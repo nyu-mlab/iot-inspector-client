@@ -243,6 +243,21 @@ def get_device_id(device_mac, host_state):
 
     return 's' + hashlib.sha256(s.encode('utf-8')).hexdigest()[0:10]
 
+def smart_max(v1, v2):
+    """
+        Returns max value even if one value is None.
+
+        Python cannot compare None and int, so build a wrapper
+        around it.
+    """
+    if v1 is None:
+        return v2
+
+    if v2 is None:
+        return v1
+
+    return max(v1, v2)
+
 
 def smart_min(v1, v2):
     """
@@ -276,7 +291,7 @@ def get_min_max_tuple(min_max_tuple, value):
     min_v, max_v = min_max_tuple
 
     min_v = smart_min(min_v, value)
-    max_v = max(max_v, value)
+    max_v = smart_max(max_v, value)
 
     return (min_v, max_v)
 
