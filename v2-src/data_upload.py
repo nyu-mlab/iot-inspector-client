@@ -156,7 +156,7 @@ class DataUploader(object):
                 # final byte count (whichever is larger), although we should
                 # note the caveats of using TCP seq numbers to estimate flow
                 # size in packet_processor.py.
-                flow_stats[direction + '_byte_count'] = max(
+                flow_stats[direction + '_byte_count'] = utils.smart_max(
                     flow_stats[direction + '_byte_count'],
                     flow_stats[direction + '_tcp_seq_range']
                 )
@@ -177,7 +177,7 @@ class DataUploader(object):
                 'outbound_byte_count': flow_stats['outbound_byte_count'],
                 'syn_originator': flow_stats['syn_originator']
             }
-
+        
         return (window_duration, {
             'dns_dict': jsonify_dict(dns_dict),
             'flow_dict': jsonify_dict(flow_dict),
@@ -218,6 +218,9 @@ class DataUploader(object):
 
             # Update whitelist
             try:
+                utils.log("logging response.")
+                utils.log(post_data)
+                utils.log(response)
                 response_dict = json.loads(response)
                 if response_dict['status'] == 'success':
                     with self._host_state.lock:

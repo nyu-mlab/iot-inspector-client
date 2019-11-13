@@ -189,8 +189,8 @@ class PacketProcessor(object):
             return
 
         # Remove trailing dot from domain
-        if domain.endswith('.'):
-            domain = domain[0:-1]
+        if domain[-1] == '.':
+            main = domain[0:-1]
 
         # Parse DNS response
         ip_set = set()
@@ -204,6 +204,7 @@ class PacketProcessor(object):
                         ip_set.add(ip)
 
         with self._host_state.lock:
+            domain = str(domain)
             dns_key = (device_id, domain, resolver_ip, 0)
             current_ip_set = self._host_state \
                 .pending_dns_dict.setdefault(dns_key, set())
@@ -294,7 +295,7 @@ class PacketProcessor(object):
                 .setdefault(flow_key, flow_stats)
 
         # Construct flow_stats
-        flow_stats[direction + '_byte_count'] += len(pkt)
+        flow_stats[direction + '_byte_count'] += len(str(pkt))
         flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(
             flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
         flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
