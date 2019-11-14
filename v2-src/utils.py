@@ -99,8 +99,7 @@ def log(*args):
     )
 
     with open(log_file_path, 'a') as fp:
-        print >> fp, log_str
-
+        fp.write(log_str + '\n')
 
 def get_gateway_ip(timeout=10):
     """Returns the IP address of the gateway."""
@@ -225,7 +224,7 @@ def safe_run(func, args=[], kwargs={}):
     try:
         return func(*args, **kwargs)
 
-    except Exception, e:
+    except Exception as e:
 
         err_msg = '=' * 80 + '\n'
         err_msg += 'Time: %s\n' % datetime.datetime.today()
@@ -234,7 +233,7 @@ def safe_run(func, args=[], kwargs={}):
         err_msg += str(traceback.format_exc()) + '\n\n\n'
 
         with _lock:
-            print >> sys.stderr, err_msg
+            sys.stderr.write(err_msg + '\n')
             log(err_msg)
 
         return _SafeRunError()
@@ -245,7 +244,22 @@ def get_device_id(device_mac, host_state):
     device_mac = str(device_mac).lower().replace(':', '')
     s = device_mac + str(host_state.secret_salt)
 
-    return 's' + hashlib.sha256(s).hexdigest()[0:10]
+    return 's' + hashlib.sha256(s.encode('utf-8')).hexdigest()[0:10]
+
+def smart_max(v1, v2):
+    """
+        Returns max value even if one value is None.
+
+        Python cannot compare None and int, so build a wrapper
+        around it.
+    """
+    if v1 is None:
+        return v2
+
+    if v2 is None:
+        return v1
+
+    return max(v1, v2)
 
 
 def smart_min(v1, v2):
@@ -280,7 +294,7 @@ def get_min_max_tuple(min_max_tuple, value):
     min_v, max_v = min_max_tuple
 
     min_v = smart_min(min_v, value)
-    max_v = max(max_v, value)
+    max_v = smart_max(max_v, value)
 
     return (min_v, max_v)
 

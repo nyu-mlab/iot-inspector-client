@@ -16,7 +16,7 @@ def main():
         is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
 
     if not is_admin:
-        print >>sys.stderr, 'Please run as root.'
+        sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 
     utils.log('[Main] Terminating existing processes.')
@@ -40,7 +40,7 @@ def main():
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print ''
+            print('')
             break
 
     utils.log('[Main] Restoring ARP...')
@@ -51,20 +51,20 @@ def main():
             host_state.spoof_arp = False
 
     for t in range(10):
-        print 'Cleaning up ({})...'.format(10 - t)
+        print('Cleaning up ({})...'.format(10 - t))
         time.sleep(1)
 
     inspector.disable_ip_forwarding()
 
     utils.log('[Main] Quit.')
 
-    print '\n' * 100
-    print """
+    print('\n' * 100)
+    print("""
         Princeton IoT Inspector has terminated.
 
         Feel free to close this window.
 
-    """
+    """)
 
 
 def kill_existing_inspector():
