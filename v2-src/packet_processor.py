@@ -190,7 +190,7 @@ class PacketProcessor(object):
 
         # Remove trailing dot from domain
         if domain[-1] == '.':
-            main = domain[0:-1]
+            domain = domain[0:-1]
 
         # Parse DNS response
         ip_set = set()
