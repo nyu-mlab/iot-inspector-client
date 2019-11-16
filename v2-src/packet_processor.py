@@ -3,7 +3,6 @@ Processes individual packets.
 
 """
 from host_state import HostState
-import scapy_ssl_tls.ssl_tls as ssl_tls # noqa
 import scapy_http.http as http
 import scapy.all as sc
 import utils
@@ -129,7 +128,7 @@ class PacketProcessor(object):
                 device_id = utils.get_device_id(device_mac, self._host_state)
 
                 self._host_state.pending_dhcp_dict[device_id] = \
-                    device_hostname
+                    str(device_hostname)
                 utils.log('[UPLOAD] DHCP Hostname:', device_hostname)
 
             if resolver_ip:
@@ -190,7 +189,7 @@ class PacketProcessor(object):
             return
 
         # Remove trailing dot from domain
-        if domain.endswith('.'):
+        if domain[-1] == '.':
             domain = domain[0:-1]
 
         # Parse DNS response
@@ -205,6 +204,7 @@ class PacketProcessor(object):
                         ip_set.add(ip)
 
         with self._host_state.lock:
+            domain = str(domain)
             dns_key = (device_id, domain, resolver_ip, 0)
             current_ip_set = self._host_state \
                 .pending_dns_dict.setdefault(dns_key, set())
@@ -295,7 +295,7 @@ class PacketProcessor(object):
                 .setdefault(flow_key, flow_stats)
 
         # Construct flow_stats
-        flow_stats[direction + '_byte_count'] += len(pkt)
+        flow_stats[direction + '_byte_count'] += len(str(pkt))
         flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(
             flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
         flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
