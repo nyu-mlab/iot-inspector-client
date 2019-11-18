@@ -16,6 +16,8 @@ import json
 import uuid
 import hashlib
 import netaddr
+import netifaces
+import ipaddress
 from scapy.arch.windows import NetworkInterface
 
 
@@ -131,7 +133,6 @@ def get_default_route():
     while True:
 
         routes = _get_routes()
-
         # Look for network = 0.0.0.0, netmask = 0.0.0.0
         for default_route in routes:
             if default_route[0] == 0 and default_route[1] == 0:
@@ -139,6 +140,24 @@ def get_default_route():
 
         log('get_default_route: retrying')
         time.sleep(1)
+
+def get_network_ip_range_windows():
+    default_iface = get_default_route()
+    iface_filter = default_iface[1]
+    print(default_iface)
+    ip_set = set()
+    iface_ip = iface_filter.ip
+    iface_guid = iface_filter.guid
+    for k, v in netifaces.ifaddresses(iface_guid).items():
+        if v[0]['addr'] == iface_ip:
+            netmask = v[0]['netmask']
+            break
+  
+    network = netaddr.IPAddress(iface_ip)
+    cidr = netaddr.IPAddress(netmask).netmask_bits()
+    subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
+  
+    return ip_set
 
 
 def get_network_ip_range():
@@ -161,7 +180,6 @@ def get_network_ip_range():
 
         network = netaddr.IPAddress(network)
         cidr = netaddr.IPAddress(netmask).netmask_bits()
-
         subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
         if gateway_ip in subnet:
             for ip in subnet:
