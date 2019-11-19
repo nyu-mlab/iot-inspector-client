@@ -33,7 +33,6 @@ class PacketCapture(object):
     def _capture_packets(self):
 
         while self._is_active():
-
             if not self._host_state.is_inspecting():
                 time.sleep(2)
                 continue
