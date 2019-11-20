@@ -16,7 +16,7 @@ import json
 import uuid
 import hashlib
 import netaddr
-
+import netifaces
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -139,32 +139,27 @@ def get_default_route():
         log('get_default_route: retrying')
         time.sleep(1)
 
-
 def get_network_ip_range():
-
-    gateway_ip = netaddr.IPAddress(get_default_route()[0])
-
+    """
+        Gets network IP range for the default interface specified
+        by scapy.conf.iface
+    """
     ip_set = set()
+    default_route = get_default_route()
+    iface_info = netifaces.ifaddresses(default_route[1])
 
-    for default_route in _get_routes():
+    for k, v in netifaces.ifaddresses(sc.conf.iface).items():
+        if v[0]['addr'] == default_route[2]:
+            netmask = v[0]['netmask']
+            break
 
-        network = default_route[0]
-        netmask = default_route[1]
-        gateway = default_route[2]
 
-        if gateway != '0.0.0.0':
-            continue
+    gateway_ip = netaddr.IPAddress(default_route[0])
+    cidr = netaddr.IPAddress(netmask).netmask_bits()
+    subnet = netaddr.IPNetwork('{}/{}'.format(gateway_ip, cidr))
 
-        if not network or not netmask:
-            continue
-
-        network = netaddr.IPAddress(network)
-        cidr = netaddr.IPAddress(netmask).netmask_bits()
-
-        subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-        if gateway_ip in subnet:
-            for ip in subnet:
-                ip_set.add(str(ip))
+    for ip in subnet:
+        ip_set.add(str(ip))
 
     return ip_set
 

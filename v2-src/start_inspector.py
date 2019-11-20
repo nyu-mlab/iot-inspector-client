@@ -5,9 +5,11 @@ import utils
 import signal
 import webserver
 import time
+import scapy.all as sc
+
 
 def main():
-
+    sc.load_layer("http")
     # The whole process should be run as root.
     if os.getuid() != 0:
         sys.stderr.write('Please run as root.\n')
