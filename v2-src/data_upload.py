@@ -177,7 +177,7 @@ class DataUploader(object):
                 'outbound_byte_count': flow_stats['outbound_byte_count'],
                 'syn_originator': flow_stats['syn_originator']
             }
-        
+       
         return (window_duration, {
             'dns_dict': jsonify_dict(dns_dict),
             'flow_dict': jsonify_dict(flow_dict),

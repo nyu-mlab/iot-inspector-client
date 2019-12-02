@@ -3,13 +3,12 @@ Processes individual packets.
 
 """
 from host_state import HostState
-import scapy_http.http as http
 import scapy.all as sc
+import scapy.layers.http as http
 import utils
 import hashlib
 import time
 import re
-
 
 class PacketProcessor(object):
 
@@ -128,7 +127,7 @@ class PacketProcessor(object):
                 device_id = utils.get_device_id(device_mac, self._host_state)
 
                 self._host_state.pending_dhcp_dict[device_id] = \
-                    device_hostname
+                    str(device_hostname)
                 utils.log('[UPLOAD] DHCP Hostname:', device_hostname)
 
             if resolver_ip:
@@ -190,7 +189,7 @@ class PacketProcessor(object):
 
         # Remove trailing dot from domain
         if domain[-1] == '.':
-            main = domain[0:-1]
+            domain = domain[0:-1]
 
         # Parse DNS response
         ip_set = set()
@@ -295,7 +294,7 @@ class PacketProcessor(object):
                 .setdefault(flow_key, flow_stats)
 
         # Construct flow_stats
-        flow_stats[direction + '_byte_count'] += len(str(pkt))
+        flow_stats[direction + '_byte_count'] += len(pkt)
         flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(
             flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
         flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
@@ -334,10 +333,12 @@ class PacketProcessor(object):
     def _process_http_user_agent(self, pkt, device_id):
 
         try:
-            ua = pkt[http.HTTPRequest].fields['User-Agent']
-        except Exception:
+            ua = pkt[http.HTTPRequest].fields['User_Agent']
+        except Exception as e:
             return
 
+        ua = str(ua)
+        
         with self._host_state.lock:
             self._host_state \
                 .pending_ua_dict \
@@ -350,10 +351,11 @@ class PacketProcessor(object):
 
         try:
             http_host = pkt[http.HTTPRequest].fields['Host']
-        except Exception:
+        except Exception as e:
             return
-
+        
         device_port = pkt[sc.TCP].sport
+        http_host = str(http_host)
 
         with self._host_state.lock:
             self._host_state \

@@ -6,10 +6,11 @@ import signal
 import webserver
 import time
 import ctypes
+import scapy.all as sc
 
 def main():
-
-    # The whole process should be run as root or administrator.
+    sc.load_layer("http")
+    # The whole process should be run as root.
     try:
         is_admin = os.getuid() == 0
     except AttributeError:
