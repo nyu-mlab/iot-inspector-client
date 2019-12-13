@@ -1,8 +1,9 @@
+Flask
 requests
 scapy
 netaddr
-scapy_http
+scapy-http
 netdisco
 flask
-flask_cors
+flask-cors
 netifaces
