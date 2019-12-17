@@ -17,6 +17,9 @@ import uuid
 import hashlib
 import netaddr
 import netifaces
+import ipaddress
+from scapy.arch.windows import NetworkInterface
+
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -130,7 +133,6 @@ def get_default_route():
     while True:
 
         routes = _get_routes()
-
         # Look for network = 0.0.0.0, netmask = 0.0.0.0
         for default_route in routes:
             if default_route[0] == 0 and default_route[1] == 0:
@@ -139,6 +141,25 @@ def get_default_route():
         log('get_default_route: retrying')
         time.sleep(1)
 
+def get_network_ip_range_windows():
+    default_iface = get_default_route()
+    iface_filter = default_iface[1]
+    print(default_iface)
+    ip_set = set()
+    iface_ip = iface_filter.ip
+    iface_guid = iface_filter.guid
+    for k, v in netifaces.ifaddresses(iface_guid).items():
+        if v[0]['addr'] == iface_ip:
+            netmask = v[0]['netmask']
+            break
+  
+    network = netaddr.IPAddress(iface_ip)
+    cidr = netaddr.IPAddress(netmask).netmask_bits()
+    subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
+  
+    return ip_set
+
+
 def get_network_ip_range():
     """
         Gets network IP range for the default interface specified
@@ -146,13 +167,18 @@ def get_network_ip_range():
     """
     ip_set = set()
     default_route = get_default_route()
-    iface_info = netifaces.ifaddresses(default_route[1])
 
-    for k, v in netifaces.ifaddresses(sc.conf.iface).items():
+    iface_str = ''
+    if sys.platform.startswith('win'):
+        iface_info = sc.conf.iface
+        iface_str = iface_info.guid
+    else:
+        iface_str = sc.conf.iface
+
+    for k, v in netifaces.ifaddresses(iface_str).items():
         if v[0]['addr'] == default_route[2]:
             netmask = v[0]['netmask']
             break
-
 
     gateway_ip = netaddr.IPAddress(default_route[0])
     cidr = netaddr.IPAddress(netmask).netmask_bits()
@@ -175,13 +201,15 @@ def get_my_mac_set(iface_filter=None):
     """Returns a set of MAC addresses of the current host."""
 
     out_set = set()
+    if type(iface_filter) == NetworkInterface:
+        out_set.add(iface_filter.mac)
 
     for iface in sc.get_if_list():
         if iface_filter is not None and iface != iface_filter:
             continue
         try:
             mac = sc.get_if_hwaddr(iface)
-        except Exception:
+        except Exception as e:
             continue
         else:
             out_set.add(mac)
@@ -306,5 +334,8 @@ def get_os():
 
     if os_platform.startswith('linux'):
         return 'linux'
+
+    if os_platform.startswith('win'):
+        return 'windows'
 
     raise RuntimeError('Unsupported operating system.')

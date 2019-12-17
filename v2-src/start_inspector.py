@@ -5,13 +5,18 @@ import utils
 import signal
 import webserver
 import time
+import ctypes
 import scapy.all as sc
-
 
 def main():
     sc.load_layer("http")
     # The whole process should be run as root.
-    if os.getuid() != 0:
+    try:
+        is_admin = os.getuid() == 0
+    except AttributeError:
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+    if not is_admin:
         sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 

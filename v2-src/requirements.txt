@@ -6,3 +6,4 @@ scapy-http
 netdisco
 flask
 flask-cors
+netifaces
