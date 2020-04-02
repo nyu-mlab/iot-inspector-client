@@ -57,6 +57,7 @@ class PacketProcessor(object):
         if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
             return
 
+
         # Get gateway's MAC
         try:
             with self._host_state.lock:
@@ -69,12 +70,13 @@ class PacketProcessor(object):
         # Communication must be between this host's MAC (acting as a gateway)
         # and a non-gateway device
         host_mac = self._host_state.host_mac
-        this_host_as_gateway = (
-            (src_mac == host_mac and dst_mac != gateway_mac) or
-            (dst_mac == host_mac and src_mac != gateway_mac)
-        )
-        if not this_host_as_gateway:
-            return
+        #this_host_as_gateway = (
+        #    (src_mac == host_mac and dst_mac != gateway_mac) or
+        #    (dst_mac == host_mac and src_mac != gateway_mac)
+        #)
+        #if not this_host_as_gateway:
+        #    return
+
 
         # TCP/UDP
         if sc.TCP in pkt:
@@ -84,6 +86,7 @@ class PacketProcessor(object):
         else:
             return
 
+        print(pkt[sc.IP].src, pkt[sc.IP].dst)
         return self._process_tcp_udp_flow(pkt, protocol)
 
     def _process_arp(self, pkt):
@@ -233,10 +236,10 @@ class PacketProcessor(object):
 
         # Only look at flows where this host pretends to be the gateway
         host_mac = self._host_state.host_mac
-        host_gateway_inbound = (src_mac == host_mac)
-        host_gateway_outbound = (dst_mac == host_mac)
-        if not (host_gateway_inbound or host_gateway_outbound):
-            return
+        #host_gateway_inbound = (src_mac == host_mac)
+        #host_gateway_outbound = (dst_mac == host_mac)
+        #if not (host_gateway_inbound or host_gateway_outbound):
+        #    return
 
         # Extract TCP sequence and ack numbers for us to estimate flow size
         # later

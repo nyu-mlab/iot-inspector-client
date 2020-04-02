@@ -73,6 +73,18 @@ class ArpSpoof(object):
             except KeyError:
                 continue
 
+            whitelist_ip_mac = []
+            # Add gateway
+            whitelist_ip_mac.append((gateway_ip, gateway_mac))
+            
+            # Build device-to-device whitelist
+            for ip, mac in ip_mac_dict.items():
+                device_id = utils.get_device_id(mac, self._host_state)
+                if device_id not in self._host_state.device_whitelist:
+                    utils.log('[ARP Spoof] Ignore:', ip, mac)
+                    continue
+                whitelist_ip_mac.append((ip, mac))
+
             # Spoof individual devices on the network.
             for (victim_ip, victim_mac) in ip_mac_dict.items():
 
@@ -93,7 +105,7 @@ class ArpSpoof(object):
 
                 utils.safe_run(
                     self._arp_spoof,
-                    args=(victim_mac, victim_ip, gateway_mac, gateway_ip)
+                    args=(victim_mac, victim_ip, whitelist_ip_mac)
                 )
 
                 with self._lock:
@@ -102,32 +114,34 @@ class ArpSpoof(object):
 
                 time.sleep(max(MIN_ARP_SPOOF_INTERVAL, 2.0 / len(ip_mac_dict)))
 
-    def _arp_spoof(self, victim_mac, victim_ip, gateway_mac, gateway_ip):
+    def _arp_spoof(self, victim_mac, victim_ip, whitelist_ip_mac):
         """Sends out spoofed packets for a single target."""
 
         with self._host_state.lock:
             spoof_arp = self._host_state.spoof_arp
 
-        gateway_arp = sc.ARP()
-        gateway_arp.op = 2
-        gateway_arp.psrc = victim_ip
-        gateway_arp.hwdst = gateway_mac
-        gateway_arp.pdst = gateway_ip
-        if not spoof_arp:
-            gateway_arp.hwsrc = victim_mac
-            utils.log('[Arp Spoof] Restoring', victim_ip, '->', gateway_ip)
+        for dest_ip, dest_mac in whitelist_ip_mac:
+            print(victim_ip, victim_mac, dest_ip, dest_mac)
+            dest_arp = sc.ARP()
+            dest_arp.op = 2
+            dest_arp.psrc = victim_ip
+            dest_arp.hwdst = dest_mac
+            dest_arp.pdst = dest_ip
+            if not spoof_arp:
+                dest_arp.hwsrc = victim_mac
+                utils.log('[Arp Spoof] Restoring', victim_ip, '->', dest_ip)
 
-        victim_arp = sc.ARP()
-        victim_arp.op = 2
-        victim_arp.psrc = gateway_ip
-        victim_arp.hwdst = victim_mac
-        victim_arp.pdst = victim_ip
-        if not spoof_arp:
-            victim_arp.hwsrc = gateway_mac
-            utils.log('[Arp Spoof] Restoring', gateway_ip, '->', victim_ip)
+            victim_arp = sc.ARP()
+            victim_arp.op = 2
+            victim_arp.psrc = dest_ip
+            victim_arp.hwdst = victim_mac
+            victim_arp.pdst = victim_ip
+            if not spoof_arp:
+                victim_arp.hwsrc = dest_mac
+                utils.log('[Arp Spoof] Restoring', dest_ip, '->', victim_ip)
 
-        sc.send(victim_arp, verbose=0)
-        sc.send(gateway_arp, verbose=0)
+            sc.send(victim_arp, verbose=0)
+            sc.send(dest_arp, verbose=0)
 
     def stop(self):
 
