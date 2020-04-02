@@ -86,7 +86,6 @@ class PacketProcessor(object):
         else:
             return
 
-        print(pkt[sc.IP].src, pkt[sc.IP].dst)
         return self._process_tcp_udp_flow(pkt, protocol)
 
     def _process_arp(self, pkt):
@@ -230,6 +229,7 @@ class PacketProcessor(object):
         src_port = pkt[layer].sport
         dst_port = pkt[layer].dport
 
+
         # No broadcast
         if dst_mac == 'ff:ff:ff:ff:ff:ff' or dst_ip == '255.255.255.255':
             return
@@ -253,6 +253,7 @@ class PacketProcessor(object):
                 tcp_ack = tcp_layer.ack
         except Exception:
             pass
+       
 
         # Determine flow direction
         if src_mac == host_mac:
@@ -313,7 +314,7 @@ class PacketProcessor(object):
                     syn_originator = 'local'
         except Exception:
             pass
-
+        
         if syn_originator and flow_stats['syn_originator'] is None:
             flow_stats['syn_originator'] = syn_originator
 
@@ -329,7 +330,6 @@ class PacketProcessor(object):
             self._host_state.byte_count += len(pkt)
 
     def _process_http(self, pkt, device_id, remote_ip):
-
         self._process_http_user_agent(pkt, device_id)
         self._process_http_host(pkt, device_id, remote_ip)
 

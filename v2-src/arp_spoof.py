@@ -121,7 +121,6 @@ class ArpSpoof(object):
             spoof_arp = self._host_state.spoof_arp
 
         for dest_ip, dest_mac in whitelist_ip_mac:
-            print(victim_ip, victim_mac, dest_ip, dest_mac)
             dest_arp = sc.ARP()
             dest_arp.op = 2
             dest_arp.psrc = victim_ip
