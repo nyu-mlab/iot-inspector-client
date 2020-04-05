@@ -57,6 +57,7 @@ class PacketProcessor(object):
         if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
             return
 
+
         # Get gateway's MAC
         try:
             with self._host_state.lock:
@@ -69,12 +70,13 @@ class PacketProcessor(object):
         # Communication must be between this host's MAC (acting as a gateway)
         # and a non-gateway device
         host_mac = self._host_state.host_mac
-        this_host_as_gateway = (
-            (src_mac == host_mac and dst_mac != gateway_mac) or
-            (dst_mac == host_mac and src_mac != gateway_mac)
-        )
-        if not this_host_as_gateway:
-            return
+        #this_host_as_gateway = (
+        #    (src_mac == host_mac and dst_mac != gateway_mac) or
+        #    (dst_mac == host_mac and src_mac != gateway_mac)
+        #)
+        #if not this_host_as_gateway:
+        #    return
+
 
         # TCP/UDP
         if sc.TCP in pkt:
@@ -227,16 +229,17 @@ class PacketProcessor(object):
         src_port = pkt[layer].sport
         dst_port = pkt[layer].dport
 
+
         # No broadcast
         if dst_mac == 'ff:ff:ff:ff:ff:ff' or dst_ip == '255.255.255.255':
             return
 
         # Only look at flows where this host pretends to be the gateway
         host_mac = self._host_state.host_mac
-        host_gateway_inbound = (src_mac == host_mac)
-        host_gateway_outbound = (dst_mac == host_mac)
-        if not (host_gateway_inbound or host_gateway_outbound):
-            return
+        #host_gateway_inbound = (src_mac == host_mac)
+        #host_gateway_outbound = (dst_mac == host_mac)
+        #if not (host_gateway_inbound or host_gateway_outbound):
+        #    return
 
         # Extract TCP sequence and ack numbers for us to estimate flow size
         # later
@@ -250,6 +253,7 @@ class PacketProcessor(object):
                 tcp_ack = tcp_layer.ack
         except Exception:
             pass
+       
 
         # Determine flow direction
         if src_mac == host_mac:
@@ -310,7 +314,7 @@ class PacketProcessor(object):
                     syn_originator = 'local'
         except Exception:
             pass
-
+        
         if syn_originator and flow_stats['syn_originator'] is None:
             flow_stats['syn_originator'] = syn_originator
 
@@ -326,7 +330,6 @@ class PacketProcessor(object):
             self._host_state.byte_count += len(pkt)
 
     def _process_http(self, pkt, device_id, remote_ip):
-
         self._process_http_user_agent(pkt, device_id)
         self._process_http_host(pkt, device_id, remote_ip)
 
