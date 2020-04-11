@@ -106,3 +106,4 @@ venv.bak/
 
 # Pycharm files
 *.idea
+v2-src/.vscode/settings.json
