@@ -9,6 +9,9 @@ import time
 from host_state import HostState
 
 
+# pylint: disable=no-member
+
+
 class ArpScan(object):
 
     def __init__(self, host_state):
