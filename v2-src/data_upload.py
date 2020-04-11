@@ -105,6 +105,7 @@ class DataUploader(object):
         self._host_state.pending_ua_dict = {}
         self._host_state.pending_tls_dict_list = []
         self._host_state.pending_netdisco_dict = {}
+        self._host_state.pending_syn_scan_dict = {}
 
     def _prepare_upload_data(self):
         """Returns (window_duration, a dictionary of data to post)."""
@@ -122,6 +123,7 @@ class DataUploader(object):
             ip_mac_dict = self._host_state.ip_mac_dict
             tls_dict_list = self._host_state.pending_tls_dict_list
             netdisco_dict = self._host_state.pending_netdisco_dict
+            syn_scan_dict = self._host_state.pending_syn_scan_dict
 
             self._clear_host_state_pending_data()
 
@@ -180,6 +182,7 @@ class DataUploader(object):
        
         return (window_duration, {
             'dns_dict': jsonify_dict(dns_dict),
+            'syn_scan_dict': jsonify_dict(syn_scan_dict),
             'flow_dict': jsonify_dict(flow_dict),
             'device_dict': jsonify_dict(device_dict),
             'ua_dict': jsonify_dict(ua_dict),

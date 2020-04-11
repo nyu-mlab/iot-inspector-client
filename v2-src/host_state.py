@@ -34,6 +34,7 @@ class HostState(object):
         self.pending_ua_dict = {}  # device_id -> ua_set
         self.pending_tls_dict_list = []  # List of tls_dict
         self.pending_netdisco_dict = {}  # device_id -> device_info_list
+        self.pending_syn_scan_dict = {}  # device_id -> port_list
         self.status_text = None
         self.device_whitelist = []
         self.has_consent = False

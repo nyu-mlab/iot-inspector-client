@@ -6,6 +6,7 @@ import utils
 from host_state import HostState
 from packet_processor import PacketProcessor
 from arp_scan import ArpScan
+from syn_scan import SynScan
 from packet_capture import PacketCapture
 from arp_spoof import ArpSpoof
 from data_upload import DataUploader
@@ -42,6 +43,10 @@ def start(webserver_context):
     # Continously discover devices
     arp_scan_thread = ArpScan(state)
     arp_scan_thread.start()
+
+    # Continously discover ports via SYN scans
+    syn_scan_thread = SynScan(state)
+    syn_scan_thread.start()
 
     # Continuously gather SSDP data
     netdisco_thread = NetdiscoWrapper(state)

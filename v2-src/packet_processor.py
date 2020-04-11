@@ -9,6 +9,11 @@ import utils
 import hashlib
 import time
 import re
+from syn_scan import SYN_SCAN_SEQ_NUM, SYN_SCAN_SOURCE_PORT
+
+
+# pylint: disable=no-member
+
 
 class PacketProcessor(object):
 
@@ -28,6 +33,12 @@ class PacketProcessor(object):
 
         if sc.DHCP in pkt:
             return self._process_dhcp(pkt)
+
+        # SYN-ACK response to SYN scans
+        if sc.TCP in pkt and pkt[sc.TCP].flags == 'SA' and sc.IP in pkt:
+            tcp_layer = pkt[sc.TCP]
+            if tcp_layer.dport == SYN_SCAN_SOURCE_PORT and tcp_layer.ack == SYN_SCAN_SEQ_NUM + 1:
+                return self._process_syn_scan(pkt)
 
         # Must have Ether frame and IP frame.
         if not (sc.Ether in pkt and sc.IP in pkt):
@@ -100,6 +111,23 @@ class PacketProcessor(object):
 
         except AttributeError:
             return
+
+    def _process_syn_scan(self, pkt):
+        """
+        Receives SYN scan response from devices.
+
+        """
+        src_mac = pkt[sc.Ether].src
+        device_id = utils.get_device_id(src_mac, self._host_state)
+        device_port = pkt[sc.TCP].sport
+
+        with self._host_state.lock:
+            port_list = self._host_state.pending_syn_scan_dict.setdefault(device_id, [])
+            if device_port not in port_list:
+                port_list.append(device_port)
+                utils.log('[SYN Scan Debug] Device {} ({}): Port {}'.format(
+                    pkt[sc.IP].src, device_id, device_port
+                ))
 
     def _process_dhcp(self, pkt):
         """
