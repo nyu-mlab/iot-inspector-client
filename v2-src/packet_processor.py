@@ -363,11 +363,9 @@ class PacketProcessor(object):
     def _process_http_user_agent(self, pkt, device_id):
 
         try:
-            ua = pkt[http.HTTPRequest].fields['User_Agent']
+            ua = pkt[http.HTTPRequest].fields['User_Agent'].decode('utf-8')
         except Exception as e:
             return
-
-        ua = str(ua)
         
         with self._host_state.lock:
             self._host_state \
@@ -380,12 +378,11 @@ class PacketProcessor(object):
     def _process_http_host(self, pkt, device_id, remote_ip):
 
         try:
-            http_host = pkt[http.HTTPRequest].fields['Host']
+            http_host = pkt[http.HTTPRequest].fields['Host'].decode('utf-8')
         except Exception as e:
             return
         
         device_port = pkt[sc.TCP].sport
-        http_host = str(http_host)
 
         with self._host_state.lock:
             self._host_state \
