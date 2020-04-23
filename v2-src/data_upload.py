@@ -35,7 +35,9 @@ class DataUploader(object):
 
         # Loop until initialized
         while True:
-            if utils.safe_run(self._upload_initialization):
+            # Need to explicitly check for True state, as safe_run may return an
+            # _SafeRunError instance.
+            if utils.safe_run(self._upload_initialization) == True:
                 break
             time.sleep(2)
 
