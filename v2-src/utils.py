@@ -335,6 +335,9 @@ def get_os():
 
     if os_platform.startswith('linux'):
         return 'linux'
+    
+    if os_platform.startswith('freebsd'):
+        return 'freebsd'
 
     if os_platform.startswith('win'):
         return 'windows'
