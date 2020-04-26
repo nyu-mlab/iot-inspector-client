@@ -3,7 +3,6 @@ import inspector
 import sys
 import utils
 import signal
-import webserver
 import time
 import ctypes
 import scapy.all as sc
@@ -25,19 +24,18 @@ def main():
         utils.log('[Main] Unable to end existing process. Exiting.')
         return
 
-    utils.log('[Main] Starting webserver.')
-    webserver.start_thread()
-
     utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
-    utils.safe_run(inspector.start, args=(webserver.context,))
+    
+    # We don't wrap the function below in safe_run because, well, if it crashes,
+    # it crashes.
+    host_state = inspector.start()
 
-    while not webserver.context['quit']:
-        host_state = webserver.context['host_state']
-        if host_state:
-            with host_state.lock:
-                if host_state.quit:
-                    break
+    # Waiting for termination
+    while True:
+        with host_state.lock:
+            if host_state.quit:
+                break
         try:
             time.sleep(2)
         except KeyboardInterrupt:
@@ -46,10 +44,8 @@ def main():
 
     utils.log('[Main] Restoring ARP...')
 
-    host_state = webserver.context['host_state']
-    if host_state:
-        with host_state.lock:
-            host_state.spoof_arp = False
+    with host_state.lock:
+        host_state.spoof_arp = False
 
     for t in range(10):
         print('Cleaning up ({})...'.format(10 - t))

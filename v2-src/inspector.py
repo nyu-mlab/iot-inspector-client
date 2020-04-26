@@ -14,10 +14,16 @@ from netdisco_wrapper import NetdiscoWrapper
 import subprocess
 import sys
 import logging
+import server_config
 
 
-def start(webserver_context):
-
+def start():
+    """
+    Initializes inspector by spawning a number of background threads.
+    
+    Returns the host state once all background threats are started.
+    
+    """
     # Read from home directory the user_key. If non-existent, get one from
     # cloud.
     config_dict = utils.get_user_config()
@@ -30,8 +36,6 @@ def start(webserver_context):
     state.secret_salt = config_dict['secret_salt']
     state.host_mac = utils.get_my_mac()
     state.gateway_ip, _, state.host_ip = utils.get_default_route()
-
-    webserver_context['host_state'] = state
 
     assert utils.is_ipv4_addr(state.gateway_ip)
     assert utils.is_ipv4_addr(state.host_ip)
@@ -99,13 +103,15 @@ def start(webserver_context):
 
         View the IoT Inspector report at:
 
-        https://inspector.cs.princeton.edu/{0}
+        {0}/{1}
 
-        {1}
+        {2}
 
         Hit Control + C to terminate this process and stop data collection.
 
-    """.format(path, caution))
+    """.format(server_config.BASE_URL, path, caution))
+
+    return state
 
 
 def enable_ip_forwarding():

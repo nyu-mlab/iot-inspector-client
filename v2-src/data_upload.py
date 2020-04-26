@@ -182,7 +182,11 @@ class DataUploader(object):
                 'syn_originator': flow_stats['syn_originator']
             }
        
+        with self._host_state.lock:
+            status_text = self._host_state.status_text
+
         return (window_duration, {
+            'client_status_text': status_text,
             'dns_dict': jsonify_dict(dns_dict),
             'syn_scan_dict': jsonify_dict(syn_scan_dict),
             'flow_dict': jsonify_dict(flow_dict),
@@ -220,18 +224,35 @@ class DataUploader(object):
             # Upload data via POST
             response = requests.post(url, data=post_data).text
             utils.log('[UPLOAD] Gets back server response:', response)
-
-            # Update whitelist
+            
             try:
                 utils.log("logging response.")
                 utils.log(post_data)
                 utils.log(response)
                 response_dict = json.loads(response)
-                if response_dict['status'] == 'success':
+
+                # Decide what client should do based on server's command
+                try:
+                    client_action = response_dict['client_action']
+                except KeyError:
+                    pass
+                else:
+                    if client_action == 'quit':
+                        utils.log('[UPLOAD] Server wants me to quit.')
+                        with self._host_state.lock:
+                            self._host_state.quit = True
+                    elif client_action == 'start_fast_arp_discovery':
+                        utils.log('[UPLOAD] Server wants me to do fast ARP scan.')
+                        with self._host_state.lock:
+                            self._host_state.fast_arp_scan = True
+
+                if response_dict['status'] == 'success':                    
+                    # Update whitelist based on server's response
                     with self._host_state.lock:
                         self._host_state.device_whitelist = \
                             response_dict['inspected_devices']
-                    break
+                        break
+                
             except Exception:
                 utils.log('[UPLOAD] Failed. Retrying:', traceback.format_exc())
             time.sleep((attempt + 1) ** 2)
@@ -244,7 +265,7 @@ class DataUploader(object):
         self._update_ui_status(
             'Currently analyzing ' +
             '{:,}'.format(int(byte_count * 8.0 / 1000.0 / window_duration)) +
-            ' Kbps of traffic.'
+            ' Kbps of traffic'
         )
 
         utils.log(

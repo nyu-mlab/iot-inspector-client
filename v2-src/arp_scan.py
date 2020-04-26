@@ -12,6 +12,10 @@ from host_state import HostState
 # pylint: disable=no-member
 
 
+FAST_SCAN_SLEEP_TIME = 0.1
+SLOW_SCAN_SLEEP_TIME = 0.5
+
+
 class ArpScan(object):
 
     def __init__(self, host_state):
@@ -49,7 +53,7 @@ class ArpScan(object):
 
             for ip in utils.get_network_ip_range():
 
-                sleep_time = 1
+                sleep_time = SLOW_SCAN_SLEEP_TIME
 
                 # Whether we should scan fast or slow
                 with self._host_state.lock:
@@ -57,13 +61,13 @@ class ArpScan(object):
 
                 # If fast scan, we do it for at most 5 mins
                 if fast_arp_scan:
-                    sleep_time = 0.1
+                    sleep_time = FAST_SCAN_SLEEP_TIME
                     if fast_scan_start_ts is None:
                         fast_scan_start_ts = time.time()
                     else:
                         if time.time() - fast_scan_start_ts > 300:
                             fast_scan_start_ts = None
-                            sleep_time = 1
+                            sleep_time = SLOW_SCAN_SLEEP_TIME
                             with self._host_state.lock:
                                 self._host_state.fast_arp_scan = False
 

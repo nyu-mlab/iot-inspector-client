@@ -8,7 +8,7 @@ import time
 import sys
 
 
-CLIENT_VERSION = '0.9'
+CLIENT_VERSION = '1.0'
 
 
 class HostState(object):
@@ -22,7 +22,7 @@ class HostState(object):
         self.user_key = None
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
-        self.persistent_mode = ('persistent' in sys.argv)
+        self.persistent_mode = True  # Always persistent to remove local Flask
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()
