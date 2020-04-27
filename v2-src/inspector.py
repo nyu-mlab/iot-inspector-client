@@ -15,6 +15,7 @@ import subprocess
 import sys
 import logging
 import server_config
+import subprocess
 
 
 def start():
@@ -110,6 +111,18 @@ def start():
         Hit Control + C to terminate this process and stop data collection.
 
     """.format(server_config.BASE_URL, path, caution))
+
+    os_platform = utils.get_os()    
+
+    # Open a browser window on Windows 10. Note that a new webpage will be
+    # opened in a non-privileged mode. TODO: Not sure how to do the same
+    # for macOS, as the "open" call on macOS will open a browser window
+    # in privileged mode.
+    if os_platform == 'windows':
+        subprocess.call(
+            ['start', '', '{0}/{1}'.format(server_config.BASE_URL, path)], 
+            shell=True
+        )
 
     return state
 
