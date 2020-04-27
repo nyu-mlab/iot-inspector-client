@@ -3,9 +3,9 @@
 block_cipher = None
 
 
-a = Analysis(['start_inspector.py', 'start_inspector.spec'],
+a = Analysis(['start_inspector.py'],
              pathex=['C:\\Users\\debug\\Documents\\research\\iot-inspector-client\\v2-src'],
-             binaries=[('npcap-0.9984.exe', '.'),('start_inspector.bat', '.')],
+             binaries=[],
              datas=[('C:\\Users\\debug\\AppData\\Local\\Programs\\Python\\Python38-32\\Lib\\site-packages\\netdisco\\discoverables\*', 'netdisco\discoverables')],
              hiddenimports=[],
              hookspath=[],
@@ -19,19 +19,13 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          [],
-          exclude_binaries=True,
-          name='start_inspector',
+	  a.binaries,
+	  a.zipfiles,
+	  a.datas,
+	  [],
+          name='start_inspector_win',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           console=True )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               upx_exclude=[],
-               name='start_inspector')
