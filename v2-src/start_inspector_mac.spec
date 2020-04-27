@@ -4,9 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['start_inspector.py'],
-             pathex=['/Users/dhuang/gdrive/dev/iot-inspector-client/v2-src'],
              binaries=[],
-             datas=[],
+             datas=[("/usr/local/lib/python3.7/site-packages/netdisco/discoverables/*", "netdisco/discoverables")],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
