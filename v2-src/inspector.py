@@ -16,7 +16,7 @@ import sys
 import logging
 import server_config
 import subprocess
-
+import webbrowser
 
 def start():
     """
@@ -123,6 +123,8 @@ def start():
             ['start', '', '{0}/{1}'.format(server_config.BASE_URL, path)], 
             shell=True
         )
+    elif os_platform == 'mac':
+        webbrowser.open_new('{0}/{1}'.format(server_config.BASE_URL, path))
 
     return state
 
