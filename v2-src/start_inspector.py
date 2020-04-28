@@ -19,6 +19,13 @@ def main():
         sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 
+    # Check for Npcap installation on Windows
+    if utils.get_os() == 'windows':
+        if not os.path.exists("C:\\Windows\\System32\\Npcap"):
+            sys.stderr.write("IoT Inspector cannot run without installing Npcap.\n")
+            sys.stderr.write("Please install Npcap here: https://nmap.org/dist/nmap-7.80-setup.exe\n")
+            sys.exit(1)
+
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():
         utils.log('[Main] Unable to end existing process. Exiting.')
