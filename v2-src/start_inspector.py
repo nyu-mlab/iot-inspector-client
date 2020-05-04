@@ -21,7 +21,10 @@ def main():
 
     # Check for Npcap installation on Windows
     if utils.get_os() == 'windows':
-        if not os.path.exists("C:\\Windows\\System32\\Npcap"):
+        npcap_path = os.path.join(
+            os.environ['WINDIR'], 'System32', 'Npcap'
+        )
+        if not os.path.exists(npcap_path):
             sys.stderr.write("IoT Inspector cannot run without installing Npcap.\n")
             sys.stderr.write("Please install Npcap here: https://nmap.org/dist/nmap-7.80-setup.exe\n")
             sys.exit(1)

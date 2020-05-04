@@ -1,5 +1,9 @@
 @echo off
 
+rem Check if user has npcap installed. If not, prompt user.
+
+if not exist %WINDIR%\System32\Npcap echo You need to install Npcap first. For more information, visit https://iot-inspector.princeton.edu/npcap-error/ & start https://iot-inspector.princeton.edu/npcap-error/ & goto press_key_to_exit
+
 rem Downloads the latest IoT Inspector upon first launch. If not first launch, downloads the latest IoT Inspector in the background after user launches IoT Inspector.
 
 set ExeURL=https://iot-inspector.princeton.edu/release/?os=windows
