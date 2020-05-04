@@ -18,6 +18,23 @@ import server_config
 import subprocess
 
 
+WINDOWS_STARTUP_TEXT = """
+
+======================================
+Princeton IoT Inspector for Windows 10
+======================================
+
+We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
+
+{0}/persistent/{1}
+
+To stop IoT Inspector, simply close this window or hit Control + C.
+
+Questions? Email us at iot-inspector@lists.cs.princeton.edu.
+
+"""
+
+
 def start():
     """
     Initializes inspector by spawning a number of background threads.
@@ -82,37 +99,19 @@ def start():
     except Exception:
         pass
 
-    if state.persistent_mode:
-        # Insert a dash every four characters to make user-key easier to type
-        pretty_user_key = ''
-        for (ix, char) in enumerate(state.user_key):
-            if (ix > 0) and (ix % 4 == 0):
-                pretty_user_key += '-'
-            pretty_user_key += char
-
-        path = 'persistent/' + pretty_user_key
-        caution = 'This is your private link. Open it only on trusted computers.' # noqa
-    else:
-        path = ''
-        caution = ''
+    # Insert a dash every four characters to make user-key easier to type
+    pretty_user_key = ''
+    for (ix, char) in enumerate(state.user_key):
+        if (ix > 0) and (ix % 4 == 0):
+            pretty_user_key += '-'
+        pretty_user_key += char
 
     print('\n' * 100)
-    print("""
-        ===========================
-          Princeton IoT Inspector
-        ===========================
-
-        View the IoT Inspector report at:
-
-        {0}/{1}
-
-        {2}
-
-        Hit Control + C to terminate this process and stop data collection.
-
-    """.format(server_config.BASE_URL, path, caution))
 
     os_platform = utils.get_os()    
+
+    if os_platform == 'windows':
+        print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
 
     # Open a browser window on Windows 10. Note that a new webpage will be
     # opened in a non-privileged mode. TODO: Not sure how to do the same
@@ -120,7 +119,7 @@ def start():
     # in privileged mode.
     if os_platform == 'windows':
         subprocess.call(
-            ['start', '', '{0}/{1}'.format(server_config.BASE_URL, path)], 
+            ['start', '', '{0}/persistent/{1}'.format(server_config.BASE_URL, pretty_user_key)], 
             shell=True
         )
 
