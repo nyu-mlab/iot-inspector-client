@@ -73,14 +73,27 @@ def main():
 
     """)
 
+    # Remove PID file
+    try:
+        os.remove(get_pid_file())
+    except Exception:
+        pass
 
-def kill_existing_inspector():
+
+def get_pid_file():
 
     pid_file = os.path.join(
         os.path.expanduser('~'),
         'princeton-iot-inspector',
         'iot_inspector_pid.txt'
     )
+
+    return pid_file
+
+
+def kill_existing_inspector():
+
+    pid_file = get_pid_file()
 
     try:
         with open(pid_file) as fp:
