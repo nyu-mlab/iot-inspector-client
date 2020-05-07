@@ -246,6 +246,18 @@ class DataUploader(object):
                         with self._host_state.lock:
                             self._host_state.fast_arp_scan = True
 
+                # Quit upon UI inactivity
+                try:
+                    ui_last_active_ts = response_dict['ui_last_active_ts']
+                except KeyError:
+                    ui_last_active_ts = 0
+                if ui_last_active_ts > 0: 
+                    ui_inactivity_time = int(time.time() - ui_last_active_ts)
+                    if ui_inactivity_time > 120:
+                        utils.log('[UPLOAD] About to quit, due to 120 seconds of UI inactivity.')
+                        with self._host_state.lock:
+                            self._host_state.quit = True
+
                 if response_dict['status'] == 'success':                    
                     # Update whitelist based on server's response
                     with self._host_state.lock:
