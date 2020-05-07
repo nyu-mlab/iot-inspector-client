@@ -142,7 +142,7 @@ class PacketProcessor(object):
         except Exception:
             return
 
-        device_hostname = option_dict.setdefault('hostname', '')
+        device_hostname = option_dict.setdefault('hostname', '').decode('utf-8')
         resolver_ip = option_dict.setdefault('name_server', '')
 
         with self._host_state.lock:
@@ -156,8 +156,7 @@ class PacketProcessor(object):
                 device_mac = pkt[sc.Ether].src
                 device_id = utils.get_device_id(device_mac, self._host_state)
 
-                self._host_state.pending_dhcp_dict[device_id] = \
-                    str(device_hostname)
+                self._host_state.pending_dhcp_dict[device_id] = device_hostname
                 utils.log('[UPLOAD] DHCP Hostname:', device_hostname)
 
             if resolver_ip:
