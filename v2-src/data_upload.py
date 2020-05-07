@@ -165,6 +165,16 @@ class DataUploader(object):
                     flow_stats[direction + '_tcp_seq_range']
                 )
 
+            # Keep raw values for internal book-keeping
+            internal_stats = {}
+            for direction in ('inbound_', 'outbound_'):
+                internal_prefix = 'internal_' + direction
+                internal_stats[internal_prefix + 'byte_count'] = flow_stats[direction + 'byte_count']
+                internal_stats[internal_prefix + 'tcp_seq_min'] = flow_stats[direction + 'tcp_seq_min_max'][0]
+                internal_stats[internal_prefix + 'tcp_seq_max'] = flow_stats[direction + 'tcp_seq_min_max'][1]
+                internal_stats[internal_prefix + 'tcp_ack_min'] = flow_stats[direction + 'tcp_ack_min_max'][0]
+                internal_stats[internal_prefix + 'tcp_ack_max'] = flow_stats[direction + 'tcp_ack_min_max'][1]
+
             # Fill in missing byte count (e.g., due to failure of ARP spoofing)
             if flow_stats['inbound_byte_count'] == 0:
                 outbound_seq_diff = flow_stats['outbound_tcp_ack_range']
@@ -175,12 +185,13 @@ class DataUploader(object):
                 if inbound_seq_diff:
                     flow_stats['outbound_byte_count'] = inbound_seq_diff
 
-            # Keep only the byte count fields
+            # Keep only the byte count fields, plus the internal stats
             flow_dict[flow_key] = {
                 'inbound_byte_count': flow_stats['inbound_byte_count'],
                 'outbound_byte_count': flow_stats['outbound_byte_count'],
                 'syn_originator': flow_stats['syn_originator']
             }
+            flow_dict[flow_key].update(internal_stats)
        
         with self._host_state.lock:
             status_text = self._host_state.status_text
