@@ -142,7 +142,10 @@ class PacketProcessor(object):
         except Exception:
             return
 
-        device_hostname = option_dict.setdefault('hostname', '').decode('utf-8')
+        try:
+            device_hostname = option_dict.setdefault('hostname', '').decode('utf-8')
+        except Exception:
+            device_hostname = ''
         resolver_ip = option_dict.setdefault('name_server', '')
 
         with self._host_state.lock:
