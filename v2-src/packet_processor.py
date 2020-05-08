@@ -64,11 +64,6 @@ class PacketProcessor(object):
         if sc.DNS in pkt:
             self._process_dns(pkt)
 
-        # Ignore traffic to and from the gateway's IP
-        if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
-            return
-
-
         # Commented out the following. We want to see traffic between device and gateway.
         # # Ignore traffic to and from the gateway's IP
         # if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
@@ -282,6 +277,15 @@ class PacketProcessor(object):
         # Anonymize device mac
         device_id = utils.get_device_id(device_mac, self._host_state)
 
+        # Get remote device_id for internal book-keeping purpose
+        remote_device_id = ''
+        try:
+            with self._host_state.lock:
+                real_remote_device_mac = self._host_state.ip_mac_dict[remote_ip]
+                remote_device_id = utils.get_device_id(real_remote_device_mac, self._host_state)
+        except Exception:
+            pass
+
         # Construct flow key
         flow_key = (
             device_id, device_port, remote_ip, remote_port, protocol
@@ -299,7 +303,8 @@ class PacketProcessor(object):
             'outbound_byte_count': 0,
             'outbound_tcp_seq_min_max': (None, None),
             'outbound_tcp_ack_min_max': (None, None),
-            'syn_originator': None
+            'syn_originator': None,
+            'internal_remote_device_id': remote_device_id
         }
         with self._host_state.lock:
             flow_stats = self._host_state.pending_flow_dict \
