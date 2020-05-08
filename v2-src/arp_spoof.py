@@ -74,6 +74,7 @@ class ArpSpoof(object):
                 continue
 
             whitelist_ip_mac = []
+            
             # Add gateway
             whitelist_ip_mac.append((gateway_ip, gateway_mac))
             
