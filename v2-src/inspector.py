@@ -15,7 +15,6 @@ import subprocess
 import sys
 import logging
 import server_config
-import subprocess
 
 
 WINDOWS_STARTUP_TEXT = """
@@ -26,7 +25,7 @@ Princeton IoT Inspector for Windows 10
 
 We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
 
-{0}/persistent/{1}
+{0}/user/{1}
 
 To stop IoT Inspector, simply close this window or hit Control + C.
 
@@ -118,10 +117,7 @@ def start():
     # for macOS, as the "open" call on macOS will open a browser window
     # in privileged mode.
     if os_platform == 'windows':
-        subprocess.call(
-            ['start', '', '{0}/persistent/{1}'.format(server_config.BASE_URL, pretty_user_key)], 
-            shell=True
-        )
+        utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
 
     return state
 

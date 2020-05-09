@@ -6,6 +6,8 @@ import signal
 import time
 import ctypes
 import scapy.all as sc
+import server_config
+
 
 def main():
     sc.load_layer("http")
@@ -19,14 +21,24 @@ def main():
         sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 
-    # Check for Npcap installation on Windows
+    # Check for Windows
     if utils.get_os() == 'windows':
+
+        # Check Npcap installation 
         npcap_path = os.path.join(
             os.environ['WINDIR'], 'System32', 'Npcap'
         )
         if not os.path.exists(npcap_path):
             sys.stderr.write("IoT Inspector cannot run without installing Npcap.\n")
-            sys.stderr.write("Please install Npcap here: https://nmap.org/dist/nmap-7.80-setup.exe\n")
+            sys.stderr.write("For details, visit " + server_config.NPCAP_ERROR_URL)
+            utils.open_browser_on_windows(server_config.NPCAP_ERROR_URL)
+            sys.exit(1)
+
+        # Check presence of multiple interfaces (e.g., VPN)
+        if len(utils.get_network_ip_range()) == 0:
+            sys.stderr.write("IoT Inspector cannot run with multiple network interfaces running.\n")
+            sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
+            utils.open_browser_on_windows(server_config.NETMASK_ERROR_URL)
             sys.exit(1)
 
     utils.log('[Main] Terminating existing processes.')
