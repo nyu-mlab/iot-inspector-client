@@ -12,6 +12,4 @@ These features will help you identify potential problems on your home network, i
 * privacy problems (e.g., your smart TV contacting advertising or tracking companies as you watch TV)
 * performance problems (e.g., identifying who is using up the most bandwidth in your home network)
 
-For details, see https://iot-inspector.princeton.edu/blog/post/getting-started/.
-
-Windows 10 support: https://github.com/noise-lab/iot-inspector-client/pull/40#issuecomment-566727558
+For details, see https://iotinspector.org.
