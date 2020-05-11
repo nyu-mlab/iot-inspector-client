@@ -3,10 +3,11 @@ import inspector
 import sys
 import utils
 import signal
-import webserver
 import time
 import ctypes
 import scapy.all as sc
+import server_config
+
 
 def main():
     sc.load_layer("http")
@@ -20,24 +21,43 @@ def main():
         sys.stderr.write('Please run as root.\n')
         sys.exit(1)
 
+    # Check for Windows
+    if utils.get_os() == 'windows':
+
+        # Check Npcap installation 
+        npcap_path = os.path.join(
+            os.environ['WINDIR'], 'System32', 'Npcap'
+        )
+        if not os.path.exists(npcap_path):
+            sys.stderr.write("IoT Inspector cannot run without installing Npcap.\n")
+            sys.stderr.write("For details, visit " + server_config.NPCAP_ERROR_URL)
+            utils.open_browser_on_windows(server_config.NPCAP_ERROR_URL)
+            sys.exit(1)
+
+        # Check presence of multiple interfaces (e.g., VPN)
+        if len(utils.get_network_ip_range()) == 0:
+            sys.stderr.write("IoT Inspector cannot run with multiple network interfaces running.\n")
+            sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
+            utils.open_browser_on_windows(server_config.NETMASK_ERROR_URL)
+            sys.exit(1)
+
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():
         utils.log('[Main] Unable to end existing process. Exiting.')
         return
 
-    utils.log('[Main] Starting webserver.')
-    webserver.start_thread()
-
     utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
-    utils.safe_run(inspector.start, args=(webserver.context,))
+    
+    # We don't wrap the function below in safe_run because, well, if it crashes,
+    # it crashes.
+    host_state = inspector.start()
 
-    while not webserver.context['quit']:
-        host_state = webserver.context['host_state']
-        if host_state:
-            with host_state.lock:
-                if host_state.quit:
-                    break
+    # Waiting for termination
+    while True:
+        with host_state.lock:
+            if host_state.quit:
+                break
         try:
             time.sleep(2)
         except KeyboardInterrupt:
@@ -46,10 +66,8 @@ def main():
 
     utils.log('[Main] Restoring ARP...')
 
-    host_state = webserver.context['host_state']
-    if host_state:
-        with host_state.lock:
-            host_state.spoof_arp = False
+    with host_state.lock:
+        host_state.spoof_arp = False
 
     for t in range(10):
         print('Cleaning up ({})...'.format(10 - t))
@@ -67,14 +85,27 @@ def main():
 
     """)
 
+    # Remove PID file
+    try:
+        os.remove(get_pid_file())
+    except Exception:
+        pass
 
-def kill_existing_inspector():
+
+def get_pid_file():
 
     pid_file = os.path.join(
         os.path.expanduser('~'),
         'princeton-iot-inspector',
         'iot_inspector_pid.txt'
     )
+
+    return pid_file
+
+
+def kill_existing_inspector():
+
+    pid_file = get_pid_file()
 
     try:
         with open(pid_file) as fp:

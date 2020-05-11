@@ -6,6 +6,7 @@ import utils
 from host_state import HostState
 from packet_processor import PacketProcessor
 from arp_scan import ArpScan
+from syn_scan import SynScan
 from packet_capture import PacketCapture
 from arp_spoof import ArpSpoof
 from data_upload import DataUploader
@@ -13,10 +14,33 @@ from netdisco_wrapper import NetdiscoWrapper
 import subprocess
 import sys
 import logging
+import server_config
 
 
-def start(webserver_context):
+WINDOWS_STARTUP_TEXT = """
 
+======================================
+Princeton IoT Inspector for Windows 10
+======================================
+
+We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
+
+{0}/user/{1}
+
+To stop IoT Inspector, simply close this window or hit Control + C.
+
+Questions? Email us at iot-inspector@lists.cs.princeton.edu.
+
+"""
+
+
+def start():
+    """
+    Initializes inspector by spawning a number of background threads.
+    
+    Returns the host state once all background threats are started.
+    
+    """
     # Read from home directory the user_key. If non-existent, get one from
     # cloud.
     config_dict = utils.get_user_config()
@@ -30,8 +54,6 @@ def start(webserver_context):
     state.host_mac = utils.get_my_mac()
     state.gateway_ip, _, state.host_ip = utils.get_default_route()
 
-    webserver_context['host_state'] = state
-
     assert utils.is_ipv4_addr(state.gateway_ip)
     assert utils.is_ipv4_addr(state.host_ip)
 
@@ -42,6 +64,10 @@ def start(webserver_context):
     # Continously discover devices
     arp_scan_thread = ArpScan(state)
     arp_scan_thread.start()
+
+    # Continously discover ports via SYN scans
+    syn_scan_thread = SynScan(state)
+    syn_scan_thread.start()
 
     # Continuously gather SSDP data
     netdisco_thread = NetdiscoWrapper(state)
@@ -72,35 +98,28 @@ def start(webserver_context):
     except Exception:
         pass
 
-    if state.persistent_mode:
-        # Insert a dash every four characters to make user-key easier to type
-        pretty_user_key = ''
-        for (ix, char) in enumerate(state.user_key):
-            if (ix > 0) and (ix % 4 == 0):
-                pretty_user_key += '-'
-            pretty_user_key += char
-
-        path = 'persistent/' + pretty_user_key
-        caution = 'This is your private link. Open it only on trusted computers.' # noqa
-    else:
-        path = ''
-        caution = ''
+    # Insert a dash every four characters to make user-key easier to type
+    pretty_user_key = ''
+    for (ix, char) in enumerate(state.user_key):
+        if (ix > 0) and (ix % 4 == 0):
+            pretty_user_key += '-'
+        pretty_user_key += char
 
     print('\n' * 100)
-    print("""
-        ===========================
-          Princeton IoT Inspector
-        ===========================
 
-        View the IoT Inspector report at:
+    os_platform = utils.get_os()    
 
-        https://inspector.cs.princeton.edu/{0}
+    if os_platform == 'windows':
+        print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
 
-        {1}
+    # Open a browser window on Windows 10. Note that a new webpage will be
+    # opened in a non-privileged mode. TODO: Not sure how to do the same
+    # for macOS, as the "open" call on macOS will open a browser window
+    # in privileged mode.
+    if os_platform == 'windows':
+        utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
 
-        Hit Control + C to terminate this process and stop data collection.
-
-    """.format(path, caution))
+    return state
 
 
 def enable_ip_forwarding():

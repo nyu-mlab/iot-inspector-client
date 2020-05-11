@@ -9,6 +9,11 @@ import utils
 import hashlib
 import time
 import re
+from syn_scan import SYN_SCAN_SEQ_NUM, SYN_SCAN_SOURCE_PORT
+
+
+# pylint: disable=no-member
+
 
 class PacketProcessor(object):
 
@@ -28,6 +33,12 @@ class PacketProcessor(object):
 
         if sc.DHCP in pkt:
             return self._process_dhcp(pkt)
+
+        # SYN-ACK response to SYN scans
+        if sc.TCP in pkt and pkt[sc.TCP].flags == 'SA' and sc.IP in pkt:
+            tcp_layer = pkt[sc.TCP]
+            if tcp_layer.dport == SYN_SCAN_SOURCE_PORT and tcp_layer.ack == SYN_SCAN_SEQ_NUM + 1:
+                return self._process_syn_scan(pkt)
 
         # Must have Ether frame and IP frame.
         if not (sc.Ether in pkt and sc.IP in pkt):
@@ -53,30 +64,10 @@ class PacketProcessor(object):
         if sc.DNS in pkt:
             self._process_dns(pkt)
 
-        # Ignore traffic to and from the gateway's IP
-        if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
-            return
-
-
-        # Get gateway's MAC
-        try:
-            with self._host_state.lock:
-                gateway_mac = self._host_state.ip_mac_dict[
-                    self._host_state.gateway_ip
-                ]
-        except KeyError:
-            return
-
-        # Communication must be between this host's MAC (acting as a gateway)
-        # and a non-gateway device
-        host_mac = self._host_state.host_mac
-        #this_host_as_gateway = (
-        #    (src_mac == host_mac and dst_mac != gateway_mac) or
-        #    (dst_mac == host_mac and src_mac != gateway_mac)
-        #)
-        #if not this_host_as_gateway:
+        # Commented out the following. We want to see traffic between device and gateway.
+        # # Ignore traffic to and from the gateway's IP
+        # if self._host_state.gateway_ip in (pkt[sc.IP].src, pkt[sc.IP].dst):
         #    return
-
 
         # TCP/UDP
         if sc.TCP in pkt:
@@ -101,6 +92,23 @@ class PacketProcessor(object):
         except AttributeError:
             return
 
+    def _process_syn_scan(self, pkt):
+        """
+        Receives SYN scan response from devices.
+
+        """
+        src_mac = pkt[sc.Ether].src
+        device_id = utils.get_device_id(src_mac, self._host_state)
+        device_port = pkt[sc.TCP].sport
+
+        with self._host_state.lock:
+            port_list = self._host_state.pending_syn_scan_dict.setdefault(device_id, [])
+            if device_port not in port_list:
+                port_list.append(device_port)
+                utils.log('[SYN Scan Debug] Device {} ({}): Port {}'.format(
+                    pkt[sc.IP].src, device_id, device_port
+                ))
+
     def _process_dhcp(self, pkt):
         """
         Extracts the client hostname from DHCP Request packets.
@@ -114,7 +122,10 @@ class PacketProcessor(object):
         except Exception:
             return
 
-        device_hostname = option_dict.setdefault('hostname', '')
+        try:
+            device_hostname = option_dict.setdefault('hostname', '').decode('utf-8')
+        except Exception:
+            device_hostname = ''
         resolver_ip = option_dict.setdefault('name_server', '')
 
         with self._host_state.lock:
@@ -128,8 +139,7 @@ class PacketProcessor(object):
                 device_mac = pkt[sc.Ether].src
                 device_id = utils.get_device_id(device_mac, self._host_state)
 
-                self._host_state.pending_dhcp_dict[device_id] = \
-                    str(device_hostname)
+                self._host_state.pending_dhcp_dict[device_id] = device_hostname
                 utils.log('[UPLOAD] DHCP Hostname:', device_hostname)
 
             if resolver_ip:
@@ -185,8 +195,8 @@ class PacketProcessor(object):
 
         # Parse domain
         try:
-            domain = pkt[sc.DNSQR].qname.lower()
-        except AttributeError:
+            domain = pkt[sc.DNSQR].qname.decode('utf-8').lower()
+        except Exception:
             return
 
         # Remove trailing dot from domain
@@ -205,7 +215,6 @@ class PacketProcessor(object):
                         ip_set.add(ip)
 
         with self._host_state.lock:
-            domain = str(domain)
             dns_key = (device_id, domain, resolver_ip, 0)
             current_ip_set = self._host_state \
                 .pending_dns_dict.setdefault(dns_key, set())
@@ -229,17 +238,12 @@ class PacketProcessor(object):
         src_port = pkt[layer].sport
         dst_port = pkt[layer].dport
 
-
         # No broadcast
         if dst_mac == 'ff:ff:ff:ff:ff:ff' or dst_ip == '255.255.255.255':
             return
 
         # Only look at flows where this host pretends to be the gateway
         host_mac = self._host_state.host_mac
-        #host_gateway_inbound = (src_mac == host_mac)
-        #host_gateway_outbound = (dst_mac == host_mac)
-        #if not (host_gateway_inbound or host_gateway_outbound):
-        #    return
 
         # Extract TCP sequence and ack numbers for us to estimate flow size
         # later
@@ -254,7 +258,6 @@ class PacketProcessor(object):
         except Exception:
             pass
        
-
         # Determine flow direction
         if src_mac == host_mac:
             direction = 'inbound'
@@ -274,6 +277,15 @@ class PacketProcessor(object):
         # Anonymize device mac
         device_id = utils.get_device_id(device_mac, self._host_state)
 
+        # Get remote device_id for internal book-keeping purpose
+        remote_device_id = ''
+        try:
+            with self._host_state.lock:
+                real_remote_device_mac = self._host_state.ip_mac_dict[remote_ip]
+                remote_device_id = utils.get_device_id(real_remote_device_mac, self._host_state)
+        except Exception:
+            pass
+
         # Construct flow key
         flow_key = (
             device_id, device_port, remote_ip, remote_port, protocol
@@ -291,7 +303,8 @@ class PacketProcessor(object):
             'outbound_byte_count': 0,
             'outbound_tcp_seq_min_max': (None, None),
             'outbound_tcp_ack_min_max': (None, None),
-            'syn_originator': None
+            'syn_originator': None,
+            'internal_remote_device_id': remote_device_id
         }
         with self._host_state.lock:
             flow_stats = self._host_state.pending_flow_dict \
@@ -336,11 +349,9 @@ class PacketProcessor(object):
     def _process_http_user_agent(self, pkt, device_id):
 
         try:
-            ua = pkt[http.HTTPRequest].fields['User_Agent']
+            ua = pkt[http.HTTPRequest].fields['User_Agent'].decode('utf-8')
         except Exception as e:
             return
-
-        ua = str(ua)
         
         with self._host_state.lock:
             self._host_state \
@@ -353,12 +364,11 @@ class PacketProcessor(object):
     def _process_http_host(self, pkt, device_id, remote_ip):
 
         try:
-            http_host = pkt[http.HTTPRequest].fields['Host']
+            http_host = pkt[http.HTTPRequest].fields['Host'].decode('utf-8')
         except Exception as e:
             return
         
         device_port = pkt[sc.TCP].sport
-        http_host = str(http_host)
 
         with self._host_state.lock:
             self._host_state \

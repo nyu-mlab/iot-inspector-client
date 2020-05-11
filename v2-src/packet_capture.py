@@ -43,11 +43,6 @@ class PacketCapture(object):
                     lambda _:
                         not self._is_active() or
                         not self._host_state.is_inspecting(),
-                'filter': 'arp' +
-                    ' or (host not {} and ether host {})'.format(
-                        self._host_state.host_ip,
-                        self._host_state.host_mac) +
-                    ' or (port 67 or port 68)',
                 'timeout': 30
             })
 

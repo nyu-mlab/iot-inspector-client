@@ -18,6 +18,7 @@ import hashlib
 import netaddr
 import netifaces
 import ipaddress
+import subprocess
 
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
@@ -174,10 +175,15 @@ def get_network_ip_range():
     else:
         iface_str = sc.conf.iface
 
+    netmask = None
     for k, v in netifaces.ifaddresses(iface_str).items():
         if v[0]['addr'] == default_route[2]:
             netmask = v[0]['netmask']
             break
+
+    # Netmask is None when user runs VPN.
+    if netmask is None:
+        return set()
 
     gateway_ip = netaddr.IPAddress(default_route[0])
     cidr = netaddr.IPAddress(netmask).netmask_bits()
@@ -340,3 +346,11 @@ def get_os():
         return 'windows'
 
     raise RuntimeError('Unsupported operating system.')
+
+
+def open_browser_on_windows(url):
+
+    try:
+        subprocess.call(['start', '', url], shell=True)    
+    except Exception:
+        pass

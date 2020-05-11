@@ -74,6 +74,7 @@ class ArpSpoof(object):
                 continue
 
             whitelist_ip_mac = []
+            
             # Add gateway
             whitelist_ip_mac.append((gateway_ip, gateway_mac))
             
@@ -121,6 +122,10 @@ class ArpSpoof(object):
             spoof_arp = self._host_state.spoof_arp
 
         for dest_ip, dest_mac in whitelist_ip_mac:
+
+            if victim_ip == dest_ip:
+                continue
+
             dest_arp = sc.ARP()
             dest_arp.op = 2
             dest_arp.psrc = victim_ip

@@ -35,12 +35,9 @@ class NetdiscoWrapper(object):
     def _start_thread(self):
 
         while True:
+            time.sleep(3)
             if len(self._host_state.get_ip_mac_dict_copy()) > 0:
                 utils.safe_run(self._run_netdisco)
-                time.sleep(10)
-            else:
-                time.sleep(1)
-                continue
 
     def _get_netdisco_path(self):
 

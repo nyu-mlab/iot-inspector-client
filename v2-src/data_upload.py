@@ -35,7 +35,9 @@ class DataUploader(object):
 
         # Loop until initialized
         while True:
-            if utils.safe_run(self._upload_initialization):
+            # Need to explicitly check for True state, as safe_run may return an
+            # _SafeRunError instance.
+            if utils.safe_run(self._upload_initialization) == True:
                 break
             time.sleep(2)
 
@@ -105,6 +107,7 @@ class DataUploader(object):
         self._host_state.pending_ua_dict = {}
         self._host_state.pending_tls_dict_list = []
         self._host_state.pending_netdisco_dict = {}
+        self._host_state.pending_syn_scan_dict = {}
 
     def _prepare_upload_data(self):
         """Returns (window_duration, a dictionary of data to post)."""
@@ -122,6 +125,7 @@ class DataUploader(object):
             ip_mac_dict = self._host_state.ip_mac_dict
             tls_dict_list = self._host_state.pending_tls_dict_list
             netdisco_dict = self._host_state.pending_netdisco_dict
+            syn_scan_dict = self._host_state.pending_syn_scan_dict
 
             self._clear_host_state_pending_data()
 
@@ -161,6 +165,18 @@ class DataUploader(object):
                     flow_stats[direction + '_tcp_seq_range']
                 )
 
+            # Keep raw values for internal book-keeping
+            internal_stats = {
+                'internal_remote_device_id': flow_stats['internal_remote_device_id']
+            }
+            for direction in ('inbound_', 'outbound_'):
+                internal_prefix = 'internal_' + direction
+                internal_stats[internal_prefix + 'byte_count'] = flow_stats[direction + 'byte_count']
+                internal_stats[internal_prefix + 'tcp_seq_min'] = flow_stats[direction + 'tcp_seq_min_max'][0]
+                internal_stats[internal_prefix + 'tcp_seq_max'] = flow_stats[direction + 'tcp_seq_min_max'][1]
+                internal_stats[internal_prefix + 'tcp_ack_min'] = flow_stats[direction + 'tcp_ack_min_max'][0]
+                internal_stats[internal_prefix + 'tcp_ack_max'] = flow_stats[direction + 'tcp_ack_min_max'][1]
+
             # Fill in missing byte count (e.g., due to failure of ARP spoofing)
             if flow_stats['inbound_byte_count'] == 0:
                 outbound_seq_diff = flow_stats['outbound_tcp_ack_range']
@@ -171,15 +187,21 @@ class DataUploader(object):
                 if inbound_seq_diff:
                     flow_stats['outbound_byte_count'] = inbound_seq_diff
 
-            # Keep only the byte count fields
+            # Keep only the byte count fields, plus the internal stats
             flow_dict[flow_key] = {
                 'inbound_byte_count': flow_stats['inbound_byte_count'],
                 'outbound_byte_count': flow_stats['outbound_byte_count'],
                 'syn_originator': flow_stats['syn_originator']
             }
+            flow_dict[flow_key].update(internal_stats)
        
+        with self._host_state.lock:
+            status_text = self._host_state.status_text
+
         return (window_duration, {
+            'client_status_text': status_text,
             'dns_dict': jsonify_dict(dns_dict),
+            'syn_scan_dict': jsonify_dict(syn_scan_dict),
             'flow_dict': jsonify_dict(flow_dict),
             'device_dict': jsonify_dict(device_dict),
             'ua_dict': jsonify_dict(ua_dict),
@@ -215,18 +237,47 @@ class DataUploader(object):
             # Upload data via POST
             response = requests.post(url, data=post_data).text
             utils.log('[UPLOAD] Gets back server response:', response)
-
-            # Update whitelist
+            
             try:
                 utils.log("logging response.")
                 utils.log(post_data)
                 utils.log(response)
                 response_dict = json.loads(response)
-                if response_dict['status'] == 'success':
+
+                # Decide what client should do based on server's command
+                try:
+                    client_action = response_dict['client_action']
+                except KeyError:
+                    pass
+                else:
+                    if client_action == 'quit':
+                        utils.log('[UPLOAD] Server wants me to quit.')
+                        with self._host_state.lock:
+                            self._host_state.quit = True
+                    elif client_action == 'start_fast_arp_discovery':
+                        utils.log('[UPLOAD] Server wants me to do fast ARP scan.')
+                        with self._host_state.lock:
+                            self._host_state.fast_arp_scan = True
+
+                # Quit upon UI inactivity
+                try:
+                    ui_last_active_ts = response_dict['ui_last_active_ts']
+                except KeyError:
+                    ui_last_active_ts = 0
+                if ui_last_active_ts > 0: 
+                    ui_inactivity_time = int(time.time() - ui_last_active_ts)
+                    if ui_inactivity_time > 120:
+                        utils.log('[UPLOAD] About to quit, due to 120 seconds of UI inactivity.')
+                        with self._host_state.lock:
+                            self._host_state.quit = True
+
+                if response_dict['status'] == 'success':                    
+                    # Update whitelist based on server's response
                     with self._host_state.lock:
                         self._host_state.device_whitelist = \
                             response_dict['inspected_devices']
-                    break
+                        break
+                
             except Exception:
                 utils.log('[UPLOAD] Failed. Retrying:', traceback.format_exc())
             time.sleep((attempt + 1) ** 2)
@@ -239,7 +290,7 @@ class DataUploader(object):
         self._update_ui_status(
             'Currently analyzing ' +
             '{:,}'.format(int(byte_count * 8.0 / 1000.0 / window_duration)) +
-            ' Kbps of traffic.'
+            ' Kbps of traffic'
         )
 
         utils.log(
