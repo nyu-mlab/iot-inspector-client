@@ -3,14 +3,14 @@
 block_cipher = None
 
 # Please set the developer's name first, so that pyinstaller can use the correct paths.
-developer_name = ''
+developer_name = 'danny'
 
 if developer_name == 'deepak':
     var_pathex = ['C:\\Users\\debug\\Documents\\research\\iot-inspector-client\\v2-src']
     var_datas = [('C:\\Users\\debug\\AppData\\Local\\Programs\\Python\\Python38-32\\Lib\\site-packages\\netdisco\\discoverables\*', 'netdisco\discoverables')]
 elif developer_name == 'danny':
-    var_pathex = [r'C:\Users\yuxingh\dev\iot-inspector-client\v2-src']
-    var_datas = [(r'C:\Users\yuxingh\dev\iot-inspector-client\v2-src\dev\Lib\site-packages\netdisco\discoverables\*', 'netdisco\discoverables')]
+    var_pathex = [r'C:\Users\yuxingh\dev\iot-inspector-client\src']
+    var_datas = [(r'C:\Users\yuxingh\dev\iot-inspector-client\env\Lib\site-packages\netdisco\discoverables\*', 'netdisco\discoverables')]
 else:
     raise RuntimeError('developer_name not set!')
 
