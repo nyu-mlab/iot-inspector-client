@@ -166,9 +166,11 @@ class DataUploader(object):
                 )
 
             # Keep raw values for internal book-keeping
-            internal_stats = {
-                'internal_remote_device_id': flow_stats['internal_remote_device_id']
-            }
+            internal_stats = {}
+            for (stat_key, stat_value) in flow_stats.items():
+                if stat_key.startswith('internal_'):
+                    internal_stats[stat_key] = stat_value
+
             for direction in ('inbound_', 'outbound_'):
                 internal_prefix = 'internal_' + direction
                 internal_stats[internal_prefix + 'byte_count'] = flow_stats[direction + 'byte_count']

@@ -279,10 +279,13 @@ class PacketProcessor(object):
 
         # Get remote device_id for internal book-keeping purpose
         remote_device_id = ''
+        remote_ip_is_inspector_host = 0 # True (1) or False (0)
         try:
             with self._host_state.lock:
                 real_remote_device_mac = self._host_state.ip_mac_dict[remote_ip]
                 remote_device_id = utils.get_device_id(real_remote_device_mac, self._host_state)
+                if remote_ip == self._host_state.host_ip:
+                    remote_ip_is_inspector_host = 1
         except Exception:
             pass
 
@@ -290,6 +293,9 @@ class PacketProcessor(object):
         flow_key = (
             device_id, device_port, remote_ip, remote_port, protocol
         )
+        flow_key_str = ':'.join([str(item) for item in flow_key])
+
+        flow_ts = time.time()
 
         # Initialize flow_stats. Note: TCP byte counts may include out-of-order
         # packets and RSTs. On the other hand, TCP sequence number shows how
@@ -304,11 +310,25 @@ class PacketProcessor(object):
             'outbound_tcp_seq_min_max': (None, None),
             'outbound_tcp_ack_min_max': (None, None),
             'syn_originator': None,
-            'internal_remote_device_id': remote_device_id
+            'internal_remote_device_id': remote_device_id,
+            'internal_first_packet_originator': '',
+            'internal_remote_ip_is_inspector_host': remote_ip_is_inspector_host,
+            'internal_inbound_pkt_count': 0,
+            'internal_outbound_pkt_count': 0,
+            'internal_flow_ts_min': flow_ts,
+            'internal_flow_ts_max': flow_ts,
+            'internal_flow_key': flow_key_str
         }
         with self._host_state.lock:
             flow_stats = self._host_state.pending_flow_dict \
                 .setdefault(flow_key, flow_stats)
+
+        # Identify who sent out the first UDP packet in this flow
+        if flow_stats['internal_first_packet_originator'] == '':
+            if direction == 'inbound':
+                flow_stats['internal_first_packet_originator'] = 'remote'
+            else:
+                flow_stats['internal_first_packet_originator'] = 'local'
 
         # Construct flow_stats
         flow_stats[direction + '_byte_count'] += len(pkt)
@@ -316,6 +336,8 @@ class PacketProcessor(object):
             flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
         flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
             flow_stats[direction + '_tcp_ack_min_max'], tcp_ack)
+        flow_stats['internal_' + direction + '_pkt_count'] += 1
+        flow_stats['internal_flow_ts_max'] = flow_ts
 
         # Who initiated the SYN packet
         syn_originator = None
