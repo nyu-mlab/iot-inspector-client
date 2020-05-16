@@ -242,7 +242,7 @@ class DataUploader(object):
             
             try:
                 utils.log("logging response.")
-                utils.log(post_data)
+                # utils.log(post_data) # Uncomment this in debug
                 utils.log(response)
                 response_dict = json.loads(response)
 
