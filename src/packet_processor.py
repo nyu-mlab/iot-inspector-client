@@ -280,12 +280,15 @@ class PacketProcessor(object):
         # Get remote device_id for internal book-keeping purpose
         remote_device_id = ''
         remote_ip_is_inspector_host = 0 # True (1) or False (0)
+        remote_ip_is_gateway = 0 # True (1) or False (0)
         try:
             with self._host_state.lock:
                 real_remote_device_mac = self._host_state.ip_mac_dict[remote_ip]
                 remote_device_id = utils.get_device_id(real_remote_device_mac, self._host_state)
                 if remote_ip == self._host_state.host_ip:
                     remote_ip_is_inspector_host = 1
+                elif remote_ip == self._host_state.gateway_ip:
+                    remote_ip_is_gateway = 1
         except Exception:
             pass
 
@@ -313,6 +316,7 @@ class PacketProcessor(object):
             'internal_remote_device_id': remote_device_id,
             'internal_first_packet_originator': '',
             'internal_remote_ip_is_inspector_host': remote_ip_is_inspector_host,
+            'internal_remote_ip_is_gateway': remote_ip_is_gateway,
             'internal_inbound_pkt_count': 0,
             'internal_outbound_pkt_count': 0,
             'internal_flow_ts_min': flow_ts,
