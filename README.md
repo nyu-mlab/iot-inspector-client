@@ -31,7 +31,7 @@ Make sure you have Python 3. Do the following from the command line:
 ```
 $ git clone https://github.com/noise-lab/iot-inspector-client.git
 $ cd iot-inspector-client/src
-$ pip install -r requirements.txt
+$ sudo pip install -r requirements.txt
 $ sudo python start_inspector.py
 ```
 
