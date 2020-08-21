@@ -15,17 +15,18 @@ import subprocess
 import sys
 import logging
 import server_config
+import webbrowser
 
-
-WINDOWS_STARTUP_TEXT = """
+STARTUP_TEXT = """
 
 ======================================
-Princeton IoT Inspector for Windows 10
+Princeton IoT Inspector for {0}
 ======================================
 
-We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
+We have also opened a new browser window for you to view the IoT Inspector report.
+If you don't see a new browser window, use the following private link:
 
-{0}/user/{1}
+{1}/user/{2}
 
 To stop IoT Inspector, simply close this window or hit Control + C.
 
@@ -33,13 +34,12 @@ Questions? Email us at iot-inspector@lists.cs.princeton.edu.
 
 """
 
-
 def start():
     """
     Initializes inspector by spawning a number of background threads.
-    
+
     Returns the host state once all background threats are started.
-    
+
     """
     # Read from home directory the user_key. If non-existent, get one from
     # cloud.
@@ -107,17 +107,19 @@ def start():
 
     print('\n' * 100)
 
-    os_platform = utils.get_os()    
-
-    if os_platform == 'windows':
-        print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
+    os_platform = utils.get_os()
 
     # Open a browser window on Windows 10. Note that a new webpage will be
     # opened in a non-privileged mode. TODO: Not sure how to do the same
     # for macOS, as the "open" call on macOS will open a browser window
     # in privileged mode.
+    target_url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
     if os_platform == 'windows':
-        utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
+        print(STARTUP_TEXT.format('Windows 10', server_config.BASE_URL, pretty_user_key))
+        utils.open_browser_on_windows(target_url)
+    elif os_platform == 'mac':
+        print(STARTUP_TEXT.format('Mac OS X', server_config.BASE_URL, pretty_user_key))
+        webbrowser.open_new(target_url)
 
     return state
 
