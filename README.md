@@ -1,4 +1,4 @@
-# Princeton IoT Inspector
+# IoT Inspector
 
 IoT Inspector is a standalone desktop app that lets you analyze your home IoT devices. It allows you to determine
 
