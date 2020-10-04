@@ -354,3 +354,12 @@ def open_browser_on_windows(url):
         subprocess.call(['start', '', url], shell=True)    
     except Exception:
         pass
+
+def open_browser_on_linux(url):
+
+    try:
+        logname = subprocess.check_output(['logname']).rstrip().decode('utf-8')
+        subprocess.call(['sudo', '-u', logname, 'sensible-browser', url])
+
+    except Exception:
+        pass

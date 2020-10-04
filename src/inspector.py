@@ -117,6 +117,9 @@ def start():
     # in privileged mode.
     if os_platform == 'windows':
         utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
+    elif os_platform == 'linux':
+        utils.open_browser_on_linux('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
+
 
     return state
 
