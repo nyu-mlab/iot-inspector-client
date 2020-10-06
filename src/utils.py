@@ -19,7 +19,7 @@ import netaddr
 import netifaces
 import ipaddress
 import subprocess
-
+import webbrowser
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -127,7 +127,7 @@ def _get_routes():
         time.sleep(1)
 
 
-def get_default_route():
+def get_default_route(timeout = 10):
     """Returns (gateway_ip, iface, host_ip)."""
 
     while True:
@@ -143,20 +143,20 @@ def get_default_route():
 
 def get_network_ip_range_windows():
     default_iface = get_default_route()
-    iface_filter = default_iface[1]
+    iface_filter = default_iface # FIXME:
     print(default_iface)
     ip_set = set()
-    iface_ip = iface_filter.ip
-    iface_guid = iface_filter.guid
+    iface_ip = iface_filter[2]
+    iface_guid = iface_filter[0]
     for k, v in netifaces.ifaddresses(iface_guid).items():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
             break
-  
+
     network = netaddr.IPAddress(iface_ip)
     cidr = netaddr.IPAddress(netmask).netmask_bits()
     subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-  
+
     return ip_set
 
 
@@ -351,6 +351,13 @@ def get_os():
 def open_browser_on_windows(url):
 
     try:
-        subprocess.call(['start', '', url], shell=True)    
+        subprocess.call(['start', '', url], shell=True)
+    except Exception:
+        pass
+
+def open_browser_on_mac(url):
+    try:
+        browser_controller = webbrowser.get('chrome')
+        browser_controller.open(url)
     except Exception:
         pass

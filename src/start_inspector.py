@@ -24,7 +24,7 @@ def main():
     # Check for Windows
     if utils.get_os() == 'windows':
 
-        # Check Npcap installation 
+        # Check Npcap installation
         npcap_path = os.path.join(
             os.environ['WINDIR'], 'System32', 'Npcap'
         )
@@ -40,6 +40,8 @@ def main():
             sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
             utils.open_browser_on_windows(server_config.NETMASK_ERROR_URL)
             sys.exit(1)
+    elif utils.get_os() == 'mac':
+        utils.open_browser_on_mac('https://dashboard.iotinspector.org/dashboard')
 
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():
@@ -48,7 +50,7 @@ def main():
 
     utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
-    
+
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
     host_state = inspector.start()
