@@ -40,8 +40,8 @@ def main():
             sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
             utils.open_browser_on_windows(server_config.NETMASK_ERROR_URL)
             sys.exit(1)
-    elif utils.get_os() == 'mac':
-        utils.open_browser_on_mac('https://dashboard.iotinspector.org/dashboard')
+    # elif utils.get_os() == 'mac':
+        #TODO: Check mac
 
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():

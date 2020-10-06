@@ -16,3 +16,4 @@ INIT_URL = BASE_URL + '/setup?started_from_app=yes'
 NPCAP_ERROR_URL = 'https://iotinspector.org/npcap-error/'
 
 NETMASK_ERROR_URL = 'https://iotinspector.org/netmask-error/'
+

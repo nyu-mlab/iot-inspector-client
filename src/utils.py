@@ -141,9 +141,10 @@ def get_default_route(timeout = 10):
         log('get_default_route: retrying')
         time.sleep(1)
 
+# Deprecated
 def get_network_ip_range_windows():
     default_iface = get_default_route()
-    iface_filter = default_iface # FIXME:
+    iface_filter = default_iface
     print(default_iface)
     ip_set = set()
     iface_ip = iface_filter[2]
@@ -360,4 +361,12 @@ def open_browser_on_mac(url):
         browser_controller = webbrowser.get('chrome')
         browser_controller.open(url)
     except Exception:
-        pass
+        # if Chrome fails, try firefox
+        #TEST on virtual mac
+        try:
+            browser_controller = webbrowser.get('mozilla')
+            browser_controller.open(url)
+        except Exception:
+            # Try Safari? or just terminate app
+            pass
+
