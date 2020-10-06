@@ -19,7 +19,8 @@ import netaddr
 import netifaces
 import ipaddress
 import subprocess
-
+import webbrowser
+import plistlib
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -127,7 +128,7 @@ def _get_routes():
         time.sleep(1)
 
 
-def get_default_route():
+def get_default_route(timeout = 10):
     """Returns (gateway_ip, iface, host_ip)."""
 
     while True:
@@ -141,22 +142,23 @@ def get_default_route():
         log('get_default_route: retrying')
         time.sleep(1)
 
+# Deprecated
 def get_network_ip_range_windows():
     default_iface = get_default_route()
-    iface_filter = default_iface[1]
+    iface_filter = default_iface
     print(default_iface)
     ip_set = set()
-    iface_ip = iface_filter.ip
-    iface_guid = iface_filter.guid
+    iface_ip = iface_filter[2]
+    iface_guid = iface_filter[0]
     for k, v in netifaces.ifaddresses(iface_guid).items():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
             break
-  
+
     network = netaddr.IPAddress(iface_ip)
     cidr = netaddr.IPAddress(netmask).netmask_bits()
     subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-  
+
     return ip_set
 
 
@@ -351,6 +353,39 @@ def get_os():
 def open_browser_on_windows(url):
 
     try:
-        subprocess.call(['start', '', url], shell=True)    
+        subprocess.call(['start', '', url], shell=True)
     except Exception:
         pass
+
+def open_browser_on_mac(url):
+    support_browser = ['chrome', 'safari', 'firefox']
+    # brave_path = '/Applications/Brave Browser.app'
+    # webbrowser.register('brave', None, brave_path)
+
+    default_browser = get_default_browser()
+    # print(default_browser)
+    if default_browser in support_browser:
+        try:
+            browser_controller = webbrowser.get(default_browser)
+            browser_controller.open(url)
+
+        except Exception:
+            pass
+    else:
+        webbrowser.open(url) # usually open safari since every mac has safari installed
+
+def get_default_browser():
+    # time.sleep(10) # time that system updates the plist file
+    subprocess.call(['./cp_plist.sh'], shell=True)
+    with open('com.apple.launchservices.secure.plist', 'rb') as fp:
+        pl = plistlib.load(fp)
+    words = ['com', '.','apple', 'google', 'browser', 'org', 'mozilla']
+    default_browser = ''
+    for i in pl['LSHandlers']:
+        for j in i.values():
+            if j == 'http':
+                default_browser = i['LSHandlerRoleAll']
+                # print(default_browser + "*")
+                for word in words:
+                    default_browser = default_browser.replace(word, '')
+    return default_browser
