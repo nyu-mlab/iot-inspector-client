@@ -110,6 +110,7 @@ def start():
     os_platform = utils.get_os()    
 
     print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
+    state.dashboard_url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
 
     # Open a browser window on Windows 10. Note that a new webpage will be
     # opened in a non-privileged mode. TODO: Not sure how to do the same

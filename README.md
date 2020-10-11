@@ -24,7 +24,30 @@ You can download the latest pre-compiled binaries from https://iotinspector.org.
 
 If you are uncomfortable executing our pre-compiled binaries (as some anti-virus products may flag IoT Inspector as malware), you can directly run IoT Inspector from the source code. After all, IoT Inspector is written in pure Python 3. 
 
-### Linux and macOS
+### Linux
+
+Make sure you have Python 3, `tcpdump`, and `nss-mdns` installed. Do the following from the command line:
+```
+$ git clone https://github.com/noise-lab/iot-inspector-client.git
+$ cd iot-inspector-client
+$ sudo bash install_linux.sh
+```
+This will install the iot-inspector to `/opt/iot-inspector`.
+
+
+
+After that, you can start the iot-inspector by typing:
+```
+$ sudo systemctl start iot-inspector.service
+```
+
+Or, you can let the iot-inspector start automatically at boot time by typing:
+```
+$ sudo systemctl enable iot-inspector.service
+```
+
+
+### macOS
 
 Make sure you have Python 3. Do the following from the command line:
 

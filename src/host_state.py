@@ -20,6 +20,7 @@ class HostState(object):
         self.gateway_ip = None
         self.packet_processor = None
         self.user_key = None
+        self.dashboard_url = None
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
         self.persistent_mode = True  # Always persistent to remove local Flask

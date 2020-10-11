@@ -1,5 +1,6 @@
 import os
 import inspector
+import inspector_local_server
 import sys
 import utils
 import signal
@@ -52,17 +53,19 @@ def main():
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
     host_state = inspector.start()
-
-    # Waiting for termination
-    while True:
-        with host_state.lock:
-            if host_state.quit:
+    # TODO: Make it configurable
+    port_url = 80
+    with inspector_local_server.InspectorLocalServer(host_state.dashboard_url, port_url):
+        # Waiting for termination
+        while True:
+            with host_state.lock:
+                if host_state.quit:
+                    break
+            try:
+                time.sleep(2)
+            except KeyboardInterrupt:
+                print('')
                 break
-        try:
-            time.sleep(2)
-        except KeyboardInterrupt:
-            print('')
-            break
 
     utils.log('[Main] Restoring ARP...')
 

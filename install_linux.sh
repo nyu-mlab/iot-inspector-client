@@ -9,8 +9,9 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR && \
-mkdir -p venv && \
-python3 -m venv ./venv && \
-source ./venv/bin/activate && \
-pip3 install -r requirements.txt && \
-apt install tcpdump
+cp installation_files/iot-inspector.service /lib/systemd/system/iot-inspector.service && \
+chmod 644 /lib/systemd/system/iot-inspector.service && \
+chown root:root /lib/systemd/system/iot-inspector.service && \
+cp -r src /opt/iot-inspector && \
+/opt/iot-inspector/linux-install-dependencies.sh && \
+echo "Successfully installed the iot-inspector to /opt/iot-inspector. You can start the iot-inspector by typing 'systemctl start iot-inspector.service'."
