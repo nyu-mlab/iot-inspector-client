@@ -54,6 +54,10 @@ def start():
     state.host_mac = utils.get_my_mac()
     state.gateway_ip, _, state.host_ip = utils.get_default_route()
 
+    # Read special command-line arguments
+    if '--raspberry_pi_mode' in sys.argv:
+        state.raspberry_pi_mode = True
+
     assert utils.is_ipv4_addr(state.gateway_ip)
     assert utils.is_ipv4_addr(state.host_ip)
 

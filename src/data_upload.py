@@ -268,7 +268,7 @@ class DataUploader(object):
                     ui_last_active_ts = 0
                 if ui_last_active_ts > 0: 
                     ui_inactivity_time = int(time.time() - ui_last_active_ts)
-                    if ui_inactivity_time > 120:
+                    if ui_inactivity_time > 120 and not self._host_state.raspberry_pi_mode:
                         utils.log('[UPLOAD] About to quit, due to 120 seconds of UI inactivity.')
                         with self._host_state.lock:
                             self._host_state.quit = True
