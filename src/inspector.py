@@ -109,16 +109,11 @@ def start():
 
     os_platform = utils.get_os()
 
-
-    # Open a browser window on Windows 10. Note that a new webpage will be
-    # opened in a non-privileged mode. TODO: Not sure how to do the same
-    # for macOS, as the "open" call on macOS will open a browser window
-    # in privileged mode.
     if os_platform == 'windows':
         print(STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key, "Windows 10", ""))
         utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
     elif utils.get_os() == 'mac':
-        print(STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key, "Mac", "Catalina"))
+        print(STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key, "Mac", "OS"))
         utils.open_browser_on_mac('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
     return state
 

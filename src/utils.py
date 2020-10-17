@@ -20,6 +20,7 @@ import netifaces
 import ipaddress
 import subprocess
 import webbrowser
+import plistlib
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -357,16 +358,34 @@ def open_browser_on_windows(url):
         pass
 
 def open_browser_on_mac(url):
-    try:
-        browser_controller = webbrowser.get('chrome')
-        browser_controller.open(url)
-    except Exception:
-        # if Chrome fails, try firefox
-        #TEST on virtual mac
-        try:
-            browser_controller = webbrowser.get('mozilla')
-            browser_controller.open(url)
-        except Exception:
-            # Try Safari? or just terminate app
-            pass
+    support_browser = ['chrome', 'safari', 'firefox']
+    # brave_path = '/Applications/Brave Browser.app'
+    # webbrowser.register('brave', None, brave_path)
 
+    default_browser = get_default_browser()
+    # print(default_browser)
+    if default_browser in support_browser:
+        try:
+            browser_controller = webbrowser.get(default_browser)
+            browser_controller.open(url)
+
+        except Exception:
+            pass
+    else:
+        webbrowser.open(url) # usually open safari since every mac has safari installed
+
+def get_default_browser():
+    # time.sleep(10) # time that system updates the plist file
+    subprocess.call(['./cp_plist.sh'], shell=True)
+    with open('com.apple.launchservices.secure.plist', 'rb') as fp:
+        pl = plistlib.load(fp)
+    words = ['com', '.','apple', 'google', 'browser', 'org', 'mozilla']
+    default_browser = ''
+    for i in pl['LSHandlers']:
+        for j in i.values():
+            if j == 'http':
+                default_browser = i['LSHandlerRoleAll']
+                # print(default_browser + "*")
+                for word in words:
+                    default_browser = default_browser.replace(word, '')
+    return default_browser
