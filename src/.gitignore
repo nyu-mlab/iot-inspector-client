@@ -4,3 +4,4 @@ dev/
 __pycache__/
 .vscode/
 .DS_Store
+com.apple.launchservices.secure.plist
