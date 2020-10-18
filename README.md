@@ -35,7 +35,7 @@ $ sudo pip install -r requirements-linux.txt
 $ sudo python start_inspector.py
 ```
 
-### MaxOS
+### MacOS
 
 Make sure you have Python 3. Do the following from the command line:
 
@@ -45,6 +45,7 @@ $ cd iot-inspector-client/src
 $ sudo pip install -r requirements-mac.txt
 $ sudo python start_inspector.py
 ```
+
 
 ### Windows 10 PowerShell or WSL
 
