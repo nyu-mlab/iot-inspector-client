@@ -1,0 +1,9 @@
+Flask
+requests
+scapy
+netaddr
+scapy-http
+netdisco
+flask
+flask-cors
+netifaces
