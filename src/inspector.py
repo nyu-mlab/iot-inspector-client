@@ -17,10 +17,10 @@ import logging
 import server_config
 
 
-WINDOWS_STARTUP_TEXT = """
+STARTUP_TEXT = """
 
 ======================================
-Princeton IoT Inspector for Windows 10
+Princeton IoT Inspector for {2} {3}
 ======================================
 
 We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
@@ -37,9 +37,9 @@ Questions? Email us at iot-inspector@lists.cs.princeton.edu.
 def start():
     """
     Initializes inspector by spawning a number of background threads.
-    
+
     Returns the host state once all background threats are started.
-    
+
     """
     # Read from home directory the user_key. If non-existent, get one from
     # cloud.
@@ -111,17 +111,14 @@ def start():
 
     print('\n' * 100)
 
-    os_platform = utils.get_os()    
+    os_platform = utils.get_os()
 
-    print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
-
-    # Open a browser window on Windows 10. Note that a new webpage will be
-    # opened in a non-privileged mode. TODO: Not sure how to do the same
-    # for macOS, as the "open" call on macOS will open a browser window
-    # in privileged mode.
     if os_platform == 'windows':
+        print(STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key, "Windows 10", ""))
         utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
-
+    elif utils.get_os() == 'mac':
+        print(STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key, "Mac", "OS"))
+        utils.open_browser_on_mac('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
     return state
 
 

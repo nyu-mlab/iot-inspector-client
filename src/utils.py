@@ -152,11 +152,11 @@ def get_network_ip_range_windows():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
             break
-  
+
     network = netaddr.IPAddress(iface_ip)
     cidr = netaddr.IPAddress(netmask).netmask_bits()
     subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-  
+
     return ip_set
 
 
@@ -351,6 +351,14 @@ def get_os():
 def open_browser_on_windows(url):
 
     try:
-        subprocess.call(['start', '', url], shell=True)    
+        subprocess.call(['start', '', url], shell=True)
+    except Exception:
+        pass
+
+def open_browser_on_mac(url):
+    try:
+        username = os.getlogin()
+        cmd = "sudo -u " + username + " open " + url
+        subprocess.call(cmd.split(' '))
     except Exception:
         pass
