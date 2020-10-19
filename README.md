@@ -35,7 +35,7 @@ $ sudo pip install -r requirements_mac.txt
 $ sudo python start_inspector.py
 ```
 
-Note: If you just setup your System, you might get error that saying you need a SSL certificate, you can try to fully restart the browser.
+If you just setup your System, you might get error that saying you need a SSL certificate, you can try to fully restart the browser.
 
 ### Windows 10 PowerShell or WSL
 
