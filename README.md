@@ -25,7 +25,6 @@ You can download the latest pre-compiled binaries from https://iotinspector.org.
 If you are uncomfortable executing our pre-compiled binaries (as some anti-virus products may flag IoT Inspector as malware), you can directly run IoT Inspector from the source code. After all, IoT Inspector is written in pure Python 3.
 
 ### Linux and macOS
-We are currently supporting Safari, Chrome, Firefox browsers on mac. If your default browser is not in the list, the app will using Sarari in default. (Feel feel to let me know which browser you want the app to support)
 
 Make sure you have Python 3. Do the following from the command line:
 
@@ -36,7 +35,8 @@ $ sudo pip install -r requirements_mac.txt
 $ sudo python start_inspector.py
 ```
 
-If you just setup your System, you might get error that saying you need a SSL certificate, you can try to fully restart the browser.
+Note: If you just setup your System, you might get error that saying you need a SSL certificate, you can try to fully restart the browser.
+
 ### Windows 10 PowerShell or WSL
 
 Make sure to first install [Npcap](https://nmap.org/dist/nmap-7.80-setup.exe).
