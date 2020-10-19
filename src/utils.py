@@ -358,34 +358,10 @@ def open_browser_on_windows(url):
         pass
 
 def open_browser_on_mac(url):
-    support_browser = ['chrome', 'safari', 'firefox']
-    # brave_path = '/Applications/Brave Browser.app'
-    # webbrowser.register('brave', None, brave_path)
+    try:
 
-    default_browser = get_default_browser()
-    # print(default_browser)
-    if default_browser in support_browser:
-        try:
-            browser_controller = webbrowser.get(default_browser)
-            browser_controller.open(url)
-
-        except Exception:
-            pass
-    else:
-        webbrowser.open(url) # usually open safari since every mac has safari installed
-
-def get_default_browser():
-    # time.sleep(10) # time that system updates the plist file
-    subprocess.call(['./cp_plist.sh'], shell=True)
-    with open('com.apple.launchservices.secure.plist', 'rb') as fp:
-        pl = plistlib.load(fp)
-    words = ['com', '.','apple', 'google', 'browser', 'org', 'mozilla']
-    default_browser = ''
-    for i in pl['LSHandlers']:
-        for j in i.values():
-            if j == 'http':
-                default_browser = i['LSHandlerRoleAll']
-                # print(default_browser + "*")
-                for word in words:
-                    default_browser = default_browser.replace(word, '')
-    return default_browser
+        username = os.getlogin()
+        cmd = "sudo -u " + username + " open " + url
+        subprocess.call(cmd.split(' '))
+    except Exception:
+        pass
