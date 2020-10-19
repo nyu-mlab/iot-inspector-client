@@ -126,7 +126,7 @@ def _get_routes():
         time.sleep(1)
 
 
-def get_default_route(timeout = 10):
+def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
 
     while True:
@@ -140,14 +140,13 @@ def get_default_route(timeout = 10):
         log('get_default_route: retrying')
         time.sleep(1)
 
-# Deprecated
 def get_network_ip_range_windows():
     default_iface = get_default_route()
-    iface_filter = default_iface
+    iface_filter = default_iface[1]
     print(default_iface)
     ip_set = set()
-    iface_ip = iface_filter[2]
-    iface_guid = iface_filter[0]
+    iface_ip = iface_filter.ip
+    iface_guid = iface_filter.guid
     for k, v in netifaces.ifaddresses(iface_guid).items():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
@@ -357,7 +356,6 @@ def open_browser_on_windows(url):
 
 def open_browser_on_mac(url):
     try:
-
         username = os.getlogin()
         cmd = "sudo -u " + username + " open " + url
         subprocess.call(cmd.split(' '))

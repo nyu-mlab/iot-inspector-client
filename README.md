@@ -31,6 +31,7 @@ Make sure you have Python 3. Do the following from the command line:
 ```
 $ git clone https://github.com/noise-lab/iot-inspector-client.git
 $ cd iot-inspector-client/src
+
 $ sudo pip install -r requirements_mac.txt
 $ sudo python start_inspector.py
 ```
@@ -40,6 +41,7 @@ If you just setup your System, you might get error that saying you need a SSL ce
 ### Windows 10 PowerShell or WSL
 
 Make sure to first install [Npcap](https://nmap.org/dist/nmap-7.80-setup.exe).
+
 
 If you use the command line or PowerShell, make sure to open it using the Admin mode.
 

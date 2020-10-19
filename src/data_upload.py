@@ -196,7 +196,7 @@ class DataUploader(object):
                 'syn_originator': flow_stats['syn_originator']
             }
             flow_dict[flow_key].update(internal_stats)
-       
+
         with self._host_state.lock:
             status_text = self._host_state.status_text
 
@@ -239,7 +239,7 @@ class DataUploader(object):
             # Upload data via POST
             response = requests.post(url, data=post_data).text
             utils.log('[UPLOAD] Gets back server response:', response)
-            
+
             try:
                 utils.log("logging response.")
                 # utils.log(post_data) # Uncomment this in debug
@@ -266,20 +266,20 @@ class DataUploader(object):
                     ui_last_active_ts = response_dict['ui_last_active_ts']
                 except KeyError:
                     ui_last_active_ts = 0
-                if ui_last_active_ts > 0: 
+                if ui_last_active_ts > 0:
                     ui_inactivity_time = int(time.time() - ui_last_active_ts)
-                    if ui_inactivity_time > 120:
+                    if ui_inactivity_time > 120 and not self._host_state.raspberry_pi_mode:
                         utils.log('[UPLOAD] About to quit, due to 120 seconds of UI inactivity.')
                         with self._host_state.lock:
                             self._host_state.quit = True
 
-                if response_dict['status'] == 'success':                    
+                if response_dict['status'] == 'success':
                     # Update whitelist based on server's response
                     with self._host_state.lock:
                         self._host_state.device_whitelist = \
                             response_dict['inspected_devices']
                         break
-                
+
             except Exception:
                 utils.log('[UPLOAD] Failed. Retrying:', traceback.format_exc())
             time.sleep((attempt + 1) ** 2)

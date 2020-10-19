@@ -23,6 +23,7 @@ class HostState(object):
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
         self.persistent_mode = True  # Always persistent to remove local Flask
+        self.raspberry_pi_mode = False  # If true, app does not auto-quit upon UI inactivity
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()
