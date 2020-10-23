@@ -7,7 +7,3 @@ netdisco
 flask
 flask-cors
 netifaces
-requests
-netdisco
-netifaces
-netaddr
