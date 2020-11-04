@@ -1,5 +1,6 @@
 import os
 import inspector
+import inspector_local_server
 import sys
 import utils
 import signal
@@ -7,9 +8,16 @@ import time
 import ctypes
 import scapy.all as sc
 import server_config
+import configparser
+import argparse
 
+DEFAULT_PORT = 80
 
 def main():
+    parser = argparse.ArgumentParser(description='The main program for iot-inspector.')
+    parser.add_argument('-config',
+                    help='Config file to be used.')
+    args = parser.parse_args()
     sc.load_layer("http")
     # The whole process should be run as root.
     try:
@@ -51,18 +59,21 @@ def main():
     
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
-    host_state = inspector.start()
+    host_state = inspector.start(args.config)
+    enable_server = utils.parse_config(host_state.config, 'yn', False, 'Local_Server', 'Enable')
+    server_port = utils.parse_config(host_state.config, 'num', 80, 'Local_Server', 'Port') if enable_server else None
 
-    # Waiting for termination
-    while True:
-        with host_state.lock:
-            if host_state.quit:
+    with inspector_local_server.InspectorLocalServer(host_state.dashboard_url, server_port):
+        # Waiting for termination
+        while True:
+            with host_state.lock:
+                if host_state.quit:
+                    break
+            try:
+                time.sleep(2)
+            except KeyboardInterrupt:
+                print('')
                 break
-        try:
-            time.sleep(2)
-        except KeyboardInterrupt:
-            print('')
-            break
 
     utils.log('[Main] Restoring ARP...')
 

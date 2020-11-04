@@ -7,4 +7,3 @@ netdisco
 flask
 flask-cors
 netifaces
-tcpdump

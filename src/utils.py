@@ -19,6 +19,7 @@ import netaddr
 import netifaces
 import ipaddress
 import subprocess
+import configparser
 
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
@@ -127,7 +128,7 @@ def _get_routes():
         time.sleep(1)
 
 
-def get_default_route():
+def get_default_route(timeout = 10):
     """Returns (gateway_ip, iface, host_ip)."""
 
     while True:
@@ -354,3 +355,27 @@ def open_browser_on_windows(url):
         subprocess.call(['start', '', url], shell=True)    
     except Exception:
         pass
+
+def parse_config(config, type, default_value, *paths):
+    config_value = config
+    for path in paths:
+        if path in config_value:
+            config_value = config_value[path]
+        else:
+            return default_value
+    if type == 'yn':
+        if config_value.lower() == 'yes':
+            return True
+        elif config_value.lower() == 'no':
+            return False
+        else:
+            return default_value
+    if type == 'str':
+        return config_value
+    if type == 'num':
+        if config_value.isnumeric():
+            return int(config_value)
+        else:
+            return default_value
+    return config_value
+    
