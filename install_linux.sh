@@ -9,6 +9,8 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR && \
+mkdir -p /etc/iot-inspector && \
+cp installation_files/iot-inspector.conf /etc/iot-inspector/iot-inspector.conf && \
 cp installation_files/iot-inspector.service /lib/systemd/system/iot-inspector.service && \
 chmod 644 /lib/systemd/system/iot-inspector.service && \
 chown root:root /lib/systemd/system/iot-inspector.service && \

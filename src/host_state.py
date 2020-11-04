@@ -6,6 +6,7 @@ import threading
 import utils
 import time
 import sys
+import os
 
 
 CLIENT_VERSION = '1.0.3'
@@ -45,6 +46,10 @@ class HostState(object):
         self.last_ui_contact_ts = time.time()  # ts of /is_inspecting_traffic
         self.quit = False
         self.spoof_arp = True
+
+        # Config file
+        self.config_file = [os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'iot-inspector.conf'), '/etc/iot-inspector/iot-inspector.conf']
+        self.config = None
 
         # Constantly checks for IP changes on this host
         thread = threading.Thread(target=self.update_ip_thread)

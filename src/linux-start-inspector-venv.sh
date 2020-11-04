@@ -15,7 +15,7 @@ cd $DIR
 
 # Start!
 echo "Starting IoT Inspector..."
-python3 start_inspector.py persistent
+python3 start_inspector.py
 
 # Update software
 #echo "Updating software..."

@@ -15,6 +15,7 @@ import subprocess
 import sys
 import logging
 import server_config
+import configparser
 
 
 WINDOWS_STARTUP_TEXT = """
@@ -34,7 +35,7 @@ Questions? Email us at iot-inspector@lists.cs.princeton.edu.
 """
 
 
-def start():
+def start(config_file):
     """
     Initializes inspector by spawning a number of background threads.
     
@@ -58,6 +59,12 @@ def start():
     assert utils.is_ipv4_addr(state.host_ip)
 
     state.packet_processor = PacketProcessor(state)
+
+    state.config = configparser.ConfigParser()
+    if config_file:
+        state.config_file = config_file
+    if state.config_file:
+        state.config.read(state.config_file)
 
     utils.log('Initialized:', state.__dict__)
 
