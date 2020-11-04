@@ -1,0 +1,13 @@
+[Unit]
+Description=IoT Inspector
+Wants=network.target
+After=network.target
+
+[Service]
+ExecStart=/opt/iot-inspector/linux-start-inspector.sh
+Type=simple
+Restart=on-success
+
+[Install]
+Alias=iot-inspector.service
+WantedBy=default.target
