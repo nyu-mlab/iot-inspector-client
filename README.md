@@ -35,6 +35,14 @@ $ sudo pip install -r requirements.txt
 $ sudo python start_inspector.py
 ```
 
+If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, run the following:
+
+```
+sudo apt-get install python3-dev
+```
+
+
+
 ### Windows 10 PowerShell or WSL
 
 Make sure to first install [Npcap](https://nmap.org/dist/nmap-7.80-setup.exe). 
