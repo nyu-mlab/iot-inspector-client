@@ -444,7 +444,7 @@ def is_grease(int_value):
     See https://tools.ietf.org/html/draft-ietf-tls-grease-01
 
     """
-    hex_str = hex(int_value)[2:].lower()
+    hex_str = hex(int_value)[2:].lower().zfill(4)
     if len(hex_str) < 4:
         return False
 
