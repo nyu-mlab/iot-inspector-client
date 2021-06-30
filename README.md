@@ -31,11 +31,12 @@ Make sure you have Python 3. Do the following from the command line:
 ```
 $ git clone https://github.com/noise-lab/iot-inspector-client.git
 $ cd iot-inspector-client/src
-$ sudo pip install -r requirements.txt
-$ sudo python start_inspector.py
+$ sudo su # Make sure that everything below is run as root
+$ pip install -r requirements.txt
+$ python start_inspector.py
 ```
 
-If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, run the following:
+If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, run the following before doing `pip install -r requirements.txt`:
 
 ```
 sudo apt-get install python3-dev
