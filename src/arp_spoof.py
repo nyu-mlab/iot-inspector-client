@@ -2,11 +2,12 @@
 Based on ARP packets received, sends out spoofed ARP packets.
 
 """
-from host_state import HostState
 import scapy.all as sc
 import threading
-import utils
 import time
+
+from host_state import HostState
+import utils
 
 
 # Min seconds between successive spoofed packets

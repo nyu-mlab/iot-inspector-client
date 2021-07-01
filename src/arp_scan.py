@@ -4,9 +4,10 @@ Continuously sends out ARP discover packets.
 """
 import scapy.all as sc
 import threading
-import utils
 import time
+
 from host_state import HostState
+import utils
 
 
 # pylint: disable=no-member
