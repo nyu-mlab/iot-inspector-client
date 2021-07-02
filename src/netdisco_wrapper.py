@@ -2,15 +2,17 @@
 Periodically start netdisco and extract naming info about the network.
 
 """
-import threading
-import os
-import stat
-import utils
-import requests
-import subprocess
 import json
-import time
+import requests
+import stat
+import subprocess
+
 from netdisco.discovery import NetworkDiscovery
+import os
+import threading
+import time
+
+import utils
 
 BASE_BINARY_PATH = 'https://github.com/noise-lab/netdisco-python-wrapper/raw/master/release/device_identifier_{os}'  # noqa
 

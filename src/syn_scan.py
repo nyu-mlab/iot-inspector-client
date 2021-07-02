@@ -2,14 +2,15 @@
 Continuously sends out SYN packets.
 
 """
-import scapy.all as sc
-import threading
-import utils
-import time
 import itertools
 import random
+import scapy.all as sc
+import threading
+import time
+
 from host_state import HostState
 from parse_available_ports import get_port_list
+import utils
 
 
 # pylint: disable=no-member

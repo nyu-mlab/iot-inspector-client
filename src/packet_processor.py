@@ -2,14 +2,15 @@
 Processes individual packets.
 
 """
-from host_state import HostState
+import hashlib
 import scapy.all as sc
 import scapy.layers.http as http
-import utils
-import hashlib
-import time
 import re
+import time
+
+from host_state import HostState
 from syn_scan import SYN_SCAN_SEQ_NUM, SYN_SCAN_SOURCE_PORT
+import utils
 
 
 # pylint: disable=no-member

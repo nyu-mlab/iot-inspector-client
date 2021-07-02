@@ -2,10 +2,12 @@
 Global shared state about the host.
 
 """
-import threading
-import utils
-import time
 import sys
+
+import threading
+import time
+
+import utils
 
 
 CLIENT_VERSION = '1.0.3'

@@ -1,10 +1,5 @@
-Flask
 requests
-scapy
+scapy==2.4.3
 netaddr
-scapy-http
 netdisco
-flask
-flask-cors
 netifaces
-tcpdump

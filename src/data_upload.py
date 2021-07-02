@@ -2,15 +2,16 @@
 Anonymizes and uploads DNS and flow data to cloud.
 
 """
-import time
 import datetime
-import threading
-import utils
-import requests
 import json
-import server_config
-from host_state import HostState
+import requests
+import threading
+import time
 import traceback
+
+from host_state import HostState
+import server_config
+import utils
 
 
 UPLOAD_INTERVAL = 5

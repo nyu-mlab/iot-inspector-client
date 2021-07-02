@@ -2,23 +2,25 @@
 Misc functions.
 
 """
-import server_config
-import os
-import requests
-import scapy.all as sc
-import time
-import threading
-import traceback
+import ipaddress
+
 import datetime
-import sys
-import re
-import json
-import uuid
 import hashlib
+import json
 import netaddr
 import netifaces
-import ipaddress
+import os
+import re
+import requests
+import scapy.all as sc
 import subprocess
+import sys
+import threading
+import time
+import traceback
+import uuid
+
+import server_config
 
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')

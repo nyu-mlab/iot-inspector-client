@@ -1,12 +1,13 @@
-import os
-import inspector
-import sys
-import utils
-import signal
-import time
 import ctypes
+import os
+import signal
+import sys
+import time
+
+import inspector
 import scapy.all as sc
 import server_config
+import utils
 
 
 def main():

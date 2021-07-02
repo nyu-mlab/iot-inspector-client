@@ -2,19 +2,20 @@
 Entry point for Inspector UI.
 
 """
-import utils
-from host_state import HostState
-from packet_processor import PacketProcessor
-from arp_scan import ArpScan
-from syn_scan import SynScan
-from packet_capture import PacketCapture
-from arp_spoof import ArpSpoof
-from data_upload import DataUploader
-from netdisco_wrapper import NetdiscoWrapper
+import logging
 import subprocess
 import sys
-import logging
+
+from arp_scan import ArpScan
+from arp_spoof import ArpSpoof
+from data_upload import DataUploader
+from host_state import HostState
+from netdisco_wrapper import NetdiscoWrapper
+from packet_capture import PacketCapture
+from packet_processor import PacketProcessor
 import server_config
+from syn_scan import SynScan
+import utils
 
 
 WINDOWS_STARTUP_TEXT = """

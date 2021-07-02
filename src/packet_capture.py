@@ -4,9 +4,10 @@ Thread that continuously captures and processes packets.
 """
 import scapy.all as sc
 import threading
-import utils
-from host_state import HostState
 import time
+
+from host_state import HostState
+import utils
 
 
 class PacketCapture(object):

@@ -35,7 +35,7 @@ $ sudo su # Make sure that everything below is run as root
 $ python3 -m venv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
-$ python start_inspector.py
+$ python3 start_inspector.py
 ```
 
 If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, run the following before doing `pip install -r requirements.txt`:
@@ -55,8 +55,8 @@ If you use the command line or PowerShell, make sure to open it using the Admin 
 ```
 > git clone https://github.com/noise-lab/iot-inspector-client.git
 > cd iot-inspector-client\src
-> pip install -r requirements-windows.txt
-> python start_inspector.py
+> pip install -r requirements.txt
+> python3 start_inspector.py
 ```
 
 If you're on WSL, do the following:
@@ -65,6 +65,6 @@ If you're on WSL, do the following:
 $ git clone https://github.com/noise-lab/iot-inspector-client.git
 $ cd iot-inspector-client/src
 $ pip install -r requirements-windows.txt
-$ sudo python start_inspector.py
+$ sudo python3 start_inspector.py
 ```
 
