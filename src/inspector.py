@@ -5,6 +5,7 @@ Entry point for Inspector UI.
 import logging
 import subprocess
 import sys
+import webbrowser
 
 from arp_scan import ArpScan
 from arp_spoof import ArpSpoof
@@ -116,13 +117,22 @@ def start():
 
     print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
 
-    # Open a browser window on Windows 10. Note that a new webpage will be
-    # opened in a non-privileged mode. TODO: Not sure how to do the same
-    # for macOS, as the "open" call on macOS will open a browser window
-    # in privileged mode.
-    if os_platform == 'windows':
-        utils.open_browser_on_windows('{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key))
+    # Open a Chrome window that runs IoT Inspector since running IoT Inspector
+    # on Chrome is preferred. Note that a new webpage will be opened 
+    # in non-privileged mode. 
 
+    # For users that do not use chrome, the default browser will be opened in 
+    # Windows 10, and Safari will be opened in macOS.
+
+    if os_platform == 'windows' or 'mac':
+        url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
+        try:
+            try:
+                webbrowser.get('chrome').open(url, new=2)
+            except webbrowser.Error:
+                webbrowser.open(url, new=2)
+        except Exception:
+            pass
     return state
 
 
