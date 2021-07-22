@@ -41,9 +41,13 @@ $ python3 start_inspector.py
 If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, run the following before doing `pip install -r requirements.txt`:
 
 ```
-sudo apt-get install python3-dev
+$ sudo apt-get install python3-dev
 ```
 
+If you are using a **Raspberry Pi**, you would need to install `tcpdump` to support `scapy`. Run the following command before doing `pip install -r requirements.txt`
+```
+$ sudo apt-get install tcpdump
+```
 
 
 ### Windows 10 PowerShell or WSL
