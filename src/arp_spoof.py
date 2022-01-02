@@ -107,7 +107,7 @@ class ArpSpoof(object):
 
                 utils.safe_run(
                     self._arp_spoof,
-                    args=(victim_mac, victim_ip, whitelist_ip_mac)
+                    args=(victim_mac, victim_ip, whitelist_ip_mac, gateway_ip)
                 )
 
                 with self._lock:
@@ -116,7 +116,7 @@ class ArpSpoof(object):
 
                 time.sleep(max(MIN_ARP_SPOOF_INTERVAL, 2.0 / len(ip_mac_dict)))
 
-    def _arp_spoof(self, victim_mac, victim_ip, whitelist_ip_mac):
+    def _arp_spoof(self, victim_mac, victim_ip, whitelist_ip_mac, gateway_ip):
         """Sends out spoofed packets for a single target."""
 
         with self._host_state.lock:
@@ -126,16 +126,20 @@ class ArpSpoof(object):
 
             if victim_ip == dest_ip:
                 continue
-
-            dest_arp = sc.ARP()
-            dest_arp.op = 2
-            dest_arp.psrc = victim_ip
-            dest_arp.hwdst = dest_mac
-            dest_arp.pdst = dest_ip
-            if not spoof_arp:
-                dest_arp.hwsrc = victim_mac
-                utils.log('[Arp Spoof] Restoring', victim_ip, '->', dest_ip)
-
+            
+            # Half ARP spoofing: If the destination is the gateway, do not spoof the 
+            # destination/gateway's ARP table
+            if dest_ip != gateway_ip:
+                dest_arp = sc.ARP()
+                dest_arp.op = 2
+                dest_arp.psrc = victim_ip
+                dest_arp.hwdst = dest_mac
+                dest_arp.pdst = dest_ip
+                if not spoof_arp:
+                    dest_arp.hwsrc = victim_mac
+                    utils.log('[Arp Spoof] Restoring', victim_ip, '->', dest_ip)
+                sc.send(dest_arp, verbose=0)
+                
             victim_arp = sc.ARP()
             victim_arp.op = 2
             victim_arp.psrc = dest_ip
@@ -144,9 +148,7 @@ class ArpSpoof(object):
             if not spoof_arp:
                 victim_arp.hwsrc = dest_mac
                 utils.log('[Arp Spoof] Restoring', dest_ip, '->', victim_ip)
-
             sc.send(victim_arp, verbose=0)
-            sc.send(dest_arp, verbose=0)
 
     def stop(self):
 
