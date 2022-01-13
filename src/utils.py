@@ -19,6 +19,7 @@ import threading
 import time
 import traceback
 import uuid
+import webbrowser
 
 import server_config
 
@@ -350,9 +351,11 @@ def get_os():
     raise RuntimeError('Unsupported operating system.')
 
 
-def open_browser_on_windows(url):
-
+def open_browser(url):
     try:
-        subprocess.call(['start', '', url], shell=True)    
+        try:
+            webbrowser.get('chrome').open(url, new=2)
+        except webbrowser.Error:
+            webbrowser.open(url, new=2)
     except Exception:
         pass
