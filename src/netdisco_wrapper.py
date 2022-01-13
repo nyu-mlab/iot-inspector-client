@@ -70,10 +70,12 @@ class NetdiscoWrapper(object):
             # Get device_id based on MAC
             device_id = utils.get_device_id(device_mac, self._host_state)
 
-            # Submit for upload lter
+            # Submit for upload later
             with self._host_state.lock:
                 self._host_state.pending_netdisco_dict \
                     .setdefault(device_id, []).append(device_info)
+
+        netdis.stop()
 
 def test():
     n = NetdiscoWrapper(None)

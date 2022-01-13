@@ -5,7 +5,6 @@ Entry point for Inspector UI.
 import logging
 import subprocess
 import sys
-import webbrowser
 
 from arp_scan import ArpScan
 from arp_spoof import ArpSpoof
@@ -126,13 +125,7 @@ def start():
 
     if os_platform == 'windows' or 'mac':
         url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
-        try:
-            try:
-                webbrowser.get('chrome').open(url, new=2)
-            except webbrowser.Error:
-                webbrowser.open(url, new=2)
-        except Exception:
-            pass
+        utils.open_browser(url)
     return state
 
 
