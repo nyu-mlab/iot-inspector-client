@@ -146,8 +146,7 @@ def get_default_route():
         routes = _get_routes()
         default_route = None
         for route in routes:
-            # if network == '0.0.0.0' and netmask == '0.0.0.0' and ip == iface_ip
-            if route[0] == 0 and route[1] == 0 and route[4] == iface_ip:
+            if route[4] == iface_ip:
                 sc.conf.iface = route[3]
                 default_route = route[2:5]
                 break
@@ -206,7 +205,7 @@ def check_ethernet_network():
     ifaddresses = netifaces.ifaddresses(iface_str)
     try:
         iface_mac = ifaddresses[netifaces.AF_LINK][0]['addr']
-    except Exception:
+    except KeyError:
         return False
     return iface_mac != ''
 

@@ -59,7 +59,7 @@ class ArpSpoof(object):
             # Get ARP cache
             ip_mac_dict = self._host_state.get_ip_mac_dict_copy()
             gateway_ip = self._host_state.gateway_ip
-            print('Discovered devices:', len(ip_mac_dict))
+            # print('Discovered devices:', len(ip_mac_dict))
             if str(ip_mac_dict) != str(prev_ip_mac_dict):
 
                 prev_ip_mac_dict = ip_mac_dict
@@ -88,7 +88,7 @@ class ArpSpoof(object):
                     continue
                 whitelist_ip_mac.append((ip, mac))
             
-            print('Spoof devices:', whitelist_ip_mac)
+            # print('Spoof devices:', whitelist_ip_mac)
 
             # Spoof individual devices on the network.
             for (victim_ip, victim_mac) in ip_mac_dict.items():
