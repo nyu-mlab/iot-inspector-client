@@ -40,6 +40,7 @@ class PacketCapture(object):
 
             result = utils.safe_run(sc.sniff, kwargs={
                 'prn': self._host_state.packet_processor.process_packet,
+                'iface': sc.conf.iface,
                 'stop_filter':
                     lambda _:
                         not self._is_active() or

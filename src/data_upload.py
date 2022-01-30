@@ -239,12 +239,11 @@ class DataUploader(object):
 
             # Upload data via POST
             response = requests.post(url, data=post_data).text
-            utils.log('[UPLOAD] Gets back server response:', response)
             
             try:
                 utils.log("logging response.")
-                # utils.log(post_data) # Uncomment this in debug
-                utils.log(response)
+                utils.log('[UPLOAD] Post data to server: ', post_data) # Uncomment this in debug
+                utils.log('\n[UPLOAD] Gets back server response:', response)
                 response_dict = json.loads(response)
 
                 # Decide what client should do based on server's command

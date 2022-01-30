@@ -48,6 +48,10 @@ def start():
 
     utils.log('[MAIN] Starting.')
 
+    gateway_ip, iface, host_ip = utils.get_default_route()
+    utils.log('Running Inspector on IP Address: {}\n \
+    Running Inspector on Network Interface: {}'.format(host_ip, iface))
+
     # Set up environment
     state = HostState()
     state.user_key = config_dict['user_key'].replace('-', '')

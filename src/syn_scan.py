@@ -68,13 +68,19 @@ class SynScan(object):
                 ', '.join(ip_list)
             ))
 
+            host_ip = self._host_state.host_ip
+            host_mac = self._host_state.host_mac
+
             for (ip, port) in ip_port_list:
 
                 time.sleep(0.01)
 
-                syn_pkt = sc.IP(dst=ip) / \
+                syn_pkt = sc.IP(src=host_ip, dst=ip) / \
                     sc.TCP(dport=port, sport=SYN_SCAN_SOURCE_PORT, flags="S", seq=SYN_SCAN_SEQ_NUM)
-                sc.send(syn_pkt, verbose=0)
+                
+                # print(syn_pkt.route())
+
+                sc.send(syn_pkt, iface=sc.conf.iface, verbose=0)
 
                 with self._lock:
                     if not self._active:
