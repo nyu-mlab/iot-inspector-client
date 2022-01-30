@@ -61,14 +61,14 @@ class ArpSpoof(object):
             gateway_ip = self._host_state.gateway_ip
             # print('Discovered devices:', len(ip_mac_dict))
             if str(ip_mac_dict) != str(prev_ip_mac_dict):
-
                 prev_ip_mac_dict = ip_mac_dict
 
-                utils.log('[ARP Spoof] Cache:', ip_mac_dict)
-                utils.log(
-                    '[ARP Spoof] Whitelist:', self._host_state.device_whitelist
-                )
-
+            utils.log('[ARP Spoof] Cache: {} devices, {}'.format(len(ip_mac_dict), ip_mac_dict))
+            len_of_whitelist = len(self._host_state.device_whitelist)
+            utils.log(
+                '[ARP Spoof] Whitelist:{} devices, {}'.format(len_of_whitelist, self._host_state.device_whitelist)
+            )
+            
             # Get gateway MAC addr
             try:
                 gateway_mac = ip_mac_dict[gateway_ip]
