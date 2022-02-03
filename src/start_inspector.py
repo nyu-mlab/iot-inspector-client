@@ -35,12 +35,12 @@ def main():
             utils.open_browser(server_config.NPCAP_ERROR_URL)
             sys.exit(1)
 
-        # Check presence of multiple interfaces (e.g., VPN)
-        if len(utils.get_network_ip_range()) == 0:
-            sys.stderr.write("IoT Inspector cannot run with multiple network interfaces running.\n")
-            sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
-            utils.open_browser(server_config.NETMASK_ERROR_URL)
-            sys.exit(1)
+    # Check presence of non-Ethernet network adapters, (e.g., VPN)
+    if not utils.check_ethernet_network():
+        sys.stderr.write('IoT Inspector cannot run on non-Ethernet network adapters, (e.g., VPN)\n')
+        sys.stderr.write("For details, visit " + server_config.NETMASK_ERROR_URL)
+        utils.open_browser(server_config.NETMASK_ERROR_URL)
+        sys.exit(1)
 
     utils.log('[Main] Terminating existing processes.')
     if not kill_existing_inspector():

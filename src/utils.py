@@ -13,6 +13,7 @@ import os
 import re
 import requests
 import scapy.all as sc
+import socket
 import subprocess
 import sys
 import threading
@@ -132,22 +133,46 @@ def _get_routes():
 
 def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.settimeout(2)
+            s.connect(("8.8.8.8", 80))
+            iface_ip = s.getsockname()[0]
+    except socket.error:
+        sys.stderr.write('IoT Inspector cannot run without network connectivity.\n')
+        sys.exit(1)
 
     while True:
-
         routes = _get_routes()
-        # Look for network = 0.0.0.0, netmask = 0.0.0.0
-        for default_route in routes:
-            if default_route[0] == 0 and default_route[1] == 0:
-                return default_route[2:5]
+        default_route = None
+        for route in routes:
+            if route[4] == iface_ip:
+                sc.conf.iface = route[3]
+                default_route = route[2:5]
+                break
+        if default_route:
+            break
 
         log('get_default_route: retrying')
         time.sleep(1)
+    
+
+    # If we are using windows, conf.route.routes table doesn't upload
+    # Therefore we have to update routing table manually for packets
+    # to pick the correct route 
+    if sys.platform.startswith('win'):
+        for i, route in enumerate(routes):
+            # if we have the same iface, update the metrics to 0
+            if route[3] == default_route[1]:
+                routes[i] = (*route[:-1], 0)
+
+    return default_route
+
 
 def get_network_ip_range_windows():
     default_iface = get_default_route()
     iface_filter = default_iface[1]
-    print(default_iface)
+
     ip_set = set()
     iface_ip = iface_filter.ip
     iface_guid = iface_filter.guid
@@ -162,14 +187,38 @@ def get_network_ip_range_windows():
   
     return ip_set
 
+def check_ethernet_network():
+    """
+        Check presence of non-Ethernet network adapters, (e.g., VPN)
+        VPNs use TUN interfaces which doesn't have a hardware address
+    """
+    default_iface = get_default_route()
+
+    assert default_iface[1] is sc.conf.iface, "incorrect sc.conf.iface"
+    iface_str = ''
+    if sys.platform.startswith('win'):
+        iface_info = sc.conf.iface
+        iface_str = iface_info.guid
+    else:
+        iface_str = sc.conf.iface
+
+    ifaddresses = netifaces.ifaddresses(iface_str)
+    try:
+        iface_mac = ifaddresses[netifaces.AF_LINK][0]['addr']
+    except KeyError:
+        return False
+    return iface_mac != ''
+
+
 
 def get_network_ip_range():
     """
-        Gets network IP range for the default interface specified
-        by scapy.conf.iface
+        Gets network IP range for the default interface
     """
     ip_set = set()
     default_route = get_default_route()
+
+    assert default_route[1] is sc.conf.iface, "incorrect sc.conf.iface"
 
     iface_str = ''
     if sys.platform.startswith('win'):
@@ -184,7 +233,6 @@ def get_network_ip_range():
             netmask = v[0]['netmask']
             break
 
-    # Netmask is None when user runs VPN.
     if netmask is None:
         return set()
 
@@ -359,3 +407,10 @@ def open_browser(url):
             webbrowser.open(url, new=2)
     except Exception:
         pass
+
+
+def test():
+    # check_ethernet_network()
+    print(get_default_route())
+if __name__ == '__main__':
+    test()

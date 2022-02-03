@@ -24,9 +24,11 @@ WINDOWS_STARTUP_TEXT = """
 Princeton IoT Inspector for Windows 10
 ======================================
 
+Running on IP Address: {0}
+
 We have also opened a new browser window for you to view the IoT Inspector report. If you don't see a new browser window, use the following private link:
 
-{0}/user/{1}
+{1}/user/{2}
 
 To stop IoT Inspector, simply close this window or hit Control + C.
 
@@ -47,6 +49,10 @@ def start():
     config_dict = utils.get_user_config()
 
     utils.log('[MAIN] Starting.')
+
+    gateway_ip, iface, host_ip = utils.get_default_route()
+    utils.log('Running Inspector on IP Address: {}\n \
+    Running Inspector on Network Interface: {}'.format(host_ip, iface))
 
     # Set up environment
     state = HostState()
@@ -114,7 +120,7 @@ def start():
 
     os_platform = utils.get_os()    
 
-    print(WINDOWS_STARTUP_TEXT.format(server_config.BASE_URL, pretty_user_key))
+    print(WINDOWS_STARTUP_TEXT.format(host_ip, server_config.BASE_URL, pretty_user_key))
 
     # Open a Chrome window that runs IoT Inspector since running IoT Inspector
     # on Chrome is preferred. Note that a new webpage will be opened 

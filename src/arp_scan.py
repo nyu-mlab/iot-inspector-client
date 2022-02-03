@@ -74,9 +74,11 @@ class ArpScan(object):
 
                 time.sleep(sleep_time)
 
-                arp_pkt = sc.Ether(dst="ff:ff:ff:ff:ff:ff") / \
-                    sc.ARP(pdst=ip, hwdst="ff:ff:ff:ff:ff:ff")
-                sc.sendp(arp_pkt, verbose=0)
+                host_mac = self._host_state.host_mac
+
+                arp_pkt = sc.Ether(src=host_mac, dst="ff:ff:ff:ff:ff:ff") / \
+                    sc.ARP(pdst=ip, hwsrc=host_mac, hwdst="ff:ff:ff:ff:ff:ff")
+                sc.sendp(arp_pkt, iface=sc.conf.iface, verbose=0)
 
                 with self._lock:
                     if not self._active:
