@@ -133,6 +133,7 @@ def _get_routes():
 
 def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
+    
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(2)
@@ -147,6 +148,7 @@ def get_default_route():
         default_route = None
         for route in routes:
             if route[4] == iface_ip:
+                
                 sc.conf.iface = route[3]
                 default_route = route[2:5]
                 break

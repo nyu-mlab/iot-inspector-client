@@ -29,17 +29,17 @@ class NetdiscoWrapper(object):
         self._netdisco_path = self._get_netdisco_path()
 
     def start(self):
-
         th = threading.Thread(target=self._start_thread)
         th.daemon = True
         th.start()
 
     def _start_thread(self):
-
+        # NetworkDiscovery only needs to be initialized once
+        netdis = NetworkDiscovery()
         while True:
             time.sleep(3)
             if len(self._host_state.get_ip_mac_dict_copy()) > 0:
-                utils.safe_run(self._run_netdisco)
+                utils.safe_run(self._run_netdisco, args=[netdis])
 
     def _get_netdisco_path(self):
 
@@ -50,30 +50,28 @@ class NetdiscoWrapper(object):
             'princeton-iot-inspector',
             exe_name)
 
-    def _run_netdisco(self):
-
-        netdis = NetworkDiscovery()
+    def _run_netdisco(self, netdis):
         netdis.scan()
-
         for device_type in netdis.discover():
-            device_info = netdis.get_info(device_type)[0]
-            device_ip = device_info['host']
-            device_info['device_type'] = device_type 
-            
-            # Find MAC based on IP
-            try:
+            # get_info() could return a list of devices
+            for device_info in netdis.get_info(device_type):
+                device_ip = device_info['host']
+                device_info['device_type'] = device_type 
+                
+                # Find MAC based on IP
+                try:
+                    with self._host_state.lock:
+                        device_mac = self._host_state.ip_mac_dict[device_ip]
+                except KeyError:
+                    continue 
+
+                # Get device_id based on MAC
+                device_id = utils.get_device_id(device_mac, self._host_state)
+
+                # Submit for upload later
                 with self._host_state.lock:
-                    device_mac = self._host_state.ip_mac_dict[device_ip]
-            except KeyError:
-                continue 
-
-            # Get device_id based on MAC
-            device_id = utils.get_device_id(device_mac, self._host_state)
-
-            # Submit for upload later
-            with self._host_state.lock:
-                self._host_state.pending_netdisco_dict \
-                    .setdefault(device_id, []).append(device_info)
+                    self._host_state.pending_netdisco_dict \
+                        .setdefault(device_id, []).append(device_info)
 
         netdis.stop()
 
