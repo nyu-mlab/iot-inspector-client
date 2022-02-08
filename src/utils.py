@@ -133,7 +133,8 @@ def _get_routes():
 
 def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
-    
+    # Discover the active/preferred network interface 
+    # by connecting to Google's public DNS server
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(2)
@@ -148,7 +149,7 @@ def get_default_route():
         default_route = None
         for route in routes:
             if route[4] == iface_ip:
-                
+                # Reassign scapy's default interface to the one we selected
                 sc.conf.iface = route[3]
                 default_route = route[2:5]
                 break
@@ -159,12 +160,12 @@ def get_default_route():
         time.sleep(1)
     
 
-    # If we are using windows, conf.route.routes table doesn't upload
-    # Therefore we have to update routing table manually for packets
-    # to pick the correct route 
+    # If we are using windows, conf.route.routes table doesn't update.
+    # We have to update routing table manually for packets
+    # to pick the correct route. 
     if sys.platform.startswith('win'):
         for i, route in enumerate(routes):
-            # if we have the same iface, update the metrics to 0
+            # if we see our selected iface, update the metrics to 0
             if route[3] == default_route[1]:
                 routes[i] = (*route[:-1], 0)
 
@@ -191,8 +192,8 @@ def get_network_ip_range_windows():
 
 def check_ethernet_network():
     """
-        Check presence of non-Ethernet network adapters, (e.g., VPN)
-        VPNs use TUN interfaces which doesn't have a hardware address
+        Check presence of non-Ethernet network adapters (e.g., VPN).
+        VPNs use TUN interfaces which don't have a hardware address.
     """
     default_iface = get_default_route()
 
@@ -215,7 +216,7 @@ def check_ethernet_network():
 
 def get_network_ip_range():
     """
-        Gets network IP range for the default interface
+        Gets network IP range for the default interface.
     """
     ip_set = set()
     default_route = get_default_route()
