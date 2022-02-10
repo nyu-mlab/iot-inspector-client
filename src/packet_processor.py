@@ -87,7 +87,9 @@ class PacketProcessor(object):
 
         """
         try:
-            if pkt.op == 2 and pkt.hwsrc != self._host_state.host_mac:
+            # Similar to the ARP protocol
+            # Allow both ARP requests and replies to update mapping.
+            if pkt.op == 1 or pkt.op == 2 and pkt.hwsrc != self._host_state.host_mac:
                 self._host_state.set_ip_mac_mapping(pkt.psrc, pkt.hwsrc)
 
         except AttributeError:
