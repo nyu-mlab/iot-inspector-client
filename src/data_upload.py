@@ -58,7 +58,7 @@ class DataUploader(object):
                 if last_ui_contact_ts:
                     time_delta = time.time() - last_ui_contact_ts
                     if time_delta > 15 and \
-                            not self._host_state.persistent_mode:
+                            not self._host_state.raspberry_pi_mode:
                         self._host_state.quit = True
                         return
 
