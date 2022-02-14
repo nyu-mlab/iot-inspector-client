@@ -197,7 +197,7 @@ def check_ethernet_network():
     """
     default_iface = get_default_route()
 
-    assert default_iface[1] is sc.conf.iface, "incorrect sc.conf.iface"
+    assert default_iface[1] == sc.conf.iface, "incorrect sc.conf.iface"
     iface_str = ''
     if sys.platform.startswith('win'):
         iface_info = sc.conf.iface
@@ -205,7 +205,7 @@ def check_ethernet_network():
     else:
         iface_str = sc.conf.iface
 
-    ifaddresses = netifaces.ifaddresses(iface_str)
+    ifaddresses = netifaces.ifaddresses(str(iface_str))
     try:
         iface_mac = ifaddresses[netifaces.AF_LINK][0]['addr']
     except KeyError:
@@ -221,7 +221,7 @@ def get_network_ip_range():
     ip_set = set()
     default_route = get_default_route()
 
-    assert default_route[1] is sc.conf.iface, "incorrect sc.conf.iface"
+    assert default_route[1] == sc.conf.iface, "incorrect sc.conf.iface"
 
     iface_str = ''
     if sys.platform.startswith('win'):
@@ -231,7 +231,7 @@ def get_network_ip_range():
         iface_str = sc.conf.iface
 
     netmask = None
-    for k, v in netifaces.ifaddresses(iface_str).items():
+    for k, v in netifaces.ifaddresses(str(iface_str)).items():
         if v[0]['addr'] == default_route[2]:
             netmask = v[0]['netmask']
             break
