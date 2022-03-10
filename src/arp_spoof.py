@@ -130,7 +130,8 @@ class ArpSpoof(object):
 
             if victim_ip == dest_ip:
                 continue
-            
+            # send ARP spoof request to destination 
+            # victim -> host -> destination
             dest_arp = sc.ARP()
             dest_arp.op = 1
             dest_arp.psrc = victim_ip
@@ -140,11 +141,12 @@ class ArpSpoof(object):
             if not spoof_arp:
                 dest_arp.hwsrc = victim_mac
                 utils.log('[Arp Spoof] Restoring', victim_ip, '->', dest_ip)
-
+            # send ARP spoof request to victim
+            # destination -> host -> victim
             victim_arp = sc.ARP()
             victim_arp.op = 1
             victim_arp.psrc = dest_ip
-            dest_arp.hwsrc = host_mac
+            victim_arp.hwsrc = host_mac
             victim_arp.hwdst = victim_mac
             victim_arp.pdst = victim_ip
             if not spoof_arp:
