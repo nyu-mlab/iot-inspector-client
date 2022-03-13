@@ -252,7 +252,7 @@ class DataUploader(object):
                 except KeyError:
                     pass
                 else:
-                    if client_action == 'quit':
+                    if client_action == 'quit' and not self._host_state.raspberry_pi_mode:
                         utils.log('[UPLOAD] Server wants me to quit.')
                         with self._host_state.lock:
                             self._host_state.quit = True
