@@ -16,6 +16,8 @@ For details, see https://iotinspector.org.
 
 # Running IoT Inspector
 
+❗**Important Note** We are currently undergoing major re-development. While we will try to fix the major bugs, any issues flagged will go toward improving the next version. We will re-launch around the summer of 2022.
+
 ## Binaries
 
 You can download the latest pre-compiled binaries from https://iotinspector.org.
