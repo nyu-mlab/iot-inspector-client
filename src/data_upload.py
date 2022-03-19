@@ -52,16 +52,6 @@ class DataUploader(object):
         # Continuously upload data
         while True:
 
-            # If /is_inspecting_traffic was called too long ago, exit.
-            with self._host_state.lock:
-                last_ui_contact_ts = self._host_state.last_ui_contact_ts
-                if last_ui_contact_ts:
-                    time_delta = time.time() - last_ui_contact_ts
-                    if time_delta > 15 and \
-                            not self._host_state.raspberry_pi_mode:
-                        self._host_state.quit = True
-                        return
-
             if not self._host_state.is_inspecting():
                 self._update_ui_status('Paused inspection.')
                 with self._host_state.lock:
