@@ -7,11 +7,13 @@ import utils
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from typing import List
 import uvicorn
 import settings
 from models import *
+import io
+
 
 
 # Configure FastAPI doc interface
@@ -264,6 +266,16 @@ def get_overall_device_stats(device_id) -> OverallDeviceStats:
     return OverallDeviceStats()
 
 
+@app.get('/download_all_data', tags=[DocTags.DEVICE_STATS])
+def download_all_data():
+    """
+    Downloads a JSON file of all device data.
+    
+    """
+    return StreamingResponse(io.StringIO('Test Data'))
+
+
+
 @app.get('/', tags=[DocTags.MISC])
 def root_page():
     """Returns the homepage."""
@@ -271,7 +283,12 @@ def root_page():
 
 
 def start_local_api_server():
-    return uvicorn.run(app, host="127.0.0.1", port=settings.LOCAL_API_WEBSERVER_PORT, workers=1)
+    return uvicorn.run(
+        app, 
+        host="127.0.0.1", 
+        port=settings.LOCAL_API_WEBSERVER_PORT, 
+        workers=1
+    )
 
 
 if __name__ == '__main__':
