@@ -57,25 +57,24 @@ app.mount(
 )
 
 
-@app.get('/get_global_consent', tags=[DocTags.GLOBAL_STATE], response_model=bool)
-def get_global_consent() -> bool:
+@app.get('/get_global_config', tags=[DocTags.GLOBAL_STATE], response_model=GlobalConfig)
+def get_global_config() -> GlobalConfig:
     """
-    Returns whether the user has consented to the risks of inspection.
+    Returns the global configuration, which includes the following fields:
 
-    If this returns False, any interactions with Inspector would be redirected
-    to the consent screen.
-    
+    - **has_consent**: Whether the user has provided consent to use Inspector.
+    - **contribute_data**: Whether the user agrees to contribute data to research.
+    - **auto_inspect_new_devices**: Whether Inspector automatically inspects new devices.
+
     """
-    return True
+    return GlobalConfig()
 
 
-@app.get('/set_global_consent/{consent}', tags=[DocTags.GLOBAL_STATE])
-def set_global_consent(consent: bool):
+
+@app.get('/set_global_config', tags=[DocTags.GLOBAL_STATE])
+def set_global_config(config: GlobalConfig):
     """
-    Sets the global consent. 
-
-    Unless `consent` is set to `True`, any interactions with Inspector would be
-    redirected to the consent screen.
+    Sets the global configuration
 
     """
     return

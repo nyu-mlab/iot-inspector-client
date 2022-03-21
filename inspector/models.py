@@ -2,6 +2,12 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 
+class GlobalConfig(BaseModel):
+    has_consent: bool = False
+    contribute_data: bool = True
+    auto_inspect_new_devices: bool = True
+
+
 class DeviceState(BaseModel):
     device_id: str = ''
     is_inspected: bool = False
