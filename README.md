@@ -1,5 +1,8 @@
 # Smart Home Inspector
 
+This branch is for the development of the new Inspector -- a collaboration
+between NYU, Consumer Reports, and Ocopop.
+
 ## Setting up the development environment
 
 ### For all developers
