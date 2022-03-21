@@ -11,7 +11,7 @@ Make sure you have Python 3. Do the following from the command line:
 ```
 git clone https://github.com/nyu-mlab/iot-inspector-client.git
 cd iot-inspector-client
-git branch cr-dev
+git checkout cr-dev
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
