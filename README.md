@@ -20,14 +20,18 @@ python inspector/start.py
 
 If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, before doing `pip install -r requirements.txt`, you need to run `sudo apt-get install python3-dev`.
 
+Issues? Questions? Please create an Issue.
 
 
 ### For UI/UX developers:
 
 Edit the files within the `ui/default` directory. The HTML for the start page
-must be `ui/default/index.html`.
+must be `ui/default/html/index.html`. Feel free to place any other files (e.g.,
+images, CSS, and JS) elsewhere in the `ui/default` directory. Make sure to
+commit your changes in the `cr-dev` branch.
 
-To test the UI, start Inspector and navigate to http://localhost:53721/, which automatically redirects to `/dashboard/html/index.html`.
+To test the UI, start Inspector and navigate to http://localhost:53721/, which
+automatically redirects to `/dashboard/html/index.html`.
 
 The UI interacts with the Inspector client via an local API. See the local API
 docs by running Inspector above and navigating to http://127.0.0.1:53721/redoc
@@ -40,13 +44,7 @@ or http://localhost:53721/docs (depending on your personal preference).
 
 ### Overview
 
-
-
-
-
-For the design doc, please refer to the wiki.
-
-For the API doc, you can view it here: TBD
+Coming soonn.
 
 
 
