@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "dev\\Scripts\\python.exe",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": false
-}
