@@ -6,6 +6,7 @@ class GlobalConfig(BaseModel):
     has_consent: bool = False
     contribute_data: bool = True
     auto_inspect_new_devices: bool = True
+    is_inspecting: bool = False
 
 
 class DeviceState(BaseModel):
@@ -41,8 +42,6 @@ class DeviceNetworkActivity(BaseModel):
     activity_human_label: str = ''
 
 
-
-
 class DeviceNetworkActivityFilter(BaseModel):
     start_ts: int = 0
     end_ts: int = 0
@@ -54,7 +53,22 @@ class OverallDeviceStats(BaseModel):
     min_ts: int = 0
     max_ts: int = 0
     active_seconds: int = 0
+    inbound_byte_count: int = 0
+    outbound_byte_count: int = 0
     inbound_byte_count_dict: Dict[str, int] = {}
     outbound_byte_count_dict: Dict[str, int] = {}
     counterparty_country_list: List[str] = []
     counterparty_ad_tracking_list: List[str] = []    
+
+
+class CounterpartyStats(BaseModel):
+    counterparty_hostname: str = ''
+    counterparty_human_label: str = ''
+    counterparty_is_ad_tracking: bool = False
+    counterparty_country: str = ''
+    data_out_flow_dict: Dict[str, int] = {}
+
+
+class BandwidthConsumption(BaseModel):
+    inbound_kbps: int = 0
+    outbound_kbps: int = 0

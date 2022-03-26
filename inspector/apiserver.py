@@ -65,11 +65,58 @@ def get_global_config() -> GlobalConfig:
     Returns the global configuration, which includes the following fields:
 
     - **has_consent**: Whether the user has provided consent to use Inspector.
-    - **contribute_data**: Whether the user agrees to contribute data to research.
-    - **auto_inspect_new_devices**: Whether Inspector automatically inspects new devices.
+    
+    - **contribute_data**: Whether the user agrees to contribute data to
+      research.
+    
+    - **auto_inspect_new_devices**: Whether Inspector automatically inspects new
+      devices.
+    
+    - **is_inspecting**: Whether Inspector is currently inspecting or trying to
+      inspect any devices. If this is set to true, then Inspector will inspect
+      all devices that are marked for inspection. If this is set to false, then
+      all devices that are marked for inspection will not be inspected.
 
     """
     return GlobalConfig()
+
+
+@app.get('/get_custom_option/{option_key}', tags=[DocTags.GLOBAL_STATE], response_model=dict)
+def get_custom_option(option_key: str) -> dict:
+    """
+    Returns the value for the given `option_key` in the form of `{option_key:
+    option_value}`. If `option_key` has not been set yet, returns an empty
+    dictionary `{}`.
+
+    This method is for the UI to recall/retrieve some custom state (set using
+    `set_custom_option`) that is not defined in this API.
+
+    For example, the UI may want to show the welcome screen only once. To
+    remember whether the user has seen the screen, the UI could call
+    (hypothetically) `/get_custom_option/user_has_seen_welcome_screen`. If this
+    is the first time the user has seen the welcome screen, then this call will
+    return `{}`. In this case, Inspector can show the welcome screen and call
+    `/get_custom_option/user_has_seen_welcome_screen/true`. The next time the
+    user opens Inspector, we check
+    ``/get_custom_option/user_has_seen_welcome_screen` and it will return
+    `{"user_has_seen_welcome_screen": "true"}` -- in which case we don't show
+    the welcome screen again.
+    
+    """
+    return {}
+
+
+@app.get('/set_custom_option/{option_key}/{option_value}', tags=[DocTags.GLOBAL_STATE])
+def set_custom_option(option_key: str, option_value: str):
+    """
+    Sets the value for the given `option_key`.
+
+    This method is for the UI to remember some custom state that is not defined
+    in this API, so that the UI could recall/retrieve it later using the
+    `get_custom_option` method.
+    
+    """
+    return 
 
 
 
@@ -80,6 +127,15 @@ def set_global_config(config: GlobalConfig):
 
     """
     return
+
+
+@app.get('/exit', tags=[DocTags.GLOBAL_STATE])
+def exit():
+    """
+    Terminates Inspector.
+
+    """
+    return    
 
 
 @app.get('/get_device_list', tags=[DocTags.DEVICE_MANAGEMENT], response_model=List[DeviceState])
@@ -216,10 +272,10 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
     - **counterparty_hostname**: Hostname (based on DNS or SNI) of the
       counterparty if the counterparty is a remote host.
 
-    - **counterparty_hostname_human_label**: A human-readable label for
+    - **counterparty_human_label**: A human-readable label for
       `counterparty_hostname`. For example, if `counterparty_hostname` is
       `*.doubleclick.net`, then the corresponding
-      `counterparty_hostname_human_label` could be (for example) "Google
+      `counterparty_human_label` could be (for example) "Google
       Advertising Services".
 
     - **counterparty_country**: Two-letter country code for where the
@@ -240,10 +296,15 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
     return []
 
 
-@app.get('/get_overall_device_stats/{device_id}', tags=[DocTags.DEVICE_STATS], response_model=OverallDeviceStats)
-def get_overall_device_stats(device_id) -> OverallDeviceStats:
+@app.get('/get_overall_device_stats/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=OverallDeviceStats)
+def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
     """
-    Returns the overall statistics given a device with `device_id`.
+    Returns the overall statistics given a device with `device_id` within the
+    past `timeframe` seconds.
+
+    For example, if you want to show statistics in the past 24 hours, set
+    `timeframe` to be (24 * 3600) = 86400 seconds. If you want to show
+    statistics for the entire history, set `timeframe` to 0.
 
     The returned device statistics include the following fields:
 
@@ -254,9 +315,17 @@ def get_overall_device_stats(device_id) -> OverallDeviceStats:
       for how many seconds. Note that `active_seconds` is always less than or
       equal to `max_ts` - `min_ts`.
 
+    - **inbound_byte_count** and **outbound_byte_count**. How many bytes are
+      received (inbound) and sent (outbound) in total.
+
     - **inbound_byte_count_dict** and **outbound_byte_count_dict**. How many
       bytes are received (inbound) and sent (outbound) to different
-      counterparties.
+      counterparties. Here, the dictionary's keys are the counterparties'
+      hostnames, and the values are the byte counts. To show user-friendly names
+      of the counterparty hostnames (i.e., `counterparty_human_label`), you can
+      either call `get_all_counterparties` (fast, as it gives you all the
+      counterparties at one go) or `get_counterparty_human_label` (slow, as
+      you'd have to query the counterparties one by one).
 
     - **counterparty_country_list** and **counterparty_ad_tracking_list**: For
       the counterparties, list their countries and names of ad/tracking
@@ -264,6 +333,47 @@ def get_overall_device_stats(device_id) -> OverallDeviceStats:
     
     """
     return OverallDeviceStats()
+
+
+@app.get('/get_all_counterparties/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[CounterpartyStats])
+def get_all_counterparties(timeframe) -> List[CounterpartyStats]:
+    """
+    Returns a list of counterparties and their statistics seen across all the
+    devices, given `timeframe` (see docs for `get_overall_device_stats`). 
+
+    Most of the attributes for `CounterpartyStats` can be found in previous
+    docs, except for:
+
+    - **data_out_flow_dict**: A dict that captures how many bytes of traffic
+      each inspected device has sent to the current counterparty. Here, each key
+      is a `device_id`, and the coresponding value is the number of bytes sent
+      (i.e., outbound) from the device to the current counterparty.
+    
+    """
+    return []
+
+
+@app.get('/get_counterparty_human_label/{counterparty_hostname}', tags=[DocTags.DEVICE_STATS], response_model=str)
+def get_counterparty_human_label(counterparty_hostname) -> str:
+    """
+    Given `counterparty_hostname`, returns the human readable label.
+
+    For example, if `counterparty_hostname` is `*.doubleclick.net, then this
+    call returns 'Google Advertising Service'.
+    
+    """
+    return ''
+
+
+@app.get('/get_overall_bandwidth_consumption', tags=[DocTags.DEVICE_STATS], response_model=BandwidthConsumption)
+def get_overall_bandwidth_consumption() -> BandwidthConsumption:
+    """
+    Returns the overall bandwidth consumption in both inbound (download) and
+    outbound (upload) directions.
+    
+    """
+    return BandwidthConsumption()
+
 
 
 @app.get('/download_all_data', tags=[DocTags.DEVICE_STATS])
@@ -274,6 +384,16 @@ def download_all_data():
     """
     return StreamingResponse(io.StringIO('Test Data'))
 
+
+
+
+@app.get('/delete_all_research_data')
+def delete_all_research_data():
+    """
+    Deletes all data that that user has contributed to research.
+    
+    """
+    return 
 
 
 @app.get('/', tags=[DocTags.MISC])
