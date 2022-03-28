@@ -324,6 +324,26 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
     return []
 
 
+@app.get('/get_device_counterparties/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[Device_CounterpartyStats])
+def get_device_counterparties(device_id, timeframe) -> List[Device_CounterpartyStats]:
+    """
+    Returns a list of counterparties and their statistics seen on the device
+    with `device_id`, given `timeframe` (see docs for
+    `get_overall_device_stats`). 
+
+    Most of the attributes for `Device_CounterpartyStats` can be found in previous
+    docs, except for:
+
+    - **uses_weak_encryption** and **uses_no_encryption**: Whether the communication between `device_id` and this counterparty uses weak encryption and no encryption respectively.
+
+    - **inbound_byte_count** and **outbound_byte_count**: How many bytes are coming into this device (i.e., inbound/download) and going out of this device (i.e., outbound/upload). All inbound/outbound references are with respect to devices (not counterparties).
+
+    - **last_updated_ts**: Unix timestamp for when the above statistics were updated in the database.
+
+    """
+    return []
+
+
 @app.get('/get_overall_device_stats/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=OverallDeviceStats)
 def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
     """
@@ -388,7 +408,9 @@ def get_all_counterparties(timeframe) -> List[CounterpartyStats]:
     - **data_out_flow_dict**: A dict that captures how many bytes of traffic
       each inspected device has sent to the current counterparty. Here, each key
       is a `device_id`, and the coresponding value is the number of bytes sent
-      (i.e., outbound) from the device to the current counterparty.
+      (i.e., outbound) from the device to the current counterparty. You can use
+      the keys of this dictionary to list all devices that sent data to a given
+      counterparty.
 
     - **weak_encryption_device_list** and **no_encryption_device_list**: A list
       of `device_id`s such that each device communicated with the current

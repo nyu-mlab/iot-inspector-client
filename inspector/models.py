@@ -77,6 +77,19 @@ class CounterpartyStats(BaseModel):
     no_encryption_device_list: List[str] = []
 
 
+class Device_CounterpartyStats(BaseModel):
+    counterparty_hostname: str = ''
+    counterparty_ip: str = ''
+    counterparty_human_label: str = ''
+    counterparty_is_ad_tracking: bool = False
+    counterparty_country: str = ''
+    uses_weak_encryption: bool = False
+    uses_no_encryption: bool = False
+    inbound_byte_count: int = 0
+    outbound_byte_count: int = 0
+    last_updated_ts: int = 0
+
+
 class BandwidthConsumption(BaseModel):
     inbound_kbps: int = 0
     outbound_kbps: int = 0
