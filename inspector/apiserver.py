@@ -212,6 +212,34 @@ def set_device_state(device_id: str, device_state: DeviceState) -> DeviceState:
     return device_state
 
 
+@app.get('/block', tags=[DocTags.DEVICE_MANAGEMENT])
+def download_all_data():
+    """
+    Downloads a JSON file of all device data.
+    
+    """
+    return StreamingResponse(io.StringIO('Test Data'))
+
+
+
+@app.get('/download_all_data', tags=[DocTags.DEVICE_MANAGEMENT])
+def download_all_data():
+    """
+    Downloads a JSON file of all device data.
+    
+    """
+    return StreamingResponse(io.StringIO('Test Data'))
+
+
+@app.get('/delete_all_research_data', tags=[DocTags.DEVICE_MANAGEMENT])
+def delete_all_research_data():
+    """
+    Deletes all data that that user has contributed to research.
+    
+    """
+    return 
+
+
 @app.get('/get_device_network_activities/{device_id}', tags=[DocTags.DEVICE_STATS], response_model=List[DeviceNetworkActivity])
 def get_device_network_activities(device_id, activity_filter: DeviceNetworkActivityFilter) -> List[DeviceNetworkActivity]:
     """
@@ -233,7 +261,7 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
       `start_ts` to the latest. If both `start_ts` and `end_ts` are set to 0,
       then this method returns all activities for the device.
     
-    - **granualrity**: time (in seconds) for roughly how often this method
+    - **granularity**: time (in seconds) for roughly how often this method
       reports the activities. Let's say a device sends X bytes in the first 0.3
       seconds, Y bytes in the next 0.7 seconds, followed by Z bytes in the next
       second. If `granularity` is set to 1, then this method will report that
@@ -247,9 +275,9 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
 
     - **device_id**: The device of interest.
 
-    - **counterparty_id**: The device of interest is talking to which other
+    - **counterparty_device_id**: The device of interest is talking to which other
       device -- which we call the counterparty. This field shows the `device_id`
-      of the counterparty. The `counterparty_id` must refer to another device on
+      of the counterparty. The `counterparty_device_id` must refer to another device on
       the local network.
 
     - **counterparty_is_local**: Whether the device of interest is talking to
@@ -315,8 +343,21 @@ def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
       for how many seconds. Note that `active_seconds` is always less than or
       equal to `max_ts` - `min_ts`.
 
-    - **inbound_byte_count** and **outbound_byte_count**. How many bytes are
-      received (inbound) and sent (outbound) in total.
+    - **total_inbound_byte_count** and **total_outbound_byte_count**. How many
+      bytes are received (inbound) and sent (outbound) in total.
+
+    - **weak_encryption_inbound_byte_count** and
+      **weak_encryption_outbound_byte_count**. How many bytes are received
+      (inbound) and sent (outbound) in total over an weak encrypted channel
+      (i.e., encrypted with insecure cipher, or outdated encryption).
+
+    - **no_encryption_inbound_byte_count** and
+      **no_encryption_outbound_byte_count**. How many bytes are received
+      (inbound) and sent (outbound) in total over an unencrypted channel.
+
+    - **ad_tracking_inbound_byte_count** and
+      **ad_tracking_outbound_byte_count**. How many bytes are received (inbound)
+      and sent (outbound) in total from/to advertising and tracking services.
 
     - **inbound_byte_count_dict** and **outbound_byte_count_dict**. How many
       bytes are received (inbound) and sent (outbound) to different
@@ -348,6 +389,10 @@ def get_all_counterparties(timeframe) -> List[CounterpartyStats]:
       each inspected device has sent to the current counterparty. Here, each key
       is a `device_id`, and the coresponding value is the number of bytes sent
       (i.e., outbound) from the device to the current counterparty.
+
+    - **weak_encryption_device_list** and **no_encryption_device_list**: A list
+      of `device_id`s such that each device communicated with the current
+      counterparty using weak encryption and no encryption respectively.
     
     """
     return []
@@ -373,27 +418,6 @@ def get_overall_bandwidth_consumption() -> BandwidthConsumption:
     
     """
     return BandwidthConsumption()
-
-
-
-@app.get('/download_all_data', tags=[DocTags.DEVICE_STATS])
-def download_all_data():
-    """
-    Downloads a JSON file of all device data.
-    
-    """
-    return StreamingResponse(io.StringIO('Test Data'))
-
-
-
-
-@app.get('/delete_all_research_data')
-def delete_all_research_data():
-    """
-    Deletes all data that that user has contributed to research.
-    
-    """
-    return 
 
 
 @app.get('/', tags=[DocTags.MISC])

@@ -53,8 +53,14 @@ class OverallDeviceStats(BaseModel):
     min_ts: int = 0
     max_ts: int = 0
     active_seconds: int = 0
-    inbound_byte_count: int = 0
-    outbound_byte_count: int = 0
+    total_inbound_byte_count: int = 0
+    total_outbound_byte_count: int = 0
+    weak_encryption_inbound_byte_count: int = 0
+    weak_encryption_outbound_byte_count: int = 0
+    no_encryption_inbound_byte_count: int = 0
+    no_encryption_outbound_byte_count: int = 0
+    ad_tracking_inbound_byte_count: int = 0
+    ad_tracking_outbound_byte_count: int = 0
     inbound_byte_count_dict: Dict[str, int] = {}
     outbound_byte_count_dict: Dict[str, int] = {}
     counterparty_country_list: List[str] = []
@@ -67,6 +73,8 @@ class CounterpartyStats(BaseModel):
     counterparty_is_ad_tracking: bool = False
     counterparty_country: str = ''
     data_out_flow_dict: Dict[str, int] = {}
+    weak_encryption_device_list: List[str] = []
+    no_encryption_device_list: List[str] = []
 
 
 class BandwidthConsumption(BaseModel):
