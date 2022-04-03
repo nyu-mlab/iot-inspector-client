@@ -21,6 +21,7 @@ import time
 import traceback
 import uuid
 import webbrowser
+import ipaddress
 
 import server_config
 
@@ -170,6 +171,23 @@ def get_default_route():
                 routes[i] = (*route[:-1], 0)
 
     return default_route
+
+
+def get_net_and_mask():
+    iface = get_default_route()[1]
+    routes = _get_routes()
+    net = mask = None
+    for route in routes:
+        if route[3] == iface:
+            net = ipaddress.IPv4Address(route[0])
+            mask = ipaddress.IPv4Address(route[1])
+            break
+    return net, mask
+
+
+def check_pkt_in_network(ip, net, mask):
+    full_net = ipaddress.ip_network(f"{ip}/{mask}", strict=False)
+    return full_net.network_address == net
 
 
 def get_network_ip_range_windows():

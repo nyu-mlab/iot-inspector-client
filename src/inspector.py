@@ -60,6 +60,7 @@ def start():
     state.secret_salt = config_dict['secret_salt']
     state.host_mac = utils.get_my_mac()
     state.gateway_ip, _, state.host_ip = utils.get_default_route()
+    state.net, state.mask = utils.get_net_and_mask()
 
     # Read special command-line arguments
     if '--raspberry_pi_mode' in sys.argv:
