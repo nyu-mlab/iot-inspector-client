@@ -94,7 +94,9 @@ class PacketProcessor(object):
             # address turns out to be already in use by another host.
             # An ARP Probe conveys both a question ("Is anyone using this address?") and an
             # implied statement ("This is the address I hope to use.").
-            if pkt.op == 1 or pkt.op == 2 and pkt.hwsrc != self._host_state.host_mac and pkt.psrc != "0.0.0.0":
+            if (pkt.op == 1 or pkt.op == 2 and pkt.hwsrc != self._host_state.host_mac and
+                pkt.psrc != "0.0.0.0" and
+                utils.check_pkt_in_network(pkt.psrc, self._host_state.net, self._host_state.mask)):
                 self._host_state.set_ip_mac_mapping(pkt.psrc, pkt.hwsrc)
 
         except AttributeError:
