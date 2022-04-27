@@ -11,7 +11,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from typing import List
 import uvicorn
 import settings
-from models import *
+from api_models import *
 import io
 
 
