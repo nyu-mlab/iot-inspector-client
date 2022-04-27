@@ -13,6 +13,8 @@ import uvicorn
 import settings
 from api_models import *
 import io
+import random
+import time
 
 
 
@@ -160,6 +162,34 @@ def get_device_list() -> List[DeviceState]:
     second), but not too frequently as it would incurr unnecessary disk IO. 
 
     """
+    if settings.API_RETURNS_SIMULATED_DATA:
+
+      amazon_device = DeviceState()
+      amazon_device.device_id = 'DeviceA'
+      amazon_device.is_inspected = True
+      amazon_device.user_device_name = 'Amazon Echo'
+      amazon_device.ip_addr = '10.0.0.2'
+      amazon_device.mac_addr = '00112233445A'
+      amazon_device.tag_list = ['Living Room', 'Kevin']
+
+      google_device = DeviceState()
+      google_device.device_id = 'DeviceB'
+      google_device.is_inspected = True
+      google_device.user_device_name = 'Google Home'
+      google_device.ip_addr = '10.0.0.3'
+      google_device.mac_addr = '00112233445B'
+      google_device.tag_list = ['Living Room', 'Lucy']
+
+      samsung_device = DeviceState()
+      samsung_device.device_id = 'DeviceC'
+      samsung_device.is_inspected = True
+      samsung_device.user_device_name = 'Samsung TV'
+      samsung_device.ip_addr = '10.0.0.4'
+      samsung_device.mac_addr = '00112233445C'
+      samsung_device.tag_list = ['Bedroom', 'Kevin']
+
+      return [amazon_device, google_device, samsung_device]
+
     return []
 
 
@@ -393,6 +423,29 @@ def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
       companies (if any).
     
     """
+    if settings.API_RETURNS_SIMULATED_DATA:
+
+      timeframe = int(timeframe)
+      stats = OverallDeviceStats()
+      
+      stats.device_id = device_id
+      stats.max_ts = int(time.time())
+      stats.min_ts = stats.max_ts - timeframe
+      stats.active_seconds = timeframe
+      stats.total_inbound_byte_count = random.randint(10, 1000)
+      stats.total_outbound_byte_count = random.randint(0, 50)
+      stats.ad_tracking_inbound_byte_count = random.randint(10, 500)
+      stats.ad_tracking_outbound_byte_count = random.randint(0, 20)
+      stats.inbound_byte_count_dict = {
+        'www.google.com': random.randint(0, 1000), 
+        'www.amazon.com': random.randint(0, 1000)}
+      stats.outbound_byte_count_dict = {
+        'www.google.com': random.randint(0, 1000), 
+        'www.amazon.com': random.randint(0, 1000)}
+      stats.counterparty_country_list = [random.choice(['US', 'JP', 'CN', 'RU'])]
+
+      return stats
+
     return OverallDeviceStats()
 
 
