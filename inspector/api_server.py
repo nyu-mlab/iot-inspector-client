@@ -59,7 +59,7 @@ app.mount(
 )
 
 
-@app.get('/get_global_config', tags=[DocTags.GLOBAL_STATE], response_model=GlobalConfig)
+@app.get('/api/get_global_config', tags=[DocTags.GLOBAL_STATE], response_model=GlobalConfig)
 def get_global_config() -> GlobalConfig:
     """
     Returns the global configuration, which includes the following fields:
@@ -81,7 +81,7 @@ def get_global_config() -> GlobalConfig:
     return GlobalConfig()
 
 
-@app.get('/get_custom_option/{option_key}', tags=[DocTags.GLOBAL_STATE], response_model=dict)
+@app.get('/api/get_custom_option/{option_key}', tags=[DocTags.GLOBAL_STATE], response_model=dict)
 def get_custom_option(option_key: str) -> dict:
     """
     Returns the value for the given `option_key` in the form of `{option_key:
@@ -106,7 +106,7 @@ def get_custom_option(option_key: str) -> dict:
     return {}
 
 
-@app.get('/set_custom_option/{option_key}/{option_value}', tags=[DocTags.GLOBAL_STATE])
+@app.get('/api/set_custom_option/{option_key}/{option_value}', tags=[DocTags.GLOBAL_STATE])
 def set_custom_option(option_key: str, option_value: str):
     """
     Sets the value for the given `option_key`.
@@ -120,7 +120,7 @@ def set_custom_option(option_key: str, option_value: str):
 
 
 
-@app.get('/set_global_config', tags=[DocTags.GLOBAL_STATE])
+@app.get('/api/set_global_config', tags=[DocTags.GLOBAL_STATE])
 def set_global_config(config: GlobalConfig):
     """
     Sets the global configuration
@@ -129,7 +129,7 @@ def set_global_config(config: GlobalConfig):
     return
 
 
-@app.get('/exit', tags=[DocTags.GLOBAL_STATE])
+@app.get('/api/exit', tags=[DocTags.GLOBAL_STATE])
 def exit():
     """
     Terminates Inspector.
@@ -138,7 +138,7 @@ def exit():
     return    
 
 
-@app.get('/get_device_list', tags=[DocTags.DEVICE_MANAGEMENT], response_model=List[DeviceState])
+@app.get('/api/get_device_list', tags=[DocTags.DEVICE_MANAGEMENT], response_model=List[DeviceState])
 def get_device_list() -> List[DeviceState]:
     """
     Returns a list of devices and their state attributes, including:
@@ -163,7 +163,7 @@ def get_device_list() -> List[DeviceState]:
     return []
 
 
-@app.get('/set_device_state/{device_id}', tags=[DocTags.DEVICE_MANAGEMENT], response_model=DeviceState)
+@app.get('/api/set_device_state/{device_id}', tags=[DocTags.DEVICE_MANAGEMENT], response_model=DeviceState)
 def set_device_state(device_id: str, device_state: DeviceState) -> DeviceState:
     """
     Sets the device state for device with `device_id`.
@@ -212,7 +212,7 @@ def set_device_state(device_id: str, device_state: DeviceState) -> DeviceState:
     return device_state
 
 
-@app.get('/block', tags=[DocTags.DEVICE_MANAGEMENT])
+@app.get('/api/block', tags=[DocTags.DEVICE_MANAGEMENT])
 def download_all_data():
     """
     Downloads a JSON file of all device data.
@@ -222,7 +222,7 @@ def download_all_data():
 
 
 
-@app.get('/download_all_data', tags=[DocTags.DEVICE_MANAGEMENT])
+@app.get('/api/download_all_data', tags=[DocTags.DEVICE_MANAGEMENT])
 def download_all_data():
     """
     Downloads a JSON file of all device data.
@@ -231,7 +231,7 @@ def download_all_data():
     return StreamingResponse(io.StringIO('Test Data'))
 
 
-@app.get('/delete_all_research_data', tags=[DocTags.DEVICE_MANAGEMENT])
+@app.get('/api/delete_all_research_data', tags=[DocTags.DEVICE_MANAGEMENT])
 def delete_all_research_data():
     """
     Deletes all data that that user has contributed to research.
@@ -240,7 +240,7 @@ def delete_all_research_data():
     return 
 
 
-@app.get('/get_device_network_activities/{device_id}', tags=[DocTags.DEVICE_STATS], response_model=List[DeviceNetworkActivity])
+@app.get('/api/get_device_network_activities/{device_id}', tags=[DocTags.DEVICE_STATS], response_model=List[DeviceNetworkActivity])
 def get_device_network_activities(device_id, activity_filter: DeviceNetworkActivityFilter) -> List[DeviceNetworkActivity]:
     """
     Returns a list of `DeviceNetworkActivity` of a device, given its
@@ -324,7 +324,7 @@ def get_device_network_activities(device_id, activity_filter: DeviceNetworkActiv
     return []
 
 
-@app.get('/get_device_counterparties/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[Device_CounterpartyStats])
+@app.get('/api/get_device_counterparties/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[Device_CounterpartyStats])
 def get_device_counterparties(device_id, timeframe) -> List[Device_CounterpartyStats]:
     """
     Returns a list of counterparties and their statistics seen on the device
@@ -344,7 +344,7 @@ def get_device_counterparties(device_id, timeframe) -> List[Device_CounterpartyS
     return []
 
 
-@app.get('/get_overall_device_stats/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=OverallDeviceStats)
+@app.get('/api/get_overall_device_stats/{device_id}/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=OverallDeviceStats)
 def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
     """
     Returns the overall statistics given a device with `device_id` within the
@@ -396,7 +396,7 @@ def get_overall_device_stats(device_id, timeframe) -> OverallDeviceStats:
     return OverallDeviceStats()
 
 
-@app.get('/get_all_counterparties/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[CounterpartyStats])
+@app.get('/api/get_all_counterparties/{timeframe}', tags=[DocTags.DEVICE_STATS], response_model=List[CounterpartyStats])
 def get_all_counterparties(timeframe) -> List[CounterpartyStats]:
     """
     Returns a list of counterparties and their statistics seen across all the
@@ -420,7 +420,7 @@ def get_all_counterparties(timeframe) -> List[CounterpartyStats]:
     return []
 
 
-@app.get('/get_counterparty_human_label/{counterparty_hostname}', tags=[DocTags.DEVICE_STATS], response_model=str)
+@app.get('/api/get_counterparty_human_label/{counterparty_hostname}', tags=[DocTags.DEVICE_STATS], response_model=str)
 def get_counterparty_human_label(counterparty_hostname) -> str:
     """
     Given `counterparty_hostname`, returns the human readable label.
@@ -432,7 +432,7 @@ def get_counterparty_human_label(counterparty_hostname) -> str:
     return ''
 
 
-@app.get('/get_overall_bandwidth_consumption', tags=[DocTags.DEVICE_STATS], response_model=BandwidthConsumption)
+@app.get('/api/get_overall_bandwidth_consumption', tags=[DocTags.DEVICE_STATS], response_model=BandwidthConsumption)
 def get_overall_bandwidth_consumption() -> BandwidthConsumption:
     """
     Returns the overall bandwidth consumption in both inbound (download) and
