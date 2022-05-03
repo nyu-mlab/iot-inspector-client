@@ -59,7 +59,7 @@ app.mount(
 )
 
 
-@app.get('/get_global_config', tags=[DocTags.GLOBAL_STATE], response_model=GlobalConfig)
+@app.get('/api/get_global_config', tags=[DocTags.GLOBAL_STATE], response_model=GlobalConfig)
 def get_global_config() -> GlobalConfig:
     """
     Returns the global configuration, which includes the following fields:
