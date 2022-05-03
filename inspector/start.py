@@ -2,11 +2,11 @@
 Main entry point for Inspector.
 
 """
-import apiserver
+import api_server
 
 
 def main():
-    apiserver.start_local_api_server()
+    api_server.start_local_api_server()
 
 
 if __name__ == '__main__':
