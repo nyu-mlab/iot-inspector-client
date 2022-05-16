@@ -37,7 +37,11 @@ export default defineConfig({
       }
     }
   },
-  // devServer: {
-  //   proxy: "http://127.0.0.1:53721"
-  // }
+  // base: '/dashboard/html/',
+  build: {
+    // assetsDir: '/dashboard/html/',
+    outDir: '../html',
+    emptyOutDir: true
+  }
 })
+
