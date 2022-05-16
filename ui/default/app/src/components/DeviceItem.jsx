@@ -20,7 +20,7 @@ const DeviceItem = () => {
             </div>
             <div className="flex items-center justify-center w-1/12 px-4 text-sm border-r gray-300 border-">0KB</div>
             <div className="flex items-center justify-center w-1/12 px-4 text-sm">
-              <a href="#" className="">Details</a>
+              <a href="/device-activity/" className="">Details</a>
             </div>
 
           </div>

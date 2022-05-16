@@ -1,11 +1,12 @@
 import react, {useEffect, useState} from 'react'
 import logo from './logo.svg';
-import './App.css';
+import DefaultLayout from "./layouts/DefaultLayout";
 import Header from './components/Header'
 import EndpointDrawer from './components/EndpointDrawer'
 import DataCard from './components/DataCard'
 import NetworkActivityDashboard from './components/NetworkActivityDashboard'
 import InspectingDevicesDashboard from "./components/InspectingDevicesDashboard";
+
 
 function App() {
 
@@ -19,18 +20,18 @@ function App() {
 
 
   return (
-    <div className="App">
-      <Header />
-      <main className="flex mt-[80px]">
-        <div className="w-[calc(100vw-300px)]">
-          <NetworkActivityDashboard />
-          <InspectingDevicesDashboard />
-
-
-        </div>
-        <EndpointDrawer />
-      </main>
-    </div>
+    <DefaultLayout>
+      <div className="App">
+        {/* <Header /> */}
+        <main className="flex mt-[80px]">
+          <div className="w-[calc(100vw-300px)]">
+            <NetworkActivityDashboard />
+            <InspectingDevicesDashboard />
+          </div>
+          <EndpointDrawer />
+        </main>
+      </div>
+    </DefaultLayout>
   );
 }
 

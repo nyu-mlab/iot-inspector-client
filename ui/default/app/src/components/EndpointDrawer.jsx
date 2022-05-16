@@ -24,7 +24,7 @@ const EndpointDrawer = () => {
 
 
       {/* </div> */}
-      <button className="w-full p-4 text-lg font-bold tracking-wide rounded-lg bg-primary text-dark">Scan Network</button>
+      <button className="w-full btn btn-primary">Scan Network</button>
     </aside>
   )
 }

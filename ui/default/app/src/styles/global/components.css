@@ -1,0 +1,8 @@
+@layer components {
+  .btn{
+    @apply px-8 py-4 text-lg font-bold tracking-wide rounded-lg;
+  }
+  .btn-primary {
+    @apply bg-primary text-dark;
+  }
+}

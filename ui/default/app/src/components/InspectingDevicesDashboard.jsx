@@ -12,9 +12,11 @@ const InspectingDevicesDashboard = () => {
         </div>
         <HiRefresh className="w-auto h-full py-4 text-secondary animate-spin-slow" />
       </div>
-      <div className="px-4 py-2 text-gray-600 bg-white border border-gray-400 rounded-md">
-        Search devices
-      </div>
+
+      <form>
+        <label for="searchDevices">Search devices</label>
+        <input type='text' id='searchDevices' className="px-4 py-2 text-gray-600 bg-white border border-gray-400 rounded-md" />
+      </form>
 
       <ul>
         <li className="py-4">
