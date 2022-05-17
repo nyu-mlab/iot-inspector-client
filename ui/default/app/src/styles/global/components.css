@@ -1,8 +1,18 @@
 @layer components {
   .btn{
-    @apply px-8 py-4 text-lg font-bold tracking-wide rounded-lg;
+    @apply px-8 py-4 text-lg font-bold tracking-wide transition rounded-lg;
   }
   .btn-primary {
     @apply bg-primary text-dark;
+    @apply hover:bg-green-300 hover:text-dark;
+  }
+  .tab-nav{
+    @apply flex gap-4 border-b-2 border-dark/80;
+    .tab-nav-item{
+      @apply px-4 pt-6 pb-4 -mb-[2px] md:px-10;
+    }
+    .tab-nav-item-active{
+      @apply  border-b-2 border-primary;
+    }
   }
 }

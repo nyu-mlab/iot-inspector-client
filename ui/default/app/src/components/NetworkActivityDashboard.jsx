@@ -1,12 +1,14 @@
 import React from 'react'
 import DataCard from './DataCard'
+import BarChart from "./charts/BarChart"
 
 const NetworkActivityDashboard = () => {
   return (
     <>
       <section className="flex flex-col gap-4 p-6 ">
         <h1>Network Activity</h1>
-        <div className="bg-gray-200 w-full h-[300px]"></div>
+        {/* <div className="bg-gray-200 w-full h-[300px]"></div> */}
+        <BarChart />
         <div className="grid grid-cols-4 gap-6">
           <div className="flex flex-col justify-center h-full">
             <p>High data usage devices in the past 24 hours</p>

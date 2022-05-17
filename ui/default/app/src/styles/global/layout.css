@@ -2,4 +2,7 @@
   .container {
     @apply py-20;
   }
+  .header{
+    @apply fixed top-0 left-0 z-20 w-full bg-white shadow-md;
+  }
 }

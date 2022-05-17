@@ -16,6 +16,7 @@
     @apply text-dark;
   }
   a{
-    @apply font-semibold text-secondary ;
+    @apply font-semibold transition text-secondary;
+    @apply hover:text-primary;
   }
 }
