@@ -2,7 +2,7 @@ import React from 'react'
 
 const DeviceDrawer = () => {
   return (
-    <aside className="h-[calc(100vh-80px)] p-6 shadow-md w-[300px] flex  flex-col justify-between fixed bg-gray-50 right-0 bottom-0">
+    <aside className="menu-drawer">
         <p>Naming and tagging helps with our research</p>
         <form className="flex flex-col gap-4 py-4">
           <div>

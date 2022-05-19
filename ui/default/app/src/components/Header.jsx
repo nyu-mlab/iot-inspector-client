@@ -1,53 +1,105 @@
 import React, { useState, Fragment } from 'react'
-import { HiBell, HiCog, HiRefresh } from "react-icons/hi";
+import { HiBell, HiCog, HiMenu, HiX } from "react-icons/hi";
 import DataToggle from './DataToggle'
+import AnalyzingTraffic from "./AnalyzingTraffic";
 import Logo from './graphics/Logo'
-import { Dialog, Tab, Switch } from '@headlessui/react'
-
-
-
-
+import { Dialog, Tab, Switch, Disclosure, Menu, Transition } from '@headlessui/react'
+import SettingsModal from "./header/SettingsModal";
+import AchievmentsModal from "./header/AchievmentsModal";
+import FAQModal from "./header/FAQModal";
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(true)
-  const [contributingResearch, setContributingResearch] = useState(false)
-  const [autoInspect, setAutoInspect] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+
 
   return (
     <header className="header">
-      <div className="flex justify-between">
-        <div className="flex justify-between p-6 grow">
+      <Disclosure as="nav" className="flex flex-col justify-between lg:flex-row">
+        {({ open }) => (
+          <>
+        <div className="flex justify-between p-6 grow md:px-8 lg:px-12">
           <div className="flex gap-2 font-semibold h2 text-dark">
             <Logo /> Home Data Inspector
           </div>
-          <div className="flex gap-2">
-            <span className="mt-px font-semibold mt-1/2 text-secondary h4">
-              Analyzing 0 Kbps of traffic
-            </span>
-            <HiRefresh className="w-7 h-7 text-secondary animate-spin-slow" />
-          </div>
+          <div className="flex items-center gap-4">
+
+            <div className="hidden gap-2 md:flex">
+              <AnalyzingTraffic />
+            </div>
+
+            <div className="flex lg:hidden">
+              <Disclosure.Button className="inline-flex items-center justify-center p-2 text-gray-400 rounded-md hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <span className="sr-only">Open main menu</span>
+                {open ? (
+                  <HiX className="block w-6 h-6" aria-hidden="true" />
+                ) : (
+                  <HiMenu className="block w-6 h-6" aria-hidden="true" />
+                )}
+              </Disclosure.Button>
+            </div>
         </div>
-        <div className="flex gap-8 p-6 text-white bg-dark">
-            <DataToggle />
+        </div>
+        <div className="hidden gap-8 p-6 text-white lg:flex bg-dark">
+          <DataToggle />
           <button>
             <HiBell className="w-6 h-6" />
           </button>
-          <button onClick={() => setIsOpen(true)}>
+          <button onClick={() => setSettingsOpen(true)}>
             <HiCog className="w-6 h-6 transition hover:rotate-180 hover:text-primary" />
           </button>
         </div>
-      </div>
+        <Disclosure.Panel className="lg:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
+              <Disclosure.Button
+                as="a"
+                href="#"
+                className="block px-3 py-2 text-base font-medium text-white bg-gray-900 rounded-md"
+              >
+                Network Dashboard
+              </Disclosure.Button>
+              <Disclosure.Button
+                as="a"
+                href="#"
+                className="block px-3 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+              >
+                Settings
+              </Disclosure.Button>
+            </div>
+
+        </Disclosure.Panel>
+        </>
+      )}
+      </Disclosure>
+    <Transition show={settingsOpen} as={Fragment}>
       <Dialog
-        open={isOpen}
-        onClose={() => setIsOpen(false)}
+        // open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
         className="relative z-50"
       >
-        <div class="fixed inset-0 bg-dark/50 h-[calc(100vh-80px)] top-[80px]" aria-hidden="true" />
-
-        {/* Full-screen container to center the panel */}
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-          {/* The actual dialog panel  */}
-          <Dialog.Panel class="mx-auto max-w-5xl  rounded-2xl bg-white">
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+        <div className="fixed inset-0 bg-dark/50 h-[calc(100vh-80px)] top-[80px]" aria-hidden="true" />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+        <div className="fixed inset-0 flex items-center justify-center p-4 top-[80px]">
+          <Dialog.Panel className="mx-auto bg-white sm:11/12 md:w-10/12 lg:w-8/12 max-w-5xl rounded-2xl min-h-[70%] max-h-[90%] overflow-scroll">
             <Tab.Group >
               <Tab.List className="tab-nav">
                 <Tab as={Fragment}>
@@ -61,64 +113,47 @@ const Header = () => {
                   </button>
                   )}
                 </Tab>
-                <Tab className="tab-nav-item">Achievments</Tab>
-                <Tab className="tab-nav-item">FAQs</Tab>
+                <Tab as={Fragment}>
+                  {({ selected }) => (
+                  <button
+                      className={
+                        selected ? 'tab-nav-item tab-nav-item-active' : 'tab-nav-item'
+                      }
+                    >
+                    Achievments
+                  </button>
+                  )}
+                </Tab>
+                <Tab as={Fragment}>
+                  {({ selected }) => (
+                  <button
+                      className={
+                        selected ? 'tab-nav-item tab-nav-item-active' : 'tab-nav-item'
+                      }
+                    >
+                    FAQs
+                  </button>
+                  )}
+                </Tab>
               </Tab.List>
-              <Tab.Panels>
+              <Tab.Panels className="px-8 py-6 md:py-8 md:px-12">
                 <Tab.Panel>
-                  <div className="max-w-4xl px-8 py-6">
-                     <Switch.Group>
-                        <div className="flex flex-col gap-6 pb-6 flex-nowrap md:pr-40">
-                          <div id="contributingResearch">
-                            <div className="flex items-center gap-2 py-2">
-                              <Switch
-                                checked={contributingResearch}
-                                onChange={setContributingResearch}
-                                className="relative inline-flex items-center h-6 transition-colors rounded-full bg-light w-11 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                              >
-                                <span
-                                  className={`${
-                                    contributingResearch? 'translate-x-6 bg-green-400' : 'translate-x-1 bg-gray-400/50'
-                                  } inline-block h-4 w-4 transform rounded-full  transition-transform`}
-                                />
-                              </Switch>
-                              <Switch.Label className="h4 text-dark">Contributing Research</Switch.Label>
-                            </div>
-                            <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.</p>
-                          </div>
-                          <div id="autoInspect">
-                            <div className="flex items-center gap-2 py-2">
-                              <Switch
-                                checked={autoInspect}
-                                onChange={setAutoInspect}
-                                className="relative inline-flex items-center h-6 transition-colors rounded-full bg-light w-11 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                              >
-                                <span
-                                  className={`${
-                                    autoInspect? 'translate-x-6 bg-green-400' : 'translate-x-1 bg-gray-400/50'
-                                  } inline-block h-4 w-4 transform rounded-full  transition-transform`}
-                                />
-                              </Switch>
-                              <Switch.Label className="h4 text-dark">Automatically inspect new devices as they are discovered</Switch.Label>
-                            </div>
-                            <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.</p>
-                          </div>
-                        </div>
-                        <hr className="w-full my-4" />
-                        <div className="flex items-end justify-between">
-                          <a href="#" className="btn btn-primary">Download Network Data</a>
-                          <a href="#">Delete all device data</a>
-                        </div>
-                      </Switch.Group>
-                  </div>
+                  <SettingsModal />
                 </Tab.Panel>
-                <Tab.Panel>Content 2</Tab.Panel>
-                <Tab.Panel>Content 3</Tab.Panel>
+                <Tab.Panel >
+                  <AchievmentsModal />
+                </Tab.Panel>
+                <Tab.Panel>
+                  <FAQModal />
+                </Tab.Panel>
               </Tab.Panels>
             </Tab.Group>
           </Dialog.Panel>
         </div>
+        </Transition.Child>
       </Dialog>
+</Transition>
+
     </header>
   )
 }

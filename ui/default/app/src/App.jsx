@@ -24,7 +24,7 @@ function App() {
       <div className="App">
         {/* <Header /> */}
         <main className="flex mt-[80px]">
-          <div className="w-[calc(100vw-300px)]">
+          <div className="w-full md:w-[calc(100vw-300px)]">
             <NetworkActivityDashboard />
             <InspectingDevicesDashboard />
           </div>

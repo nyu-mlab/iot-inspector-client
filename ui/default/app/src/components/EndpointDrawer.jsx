@@ -4,7 +4,7 @@ import DeviceDiscoverySlide from "./DeviceDiscoverySlide"
 const EndpointDrawer = () => {
   return (
     <>
-    <aside className="h-[calc(100vh-80px)] p-6 shadow-md w-[300px] flex  flex-col justify-between fixed bg-white right-0 bottom-0">
+    <aside className="menu-drawer">
         <h2>Communication Endpoints</h2>
         <div  className="flex-1 py-4 overflow-y-scroll">
           <ul>
@@ -18,7 +18,7 @@ const EndpointDrawer = () => {
             <div className="w-full h-px bg-secondary"></div>
           </div>
           <div className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-            <a href="#" className="p-5 font-semibold bg-white text-secondary">View All</a>
+            <a href="/communication-endpoints/" className="p-5 font-semibold bg-white text-secondary">View All</a>
           </div>
         </div>
       <button className="w-full btn btn-primary">Scan Network</button>

@@ -7,7 +7,7 @@
     @apply hover:bg-green-300 hover:text-dark;
   }
   .tab-nav{
-    @apply flex gap-4 border-b-2 border-dark/80;
+    @apply   flex w-full gap-4 border-b-2 border-dark/80;
     .tab-nav-item{
       @apply px-4 pt-6 pb-4 -mb-[2px] md:px-10;
     }
@@ -15,4 +15,26 @@
       @apply  border-b-2 border-primary;
     }
   }
+  .achievement-card{
+    @apply flex flex-col gap-3 transition opacity-40 hover:opacity-80;
+    &.achieved{
+      @apply opacity-100 hover:opacity-100;
+    }
+  }
+  .list-view{
+    .device-item{
+      @apply flex justify-between w-full p-4 bg-white border-l-8 border-green-500 rounded-lg shadow-sm;
+      .device-info {
+        @apply flex items-center flex-1 gap-4 pr-4 border-r border-gray-300 md:w-5/12 ;
+      }
+      .device-tags {
+        @apply items-center justify-start flex-1 hidden w-3/12 gap-2 px-4 overflow-scroll border-r border-gray-300 sm:flex;
+      }
+    }
+  }
+  /* .card-view{
+    .device-item{
+      @apply flex flex-col justify-between w-full p-4 mb-4 bg-white border-l-8 border-green-500 rounded-lg shadow-sm;
+    }
+  } */
 }
