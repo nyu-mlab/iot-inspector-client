@@ -19,7 +19,7 @@ const DataToggle = () => {
             } inline-block h-4 w-4 transform rounded-full  transition-transform`}
           />
         </Switch>
-        <Switch.Label className="text-xs ">
+        <Switch.Label className="text-xs text-white">
           <span className="w-[30px] inline-block text-center">
           <strong>
             {

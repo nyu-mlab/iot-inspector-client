@@ -13,7 +13,7 @@ const endpoints = [
 
 const EndpointList = () => {
   return (
-      <table className="min-w-full overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg">
+      <table className="min-w-full my-4 overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg">
         <thead className=" bg-dark">
             <tr>
               <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-light sm:pl-6">

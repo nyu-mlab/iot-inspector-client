@@ -1,14 +1,26 @@
 import React from 'react'
 import DeviceDiscoveryCard from "./DeviceDiscoveryCard"
+import RefreshSpinner from "./graphics/RefreshSpinner"
 
 const DeviceDiscoverySlide = () => {
   return (
-    <div className="absolute top-[80px] right-0 z-10 w-3/4 h-[calc(100vh-80px)] bg-gray-100 p-4 shadow-lg flex justify-between flex-col">
-      <div className="">
-        <h2>Select Devices to inspect on your network</h2>
-        <p>Naming and tagging helps with our research.</p>
+    <>
+    <div className="modal-backdrop"></div>
+    <div className="slide-panel">
+      <div className="flex items-center gap-4 px-2">
+        <div className="w-8 h-8 animate-spin-slow">
+          <RefreshSpinner />
+        </div>
+        <div>
+          <h2>Select Devices to inspect on your network</h2>
+          <p>Naming and tagging helps with our research.</p>
+        </div>
       </div>
-      <div className="flex flex-col flex-1 gap-2 py-4 overflow-auto border-b">
+      <div className="flex flex-col flex-1 gap-2 py-4 overflow-auto border-b md:py-8">
+        <DeviceDiscoveryCard />
+        <DeviceDiscoveryCard />
+        <DeviceDiscoveryCard />
+        <DeviceDiscoveryCard />
         <DeviceDiscoveryCard />
         <DeviceDiscoveryCard />
         <DeviceDiscoveryCard />
@@ -23,8 +35,9 @@ const DeviceDiscoverySlide = () => {
           <input type="checkbox" id="selectAllDevices" checked/>
         </div>
       </form>
-      <button className="w-fit btn btn-primary">Scan Network</button>
+      <button className="w-fit btn btn-primary">Monitor Devices</button>
     </div>
+    </>
   )
 }
 

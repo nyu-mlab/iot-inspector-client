@@ -2,13 +2,13 @@ import React from 'react'
 
 const DeviceDiscoveryCard = () => {
   return (
-     <div className="relative p-3 bg-white rounded-md shadow-sm">
+     <div className="device-discovery-card">
       <form className="absolute top-2 right-3">
         <input type="checkbox" id="deviceID" checked/>
         <label htmlFor="deviceID" className="sr-only">Device Name</label>
       </form>
       <h3>Unknown Device</h3>
-      <div className="flex flex-row">
+      <div className="flex flex-row gap-4">
         <p>19.168.0.1</p>
         <p>C6:xx:xx:xx:xx:xx</p>
       </div>

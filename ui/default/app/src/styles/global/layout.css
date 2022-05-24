@@ -4,7 +4,17 @@
   }
   .header{
     @apply fixed top-0 left-0 z-20 w-full bg-white shadow-md;
+    .primary-nav{
+      @apply flex flex-col justify-between lg:flex-row;
+    }
+
   }
+  .inspector-settings {
+      @apply fixed inset-0 flex items-center justify-center p-4 top-[80px];
+      .inspector-settings-panel{
+        @apply mx-auto !bg-white sm:w-11/12 md:w-10/12 lg:w-8/12 max-w-5xl rounded-2xl min-h-[70%] max-h-[90%] overflow-scroll;
+      }
+    }
   .menu-drawer{
     @apply h-[calc(100vh-80px)] p-6 shadow-md w-[300px]  flex-col justify-between fixed bg-white right-0 bottom-0 hidden md:flex;
   }

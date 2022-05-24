@@ -22,8 +22,9 @@ const EndpointDrawer = () => {
           </div>
         </div>
       <button className="w-full btn btn-primary">Scan Network</button>
+      {/* <DeviceDiscoverySlide /> */}
     </aside>
-    {/* <DeviceDiscoverySlide /> */}
+
     </>
   )
 }
