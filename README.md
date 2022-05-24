@@ -36,9 +36,6 @@ commit your changes in the `cr-dev` branch.
 To test the UI, start Inspector and navigate to http://localhost:53721/, which
 automatically redirects to `/dashboard/html/index.html`.
 
-The UI interacts with the Inspector client via an local API. See the local API
-docs by running Inspector above and navigating to http://127.0.0.1:53721/redoc
-or http://localhost:53721/docs (depending on your personal preference). 
 
 
 
