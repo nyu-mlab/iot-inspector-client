@@ -48,6 +48,7 @@ automatically redirects to `/dashboard/html/index.html`.
 
 ![inspector-system-design](https://user-images.githubusercontent.com/1479070/170168884-89a12848-fd75-45bd-a05b-a7fbc367bb21.png)
 
+[Source File of Diagram](https://drive.google.com/file/d/1NPmysXA42BwZnroqAikgl_3HbTHSimJH/view)
 
 
 
