@@ -23,12 +23,12 @@ const InspectingDevicesDashboard = () => {
 
     <div className="grid grid-cols-4 gap-4 py-4 md:flex md:items-center">
       <form className="flex flex-1 order-last col-span-4 md:order-first">
-        <input type='text' id='searchDevices' className="w-full px-4 py-2 text-gray-600 bg-white border border-gray-400 rounded-md" placeholder="Search devices"/>
-        <label htmlFor="searchDevices" className="sr-only"><HiSearch />Search devices</label>
+        <input type='text' id='searchDevices' className="w-full px-4 py-2 text-gray-600 bg-white border border-gray-400 rounded-md" placeholder="Search devices by name or tag"/>
+        <label htmlFor="searchDevices" className="sr-only"><HiSearch />Search devices by name or tag</label>
       </form>
-      <div className="flex items-center justify-center gap-1 p-2 text-sm text-white bg-gray-500 rounded-lg">
+      {/* <div className="flex items-center justify-center gap-1 p-2 text-sm text-white bg-gray-500 rounded-lg">
         Tags <HiOutlineArrowSmDown />
-      </div>
+      </div> */}
       <div className="flex items-center justify-center p-2 text-sm">Name</div>
       <div className="flex items-center justify-center p-2 text-sm">Traffic</div>
       <div className="flex items-center justify-center gap-3 px-2">
