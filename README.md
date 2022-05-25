@@ -3,6 +3,10 @@
 This branch is for the development of the new Inspector -- a collaboration
 between NYU, Consumer Reports, and Ocopop.
 
+# System Design
+
+
+
 ## Setting up the development environment
 
 ### For all developers
@@ -27,6 +31,9 @@ Issues? Questions? Please create an Issue.
 
 
 ### For UI/UX developers:
+
+[This section is subject to change, as the UI/UX developers will be using
+nodejs. The Python client and nodejs will communicate over a sqlite database.]
 
 Edit the files within the `ui/default` directory. The HTML for the start page
 must be `ui/default/html/index.html`. Feel free to place any other files (e.g.,
