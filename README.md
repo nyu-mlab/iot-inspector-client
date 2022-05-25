@@ -3,9 +3,6 @@
 This branch is for the development of the new Inspector -- a collaboration
 between NYU, Consumer Reports, and Ocopop.
 
-# System Design
-
-
 
 ## Setting up the development environment
 
@@ -45,13 +42,12 @@ automatically redirects to `/dashboard/html/index.html`.
 
 
 
-
-
 ## Documentation
 
-### Overview
+### System Design
 
-Coming soonn.
+![inspector-system-design](https://user-images.githubusercontent.com/1479070/170168884-89a12848-fd75-45bd-a05b-a7fbc367bb21.png)
+
 
 
 
