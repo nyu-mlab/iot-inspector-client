@@ -46,7 +46,7 @@ automatically redirects to `/dashboard/html/index.html`.
 
 ### System Design
 
-![inspector-system-design](https://user-images.githubusercontent.com/1479070/170168884-89a12848-fd75-45bd-a05b-a7fbc367bb21.png)
+![inspector-system-design](https://user-images.githubusercontent.com/1479070/170374526-d2fa9156-c386-41bb-94ea-17ea5bbfe595.png)
 
 [Source File of Diagram](https://drive.google.com/file/d/1NPmysXA42BwZnroqAikgl_3HbTHSimJH/view)
 
