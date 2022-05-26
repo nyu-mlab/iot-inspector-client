@@ -17,6 +17,9 @@
     See the system design diagram here:
     https://drive.google.com/file/d/1NPmysXA42BwZnroqAikgl_3HbTHSimJH/view
 
+    Examples of usage:
+    https://xd.adobe.com/view/250bfa62-c34a-4356-9cf3-dedf1313c814-7058/screen/5a8b945a-9d7d-4095-87a8-82f8be6716ec/
+
  */
 
 
