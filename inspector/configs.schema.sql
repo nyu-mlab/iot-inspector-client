@@ -29,9 +29,13 @@ CREATE TABLE IF NOT EXISTS device_info (
     vendor_name TEXT DEFAULT "" NOT NULL,
     -- User-entered tags of the manufacturer; stored as a JSON list
     tag_list TEXT DEFAULT "[]" NOT NULL,
-    -- Boolean: whether the device is being inspected
+    -- Boolean: whether the device is being inspected. When the UI sets this
+    -- value to 1, the Python driver will automatically start inspecting the
+    -- device. When the UI sets this value to 0, the Python driver will
+    -- automatically stop inspecting. The driver monitors this table roughly
+    -- every second.
     is_inspected INTEGER DEFAULT 0 NOT NULL,
-    -- Boolean: whether the device is being blocked
+    -- Boolean: whether the device is being blocked. Set to 1 and the Python driver will automatically block a device.
     is_blocked INTEGER DEFAULT 0 NOT NULL,
 );
 

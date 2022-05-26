@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS devices (
     user_agent_list TEXT DEFAULT "[]" NOT NULL
     -- List of ports that respond to Inspector's SYN scan
     syn_scan_port_list TEXT DEFAULT "[]" NOT NULL,
-    -- Automatically inferred name of device
+    -- Automatically inferred name of device; if a user already manually provide a name in the `device_info` table, Inspector will automatically replace fill in the manual value into `auto_name`.
     auto_name TEXT DEFAULT "" NOT NULL,
     -- Last time this record is updated
     last_updated_ts INTEGER NOT NULL
