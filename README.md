@@ -3,6 +3,7 @@
 This branch is for the development of the new Inspector -- a collaboration
 between NYU, Consumer Reports, and Ocopop.
 
+
 ## Setting up the development environment
 
 ### For all developers
@@ -28,6 +29,9 @@ Issues? Questions? Please create an Issue.
 
 ### For UI/UX developers:
 
+[This section is subject to change, as the UI/UX developers will be using
+nodejs. The Python client and nodejs will communicate over a sqlite database.]
+
 Edit the files within the `ui/default` directory. The HTML for the start page
 must be `ui/default/html/index.html`. Feel free to place any other files (e.g.,
 images, CSS, and JS) elsewhere in the `ui/default` directory. Make sure to
@@ -36,18 +40,15 @@ commit your changes in the `cr-dev` branch.
 To test the UI, start Inspector and navigate to http://localhost:53721/, which
 automatically redirects to `/dashboard/html/index.html`.
 
-The UI interacts with the Inspector client via an local API. See the local API
-docs by running Inspector above and navigating to http://127.0.0.1:53721/redoc
-or http://localhost:53721/docs (depending on your personal preference). 
-
-
 
 
 ## Documentation
 
-### Overview
+### System Design
 
-Coming soonn.
+![inspector-system-design](https://user-images.githubusercontent.com/1479070/170374526-d2fa9156-c386-41bb-94ea-17ea5bbfe595.png)
+
+[Source File of Diagram](https://drive.google.com/file/d/1NPmysXA42BwZnroqAikgl_3HbTHSimJH/view)
 
 
 
