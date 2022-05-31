@@ -1,0 +1,11 @@
+{
+  "name": "default",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^7.2.1"
+  },
+  "scripts": {
+    "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\""
+  }
+}
