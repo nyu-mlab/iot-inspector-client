@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS devices (
     -- List of unique netdisco scan results
     netdisco_list TEXT DEFAULT "[]" NOT NULL,
     -- List of user agents sniffed via HTTP
-    user_agent_list TEXT DEFAULT "[]" NOT NULL
+    user_agent_list TEXT DEFAULT "[]" NOT NULL,
     -- List of ports that respond to Inspector's SYN scan
     syn_scan_port_list TEXT DEFAULT "[]" NOT NULL,
     -- Automatically inferred name of device; if a user already manually provide a name in the `device_info` table, Inspector will automatically replace fill in the manual value into `auto_name`.
