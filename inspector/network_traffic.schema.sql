@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS devices (
     -- Automatically inferred name of device; if a user already manually provide a name in the `device_info` table, Inspector will automatically replace fill in the manual value into `auto_name`.
     auto_name TEXT DEFAULT "" NOT NULL,
     -- Last time this record is updated
-    last_updated_ts INTEGER NOT NULL
+    last_updated_ts REAL NOT NULL
 );
 
 /*
