@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Device {
+  device_id          String         @id
+  ip                 String
+  mac                String
+  dhcp_hostname_list String
+  netdisco_list      String
+  user_agent_list    String
+  syn_scan_port_list String
+  auto_name          String
+  last_updated_ts    Int
+  CounterParty       CounterParty[]
+  Flow               Flow[]
+}
+
+model CounterParty {
+  id          Int    @id @default(autoincrement())
+  device      Device @relation(fields: [device_id], references: [device_id])
+  remote_ip   String
+  hostname    String
+  source      String
+  resolver_ip String
+  ts          Int
+  device_id   String
+  Flow        Flow[]
+}
+
+model Flow {
+  id                          Int          @id @default(autoincrement())
+  device                      Device       @relation(fields: [device_id], references: [device_id])
+  device_port                 Int
+  counterparty_ip             String
+  counterparty_port           Int
+  counterparty_hostname       String
+  counterparty_friendly_name  String
+  counterparty_country        String
+  counterparty_is_ad_tracking Int
+  counter_party               CounterParty @relation(fields: [counterPartyId], references: [id])
+  transport_layer_protocol    String
+  uses_weak_encryption        Int
+  ts                          Int
+  ts_mod_60                   Int
+  ts_mod_600                  Int
+  ts_mod_3600                 Int
+  window_size                 Int
+  inbound_byte_count          Int
+  outbound_byte_count         Int
+  inbound_packet_count        Int
+  outbound_packet_count       Int
+  device_id                   String
+  counterPartyId              Int
+}
