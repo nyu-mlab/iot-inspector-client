@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS device_info (
     -- every second.
     is_inspected INTEGER DEFAULT 0 NOT NULL,
     -- Boolean: whether the device is being blocked. Set to 1 and the Python driver will automatically block a device.
-    is_blocked INTEGER DEFAULT 0 NOT NULL,
+    is_blocked INTEGER DEFAULT 0 NOT NULL
 );
 
 

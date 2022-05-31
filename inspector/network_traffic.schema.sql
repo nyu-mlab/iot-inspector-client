@@ -32,8 +32,10 @@
     (e.g., IP changes) during Inspector's regular network rescans.
  */
 CREATE TABLE IF NOT EXISTS devices (
+    -- Row ID
+    id INTEGER PRIMARY KEY,
     -- ID of device
-    device_id TEXT PRIMARY KEY,
+    device_id TEXT NOT NULL,
     -- Latest IP address of device
     ip TEXT NOT NULL,
     -- MAC address of device
@@ -43,13 +45,13 @@ CREATE TABLE IF NOT EXISTS devices (
     -- List of unique netdisco scan results
     netdisco_list TEXT DEFAULT "[]" NOT NULL,
     -- List of user agents sniffed via HTTP
-    user_agent_list TEXT DEFAULT "[]" NOT NULL
+    user_agent_list TEXT DEFAULT "[]" NOT NULL,
     -- List of ports that respond to Inspector's SYN scan
     syn_scan_port_list TEXT DEFAULT "[]" NOT NULL,
     -- Automatically inferred name of device; if a user already manually provide a name in the `device_info` table, Inspector will automatically replace fill in the manual value into `auto_name`.
     auto_name TEXT DEFAULT "" NOT NULL,
     -- Last time this record is updated
-    last_updated_ts INTEGER NOT NULL
+    last_updated_ts REAL NOT NULL
 );
 
 /*
@@ -65,10 +67,12 @@ CREATE TABLE IF NOT EXISTS devices (
     counterport port 443; one row 0-1 seconds, one row 1-2 seconds, and one row 2-3 seconds.
 */
 CREATE TABLE IF NOT EXISTS flows (
+    -- Row ID
+    id INTEGER PRIMARY KEY,
     -- ID of device. Same as the device_id in the devices table. We're not using
     -- the foreign key constraints here because a user may decide to delete a
     -- flow/device.
-    device_id TEXT PRIMARY KEY,
+    device_id TEXT NOT NULL,
     -- Port of flow on device
     device_port INTEGER DEFAULT 0 NOT NULL,
     -- IP address of counterparty
@@ -116,6 +120,8 @@ CREATE TABLE IF NOT EXISTS flows (
     Maps each remote counterparty to a named entity, e.g., hostname.
 */
 CREATE TABLE IF NOT EXISTS counterparties (
+    -- Row ID
+    id INTEGER PRIMARY KEY,
     -- Remote IP address of the counterparty
     remote_ip TEXT NOT NULL,
     -- Hostname of the IP address
