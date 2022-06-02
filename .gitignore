@@ -110,3 +110,12 @@ venv.bak/
 *.idea
 v2-src/.vscode/settings.json
 .vscode/settings.json
+
+# DB Files
+inspector/configs.db
+inspector/configs.db-shm
+inspector/configs.db-wal
+inspector/network_traffic.db
+inspector/network_traffic.db-shm
+inspector/network_traffic.db-wal
+inspector/network_traffic2.db

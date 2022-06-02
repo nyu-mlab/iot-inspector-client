@@ -4,57 +4,52 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = "file:../../../../inspector/network_traffic.db"
 }
 
-model Device {
-  device_id          String         @id
-  ip                 String
-  mac                String
-  dhcp_hostname_list String
-  netdisco_list      String
-  user_agent_list    String
-  syn_scan_port_list String
-  auto_name          String
-  last_updated_ts    Int
-  CounterParty       CounterParty[]
-  Flow               Flow[]
-}
-
-model CounterParty {
+model counterparties {
   id          Int    @id @default(autoincrement())
-  device      Device @relation(fields: [device_id], references: [device_id])
   remote_ip   String
   hostname    String
-  source      String
-  resolver_ip String
-  ts          Int
   device_id   String
-  Flow        Flow[]
+  source      String
+  resolver_ip String @default("")
+  ts          Float
 }
 
-model Flow {
-  id                          Int          @id @default(autoincrement())
-  device                      Device       @relation(fields: [device_id], references: [device_id])
-  device_port                 Int
-  counterparty_ip             String
-  counterparty_port           Int
-  counterparty_hostname       String
-  counterparty_friendly_name  String
-  counterparty_country        String
-  counterparty_is_ad_tracking Int
-  counter_party               CounterParty @relation(fields: [counterPartyId], references: [id])
-  transport_layer_protocol    String
-  uses_weak_encryption        Int
-  ts                          Int
-  ts_mod_60                   Int
-  ts_mod_600                  Int
-  ts_mod_3600                 Int
-  window_size                 Int
-  inbound_byte_count          Int
-  outbound_byte_count         Int
-  inbound_packet_count        Int
-  outbound_packet_count       Int
-  device_id                   String
-  counterPartyId              Int
+model devices {
+  // id                 Int    @id @default(autoincrement())
+  device_id          String @id
+  ip                 String
+  mac                String
+  dhcp_hostname_list String @default("[]")
+  netdisco_list      String @default("[]")
+  user_agent_list    String @default("[]")
+  syn_scan_port_list String @default("[]")
+  auto_name          String @default("")
+  last_updated_ts    Float
+}
+
+model flows {
+  id                           Int    @id @default(autoincrement())
+  device_id                    String
+  device_port                  Int    @default(0)
+  counterparty_ip              String
+  counterparty_port            Int    @default(0)
+  counterparty_hostname        String @default("")
+  counterparty_friendly_name   String @default("")
+  counterparty_country         String @default("")
+  counterparty_is_ad_tracking  Int    @default(0)
+  counterparty_local_device_id String @default("")
+  transport_layer_protocol     String @default("")
+  uses_weak_encryption         Int    @default(0)
+  ts                           Float
+  ts_mod_60                    Float
+  ts_mod_600                   Float
+  ts_mod_3600                  Float
+  window_size                  Float
+  inbound_byte_count           Int    @default(0)
+  outbound_byte_count          Int    @default(0)
+  inbound_packet_count         Int    @default(0)
+  outbound_packet_count        Int    @default(0)
 }
