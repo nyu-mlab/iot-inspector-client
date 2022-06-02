@@ -27,21 +27,21 @@ export default defineConfig({
       },
     }),
    ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:53721',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      }
-    }
-  },
+  // server: {
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://127.0.0.1:53721',
+  //       changeOrigin: true,
+  //       secure: false,
+  //       ws: true,
+  //     }
+  //   }
+  // },
   // base: '/dashboard/html/',
-  build: {
-    // assetsDir: '/dashboard/html/',
-    outDir: '../html',
-    emptyOutDir: true
-  }
+  // build: {
+  //   // assetsDir: '/dashboard/html/',
+  //   outDir: '../html',
+  //   emptyOutDir: true
+  // }
 })
 
