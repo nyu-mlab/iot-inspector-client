@@ -1,7 +1,44 @@
-introspect your database. Note that this will populate your Prisma schema file with Prisma models that represent your database schema:
-`npx prisma introspect`
 
+## Commands
+### Setup
+From within `ui/default`:
+```bash
+yarn install # This will install dependencies within server and client
+```
 
-`npx prisma generate`
+### Running the App
+Spin both the client and graphql server up. Note this should be run within the `ui/default` directory. It will concurrently run both client and server.
+```bash
+yarn dev 
+```
 
-`npx prisma studio`
+Within another tab, to run the mock database (which needs to be run when running the app) run:
+```bash
+yarn mockdb 
+```
+
+This will run the mock database and generate database files.
+
+### Building the App
+From within `ui/default` run:
+```bash
+yarn build:client
+```
+
+### Other commands
+Note: Be cautious running these, make sure you know/understand what they do before running them.
+```bash
+# introspect your database. Note that this will populate your Prisma schema file with Prisma models that represent your database schema:
+npx prisma introspect
+
+npx prisma generate
+
+npx prisma studio
+```
+
+## FAQs
+- Whats the difference between `app/` and `server/`
+  - `app/` is the client application that will run on port 3000
+  - `server/` is the graphql server that will run on port 4000
+- Whats the Python Mock Database?
+  - Generates mock data that the graphql server uses

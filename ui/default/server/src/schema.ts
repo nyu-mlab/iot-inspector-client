@@ -37,13 +37,17 @@ export const typeDefs = gql`
     outbound_byte_count: Int!
     inbound_packet_count: Int!
     outbound_packet_count: Int!
+    _sum: Int
   }
 
   type Query {
     device(device_id: String): Device
     devices: [Device!]!
     flows: [Flow!]!
-    adsAndTrackerBytes(current_time: Int): [Flow]
+    # deviceUsageBytes(current_time: Int): Flow
+    adsAndTrackerBytes(current_time: Int): Flow
+    unencryptedHttpTrafficBytes(current_time: Int): Flow
+    weakEncryptionBytes(current_time: Int): Flow
   }
 `
 
@@ -60,29 +64,53 @@ export const resolvers = {
     flows: (_parent, _args, context: Context) => {
       return context.prisma.flows.findMany()
     },
-    // 1654111436
-    //     SELECT
-    //     SUM(outbound_byte_count) AS Bytes
-    // FROM flows
-    // WHERE
-    //     counterparty_port = 80 AND
-    // f.ts >= [current_time] - 3600.0 * 24.0;
-    //
-    //{ts: greaterThan: 1654111436 - 3600.0 * 24.0 }
-    adsAndTrackerBytes: (
+    adsAndTrackerBytes: async (
       _parent,
       args: { current_time: number },
       context: Context,
     ) => {
-      return context.prisma.flows.aggregate({
+      const flowsResult = await context.prisma.flows.aggregate({
+        where: {
+          counterparty_is_ad_tracking: 1,
+          ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
+        },
+        _sum: {
+          outbound_byte_count: true
+        }
+      })
+      return { _sum: flowsResult._sum.outbound_byte_count }
+    },
+    unencryptedHttpTrafficBytes: async (
+      _parent,
+      args: { current_time: number },
+      context: Context,
+    ) => {
+      const flowsResult = await context.prisma.flows.aggregate({
         where: {
           counterparty_port: 80,
           ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
         },
-        // _sum: {
-        //   outbound_byte_count: 1
-        // }
+        _sum: {
+          outbound_byte_count: true
+        }
       })
+      return { _sum: flowsResult._sum.outbound_byte_count }
+    },
+    weakEncryptionBytes: async (
+      _parent,
+      args: { current_time: number },
+      context: Context,
+    ) => {
+      const flowsResult = await context.prisma.flows.aggregate({
+        where: {
+          counterparty_port: 80,
+          ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
+        },
+        _sum: {
+          outbound_byte_count: true
+        }
+      })
+      return { _sum: flowsResult._sum.outbound_byte_count }
     },
   },
 }

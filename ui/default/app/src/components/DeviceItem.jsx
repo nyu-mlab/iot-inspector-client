@@ -1,21 +1,21 @@
 import React from 'react'
 
-const DeviceItem = () => {
+const DeviceItem = ({ device }) => {
   return (
     <div className="device-item">
       <div className="device-info">
         <img src="https://via.placeholder.com/150" alt="{device}" className="hidden w-auto h-12 lg:block md:h-16" />
         <div className="grid overflow-scroll">
-          <h3>Unknown Device</h3>
+          <h3>{device ? device.auto_name : 'Unknown Device'}</h3>
           <div className="flex justify-between text-xs md:block">
             <div>
               <p>
-              192.168.1.1
+              {device && device.ip}
               </p>
             </div>
             <div>
               <p>
-              C6:xx:xx:xxxx
+              {device && device.mac}
               </p>
             </div>
           </div>

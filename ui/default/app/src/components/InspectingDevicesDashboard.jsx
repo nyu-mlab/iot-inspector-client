@@ -3,11 +3,23 @@ import { HiViewGrid, HiViewList, HiRefresh, HiSearch, HiOutlineArrowSmDown } fro
 import RefreshSpinner from "./graphics/RefreshSpinner";
 import DeviceItem from "./DeviceItem";
 import { Switch } from '@headlessui/react'
+import { gql, useQuery } from '@apollo/client';
 
+
+const DEVICES_QUERY = gql`
+  query Query {
+    devices {
+      device_id
+      auto_name
+      ip,
+      mac
+    }
+  }
+`
 
 const InspectingDevicesDashboard = () => {
   const [cardView, setCardView] = useState(false)
-
+  const devicesResponse = useQuery(DEVICES_QUERY)
 
   return (
     <section className="bg-gray-50 flex-flex-col-gap-4">
@@ -50,10 +62,12 @@ const InspectingDevicesDashboard = () => {
       </div>
     </div>
       <ul className={cardView ? 'grid grid-cols-3' : ''}>
-        <li className={`${cardView ? 'card-view' : 'list-view'
+      {devicesResponse?.data?.devices?.map((device) => (
+        <li key={device.device_id} className={`${cardView ? 'card-view' : 'list-view'
             } py-2`}>
-          <DeviceItem />
+          <DeviceItem device={device} />
         </li>
+      ))}
       </ul>
     </section>
   )

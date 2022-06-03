@@ -6,6 +6,10 @@
     "concurrently": "^7.2.1"
   },
   "scripts": {
-    "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\""
+    "mockdb": "cd ../../inspector && python3 generate_mock_data.py",
+    "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\"",
+    "clean": "concurrently \"rm -rf node_modules\" \"cd app && rm -rf node_modules\" \"cd server && rm -rf node_modules\"",
+    "install": "(cd app && yarn) && (cd server && yarn)",
+    "build": "cd app && yarn build"
   }
 }
