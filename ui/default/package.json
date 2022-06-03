@@ -1,0 +1,15 @@
+{
+  "name": "default",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^7.2.1"
+  },
+  "scripts": {
+    "mockdb": "cd ../../inspector && python3 generate_mock_data.py",
+    "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\"",
+    "install": "(cd app && yarn) && (cd server && yarn)",
+    "clean": "(rm -rf node_modules) && (cd app && rm -rf node_modules) && (cd server && rm -rf node_modules)",
+    "build": "cd app && yarn build"
+  }
+}
