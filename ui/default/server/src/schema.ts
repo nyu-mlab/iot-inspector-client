@@ -61,10 +61,18 @@ export const resolvers = {
       })
     },
     devices: (_parent, _args, context: Context) => {
-      return context.prisma.devices.findMany()
+      return context.prisma.devices.findMany({
+        include: {
+          flows: true
+        }
+      })
     },
     flows: (_parent, _args, context: Context) => {
-      return context.prisma.flows.findMany()
+      return context.prisma.flows.findMany({
+        include: {
+          device: true
+        }
+      })
     },
     adsAndTrackerBytes: async (
       _parent,
