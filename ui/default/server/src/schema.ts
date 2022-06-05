@@ -13,10 +13,12 @@ export const typeDefs = gql`
     syn_scan_port_list: String!
     auto_name: String!
     last_updated_ts: Int!
+    flows: [Flow]
   }
 
   type Flow {
     id: ID
+    device: Device
     device_id: ID!
     device_port: Int!
     counterparty_ip: String!
