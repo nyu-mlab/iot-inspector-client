@@ -64,29 +64,27 @@ const NetworkActivityDashboard = () => {
       <section className="flex flex-col gap-4">
         <h1>Network Activity</h1>
         <BarChart />
-        <div className="grid gap-6 py-8 lg:grid-cols-4 md:py-4">
-          <div className="flex flex-col justify-center h-full">
-            <p>High data usage devices in the past 24 hours</p>
-            <a href="#">View all devices</a>
-          </div>
-          <div className="grid gap-2 md:grid-cols-3 lg:col-span-3">
-            <DataCard bytes={null}>
-              <span className="text-xs">Unknown Device</span>
-              <span className="text-xs">192.168.0.12</span>
-            </DataCard>
-            <DataCard bytes={null}>
-              <span className="text-xs">Unknown Device</span>
-              <span className="text-xs">192.168.0.12</span>
-            </DataCard>
-            <DataCard bytes={null}>
-              <span className="text-xs">Unknown Device</span>
-              <span className="text-xs">192.168.0.12</span>
-            </DataCard>
-          </div>
-        </div>
-      </section>
-      <section className="flex flex-col gap-4 bg-gray-50">
         <div className="grid gap-6 py-8 lg:grid-cols-2 md:py-4">
+          <div>
+              <p>High data usage devices in the past 24 hours
+                <br />
+                <a href="#">View all devices</a>
+              </p>
+            <div className="grid grid-cols-2 gap-2 py-4">
+              <DataCard bytes={null}>
+                <span className="text-xs">Unknown Device</span>
+                <span className="text-xs">192.168.0.12</span>
+              </DataCard>
+              <DataCard bytes={null}>
+                <span className="text-xs">Unknown Device</span>
+                <span className="text-xs">192.168.0.12</span>
+              </DataCard>
+              <DataCard bytes={null}>
+                <span className="text-xs">Unknown Device</span>
+                <span className="text-xs">192.168.0.12</span>
+              </DataCard>
+            </div>
+          </div>
           <div>
             <p>
               Monitored devices sent/recieved

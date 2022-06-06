@@ -12,7 +12,7 @@ const DeviceActivity = () => {
   return (
     <DefaultLayout>
       <main className="flex mt-[80px] bg-white h-[calc(100vh-80px)]">
-        <div className="md:w-[calc(100vw-300px)]">
+        <div className="md:w-[calc(100vw-275px)]">
           <section className="flex items-center gap-2 pb-2 w-fit">
             <a href="/" >
               Network Activity
