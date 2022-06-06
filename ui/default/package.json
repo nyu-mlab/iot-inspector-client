@@ -10,6 +10,6 @@
     "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\"",
     "install": "(cd app && yarn) && (cd server && yarn)",
     "clean": "(rm -rf node_modules) && (cd app && rm -rf node_modules) && (cd server && rm -rf node_modules)",
-    "client:build": "cd app && yarn build"
+    "client:build": "(cd app && yarn build) && (ls && mv app/dist html/)"
   }
 }
