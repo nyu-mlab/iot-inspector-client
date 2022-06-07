@@ -48,7 +48,7 @@ export const typeDefs = gql`
     device(device_id: String): Device
     devices: [Device!]!
     flows: [Flow!]!
-    # deviceUsageBytes(current_time: Int): Flow
+    flowsByDeviceId: [Flow!]!
     adsAndTrackerBytes(current_time: Int): Flow
     unencryptedHttpTrafficBytes(current_time: Int): Flow
     weakEncryptionBytes(current_time: Int): Flow
@@ -82,6 +82,13 @@ export const resolvers = {
       return devices
     },
     flows: (_parent, _args, context: Context) => {
+      return context.prisma.flows.findMany({
+        include: {
+          device: true,
+        },
+      })
+    },
+    flowsByDeviceId: (_parent, _args, context: Context) => {
       return context.prisma.flows.findMany({
         include: {
           device: true,

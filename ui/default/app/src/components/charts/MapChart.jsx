@@ -1,107 +1,58 @@
-import React, { memo } from "react";
-import {
-  ComposableMap,
-  Geographies,
-  Graticule,
-  Geography,
-  Marker,
-  ZoomableGroup,
-  Line
-} from "react-simple-maps";
+import React, { useEffect, useRef, useState } from 'react'
+import mapboxgl from 'mapbox-gl'
+import * as turf from "@turf/turf";
 
-const geoUrl =
-  "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
+const generateArc = (start, destination) => {
+  console.log(turf)
+  const radius = turf.rhumbDistance(start, destination);
+  const midpoint = turf.midpoint(start, destination);
+  const bearing = turf.rhumbBearing(start, destination) - 90;
+  const origin = turf.rhumbDestination(midpoint, radius, bearing);
 
-const homeMarker = {
-  coordinates: [-95.712891, 37.09024]
+  const arc = turf.lineArc(
+    origin,
+    turf.distance(origin, start),
+    turf.bearing(origin, destination),
+    turf.bearing(origin, start), {
+      steps: 128
+    }
+  );
+
+  return arc.geometry.coordinates
 }
 
-const markers = [
-  { markerOffset: 0, name: "TW", coordinates: [120.960515, 23.69781], data: '35kb' },
-  { markerOffset: 0, name: "US", coordinates: [-95.712891	, 37.09024], data: '160mb' },
-  { markerOffset: 0, name: "CN", coordinates: [104.195397, 35.86166], data: '800mb' },
-  { markerOffset: 0, name: "KR", coordinates: [127.766922	, 35.907757], data: '80b' },
-  { markerOffset: 0, name: "US", coordinates: [-95.712891	, 37.09024], data: '5mb' },
-];
+// https://jsfiddle.net/r9c4khbs/2/
+const MapChart = () => {
+  mapboxgl.accessToken =
+    'pk.eyJ1Ijoib2N1cG9wIiwiYSI6ImNqa3ZnOTc4cTBicjAzc29iZWNrZHQwa3kifQ.PDkTbHFNjtqvXZTK14eUiw' // ocupops account key
 
-const MapChart = ({ setTooltipContent }) => {
+  const mapContainer = useRef(null)
+  const map = useRef(null)
+  const [userLng, setUserLng] = useState(-70.9) // TODO: Set to users location
+  const [userLat, setUserLat] = useState(42.35)
+  const [zoom, setZoom] = useState(3)
+
+  const endPoint1 = [120.960515, 23.69781]
+  // 
+
+  useEffect(() => {
+    if (map.current) return // initialize map only once
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [userLng, userLat],
+      zoom: zoom,
+    })
+    map.current.on('load', () => {
+
+    })
+  })
+
   return (
-    <div className="my-4 border rounded-lg border-dark bg-secondary/20">
-    <ComposableMap
-      projection="geoMercator"
-      height="350"
-      data-tip=""
-      projectionConfig={{
-        rotate: [0, 0, 0],
-        scale: 140
-      }}
-    >
-      <ZoomableGroup
-        // Center World
-        center= {[30.802498, 26.820553]}
-        // Center US/Home
-        // center= {[-95.712891, 37.09024]}
-      >
-      <Geographies geography={geoUrl}>
-        {({ geographies }) =>
-          geographies.map(geo => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill="#fff"
-                stroke="#fff"
-                onMouseEnter={() => {
-                    const { NAME } = geo.properties;
-                    setTooltipContent(`${NAME}`);
-                  }}
-                  onMouseLeave={() => {
-                    setTooltipContent("");
-                  }}
-                  style={{
-                    default: {
-                      fill: "#fff",
-                      outline: "none",
-                      transition: "200ms"
-                    },
-                    hover: {
-                      fill: "#08103F",
-                      outline: "none"
-                    },
-                    pressed: {
-                      fill: "#08103F",
-                      outline: "none"
-                    }
-                  }}
-              />
-            ))
-        }
-      </Geographies>
-
-      {markers.map(({ name, coordinates, markerOffset, data }) => (
-        <>
-        <Marker key={name} coordinates={coordinates}>
-          <circle r={8} fill="#007BC7" stroke="#E5E5E5" strokeWidth={4} />
-          <text
-            textAnchor="middle"
-            y={markerOffset}
-            style={{ fontFamily: "system-ui", fill: "#5D5A6D" }}
-          >
-            {data}
-          </text>
-        </Marker>
-        <Line
-          from={homeMarker.coordinates}
-          to={coordinates}
-          stroke="#007BC7"
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
-      </>
-      ))}
-      </ZoomableGroup>
-    </ComposableMap>
+    <div>
+      <div ref={mapContainer} style={{height: "600px"}}className="map-container" />
     </div>
-  );
-};
+  )
+}
 
-export default memo(MapChart);
+export default MapChart

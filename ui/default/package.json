@@ -10,6 +10,8 @@
     "dev": "concurrently \"cd app && yarn dev\" \"cd server && yarn dev\"",
     "install": "(cd app && yarn) && (cd server && yarn)",
     "clean": "(rm -rf node_modules) && (cd app && rm -rf node_modules) && (cd server && rm -rf node_modules)",
+    "clean:db": "(rm ../../inspector/configs.db) && (rm ../../inspector/configs.db-shm) && (rm ../../inspector/configs.db-wal) && (rm ../../inspector/network_traffic.db) && (rm ../../inspector/network_traffic.db-shm) && (rm ../../inspector/network_traffic.db-wal) && (rm ../../inspector/network_traffic2.db)",
     "client:build": "(cd app && yarn build) && (ls && mv app/dist html/)"
   }
 }
+

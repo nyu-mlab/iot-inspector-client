@@ -5,10 +5,13 @@ import EndpointList from "../EndpointList"
 import BarChart from "../charts/BarChart"
 import MapChart from "../charts/MapChart"
 import { HiChevronRight } from "react-icons/hi";
+import useQueryParam from '../../hooks/useQueryParam'
 
 
 
-const DeviceActivity = () => {
+const DeviceActivity = (props) => {
+  let query = useQueryParam();
+  console.log(query.get('deviceid'))
   return (
     <DefaultLayout>
       <main className="flex mt-[80px] bg-white h-[calc(100vh-80px)]">

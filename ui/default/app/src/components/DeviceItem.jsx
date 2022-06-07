@@ -30,7 +30,7 @@ const DeviceItem = ({ device }) => {
       <div className="flex">
         {device && (<div className="flex items-center justify-center px-4 text-sm border-r border-gray-300 w-fit">{dataUseage(device.outbound_byte_count)}</div>)}
         <div className="flex items-center justify-center px-4 text-sm w-fit">
-          <a href="/device-activity/" className="">Details</a>
+          <a href={`/device-activity?deviceid=${device.device_id}`} className="">Details</a>
         </div>
       </div>
     </div>
