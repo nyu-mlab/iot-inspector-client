@@ -1,0 +1,22 @@
+@layer base {
+  h1, .h1 {
+    @apply text-4xl font-bold text-dark;
+    font-family: "Open Sans", Helvetica, serif;
+  }
+  h2, .h2 {
+    @apply text-2xl font-bold text-dark;
+  }
+  h3, .h3 {
+    @apply text-xl font-semibold text-dark;
+  }
+  h4, .h4 {
+    @apply text-lg font-medium text-dark;
+  }
+  p {
+    @apply text-dark;
+  }
+  a{
+    @apply font-semibold transition text-secondary;
+    @apply hover:text-primary;
+  }
+}
