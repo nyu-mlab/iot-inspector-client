@@ -16,6 +16,6 @@
       }
     }
   .menu-drawer{
-    @apply h-[calc(100vh-80px)] p-6 shadow-md w-[300px]  flex-col justify-between fixed bg-white right-0 bottom-0 hidden md:flex;
+    @apply h-[calc(100vh-80px)] p-6 shadow-md w-[275px]  flex-col justify-between fixed bg-white right-0 bottom-0 hidden md:flex;
   }
 }
