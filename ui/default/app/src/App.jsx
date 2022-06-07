@@ -7,6 +7,7 @@ import EndpointDrawer from './components/EndpointDrawer'
 // import DataCard from './components/DataCard'
 import NetworkActivityDashboard from './components/NetworkActivityDashboard'
 import InspectingDevicesDashboard from './components/InspectingDevicesDashboard'
+import DeviceActivity from './components/pages/DeviceActivity'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
               <div className="w-full md:w-[calc(100vw-275px)]">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/device-activity" element={<DeviceActivityDashboard />} />
                 </Routes>
               </div>
               <EndpointDrawer />
@@ -36,6 +38,15 @@ function Dashboard() {
     <>
       <NetworkActivityDashboard />
       <InspectingDevicesDashboard />
+    </>
+  )
+}
+
+// TODO: Move this....
+function DeviceActivityDashboard() {
+  return (
+    <>
+      <DeviceActivity />
     </>
   )
 }
