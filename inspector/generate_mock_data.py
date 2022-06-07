@@ -136,16 +136,26 @@ def generate_mock_traffic(device_id_list):
 
     # Generate flows continuously
     print('Generating flows forever. Hit Control + C to exit.')
+    prev_ts = None
     while True:
         try:
-            time.sleep(0.2)
-            generate_mock_traffic_helper(random.choice(device_id_list))
+            sleep_time = random.randint(10, 15) / 10.0
+            time.sleep(sleep_time)
+            current_ts = time.time()
+            random.shuffle(device_id_list)
+            if prev_ts is None:
+                window_size = 9999999
+            else:
+                window_size = current_ts - prev_ts
+            for device_id in device_id_list[0 : random.randint(0, 5)]:
+                generate_mock_traffic_helper(device_id, current_ts, window_size)
+            prev_ts = current_ts
 
         except KeyboardInterrupt:
             return
 
 
-def generate_mock_traffic_helper(device_id):
+def generate_mock_traffic_helper(device_id, ts, window_size):
     """
     Generate traffic for device_id
 
@@ -171,21 +181,12 @@ def generate_mock_traffic_helper(device_id):
             'hostname': remote_hostname,
             'device_id': device_id,
             'source': 'dns',
-            'ts': time.time()
+            'ts': ts
         }])
-
-    # Get device last updated time
-    device_last_update_ts = None
-    query = 'SELECT last_updated_ts FROM devices WHERE device_id = ?'
-    for row in traffic_db.execute(query, (device_id, )):
-        device_last_update_ts = row['last_updated_ts']
-
-    assert device_last_update_ts is not None
 
     # Generate the flow
     counterparty_port = random.choice([80, 443, 8080])
     counterparty_is_ad_tracking = 0
-    ts = time.time()
     if remote_hostname:
         if (remote_ip_last_digit % 5) == 0:
             counterparty_is_ad_tracking = 1
@@ -202,7 +203,7 @@ def generate_mock_traffic_helper(device_id):
         'ts_mod_60': round_down(ts, 60),
         'ts_mod_600': round_down(ts, 600),
         'ts_mod_3600': round_down(ts, 3600),
-        'window_size': (ts - device_last_update_ts),
+        'window_size': window_size,
         'inbound_byte_count': random.randint(0, 200),
         'outbound_byte_count': random.randint(0, 50),
         'inbound_packet_count': random.randint(0, 20),
