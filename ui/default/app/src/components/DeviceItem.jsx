@@ -1,4 +1,5 @@
 import React from 'react'
+import { dataUseage } from '../utils/utils'
 
 const DeviceItem = ({ device }) => {
   return (
@@ -27,7 +28,7 @@ const DeviceItem = ({ device }) => {
         </div>
       </div>
       <div className="flex">
-        <div className="flex items-center justify-center px-4 text-sm border-r border-gray-300 w-fit">0KB</div>
+        {device && (<div className="flex items-center justify-center px-4 text-sm border-r border-gray-300 w-fit">{dataUseage(device.outbound_byte_count)}</div>)}
         <div className="flex items-center justify-center px-4 text-sm w-fit">
           <a href="/device-activity/" className="">Details</a>
         </div>

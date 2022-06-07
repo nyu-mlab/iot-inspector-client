@@ -3,6 +3,17 @@ import DataCard from './DataCard'
 import BarChart from './charts/BarChart'
 import useIntervalQuery from '../hooks/useIntervalQuery'
 import { gql, useQuery } from '@apollo/client'
+import { dataUseage } from '../utils/utils'
+
+const HIGH_USEAGE_QUERY = gql`
+  query Query {
+    devices {
+      auto_name
+      ip
+      outbound_byte_count
+    }
+  }
+`
 
 const ADS_AND_TRACKERS_QUERY = gql`
   query Query($currentTime: Int) {
@@ -55,9 +66,18 @@ const NetworkActivityDashboard = () => {
     7000
   )
 
-  // console.log(devicesResponse.data?.devices)
-  // console.log("unencryptedHttpTrafficResponse", unencryptedHttpTrafficResponse?.data?.unencryptedHttpTrafficBytes?._sum)
-  // console.log("weakEncryptionResponse", weakEncryptionResponse?.data?.weakEncryptionBytes?._sum)
+  const highUseageResponse = useIntervalQuery(HIGH_USEAGE_QUERY, 20000)
+
+
+  if (highUseageResponse?.data?.devices) {
+    console.log(highUseageResponse)
+    // // sort it
+    highUseageResponse.data?.devices.sort((a, b) => {
+      return b.outbound_byte_count - a.outbound_byte_count
+    })
+
+    highUseageResponse.data.devices = highUseageResponse?.data?.devices?.slice(0, 3)
+  }
 
   return (
     <>
@@ -70,7 +90,15 @@ const NetworkActivityDashboard = () => {
             <a href="#">View all devices</a>
           </div>
           <div className="grid gap-2 md:grid-cols-3 lg:col-span-3">
-            <DataCard bytes={null}>
+            {highUseageResponse?.data?.devices &&
+              highUseageResponse?.data?.devices.map((device) => (
+                <DataCard bytes={device.outbound_byte_count}>
+                  <span className="text-xs">{device.auto_name}</span>
+                  <br />
+                  <span className="text-xs">{device.ip}</span>
+                </DataCard>
+              ))}
+            {/* <DataCard bytes={null}>
               <span className="text-xs">Unknown Device</span>
               <span className="text-xs">192.168.0.12</span>
             </DataCard>
@@ -81,7 +109,7 @@ const NetworkActivityDashboard = () => {
             <DataCard bytes={null}>
               <span className="text-xs">Unknown Device</span>
               <span className="text-xs">192.168.0.12</span>
-            </DataCard>
+            </DataCard> */}
           </div>
         </div>
       </section>
@@ -91,9 +119,14 @@ const NetworkActivityDashboard = () => {
             <p>
               Monitored devices sent/recieved
               <br />
-              <strong>{
-                adsTrackingResponse?.data?.adsAndTrackerBytes?._sum + unencryptedHttpTrafficResponse?.data?.unencryptedHttpTrafficBytes?._sum + weakEncryptionResponse?.data?.weakEncryptionBytes?._sum
-                }</strong> Bytes of data
+              <strong>
+                {dataUseage(
+                  adsTrackingResponse?.data?.adsAndTrackerBytes?._sum +
+                    unencryptedHttpTrafficResponse?.data
+                      ?.unencryptedHttpTrafficBytes?._sum +
+                    weakEncryptionResponse?.data?.weakEncryptionBytes?._sum
+                )}
+              </strong>
             </p>
             <div className="grid grid-cols-2 gap-2 py-4">
               <DataCard
@@ -101,10 +134,17 @@ const NetworkActivityDashboard = () => {
               >
                 <span className="text-xs">Ads & Trackers</span>
               </DataCard>
-              <DataCard bytes={unencryptedHttpTrafficResponse?.data?.unencryptedHttpTrafficBytes?._sum}>
+              <DataCard
+                bytes={
+                  unencryptedHttpTrafficResponse?.data
+                    ?.unencryptedHttpTrafficBytes?._sum
+                }
+              >
                 <span className="text-xs">Unencrypted HTTP Traffic</span>
               </DataCard>
-              <DataCard bytes={weakEncryptionResponse?.data?.weakEncryptionBytes?._sum}>
+              <DataCard
+                bytes={weakEncryptionResponse?.data?.weakEncryptionBytes?._sum}
+              >
                 <span className="text-xs">Weak Encryption</span>
               </DataCard>
             </div>

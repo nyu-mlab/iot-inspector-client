@@ -4,6 +4,7 @@ import RefreshSpinner from "./graphics/RefreshSpinner";
 import DeviceItem from "./DeviceItem";
 import { Switch } from '@headlessui/react'
 import { gql, useQuery } from '@apollo/client';
+import useIntervalQuery from '../hooks/useIntervalQuery';
 
 
 const DEVICES_QUERY = gql`
@@ -11,15 +12,16 @@ const DEVICES_QUERY = gql`
     devices {
       device_id
       auto_name
-      ip,
+      ip
       mac
+      outbound_byte_count
     }
   }
 `
 
 const InspectingDevicesDashboard = () => {
   const [cardView, setCardView] = useState(false)
-  const devicesResponse = useQuery(DEVICES_QUERY)
+  const devicesResponse = useIntervalQuery(DEVICES_QUERY)
 
   return (
     <section className="bg-gray-50 flex-flex-col-gap-4">

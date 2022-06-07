@@ -1,3 +1,4 @@
+import { prisma } from '@prisma/client'
 import { gql } from 'apollo-server'
 import { Context } from './context'
 
@@ -13,6 +14,7 @@ export const typeDefs = gql`
     syn_scan_port_list: String!
     auto_name: String!
     last_updated_ts: Int!
+    outbound_byte_count: Int  # Included from the Flow Type
     flows: [Flow]
   }
 
@@ -60,18 +62,30 @@ export const resolvers = {
         where: { device_id: args.device_id || undefined },
       })
     },
-    devices: (_parent, _args, context: Context) => {
-      return context.prisma.devices.findMany({
-        include: {
-          flows: true
-        }
+    devices: async (_parent, _args, context: Context) => {
+      const devicesResult = await context.prisma.flows.groupBy({
+        by:['device_id'],
+        _sum: {
+          outbound_byte_count: true
+        },
       })
+      // map the devices to the flow device_id
+      let devices = await Promise.all(devicesResult.map(async (flow) => {
+        const mappedDevices =  await context.prisma.devices.findUnique({
+          where: {
+            device_id: flow.device_id
+          },
+        })
+        return {...mappedDevices, outbound_byte_count: flow._sum.outbound_byte_count}
+      }))
+
+      return devices
     },
     flows: (_parent, _args, context: Context) => {
       return context.prisma.flows.findMany({
         include: {
-          device: true
-        }
+          device: true,
+        },
       })
     },
     adsAndTrackerBytes: async (
@@ -82,11 +96,11 @@ export const resolvers = {
       const flowsResult = await context.prisma.flows.aggregate({
         where: {
           counterparty_is_ad_tracking: 1,
-          ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
+          ts: { gte: (args.current_time || undefined) - 3600.0 * 24.0 },
         },
         _sum: {
-          outbound_byte_count: true
-        }
+          outbound_byte_count: true,
+        },
       })
       return { _sum: flowsResult._sum.outbound_byte_count }
     },
@@ -98,11 +112,11 @@ export const resolvers = {
       const flowsResult = await context.prisma.flows.aggregate({
         where: {
           counterparty_port: 80,
-          ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
+          ts: { gte: (args.current_time || undefined) - 3600.0 * 24.0 },
         },
         _sum: {
-          outbound_byte_count: true
-        }
+          outbound_byte_count: true,
+        },
       })
       return { _sum: flowsResult._sum.outbound_byte_count }
     },
@@ -114,11 +128,11 @@ export const resolvers = {
       const flowsResult = await context.prisma.flows.aggregate({
         where: {
           counterparty_port: 80,
-          ts: { gte: (args.current_time || 1654111436) - 3600.0 * 24.0 },
+          ts: { gte: (args.current_time || undefined) - 3600.0 * 24.0 },
         },
         _sum: {
-          outbound_byte_count: true
-        }
+          outbound_byte_count: true,
+        },
       })
       return { _sum: flowsResult._sum.outbound_byte_count }
     },
