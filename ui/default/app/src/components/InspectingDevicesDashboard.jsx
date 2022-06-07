@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { HiViewGrid, HiViewList, HiRefresh, HiSearch, HiOutlineArrowSmDown } from "react-icons/hi";
+import { BiSortAlt2 } from "react-icons/bi";
 import RefreshSpinner from "./graphics/RefreshSpinner";
 import DeviceItem from "./DeviceItem";
 import { Switch } from '@headlessui/react'
@@ -24,7 +25,7 @@ const InspectingDevicesDashboard = () => {
   const devicesResponse = useIntervalQuery(DEVICES_QUERY)
 
   return (
-    <section className="bg-gray-50 flex-flex-col-gap-4">
+    <section className="bg-gray-50 flex-flex-col-gap-4" id="inspecting-devices">
       <div className="flex items-center w-full gap-4 md:gap-5">
         <div className="">
           <h2 className="h1">Inspecting Devices</h2>
@@ -43,12 +44,18 @@ const InspectingDevicesDashboard = () => {
       {/* <div className="flex items-center justify-center gap-1 p-2 text-sm text-white bg-gray-500 rounded-lg">
         Tags <HiOutlineArrowSmDown />
       </div> */}
-      <div className="flex items-center justify-center p-2 text-sm">Name</div>
-      <div className="flex items-center justify-center p-2 text-sm">Traffic</div>
+      <button className="flex items-center justify-center gap-1 p-2 text-sm">
+        Name
+        <BiSortAlt2 className="w-4 h-4 text-gray-400" />
+      </button>
+      <button className="flex items-center justify-center gap-1 p-2 text-sm">
+        Traffic
+        <BiSortAlt2 className="w-4 h-4 text-gray-400"/>
+      </button>
       <div className="flex items-center justify-center gap-3 px-2">
         {/* TODO - Add cardview for device-item */}
 
-        {/* <Switch
+        <Switch
           checked={cardView}
           onChange={setCardView}
           >
@@ -60,10 +67,10 @@ const InspectingDevicesDashboard = () => {
               cardView ? 'text-dark' : 'text-white rounded-lg bg-secondary'
             } w-10 h-10 md:w-8 md:h-8 p-1 `}/>
           </span>
-        </Switch> */}
+        </Switch>
       </div>
     </div>
-      <ul className={cardView ? 'grid grid-cols-3' : ''}>
+      <ul className={cardView ? 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-5' : ''}>
       {devicesResponse?.data?.devices?.map((device) => (
         <li key={device.device_id} className={`${cardView ? 'card-view' : 'list-view'
             } py-2`}>
