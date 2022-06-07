@@ -21,14 +21,53 @@
       @apply opacity-100 hover:opacity-100;
     }
   }
+  .card-view{
+    .device-item{
+      @apply flex flex-col gap-2 overflow-hidden bg-white border-t-8 border-gray-500 rounded-lg shadow-sm;
+      &.status-empty{
+        @apply border-red-600;
+      }
+      &.status-inprogress{
+        @apply border-amber-300;
+      }
+      &.status-filled{
+        @apply border-green-500;
+      }
+      .device-info{
+        @apply grid gap-2;
+        img {
+          @apply w-full h-auto;
+        }
+
+      }
+      .device-tags{
+        @apply flex gap-2 px-4 py-3 overflow-scroll;
+      }
+      .device-details {
+        @apply flex justify-start pb-4;
+      }
+    }
+  }
   .list-view{
     .device-item{
-      @apply flex justify-between w-full p-4 bg-white border-l-8 border-green-500 rounded-lg shadow-sm;
+      @apply flex justify-between w-full p-4 bg-white border-l-8 border-gray-500 rounded-lg shadow-sm;
+      &.status-empty{
+        @apply border-red-600;
+      }
+      &.status-inprogress{
+        @apply border-amber-300;
+      }
+      &.status-filled{
+        @apply border-green-500;
+      }
       .device-info {
         @apply flex items-center flex-1 gap-4 pr-4 border-r border-gray-300 md:w-5/12 ;
       }
       .device-tags {
         @apply items-center justify-start flex-1 hidden w-3/12 gap-2 px-4 overflow-scroll border-r border-gray-300 sm:flex;
+      }
+      .device-details {
+        @apply flex;
       }
     }
   }

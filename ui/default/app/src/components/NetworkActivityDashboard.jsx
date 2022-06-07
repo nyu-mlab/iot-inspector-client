@@ -93,7 +93,7 @@ const NetworkActivityDashboard = () => {
             <p>
               High data usage devices in the past 24 hours
               <br />
-              <a href="#">View all devices</a>
+              <a href="#inspecting-devices">View all devices</a>
             </p>
             <div className="grid grid-cols-2 gap-2 py-4">
               {highUseageResponse?.data?.devices &&
