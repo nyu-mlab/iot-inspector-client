@@ -47,8 +47,8 @@ const SettingsModal = () => {
           <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.</p>
           </div>
         </Switch.Group>
-        <hr className="w-full my-4" />
       </div>
+        <hr className="w-full my-4" />
 
       <div className="flex items-end justify-between">
         <a href="#" className="btn btn-primary">Download Network Data</a>

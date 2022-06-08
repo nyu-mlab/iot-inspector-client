@@ -10,9 +10,13 @@
 
   }
   .inspector-settings {
-      @apply fixed inset-0 flex items-center justify-center p-4 top-[80px];
+      @apply fixed inset-0 top-[80px];
+      @apply p-4;
+      @apply flex items-center justify-center;
       .inspector-settings-panel{
-        @apply mx-auto !bg-white sm:w-11/12 md:w-10/12 lg:w-8/12 max-w-5xl rounded-2xl min-h-[70%] max-h-[90%] overflow-scroll;
+        @apply mx-auto !bg-white rounded-2xl  overflow-scroll;
+        @apply sm:w-11/12 md:w-10/12 lg:w-8/12;
+        @apply max-w-5xl h-fit min-h-[36rem];
       }
     }
   .menu-drawer{

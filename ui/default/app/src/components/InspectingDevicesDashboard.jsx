@@ -29,7 +29,7 @@ const InspectingDevicesDashboard = () => {
       <div className="flex items-center w-full gap-4 md:gap-5">
         <div className="">
           <h2 className="h1">Inspecting Devices</h2>
-          <p className="py-2">Naming & tagging helps with <a href="#">our research</a></p>
+          <p className="py-2">Naming & tagging helps with our research</p>
         </div>
         <div className="w-8 h-8 md:w-10 md:h-10 animate-spin-slow">
           <RefreshSpinner />
