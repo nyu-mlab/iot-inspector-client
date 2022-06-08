@@ -2,7 +2,7 @@ import React from 'react'
 import DataCard from './DataCard'
 import BarChart from './charts/BarChart'
 import useIntervalQuery from '../hooks/useIntervalQuery'
-import { gql, useQuery } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { dataUseage } from '../utils/utils'
 
 const HIGH_USEAGE_QUERY = gql`
@@ -40,37 +40,19 @@ const WEAK_ENCRYPTION_QUERY = gql`
 `
 
 const NetworkActivityDashboard = () => {
-  const timestamp = Math.round(new Date().getTime() / 1000)
-
-  const adsTrackingResponse = useIntervalQuery(
-    ADS_AND_TRACKERS_QUERY,
-    {
-      variables: { currentTime: timestamp },
-    },
-    7000
-  )
+  const adsTrackingResponse = useIntervalQuery(ADS_AND_TRACKERS_QUERY, 5000)
 
   const unencryptedHttpTrafficResponse = useIntervalQuery(
     UNENCRYPTED_HTTP_TRAFFIC_QUERY,
-    {
-      variables: { currentTime: timestamp },
-    },
-    7000
+    5000
   )
 
-  const weakEncryptionResponse = useIntervalQuery(
-    WEAK_ENCRYPTION_QUERY,
-    {
-      variables: { currentTime: timestamp },
-    },
-    7000
-  )
+  const weakEncryptionResponse = useIntervalQuery(WEAK_ENCRYPTION_QUERY, 5000)
 
   const highUseageResponse = useIntervalQuery(HIGH_USEAGE_QUERY, 20000)
 
   if (highUseageResponse?.data?.devices) {
-    console.log(highUseageResponse)
-    // // sort it
+    // sort it
     highUseageResponse.data?.devices.sort((a, b) => {
       return b.outbound_byte_count - a.outbound_byte_count
     })
