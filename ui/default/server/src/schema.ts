@@ -8,7 +8,7 @@ import {
   flows,
   serverConfig,
   adsAndTrackerBytes,
-  enencryptedHttpTrafficBytes,
+  unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
 } from './resolvers'
 
@@ -84,7 +84,7 @@ export const resolvers = {
     serverConfig,
     deviceTrafficToCountries,
     adsAndTrackerBytes,
-    enencryptedHttpTrafficBytes,
+    unencryptedHttpTrafficBytes,
     weakEncryptionBytes,
   },
 }

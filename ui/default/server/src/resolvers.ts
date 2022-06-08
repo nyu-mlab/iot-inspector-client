@@ -138,7 +138,7 @@ const adsAndTrackerBytes = async (
  * @param context 
  * @returns Type Flow
  */
-const enencryptedHttpTrafficBytes = async (
+const unencryptedHttpTrafficBytes = async (
   _parent,
   args: { current_time: number },
   context: Context,
@@ -186,6 +186,6 @@ export {
   serverConfig,
   deviceTrafficToCountries,
   adsAndTrackerBytes,
-  enencryptedHttpTrafficBytes,
+  unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
 }

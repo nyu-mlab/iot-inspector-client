@@ -1,7 +1,7 @@
 import React from 'react'
 import DefaultLayout from "../layouts/DefaultLayout"
 
-const Constent = () => {
+const Consent = () => {
   return (
     <DefaultLayout>
       <main className="flex mt-[80px] bg-gray-100 h-[calc(100vh-80px)] w-full">
@@ -32,4 +32,4 @@ const Constent = () => {
   )
 }
 
-export default Constent
+export default Consent

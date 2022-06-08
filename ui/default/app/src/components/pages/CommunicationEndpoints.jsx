@@ -23,7 +23,7 @@ const CommunicationEndpoints = () => {
         <section>
           <h1>Communication Endpoints</h1>
           <div>
-            <MapChart setTooltipContent={setContent} />
+            {/* <MapChart setTooltipContent={setContent} /> */}
             <ReactTooltip>{content}</ReactTooltip>
           </div>
 
