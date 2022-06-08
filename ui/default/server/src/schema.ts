@@ -10,6 +10,7 @@ import {
   adsAndTrackerBytes,
   unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
+  dataUploadedToCounterParty
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -18,9 +19,12 @@ export const typeDefs = gql`
   }
 
   type DeviceByCountry {
+    device_id: String
+    counterparty_friendly_name: String
     country_code: String!
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!
+    device: Device
   }
 
   type Device {
@@ -33,7 +37,7 @@ export const typeDefs = gql`
     user_agent_list: String!
     syn_scan_port_list: String!
     auto_name: String!
-    last_updated_ts: Int!
+    last_updated_ts: Float!
     outbound_byte_count: Int # Included from the Flow Type
     flows: [Flow]
   }
@@ -73,6 +77,7 @@ export const typeDefs = gql`
     adsAndTrackerBytes(current_time: Int): Flow
     unencryptedHttpTrafficBytes(current_time: Int): Flow
     weakEncryptionBytes(current_time: Int): Flow
+    dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
   }
 `
 
@@ -86,5 +91,6 @@ export const resolvers = {
     adsAndTrackerBytes,
     unencryptedHttpTrafficBytes,
     weakEncryptionBytes,
+    dataUploadedToCounterParty
   },
 }

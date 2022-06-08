@@ -14,7 +14,8 @@ const DeviceActivity = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
 
-  const deviceCountriesData = useDeviceTrafficToCountries(deviceId)
+  let deviceCountriesData = useDeviceTrafficToCountries(deviceId)
+  deviceCountriesData = deviceCountriesData.filter(d => d.device_id === deviceId)
 
   return (
     <DefaultLayout>
@@ -34,7 +35,7 @@ const DeviceActivity = () => {
           </section>
           <section>
             <h2>Device Communication Endpoints</h2>
-            <EndpointList />
+            <EndpointList data={deviceCountriesData} />
           </section>
           <section>
             <MapChart data={deviceCountriesData}/>
@@ -47,7 +48,6 @@ const DeviceActivity = () => {
             </div>
           </section>
         </div>
-
         <DeviceDrawer />
       </main>
     </DefaultLayout>

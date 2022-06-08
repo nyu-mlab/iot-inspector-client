@@ -46,7 +46,7 @@ const MapChart = ({ data }) => {
     map.current.on('load', () => {
       for (const country of data) {
         const coords = generateArc([userLng, userLat],[country.longitude, country.latitude])
-        map.current.addSource(country.name, {
+        map.current.addSource(country.name+country.device_id, {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -58,9 +58,9 @@ const MapChart = ({ data }) => {
           },
         })
         map.current.addLayer({
-          id: country.name,
+          id: country.name+country.device_id,
           type: 'line',
-          source: country.name,
+          source: country.name+country.device_id,
           layout: {
             'line-join': 'round',
             'line-cap': 'round',

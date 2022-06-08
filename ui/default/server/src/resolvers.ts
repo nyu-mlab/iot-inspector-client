@@ -18,11 +18,11 @@ const device = (_parent, args: { device_id: string }, context: Context) => {
 /**
  *
  * @param _parent
- * @param _args
+ * @param args
  * @param context
  * @returns Array Type Devices
  */
-const devices = async (_parent, _args, context: Context) => {
+const devices = async (_parent, args, context: Context) => {
   const devicesResult = await context.prisma.flows.groupBy({
     by: ['device_id'],
     _sum: {
@@ -50,11 +50,11 @@ const devices = async (_parent, _args, context: Context) => {
 /**
  *
  * @param _parent
- * @param _args
+ * @param args
  * @param context
  * @returns Array Type Flow
  */
-const flows = (_parent, _args, context: Context) => {
+const flows = (_parent, args, context: Context) => {
   return context.prisma.flows.findMany({
     include: {
       device: true,
@@ -65,26 +65,71 @@ const flows = (_parent, _args, context: Context) => {
 /**
  *
  * @param _parent
- * @param _args
+ * @param args
  * @param context
  * @returns Type ServerConfig
  */
-const serverConfig = (_parent, _args, context: Context) => {
+const serverConfig = (_parent, args, context: Context) => {
   return {
     start_timestamp: SERVER_START_TIME,
   }
 }
 
 /**
+ * Show how much data is uploaded to each counterparty
  *
  * @param _parent
- * @param _args
+ * @param args
+ * @param context
+ * @returns Type Array Flow
+ */
+const dataUploadedToCounterParty = async (
+  _parent,
+  args: { current_time: number },
+  context: Context,
+) => {
+  const response: any = await context.prisma.flows.groupBy({
+    by: ['device_id', 'counterparty_friendly_name', 'counterparty_country'],
+    _sum: { outbound_byte_count: true },
+    _max: { ts: true },
+    where: {
+      ts: { gte: args.current_time || SERVER_START_TIME },
+    },
+  })
+
+  const devices = await Promise.all(
+    response.map(async (flow) => {
+      const device = await context.prisma.devices.findUnique({
+        where: {
+          device_id: flow.device_id,
+        },
+      })
+      
+      return {
+        device: device,
+        device_id: flow.device_id,
+        counterparty_friendly_name: flow.counterparty_friendly_name,
+        country_code: flow.counterparty_country,
+        outbound_byte_count: flow._sum.outbound_byte_count,
+        last_updated_time_per_country: flow._max.ts,
+      }
+    }),
+  )
+
+  return devices
+
+}
+
+/**
+ *
+ * @param _parent
+ * @param args
  * @param context
  * @returns Type DeviceByCountry
  */
 const deviceTrafficToCountries = async (
   _parent,
-  _args: { device_id: string },
+  args: { device_id: string },
   context: Context,
 ) => {
   const response: any = await context.prisma.flows.groupBy({
@@ -92,7 +137,7 @@ const deviceTrafficToCountries = async (
     _max: { ts: true },
     _sum: { outbound_byte_count: true },
     where: {
-      device_id: _args.device_id,
+      device_id: args.device_id,
     },
   })
 
@@ -108,10 +153,10 @@ const deviceTrafficToCountries = async (
 }
 
 /**
- * 
- * @param _parent 
- * @param args 
- * @param context 
+ *
+ * @param _parent
+ * @param args
+ * @param context
  * @returns Type Flow
  */
 const adsAndTrackerBytes = async (
@@ -132,10 +177,10 @@ const adsAndTrackerBytes = async (
 }
 
 /**
- * 
- * @param _parent 
- * @param args 
- * @param context 
+ *
+ * @param _parent
+ * @param args
+ * @param context
  * @returns Type Flow
  */
 const unencryptedHttpTrafficBytes = async (
@@ -156,10 +201,10 @@ const unencryptedHttpTrafficBytes = async (
 }
 
 /**
- * 
- * @param _parent 
- * @param args 
- * @param context 
+ *
+ * @param _parent
+ * @param args
+ * @param context
  * @returns Type Flow
  */
 const weakEncryptionBytes = async (
@@ -188,4 +233,5 @@ export {
   adsAndTrackerBytes,
   unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
+  dataUploadedToCounterParty
 }

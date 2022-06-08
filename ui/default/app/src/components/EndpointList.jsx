@@ -1,17 +1,8 @@
 import React from 'react'
+import { dataUseage } from '../utils/utils'
 
-const endpoints = [
-  {
-    id: '[ device id ]',
-    party: '[ remote party ]',
-    country: '[ country ]',
-    device: '[ device name ]',
-    data: '[ data usage ]',
-    updated: '[ last update time ]',
-  }
-]
-
-const EndpointList = () => {
+const EndpointList = ({ data }) => {
+  console.log(data)
   return (
       <table className="min-w-full my-4 overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg">
         <thead className=" bg-dark">
@@ -41,22 +32,22 @@ const EndpointList = () => {
             </tr>
           </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {endpoints.map((endpoint) => (
-            <tr key={endpoint.id}>
+          {data.map((device) => (
+            <tr key={device.device_id}>
               <td className="w-full py-4 pl-4 pr-3 text-sm font-medium text-dark max-w-0 sm:w-auto sm:max-w-none sm:pl-6">
-                {endpoint.party}
+                {device.party}
                 <dl className="font-normal lg:hidden">
                   <dt className="sr-only">Device Name</dt>
-                  <dd className="mt-1 text-gray-700 truncate">{endpoint.device}</dd>
+                  <dd className="mt-1 text-gray-700 truncate">{device.device.auto_name}</dd>
                   <dt className="sr-only sm:hidden">Country</dt>
-                  <dd className="mt-1 text-gray-500 truncate sm:hidden">{endpoint.country}</dd>
+                  <dd className="mt-1 text-gray-500 truncate sm:hidden">{device.name}</dd>
                 </dl>
               </td>
 
-              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{endpoint.country}</td>
-              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{endpoint.device}</td>
-              <td className="px-3 py-4 text-sm text-gray-500">{endpoint.data}</td>
-              <td className="px-3 py-4 text-sm text-gray-500">{endpoint.updated}</td>
+              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.name}</td>
+              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.device.auto_name}</td>
+              <td className="px-3 py-4 text-sm text-gray-500">{dataUseage(device.outbound_byte_count)}</td>
+              <td className="px-3 py-4 text-sm text-gray-500">{device.last_updated_time_per_country}</td>
             </tr>
           ))}
         </tbody>
