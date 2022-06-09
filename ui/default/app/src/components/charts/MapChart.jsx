@@ -37,6 +37,7 @@ const MapChart = ({ data }) => {
 
   useEffect(() => {
     if (!data.length) return
+    if (map.current) return // Dont load the map twice
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
@@ -44,9 +45,11 @@ const MapChart = ({ data }) => {
       zoom: zoom,
     })
     map.current.on('load', () => {
-      for (const country of data) {
+      data.forEach((country, i) => {
+
+      
         const coords = generateArc([userLng, userLat],[country.longitude, country.latitude])
-        map.current.addSource(country.name+country.device_id, {
+        map.current.addSource(country.device_id+i, {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -58,9 +61,9 @@ const MapChart = ({ data }) => {
           },
         })
         map.current.addLayer({
-          id: country.name+country.device_id,
+          id: country.device_id+i,
           type: 'line',
-          source: country.name+country.device_id,
+          source: country.device_id+i,
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
@@ -70,7 +73,7 @@ const MapChart = ({ data }) => {
             'line-width': 2,
           },
         })
-      }
+      })
     })
   }, [data])
 

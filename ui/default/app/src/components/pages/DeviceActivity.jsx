@@ -29,7 +29,7 @@ const DeviceActivity = () => {
           <section className="relative">
             <h1>
               <strong>Device Activity</strong>{' '}
-              <span className="font-thin"> [ device name ]</span>
+              <span className="font-thin">{ deviceCountriesData && deviceCountriesData.length > 0 && deviceCountriesData[0].device.auto_name}</span>
             </h1>
             <BarChart />
           </section>

@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
 import countries from '../constants/countries.json'
+import useIntervalQuery from './useIntervalQuery'
 
 const deviceCountriesQuery = gql`
   query Query {

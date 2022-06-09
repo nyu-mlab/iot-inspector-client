@@ -2,7 +2,6 @@ import React from 'react'
 import { dataUseage } from '../utils/utils'
 
 const EndpointList = ({ data }) => {
-  console.log(data)
   return (
       <table className="min-w-full my-4 overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg">
         <thead className=" bg-dark">
@@ -32,8 +31,8 @@ const EndpointList = ({ data }) => {
             </tr>
           </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((device) => (
-            <tr key={device.device_id}>
+          {data.map((device, i) => (
+            <tr key={device.device_id+i}>
               <td className="w-full py-4 pl-4 pr-3 text-sm font-medium text-dark max-w-0 sm:w-auto sm:max-w-none sm:pl-6">
                 {device.party}
                 <dl className="font-normal lg:hidden">
