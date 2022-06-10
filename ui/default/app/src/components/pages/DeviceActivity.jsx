@@ -18,9 +18,8 @@ const DeviceActivity = () => {
   deviceCountriesData = deviceCountriesData.filter(d => d.device_id === deviceId)
 
   return (
-    <DefaultLayout>
-      <main className="flex  bg-white h-[calc(100vh-80px)]">
-        <div className="md:w-[calc(100vw-275px)]">
+      <div className="flex  bg-white h-[calc(100vh-80px)]">
+        <div className="w-full">
           <section className="flex items-center gap-2 pb-2 w-fit">
             <a href="/">Network Activity</a>
             <HiChevronRight className="text-gray-600/50" />
@@ -39,6 +38,7 @@ const DeviceActivity = () => {
           </section>
           <section>
             <MapChart data={deviceCountriesData}/>
+
           </section>
           <section>
             <hr className="w-100" />
@@ -49,8 +49,7 @@ const DeviceActivity = () => {
           </section>
         </div>
         <DeviceDrawer />
-      </main>
-    </DefaultLayout>
+      </div>
   )
 }
 

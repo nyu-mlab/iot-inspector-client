@@ -14,7 +14,7 @@ function App() {
     <Router>
         <DefaultLayout>
           <div className="App">
-            <main className="flex mt-[80px]">
+            <main className="flex">
               <div className="w-full md:w-[calc(100vw-275px)]">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />

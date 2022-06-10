@@ -4,7 +4,7 @@ import DefaultLayout from "../layouts/DefaultLayout"
 const Consent = () => {
   return (
     <DefaultLayout>
-      <main className="flex mt-[80px] bg-gray-100 h-[calc(100vh-80px)] w-full">
+      <main className="flex w-full h-full bg-gray-100">
         <div className="p-4 mx-auto bg-white shadow-md md:p-8 md:my-8 rounded-2xl h-fit">
           <div className="flex flex-col items-center justify-center max-w-2xl gap-8 mx-auto text-center h-fit">
             <h1>Consent Statement</h1>
