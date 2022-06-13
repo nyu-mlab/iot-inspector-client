@@ -58,8 +58,8 @@ export const typeDefs = gql`
     uses_weak_encryption: Int!
     ts: Float!
     ts_mod_60: Float!
-    ts_mod_600: Float!
-    ts_mod_3600: Float!
+    ts_mod_600: Float!  # every 10 minutes
+    ts_mod_3600: Float! # Every 1 hour
     window_size: Float!
     inbound_byte_count: Int!
     outbound_byte_count: Int!
@@ -71,7 +71,7 @@ export const typeDefs = gql`
   type Query {
     device(device_id: String): Device
     devices: [Device!]!
-    flows: [Flow!]!
+    flows(current_time: Int, device_id: String): [Flow!]!
     serverConfig: ServerConfig
     deviceTrafficToCountries(device_id: String!): [DeviceByCountry!]!
     adsAndTrackerBytes(current_time: Int): Flow
@@ -91,6 +91,7 @@ export const resolvers = {
     adsAndTrackerBytes,
     unencryptedHttpTrafficBytes,
     weakEncryptionBytes,
-    dataUploadedToCounterParty
+    dataUploadedToCounterParty,
+    
   },
 }

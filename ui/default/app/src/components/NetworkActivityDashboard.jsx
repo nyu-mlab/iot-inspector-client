@@ -40,16 +40,25 @@ const WEAK_ENCRYPTION_QUERY = gql`
 `
 
 const NetworkActivityDashboard = () => {
-  const adsTrackingResponse = useIntervalQuery(ADS_AND_TRACKERS_QUERY, 5000)
-
-  const unencryptedHttpTrafficResponse = useIntervalQuery(
-    UNENCRYPTED_HTTP_TRAFFIC_QUERY,
+  const adsTrackingResponse = useIntervalQuery(
+    ADS_AND_TRACKERS_QUERY,
+    null,
     5000
   )
 
-  const weakEncryptionResponse = useIntervalQuery(WEAK_ENCRYPTION_QUERY, 5000)
+  const unencryptedHttpTrafficResponse = useIntervalQuery(
+    UNENCRYPTED_HTTP_TRAFFIC_QUERY,
+    null,
+    5000
+  )
 
-  const highUseageResponse = useIntervalQuery(HIGH_USEAGE_QUERY, 20000)
+  const weakEncryptionResponse = useIntervalQuery(
+    WEAK_ENCRYPTION_QUERY,
+    null,
+    5000
+  )
+
+  const highUseageResponse = useIntervalQuery(HIGH_USEAGE_QUERY, null, 20000)
 
   if (highUseageResponse?.data?.devices) {
     // sort it
@@ -80,7 +89,10 @@ const NetworkActivityDashboard = () => {
             <div className="grid grid-cols-2 gap-2 py-4">
               {highUseageResponse?.data?.devices &&
                 highUseageResponse?.data?.devices.map((device) => (
-                  <DataCard key={device.device_id} bytes={device.outbound_byte_count}>
+                  <DataCard
+                    key={device.device_id}
+                    bytes={device.outbound_byte_count}
+                  >
                     <span className="text-xs">{device.auto_name}</span>
                     <br />
                     <span className="text-xs">{device.ip}</span>
