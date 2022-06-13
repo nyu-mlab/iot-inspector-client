@@ -31,7 +31,7 @@ const DeviceActivity = () => {
               <strong>Device Activity</strong>{' '}
               <span className="font-thin">{ deviceCountriesData && deviceCountriesData.length > 0 && deviceCountriesData[0].device.auto_name}</span>
             </h1>
-            <BarChart />
+            <BarChart deviceId={deviceId} />
           </section>
           <section>
             <h2>Device Communication Endpoints</h2>
