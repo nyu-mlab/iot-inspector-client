@@ -25,6 +25,10 @@
       @apply opacity-100;
     }
   }
+  .card-grid{
+    @apply grid grid-cols-2 gap-4;
+    @apply lg:grid-cols-3 xl:grid-cols-5 md:gap-5;
+  }
   .card-view{
     .device-item{
       @apply flex flex-col gap-2 overflow-hidden bg-white border-t-8 border-gray-500 rounded-lg shadow-sm;

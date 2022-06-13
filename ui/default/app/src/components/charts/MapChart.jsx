@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom';
+
 import mapboxgl from 'mapbox-gl'
+import "mapbox-gl/dist/mapbox-gl.css"
 import * as turf from '@turf/turf'
 
 // const generateArc = (start, destination) => {
@@ -43,15 +46,23 @@ const MapChart = ({ data }) => {
       style: 'mapbox://styles/mapbox/light-v10',
       center: [userLng, userLat],
       zoom: zoom,
-      // bounds: ([-50.017823, -165.155896], [-80.619486, 178.84622]),
     })
     map.current.on('load', () => {
       data.forEach((country, i) => {
 
 
-        // const coords = generateArc([userLng, userLat],[country.longitude, country.latitude])
-
         const coords =  [country.longitude, country.latitude]
+
+        // create the popup
+        const popup = new mapboxgl.Popup({ offset: 25 }).setText(
+        'Construction on the Washington Monument began in 1848.'
+        );
+
+        // create DOM element for the marker
+        const el = document.createElement('div')
+        el.id = country.device_id+i
+
+
 
         map.current.addSource(country.device_id+i, {
           type: 'geojson',
@@ -72,7 +83,16 @@ const MapChart = ({ data }) => {
             'circle-radius': 8,
             'circle-color': '#007BC7'
           },
+          setPopup: popup
         })
+
+
+
+
+
+
+
+
       })
     })
   }, [data])

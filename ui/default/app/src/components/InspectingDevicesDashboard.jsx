@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { HiViewGrid, HiViewList, HiRefresh, HiSearch, HiOutlineArrowSmDown } from "react-icons/hi";
 import { BiSortAlt2 } from "react-icons/bi";
 import RefreshSpinner from "./graphics/RefreshSpinner";
@@ -26,7 +26,10 @@ const InspectingDevicesDashboard = () => {
 
   const [searchValue, setSearchValue] = useState("")
 
+  const [sortedDevices, setSortedDevices]= useState()
+
   return (
+
     <section className="bg-gray-50 flex-flex-col-gap-4" id="inspecting-devices">
       <div className="flex items-center w-full gap-4 md:gap-5">
         <div className="">
@@ -39,8 +42,6 @@ const InspectingDevicesDashboard = () => {
       </div>
 
     <div className="grid grid-cols-4 gap-4 py-4 md:flex md:items-center">
-
-
       <form className="flex flex-1 order-last col-span-4 md:order-first">
         <input
           type='text'
@@ -52,7 +53,6 @@ const InspectingDevicesDashboard = () => {
           placeholder="Search devices by name or tag"/>
         <label htmlFor="searchDevices" className="sr-only"><HiSearch />Search devices by name or tag</label>
       </form>
-
       {/* <div className="flex items-center justify-center gap-1 p-2 text-sm text-white bg-gray-500 rounded-lg">
         Tags <HiOutlineArrowSmDown />
       </div> */}
@@ -80,13 +80,14 @@ const InspectingDevicesDashboard = () => {
         </Switch>
       </div>
     </div>
-    <ul className={cardView ? 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-5' : ''}>
+    <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
 
 
     {devicesResponse?.data?.devices
-      .filter(device => {
+
+      .filter( device => {
         if (!searchValue) return true
-        if (device.auto_name.includes(searchValue)) {
+        if (device.auto_name.toLowerCase().includes(searchValue.toLowerCase())) {
           return true
         }
       })
