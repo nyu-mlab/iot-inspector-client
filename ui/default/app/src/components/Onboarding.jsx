@@ -33,7 +33,7 @@ const Onboarding = () => {
     <DefaultLayout>
       <div className="App">
         {/* <Header /> */}
-        <main className="flex mt-[80px] bg-gray-100 h-[calc(100vh-80px)]">
+        <main className="flex h-full bg-gray-100">
           <div className="w-full p-4 m-2 bg-white shadow-md md:m-8 rounded-2xl">
             <div className="flex flex-col items-center justify-center h-full max-w-6xl gap-8 mx-auto text-center">
               <h1>Start Inspecting</h1>

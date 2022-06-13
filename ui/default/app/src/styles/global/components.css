@@ -1,25 +1,33 @@
 @layer components {
   .btn{
-    @apply px-8 py-4 text-lg font-bold tracking-wide transition rounded-lg;
+    @apply px-8 py-4;
+    @apply text-lg font-bold tracking-wide transition rounded-lg;
   }
   .btn-primary {
     @apply bg-primary text-dark;
     @apply hover:bg-green-300 hover:text-dark;
   }
   .tab-nav{
-    @apply   flex w-full gap-4 border-b-2 border-dark/80;
+    @apply flex gap-4;
+    @apply w-full;
+    @apply border-b-2 border-dark/80;
     .tab-nav-item{
       @apply px-4 pt-6 pb-4 -mb-[2px] md:px-10;
     }
     .tab-nav-item-active{
-      @apply  border-b-2 border-primary;
+      @apply border-b-2 border-primary;
     }
   }
   .achievement-card{
-    @apply flex flex-col gap-3 transition opacity-40 hover:opacity-80;
+    @apply flex flex-col gap-3;
+    @apply transition opacity-40;
     &.achieved{
-      @apply opacity-100 hover:opacity-100;
+      @apply opacity-100;
     }
+  }
+  .card-grid{
+    @apply grid grid-cols-2 gap-4;
+    @apply lg:grid-cols-3 xl:grid-cols-5 md:gap-5;
   }
   .card-view{
     .device-item{
@@ -50,7 +58,10 @@
   }
   .list-view{
     .device-item{
-      @apply flex justify-between w-full p-4 bg-white border-l-8 border-gray-500 rounded-lg shadow-sm;
+      @apply flex justify-between;
+      @apply w-full;
+      @apply p-4;
+      @apply bg-white border-l-8 border-gray-500 rounded-lg shadow-sm;
       &.status-empty{
         @apply border-red-600;
       }
@@ -61,10 +72,17 @@
         @apply border-green-500;
       }
       .device-info {
-        @apply flex items-center flex-1 gap-4 pr-4 border-r border-gray-300 md:w-5/12 ;
+        @apply flex items-center flex-1 gap-4;
+        @apply pr-4;
+        @apply border-r border-gray-300 ;
+        @apply md:w-5/12;
       }
       .device-tags {
-        @apply items-center justify-start flex-1 hidden w-3/12 gap-2 px-4 overflow-scroll border-r border-gray-300 sm:flex;
+        @apply items-center justify-start flex-1 hidden gap-2;
+        @apply w-3/12;
+        @apply px-4;
+        @apply overflow-scroll border-r border-gray-300;
+        @apply sm:flex;
       }
       .device-details {
         @apply flex;
@@ -72,12 +90,21 @@
     }
   }
   .modal-backdrop{
-    @apply fixed inset-0 bg-dark/50 h-[calc(100vh-80px)] top-[80px] ;
+    @apply h-[calc(100vh-80px)];
+    @apply fixed inset-0 top-[80px];
+    @apply bg-dark/50;
   }
   .slide-panel{
-    @apply absolute top-0 right-0 z-20 w-[300%] h-[calc(100vh-80px)] bg-gray-100 px-4 py-6 shadow-lg flex justify-between flex-col;
+    @apply absolute top-0 right-0 z-20;
+    @apply w-[300%] h-[calc(100vh-80px)];
+    @apply flex flex-col justify-between;
+    @apply px-4 py-6;
+    @apply bg-gray-100 shadow-lg;
   }
   .device-discovery-card {
-    @apply relative p-3 mb-3 bg-white rounded-md shadow-md md:px-4;
+    @apply relative;
+    @apply p-3 mb-3;
+    @apply bg-white rounded-md shadow-md;
+    @apply md:px-4;
   }
 }

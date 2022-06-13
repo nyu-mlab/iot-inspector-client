@@ -12,7 +12,7 @@ const CommunicationEndpoints = () => {
 
   return (
     <DefaultLayout>
-      <main className="mt-[80px]  h-[calc(100vh-80px)]">
+      <main className="h-full">
         <section className="flex items-center gap-2 pb-2 w-fit">
             <a href="/" >
               Network Activity
