@@ -1,9 +1,7 @@
-import React, { useState } from 'react'
-import DefaultLayout from "../../layouts/DefaultLayout"
+import React from 'react'
 import EndpointList from "../../components/EndpointList"
 import MapChart from "../../components/charts/MapChart";
 import { HiChevronRight } from "react-icons/hi";
-import ReactTooltip from "react-tooltip";
 
 import useQueryParam from '../../hooks/useQueryParam'
 import useDeviceTrafficToCountries from '../../hooks/useDeviceTrafficToCountries'
@@ -14,7 +12,7 @@ const CommunicationEndpoints = () => {
   const deviceId = query.get('deviceid')
 
   let deviceCountriesData = useDeviceTrafficToCountries(deviceId)
-  deviceCountriesData = deviceCountriesData?.filter(d => d.device_id === deviceId)
+  console.log(deviceCountriesData)
 
   // if (!deviceCountriesData?.length) {
   //   return <></>

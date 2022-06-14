@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import DeviceDrawer from './components/DeviceDrawer'
-import EndpointList from './components/EndpointList'
+import EndpointList from '../../components/EndpointList'
 import BarChart from '../../components/charts/BarChart'
 import MapChart from '../../components/charts/MapChart'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '../../hooks/useQueryParam'
 import useDeviceTrafficToCountries from '../../hooks/useDeviceTrafficToCountries'
-
-
 
 const DeviceActivity = () => {
   const query = useQueryParam()

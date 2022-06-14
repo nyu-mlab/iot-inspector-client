@@ -1,7 +1,6 @@
 import React from 'react'
 import { format } from 'date-fns'
-import { dataUseage } from '../../../utils/utils'
-
+import { dataUseage } from '../utils/utils'
 
 const EndpointList = ({ data }) => {
   return (
