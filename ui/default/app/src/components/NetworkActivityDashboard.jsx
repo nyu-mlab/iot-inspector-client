@@ -88,9 +88,9 @@ const NetworkActivityDashboard = () => {
             </p>
             <div className="grid grid-cols-2 gap-2 py-4">
               {highUseageResponse?.data?.devices &&
-                highUseageResponse?.data?.devices.map((device) => (
+                highUseageResponse?.data?.devices.map((device, i) => (
                   <DataCard
-                    key={device.device_id}
+                    key={i}
                     bytes={device.outbound_byte_count}
                   >
                     <span className="text-xs">{device.auto_name}</span>

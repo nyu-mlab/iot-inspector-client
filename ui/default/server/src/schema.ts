@@ -10,7 +10,8 @@ import {
   adsAndTrackerBytes,
   unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
-  dataUploadedToCounterParty
+  dataUploadedToCounterParty,
+  communicationEndpointNames
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -24,7 +25,10 @@ export const typeDefs = gql`
     country_code: String!
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!
-    device: Device
+  }
+
+  type CommunicationEndpointName {
+    counterparty_hostname: String
   }
 
   type Device {
@@ -78,6 +82,7 @@ export const typeDefs = gql`
     unencryptedHttpTrafficBytes(current_time: Int): Flow
     weakEncryptionBytes(current_time: Int): Flow
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
+    communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
   }
 `
 
@@ -92,6 +97,6 @@ export const resolvers = {
     unencryptedHttpTrafficBytes,
     weakEncryptionBytes,
     dataUploadedToCounterParty,
-    
+    communicationEndpointNames
   },
 }

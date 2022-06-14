@@ -65,6 +65,9 @@ const flows = (
       ts: { gte: args.current_time || SERVER_START_TIME },
       device_id:  args.device_id || undefined
     },
+    include: {
+      device: true
+    }
   })
 }
 
@@ -229,6 +232,35 @@ const weakEncryptionBytes = async (
   return { _sum: flowsResult._sum.outbound_byte_count }
 }
 
+// const communicationEndpointNames = (
+//   _parent,
+//   args: { device_id: string },
+//   context: Context,
+// ) => {
+//   return context.prisma.flows.findMany({
+//     where: {
+//       ts: { gte: SERVER_START_TIME },
+//       device_id:  args.device_id || undefined
+//     },
+//   })
+// }
+
+const communicationEndpointNames = async (
+  _parent,
+  args: { device_id: string },
+  context: Context,
+) => {
+  const response: any = await context.prisma.flows.groupBy({
+    by: ['counterparty_hostname'],
+    where: {
+      ts: { gte: SERVER_START_TIME },
+      device_id: args.device_id || undefined,
+      counterparty_hostname: { not:"" }
+    },
+  })
+  return response
+}
+
 export {
   device,
   devices,
@@ -239,4 +271,5 @@ export {
   unencryptedHttpTrafficBytes,
   weakEncryptionBytes,
   dataUploadedToCounterParty,
+  communicationEndpointNames
 }
