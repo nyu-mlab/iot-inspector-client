@@ -15,7 +15,11 @@ const DeviceActivity = () => {
   const deviceId = query.get('deviceid')
 
   let deviceCountriesData = useDeviceTrafficToCountries(deviceId)
-  deviceCountriesData = deviceCountriesData.filter(d => d.device_id === deviceId)
+  deviceCountriesData = deviceCountriesData?.filter(d => d.device_id === deviceId)
+
+  if (!deviceCountriesData?.length) {
+    return <></>
+  }
 
   return (
       <div className="flex  bg-white h-[calc(100vh-80px)]">

@@ -25,6 +25,7 @@ export const typeDefs = gql`
     country_code: String!
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!
+    device: Device
   }
 
   type CommunicationEndpointName {

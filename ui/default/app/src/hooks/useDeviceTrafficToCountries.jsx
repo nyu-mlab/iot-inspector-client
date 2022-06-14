@@ -17,7 +17,7 @@ const deviceCountriesQuery = gql`
   }
 `
 
-const useDeviceTrafficToCountries = (deviceId) => {
+const useDeviceTrafficToCountries = () => {
   const [deviceCountriesData, setDeviceCountriesData] = useState([])
   
   const { data: deviceCountriesRawData, loading: deviceCountriesRawLoading } =
