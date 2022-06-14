@@ -1,7 +1,7 @@
 import { Context } from './context'
 
-// const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
-const SERVER_START_TIME = Math.round(new Date('June 10, 2022 06:24:00').getTime() / 1000)
+const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
+// const SERVER_START_TIME = Math.round(new Date('June 10, 2022 06:24:00').getTime() / 1000)
 
 /**
  *
