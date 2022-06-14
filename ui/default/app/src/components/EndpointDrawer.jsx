@@ -13,14 +13,12 @@ const EndpointDrawer = ({ deviceId }) => {
   const [loadCommunicationNames, { called, loading, data }] = useLazyQuery(COMMUNICATION_NAMES_QUERY)
 
   useEffect(() => {
-    const variables = deviceId ? { deviceId } : null
+    // const variables = deviceId ? { deviceId } : null
     loadCommunicationNames()
   }, [])
 
-  console.log(data)
-
   if (loading) {
-    return <>Loading...</>
+    return <></>
   }
 
   return (
