@@ -38,7 +38,7 @@ const EndpointList = ({ data }) => {
                 {device.party}
                 <dl className="font-normal lg:hidden">
                   <dt className="sr-only">Device Name</dt>
-                  <dd className="mt-1 text-gray-700 truncate">{device.device.auto_name}</dd> 
+                  <dd className="mt-1 text-gray-700 truncate">{device.device.auto_name}</dd>
                   <dt className="sr-only sm:hidden">Country</dt>
                   <dd className="mt-1 text-gray-500 truncate sm:hidden">{device.name}</dd>
                 </dl>

@@ -26,7 +26,6 @@ const InspectingDevicesDashboard = () => {
 
   const [searchValue, setSearchValue] = useState("")
 
-  const [sortedDevices, setSortedDevices]= useState()
 
   return (
 
