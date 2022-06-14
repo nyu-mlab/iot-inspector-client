@@ -45,7 +45,7 @@ const EndpointList = ({ data }) => {
               </td>
 
               <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.name}</td>
-              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.device.auto_name}</td>
+              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell"><a href={`/device-activity?deviceid=${device.device_id}`}>{device.device.auto_name}</a></td>
               <td className="px-3 py-4 text-sm text-gray-500">{dataUseage(device.outbound_byte_count)}</td>
               <td className="px-3 py-4 text-sm text-gray-500">{format(new Date(device.last_updated_time_per_country*1000),  'yyyy-MM-dd HH:mm:ss')}</td>
             </tr>

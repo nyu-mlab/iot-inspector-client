@@ -12,11 +12,7 @@ const CommunicationEndpoints = () => {
   const deviceId = query.get('deviceid')
 
   let deviceCountriesData = useDeviceTrafficToCountries(deviceId)
-  console.log(deviceCountriesData)
 
-  // if (!deviceCountriesData?.length) {
-  //   return <></>
-  // }
 
   return (
     <>
