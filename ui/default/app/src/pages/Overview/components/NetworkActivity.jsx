@@ -1,9 +1,9 @@
 import React from 'react'
-import DataCard from './DataCard'
-import BarChart from './charts/BarChart'
-import useIntervalQuery from '../hooks/useIntervalQuery'
+import DataCard from '../../../components/DataCard'
+import BarChart from '../../../components/charts/BarChart'
+import useIntervalQuery from '../../../hooks/useIntervalQuery'
 import { gql } from '@apollo/client'
-import { dataUseage } from '../utils/utils'
+import { dataUseage } from '../../../utils/utils'
 
 const HIGH_USEAGE_QUERY = gql`
   query Query {

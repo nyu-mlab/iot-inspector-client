@@ -1,8 +1,7 @@
 import React from 'react'
-import DefaultLayout from "../layouts/DefaultLayout"
-import HomeSecurity from "./graphics/HomeSecurity"
-import BackgroundScanning from "./graphics/BackgroundScanning"
-import ResearchData from "./graphics/ResearchData"
+import HomeSecurity from "../../components/graphics/HomeSecurity"
+import BackgroundScanning from "../../components/graphics/BackgroundScanning"
+import ResearchData from "../../components/graphics/ResearchData"
 
 const inspectorUseCase = [
   {
@@ -30,7 +29,7 @@ const inspectorUseCase = [
 
 const Onboarding = () => {
   return (
-    <DefaultLayout>
+    <>
       <div className="App">
         {/* <Header /> */}
         <main className="flex h-full bg-gray-100">
@@ -59,7 +58,7 @@ const Onboarding = () => {
 
         </main>
       </div>
-    </DefaultLayout>
+    </>
   )
 }
 

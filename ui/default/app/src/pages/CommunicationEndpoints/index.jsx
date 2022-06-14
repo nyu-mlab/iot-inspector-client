@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import DefaultLayout from "../../layouts/DefaultLayout"
-import EndpointList from "../EndpointList"
-import MapChart from "../charts/MapChart";
+import EndpointList from "../../components/EndpointList"
+import MapChart from "../../components/charts/MapChart";
 import { HiChevronRight } from "react-icons/hi";
 import ReactTooltip from "react-tooltip";
 

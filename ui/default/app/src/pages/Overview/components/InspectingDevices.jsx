@@ -5,11 +5,12 @@ import {
   HiSearch,
 } from 'react-icons/hi'
 import { BiSortAlt2 } from 'react-icons/bi'
-import RefreshSpinner from './graphics/RefreshSpinner'
+
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
 import { gql } from '@apollo/client'
-import useIntervalQuery from '../hooks/useIntervalQuery'
+import useIntervalQuery from '../../../hooks/useIntervalQuery'
+import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
 
 const DEVICES_QUERY = gql`
   query Query {
