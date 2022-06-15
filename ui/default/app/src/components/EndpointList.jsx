@@ -1,6 +1,7 @@
 import React from 'react'
-import { format } from 'date-fns'
+// import { format } from 'date-fns'
 import { dataUseage } from '../utils/utils'
+import { format } from 'timeago.js';
 
 const EndpointList = ({ data }) => {
   return (
@@ -47,7 +48,7 @@ const EndpointList = ({ data }) => {
               <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.name}</td>
               <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell"><a href={`/device-activity?deviceid=${device.device_id}`}>{device.device.auto_name}</a></td>
               <td className="px-3 py-4 text-sm text-gray-500">{dataUseage(device.outbound_byte_count)}</td>
-              <td className="px-3 py-4 text-sm text-gray-500">{format(new Date(device.last_updated_time_per_country*1000),  'yyyy-MM-dd HH:mm:ss')}</td>
+              <td className="px-3 py-4 text-sm text-gray-500">{format(new Date(device.last_updated_time_per_country*1000))}</td>
             </tr>
           ))}
         </tbody>
