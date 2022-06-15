@@ -21,10 +21,10 @@ const useDeviceTrafficToCountries = () => {
   const [deviceCountriesData, setDeviceCountriesData] = useState([])
   
   const { data: deviceCountriesRawData, loading: deviceCountriesRawLoading } =
-    useQuery(deviceCountriesQuery)
+  useIntervalQuery(deviceCountriesQuery, null, 4500)
 
   useEffect(() => {
-    if (!deviceCountriesRawLoading) {
+    if (!deviceCountriesRawLoading && deviceCountriesRawData) {
       const data = deviceCountriesRawData?.dataUploadedToCounterParty?.map((device) => {
         const country = countries.find((c) => c.country === device.country_code)
         return {
