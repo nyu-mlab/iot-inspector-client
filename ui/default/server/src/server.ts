@@ -1,6 +1,7 @@
 import { ApolloServer } from 'apollo-server-express'
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core'
 import * as express from 'express'
+import * as path from 'path'
 import { createServer } from 'http'
 import { makeExecutableSchema } from '@graphql-tools/schema'
 import { WebSocketServer } from 'ws'
@@ -42,15 +43,20 @@ async function startApolloServer(typeDefs, resolvers, context) {
         async serverWillStart() {
           return {
             async drainServer() {
-              await serverCleanup.dispose();
+              await serverCleanup.dispose()
             },
-          };
+          }
         },
       },
     ],
   })
 
   await server.start()
+  const staticClientPath = path.join(__dirname,'../../html')
+  app.use(express.static(staticClientPath)) //serving client side from express
+  app.get('*', (req, res) => {
+    res.sendFile(`${staticClientPath}/index.html`)
+  })
   server.applyMiddleware({ app })
   httpServer.listen({ port: 4000 })
 
