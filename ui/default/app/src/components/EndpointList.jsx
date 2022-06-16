@@ -38,8 +38,6 @@ const EndpointList = ({ data }) => {
               <td className="w-full py-4 pl-4 pr-3 text-sm font-medium text-dark max-w-0 sm:w-auto sm:max-w-none sm:pl-6">
                 {device.counterparty_hostname}
                 <dl className="font-normal lg:hidden">
-                  <dt className="sr-only">Device Name</dt>
-                  <dd className="mt-1 text-gray-700 truncate">{device.counterparty_hostname}</dd>
                   <dt className="sr-only sm:hidden">Country</dt>
                   <dd className="mt-1 text-gray-500 truncate sm:hidden">{device.name}</dd>
                 </dl>
