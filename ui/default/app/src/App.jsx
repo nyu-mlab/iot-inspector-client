@@ -7,11 +7,11 @@ function App() {
   return (
     <DefaultLayout>
       <div className="App">
-        <main className="flex">
-          <div className="w-full md:w-[calc(100vw-275px)]">
+        <EndpointDrawer />
+        <main className="flex-1 md:pr-64 lg:md:pr-80">
+          <div className="">
             <Router />
           </div>
-          <EndpointDrawer />
         </main>
       </div>
     </DefaultLayout>

@@ -23,9 +23,9 @@
       }
     }
   .menu-drawer{
-    @apply h-[calc(100vh-80px)] w-[275px];
+    @apply flex-1 w-64 lg:w-80;
     @apply flex-col justify-between hidden;
-    @apply fixed bottom-0 right-0;
+    @apply fixed bottom-0 right-0 top-20 ;
     @apply p-6;
     @apply bg-white shadow-md;
     @apply md:flex;
