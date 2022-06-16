@@ -22,6 +22,7 @@ export const typeDefs = gql`
   type DeviceByCountry {
     device_id: String
     counterparty_friendly_name: String
+    counterparty_hostname: String
     country_code: String!
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!

@@ -13,6 +13,7 @@ const deviceCountriesQuery = gql`
       outbound_byte_count
       last_updated_time_per_country
       country_code
+      counterparty_hostname
     }
   }
 `
