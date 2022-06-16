@@ -49,7 +49,10 @@
 
       }
       .device-tags{
-        @apply flex gap-2 px-4 py-3 overflow-scroll;
+        @apply w-full h-full;
+        @apply flex;
+        @apply gap-2 px-4 py-3;
+        @apply overflow-y-scroll bg-white;
       }
       .device-details {
         @apply flex justify-start pb-4;
@@ -90,13 +93,11 @@
     }
   }
   .modal-backdrop{
-    @apply h-[calc(100vh-80px)];
     @apply fixed inset-0 top-[80px];
     @apply bg-dark/50;
   }
   .slide-panel{
     @apply absolute top-0 right-0 z-20;
-    @apply w-[300%] h-[calc(100vh-80px)];
     @apply flex flex-col justify-between;
     @apply px-4 py-6;
     @apply bg-gray-100 shadow-lg;

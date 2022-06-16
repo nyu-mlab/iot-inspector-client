@@ -24,8 +24,9 @@ const EndpointDrawer = ({ deviceId }) => {
   return (
     <>
       <aside className="menu-drawer">
-        <h2>Communication Endpoints</h2>
-        <div className="flex-1 py-4 overflow-y-scroll">
+        <div className="flex flex-col flex-1 min-h-0">
+          <h2 className="pr-16">Communication<br />Endpoints</h2>
+          <div className="flex flex-col flex-1 py-4 overflow-y-scroll">
           <ul>
             {data?.communicationEndpointNames?.map((endpoints, i) => (
               <li key={i} className="py-0.5">
@@ -38,6 +39,7 @@ const EndpointDrawer = ({ deviceId }) => {
               </li>
             ))}
           </ul>
+          </div>
         </div>
         <div className="relative h-12 my-8">
           <div className="absolute w-full transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
