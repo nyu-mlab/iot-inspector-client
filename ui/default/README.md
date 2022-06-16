@@ -1,13 +1,13 @@
 
 ## Commands
 ### Setup
-From within `ui/default`:
+From within `ui/default` directory
 ```bash
-yarn ; yarn install # This will install dependencies within server and client
+yarn install:all  # This will install dependencies within server and client
+```
 
-# If this is your first time running the app, spin up the database so that we have 
-# it in place. Note this will spin it up and run it, you'll need to run this in a 
-# separate terminal window
+If this is your first time running the app, spin up the database so that we have it in place. Note this will spin it up and run it, you'll need to run this in a separate terminal window
+```bash
 yarn mockdb
 ```
 
@@ -28,6 +28,17 @@ This will run the mock database and generate database files.
 From within `ui/default` run:
 ```bash
 yarn build:client
+```
+
+### Cleaning the App
+To remove all node modules
+```bash'
+yarn clean:all
+```
+
+To Remove the database files
+```bash
+yarn clean:db
 ```
 
 ### Other commands

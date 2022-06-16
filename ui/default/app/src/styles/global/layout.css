@@ -3,19 +3,31 @@
     @apply py-20;
   }
   .header{
-    @apply fixed top-0 left-0 z-20 w-full bg-white shadow-md;
+    @apply w-full;
+    @apply sticky top-0 left-0 z-20 ;
+    @apply bg-white shadow-md;
     .primary-nav{
-      @apply flex flex-col justify-between lg:flex-row;
+      @apply flex flex-col justify-between;
+      @apply lg:flex-row;
     }
 
   }
   .inspector-settings {
-      @apply fixed inset-0 flex items-center justify-center p-4 top-[80px];
+      @apply fixed inset-0 top-[80px];
+      @apply flex items-center justify-center;
+      @apply p-4;
       .inspector-settings-panel{
-        @apply mx-auto !bg-white sm:w-11/12 md:w-10/12 lg:w-8/12 max-w-5xl rounded-2xl min-h-[70%] max-h-[90%] overflow-scroll;
+        @apply max-w-5xl h-fit min-h-[36rem];
+        @apply mx-auto overflow-scroll bg-white rounded-2xl;
+        @apply sm:w-11/12 md:w-10/12 lg:w-8/12;
       }
     }
   .menu-drawer{
-    @apply h-[calc(100vh-80px)] p-6 shadow-md w-[300px]  flex-col justify-between fixed bg-white right-0 bottom-0 hidden md:flex;
+    @apply h-[calc(100vh-80px)] w-[275px];
+    @apply flex-col justify-between hidden;
+    @apply fixed bottom-0 right-0;
+    @apply p-6;
+    @apply bg-white shadow-md;
+    @apply md:flex;
   }
 }

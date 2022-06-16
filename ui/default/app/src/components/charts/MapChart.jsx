@@ -1,107 +1,111 @@
-import React, { memo } from "react";
-import {
-  ComposableMap,
-  Geographies,
-  Graticule,
-  Geography,
-  Marker,
-  ZoomableGroup,
-  Line
-} from "react-simple-maps";
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom';
 
-const geoUrl =
-  "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
+import mapboxgl from 'mapbox-gl'
+import "mapbox-gl/dist/mapbox-gl.css"
+import * as turf from '@turf/turf'
 
-const homeMarker = {
-  coordinates: [-95.712891, 37.09024]
+// const generateArc = (start, destination) => {
+//   const radius = turf.rhumbDistance(start, destination)
+//   const midpoint = turf.midpoint(start, destination)
+//   const bearing = turf.rhumbBearing(start, destination) - 89
+//   const origin = turf.rhumbDestination(midpoint, radius, bearing)
+
+//   const arc = turf.lineArc(
+//     origin,
+//     turf.distance(origin, start),
+//     turf.bearing(origin, destination),
+//     turf.bearing(origin, start),
+//     {
+//       steps: 128,
+//     }
+//   )
+
+//   return arc.geometry.coordinates
+// }
+
+// https://jsfiddle.net/r9c4khbs/2/
+const MapChart = ({ data }) => {
+  mapboxgl.accessToken =
+    'pk.eyJ1Ijoib2N1cG9wIiwiYSI6ImNqa3ZnOTc4cTBicjAzc29iZWNrZHQwa3kifQ.PDkTbHFNjtqvXZTK14eUiw' // ocupops account key
+
+  const mapContainer = useRef(null)
+  const map = useRef(null)
+  const [userLng, setUserLng] = useState(-70.9) // TODO: Set to users location
+  const [userLat, setUserLat] = useState(42.35)
+  const [zoom, setZoom] = useState(1)
+
+  const endPoint1 = [120.960515, 23.69781]
+  //
+
+  useEffect(() => {
+    if (!data.length) return
+    if (map.current) return // Dont load the map twice
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v10',
+      center: [userLng, userLat],
+      zoom: zoom,
+    })
+    map.current.on('load', () => {
+      data.forEach((country, i) => {
+
+
+        const coords =  [country.longitude, country.latitude]
+
+        // create the popup
+        const popup = new mapboxgl.Popup({ offset: 25 }).setText(
+        'Construction on the Washington Monument began in 1848.'
+        );
+
+        // create DOM element for the marker
+        const el = document.createElement('div')
+        el.id = country.device_id+i
+
+
+
+        map.current.addSource(country.device_id+i, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Point',
+              coordinates: coords,
+            },
+          },
+        })
+        map.current.addLayer({
+          id: country.device_id+i,
+          type: 'circle',
+          source: country.device_id+i,
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#007BC7'
+          },
+          setPopup: popup
+        })
+
+
+
+
+
+
+
+
+      })
+    })
+  }, [data])
+
+  return (
+    <div>
+      <div
+        ref={mapContainer}
+        style={{ height: '600px' }}
+        className="map-container"
+      />
+    </div>
+  )
 }
 
-const markers = [
-  { markerOffset: 0, name: "TW", coordinates: [120.960515, 23.69781], data: '35kb' },
-  { markerOffset: 0, name: "US", coordinates: [-95.712891	, 37.09024], data: '160mb' },
-  { markerOffset: 0, name: "CN", coordinates: [104.195397, 35.86166], data: '800mb' },
-  { markerOffset: 0, name: "KR", coordinates: [127.766922	, 35.907757], data: '80b' },
-  { markerOffset: 0, name: "US", coordinates: [-95.712891	, 37.09024], data: '5mb' },
-];
-
-const MapChart = ({ setTooltipContent }) => {
-  return (
-    <div className="my-4 border rounded-lg border-dark bg-secondary/20">
-    <ComposableMap
-      projection="geoMercator"
-      height="350"
-      data-tip=""
-      projectionConfig={{
-        rotate: [0, 0, 0],
-        scale: 140
-      }}
-    >
-      <ZoomableGroup
-        // Center World
-        center= {[30.802498, 26.820553]}
-        // Center US/Home
-        // center= {[-95.712891, 37.09024]}
-      >
-      <Geographies geography={geoUrl}>
-        {({ geographies }) =>
-          geographies.map(geo => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill="#fff"
-                stroke="#fff"
-                onMouseEnter={() => {
-                    const { NAME } = geo.properties;
-                    setTooltipContent(`${NAME}`);
-                  }}
-                  onMouseLeave={() => {
-                    setTooltipContent("");
-                  }}
-                  style={{
-                    default: {
-                      fill: "#fff",
-                      outline: "none",
-                      transition: "200ms"
-                    },
-                    hover: {
-                      fill: "#08103F",
-                      outline: "none"
-                    },
-                    pressed: {
-                      fill: "#08103F",
-                      outline: "none"
-                    }
-                  }}
-              />
-            ))
-        }
-      </Geographies>
-
-      {markers.map(({ name, coordinates, markerOffset, data }) => (
-        <>
-        <Marker key={name} coordinates={coordinates}>
-          <circle r={8} fill="#007BC7" stroke="#E5E5E5" strokeWidth={4} />
-          <text
-            textAnchor="middle"
-            y={markerOffset}
-            style={{ fontFamily: "system-ui", fill: "#5D5A6D" }}
-          >
-            {data}
-          </text>
-        </Marker>
-        <Line
-          from={homeMarker.coordinates}
-          to={coordinates}
-          stroke="#007BC7"
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
-      </>
-      ))}
-      </ZoomableGroup>
-    </ComposableMap>
-    </div>
-  );
-};
-
-export default memo(MapChart);
+export default MapChart

@@ -1,37 +1,42 @@
-import { gql, useQuery } from '@apollo/client'
-import React from 'react'
+import { gql, useLazyQuery } from '@apollo/client'
+import React, { useEffect } from 'react'
 import DeviceDiscoverySlide from './DeviceDiscoverySlide'
 
-const DEVICES_QUERY = gql`
-  query Query {
-    devices {
-      device_id
-      auto_name
+const COMMUNICATION_NAMES_QUERY = gql`
+  query Query($deviceId: String) {
+    communicationEndpointNames(device_id: $deviceId) {
+      counterparty_hostname
     }
   }
 `
+const EndpointDrawer = ({ deviceId }) => {
+  const [loadCommunicationNames, { called, loading, data }] = useLazyQuery(COMMUNICATION_NAMES_QUERY)
 
-const EndpointDrawer = () => {
-  const devicesResponse = useQuery(DEVICES_QUERY)
+  useEffect(() => {
+    // const variables = deviceId ? { deviceId } : null
+    loadCommunicationNames()
+  }, [])
+
+  if (loading) {
+    return <></>
+  }
+
   return (
     <>
       <aside className="menu-drawer">
         <h2>Communication Endpoints</h2>
         <div className="flex-1 py-4 overflow-y-scroll">
           <ul>
-            {devicesResponse?.data?.devices?.map((device) => (
-              <li key={device.device_id} className="py-0.5">
+            {data?.communicationEndpointNames?.map((endpoints, i) => (
+              <li key={i} className="py-0.5">
                 <a
                   href="#"
                   className="text-xs transition text-dark hover:text-secondary"
                 >
-                  {device.auto_name}
+                  {endpoints.counterparty_hostname}
                 </a>
               </li>
             ))}
-            {/* <li className="py-0.5"><a href="#" className="text-xs transition text-dark hover:text-secondary">Adobe</a></li>
-            <li className="py-0.5"><a href="#" className="text-xs transition text-dark hover:text-secondary">Synology</a></li>
-            <li className="py-0.5"><a href="#" className="text-xs transition text-dark hover:text-secondary">Google</a></li> */}
           </ul>
         </div>
         <div className="relative h-12 my-8">

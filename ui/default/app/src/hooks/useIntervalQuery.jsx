@@ -8,8 +8,8 @@ const useIntervalQuery = (gqlQuery, variables = {}, ttl = 15000) => {
 
   useEffect(() => {
     const asyncInit = async () => {
-      await getQuery(variables)
-      const interval = setInterval(() => getQuery(variables), ttl)
+      await getQuery({variables: { ...variables }})
+      const interval = setInterval(() => getQuery({variables: { ...variables }}), ttl)
       return () => {
         clearInterval(interval)
       }

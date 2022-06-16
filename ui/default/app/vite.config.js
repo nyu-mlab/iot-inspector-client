@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-const { resolve } = require('path')
+const { resolve, join } = require('path')
 import react from '@vitejs/plugin-react'
 import ViteFonts from 'vite-plugin-fonts'
 
@@ -10,7 +10,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        nested: resolve(__dirname, 'getting-started/index.html')
+        // nested: resolve(__dirname, 'getting-started/index.html')
+        // main: join(__dirname, '../../', 'html', 'index.html')
+        // main: resolve(__dirname, '..', 'html/index.html')
       }
     }
   },
@@ -29,8 +31,8 @@ export default defineConfig({
    ],
   // server: {
   //   proxy: {
-  //     '/api': {
-  //       target: 'http://127.0.0.1:53721',
+  //     '/graphql': {
+  //       target: 'http://127.0.0.1:4000',
   //       changeOrigin: true,
   //       secure: false,
   //       ws: true,
