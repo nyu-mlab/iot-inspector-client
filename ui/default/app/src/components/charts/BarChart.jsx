@@ -90,6 +90,7 @@ const BarChart = ({ deviceId }) => {
   }, [start_timestamp, networkDownloadActivityResponse])
   */
 
+  return <></>
   return (
     <div className="network-bar-chart">
       <div className="row">

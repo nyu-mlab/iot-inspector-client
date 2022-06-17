@@ -1,7 +1,7 @@
 import { Context } from './context'
 
-const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
-// const SERVER_START_TIME = Math.round(new Date('June 10, 2022 06:24:00').getTime() / 1000)
+// const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
+const SERVER_START_TIME = Math.round(new Date('June 15, 2022 06:24:00').getTime() / 1000)
 
 /**
  *
@@ -98,7 +98,7 @@ const dataUploadedToCounterParty = async (
   context: Context,
 ) => {
   const response: any = await context.prisma.flows.groupBy({
-    by: ['device_id', 'counterparty_friendly_name', 'counterparty_country'],
+    by: ['device_id', 'counterparty_friendly_name', 'counterparty_country', 'counterparty_hostname'],
     _sum: { outbound_byte_count: true },
     _max: { ts: true },
     where: {
@@ -118,6 +118,7 @@ const dataUploadedToCounterParty = async (
         device: device,
         device_id: flow.device_id,
         counterparty_friendly_name: flow.counterparty_friendly_name,
+        counterparty_hostname: flow.counterparty_hostname,
         country_code: flow.counterparty_country,
         outbound_byte_count: flow._sum.outbound_byte_count,
         last_updated_time_per_country: flow._max.ts,

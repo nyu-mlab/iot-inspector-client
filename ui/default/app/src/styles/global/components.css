@@ -25,13 +25,20 @@
       @apply opacity-100;
     }
   }
+
   .card-grid{
     @apply grid grid-cols-2 gap-4;
     @apply lg:grid-cols-3 xl:grid-cols-5 md:gap-5;
   }
+    .device-item{
+    @apply flex;
+    @apply  bg-white border-gray-500 rounded-lg shadow-sm;
+  }
   .card-view{
     .device-item{
-      @apply flex flex-col gap-2 overflow-hidden bg-white border-t-8 border-gray-500 rounded-lg shadow-sm;
+      @apply flex-col;
+      @apply gap-2;
+      @apply   border-t-8 ;
       &.status-empty{
         @apply border-red-600;
       }
@@ -49,7 +56,10 @@
 
       }
       .device-tags{
-        @apply flex gap-2 px-4 py-3 overflow-scroll;
+        @apply flex;
+        @apply gap-2 px-4 py-3;
+        @apply overflow-y-scroll bg-white;
+
       }
       .device-details {
         @apply flex justify-start pb-4;
@@ -58,10 +68,10 @@
   }
   .list-view{
     .device-item{
-      @apply flex justify-between;
+      @apply justify-between;
       @apply w-full;
       @apply p-4;
-      @apply bg-white border-l-8 border-gray-500 rounded-lg shadow-sm;
+      @apply border-l-8;
       &.status-empty{
         @apply border-red-600;
       }
@@ -89,14 +99,16 @@
       }
     }
   }
+        .tag {
+          @apply px-4 py-1;
+          @apply text-sm text-white bg-gray-600 rounded-full h-fit;
+        }
   .modal-backdrop{
-    @apply h-[calc(100vh-80px)];
     @apply fixed inset-0 top-[80px];
     @apply bg-dark/50;
   }
   .slide-panel{
     @apply absolute top-0 right-0 z-20;
-    @apply w-[300%] h-[calc(100vh-80px)];
     @apply flex flex-col justify-between;
     @apply px-4 py-6;
     @apply bg-gray-100 shadow-lg;

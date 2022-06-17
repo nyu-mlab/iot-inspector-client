@@ -1,9 +1,5 @@
-import React, { useState } from 'react'
-import {
-  HiViewGrid,
-  HiViewList,
-  HiSearch,
-} from 'react-icons/hi'
+import React, { useEffect, useState } from 'react'
+import { HiViewGrid, HiViewList, HiSearch } from 'react-icons/hi'
 import { BiSortAlt2 } from 'react-icons/bi'
 
 import DeviceItem from './DeviceItem'
@@ -29,6 +25,13 @@ const InspectingDevicesDashboard = () => {
   const devicesResponse = useIntervalQuery(DEVICES_QUERY, null, 5000)
 
   const [searchValue, setSearchValue] = useState('')
+  const [devices, setDevices] = useState([])
+
+  useEffect(() => {
+    if (devicesResponse?.data?.devices) {
+      setDevices(devicesResponse?.data?.devices)
+    }
+  }, [devicesResponse?.data?.devices])
 
   return (
     <section className="bg-gray-50 flex-flex-col-gap-4" id="inspecting-devices">
@@ -62,7 +65,28 @@ const InspectingDevicesDashboard = () => {
           Name
           <BiSortAlt2 className="w-4 h-4 text-gray-400" />
         </button>
-        <button className="flex items-center justify-center gap-1 p-2 text-sm">
+        <button
+          className="flex items-center justify-center gap-1 p-2 text-sm"
+          onClick={() => {
+            // const d = devices.sort((a, b) =>
+            //   a.outbound_byte_count > b.outbound_byte_count
+            //     ? 1
+            //     : b.outbound_byte_count > a.outbound_byte_count
+            //     ? -1
+            //     : 0
+            // )
+
+            const d = devices.sort((a, b) => {
+              if ( a.outbound_byte_count > b.outbound_byte_count) {
+                return 1
+              }
+              console.log(a.outbound_byte_count)
+              return 0
+            })
+
+            setDevices(d)
+          }}
+        >
           Traffic
           <BiSortAlt2 className="w-4 h-4 text-gray-400" />
         </button>
@@ -84,8 +108,8 @@ const InspectingDevicesDashboard = () => {
         </div>
       </div>
       <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
-        {devicesResponse?.data?.devices
-          .filter((device) => {
+        {devices
+          ?.filter((device) => {
             if (!searchValue) return true
             if (
               device.auto_name.toLowerCase().includes(searchValue.toLowerCase())

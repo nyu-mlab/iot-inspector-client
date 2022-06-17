@@ -30,6 +30,10 @@ From within `ui/default` run:
 yarn build:client
 ```
 
+This will output a distribution to: `ui/default/html`
+
+*NOTE: If you're running ngrok, the server also looks at this directory and feeds it as a static directory.*
+
 ### Cleaning the App
 To remove all node modules
 ```bash'

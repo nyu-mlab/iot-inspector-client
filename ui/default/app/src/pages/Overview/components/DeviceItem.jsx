@@ -7,21 +7,17 @@ const DeviceItem = ({ device }) => {
     <div className="device-item status-empty">
       <div className="device-info">
         <img src="https://via.placeholder.com/150" alt={device ? device.auto_name : 'Unknown Device'} className="hidden w-auto h-12 lg:block md:h-16" />
-        <div className="grid px-4 overflow-scroll">
+        <div className="px-4">
           <h3>{device ? device.auto_name : 'Unknown Device'}</h3>
-          <div className="flex justify-between text-xs md:block">
-            <div>
-              <p>
-              {device && device.ip}
-              <br />
-              {device && device.mac}
-              </p>
-            </div>
-          </div>
+          <p className="text-xs">
+          {device && device.ip}
+          <br />
+          {device && device.mac}
+          </p>
         </div>
       </div>
       <div className="device-tags">
-        <div className="px-4 py-1 text-sm text-white bg-gray-600 rounded-full h-fit">
+        <div className="tag">
           tag
         </div>
       </div>

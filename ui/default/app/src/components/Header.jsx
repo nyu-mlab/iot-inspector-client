@@ -18,9 +18,9 @@ const Header = () => {
         {({ open }) => (
           <>
         <div className="flex justify-between p-6 grow md:px-8 lg:px-12">
-          <div className="flex gap-2 font-semibold h2 text-dark">
-            <Logo /> Home Data Inspector
-          </div>
+          <a href="/" className="flex gap-2 font-semibold h2 text-dark">
+              <Logo /> Home Data Inspector
+          </a>
           <div className="flex items-center gap-4">
 
             <div className="hidden gap-2 md:flex">
