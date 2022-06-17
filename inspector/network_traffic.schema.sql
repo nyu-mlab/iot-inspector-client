@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS devices (
     last_updated_ts REAL NOT NULL
 );
 
+
+CREATE INDEX IF NOT EXISTS devices_device_id ON devices (device_id);
+
 /*
     Inspector creates a new row when it sees a new flow between a device and a
     counterparty (which could be a host on the Internet or another device on the
@@ -116,6 +119,14 @@ CREATE TABLE IF NOT EXISTS flows (
 );
 
 
+CREATE INDEX IF NOT EXISTS flows_device_id ON flows (device_id);
+CREATE INDEX IF NOT EXISTS flows_counterparty_ip ON flows (counterparty_ip);
+CREATE INDEX IF NOT EXISTS flows_ts ON flows (ts);
+CREATE INDEX IF NOT EXISTS flows_ts_mod_60 ON flows (ts_mod_60);
+CREATE INDEX IF NOT EXISTS flows_ts_mod_600 ON flows (ts_mod_600);
+CREATE INDEX IF NOT EXISTS flows_ts_mod_3600 ON flows (ts_mod_3600);
+
+
 /*
     Maps each remote counterparty to a named entity, e.g., hostname.
 */
@@ -135,3 +146,7 @@ CREATE TABLE IF NOT EXISTS counterparties (
     -- Timestamp when we observe this mapping
     ts REAL NOT NULL
 );
+
+
+CREATE INDEX IF NOT EXISTS counterparties_remote_ip ON counterparties (remote_ip);
+CREATE INDEX IF NOT EXISTS counterparties_device_id ON counterparties (device_id);
