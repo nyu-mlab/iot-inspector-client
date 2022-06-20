@@ -76,7 +76,6 @@ export const typeDefs = gql`
     outbound_byte_count: Int!
     inbound_packet_count: Int!
     outbound_packet_count: Int!
-    _sum: Int
   }
 
   type Query {

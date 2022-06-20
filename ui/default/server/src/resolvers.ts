@@ -169,77 +169,12 @@ const deviceTrafficToCountries = async (
 }
 
 /**
- *
- * @param _parent
- * @param args
- * @param context
- * @returns Type Flow
+ * 
+ * @param _parent 
+ * @param args 
+ * @param context 
+ * @returns Network Activity In Bytes
  */
-const adsAndTrackerBytes = async (
-  _parent,
-  args: { current_time: number },
-  context: Context,
-) => {
-  const flowsResult = await context.prisma.flows.aggregate({
-    where: {
-      counterparty_is_ad_tracking: 1,
-      ts: { gte: args.current_time || SERVER_START_TIME },
-    },
-    _sum: {
-      outbound_byte_count: true,
-    },
-  })
-  return { _sum: flowsResult._sum.outbound_byte_count }
-}
-
-/**
- *
- * @param _parent
- * @param args
- * @param context
- * @returns Type Flow
- */
-const unencryptedHttpTrafficBytes = async (
-  _parent,
-  args: { current_time: number },
-  context: Context,
-) => {
-  const flowsResult = await context.prisma.flows.aggregate({
-    where: {
-      counterparty_port: 80,
-      ts: { gte: args.current_time || SERVER_START_TIME },
-    },
-    _sum: {
-      outbound_byte_count: true,
-    },
-  })
-  return { _sum: flowsResult._sum.outbound_byte_count }
-}
-
-/**
- *
- * @param _parent
- * @param args
- * @param context
- * @returns Type Flow
- */
-const weakEncryptionBytes = async (
-  _parent,
-  args: { current_time: number },
-  context: Context,
-) => {
-  const flowsResult = await context.prisma.flows.aggregate({
-    where: {
-      uses_weak_encryption: 1,
-      ts: { gte: args.current_time || SERVER_START_TIME },
-    },
-    _sum: {
-      outbound_byte_count: true,
-    },
-  })
-  return { _sum: flowsResult._sum.outbound_byte_count }
-}
-
 const networkActivity = async (
   _parent,
   args: { current_time: number },
@@ -282,18 +217,6 @@ const networkActivity = async (
   }
 }
 
-// const communicationEndpointNames = (
-//   _parent,
-//   args: { device_id: string },
-//   context: Context,
-// ) => {
-//   return context.prisma.flows.findMany({
-//     where: {
-//       ts: { gte: SERVER_START_TIME },
-//       device_id:  args.device_id || undefined
-//     },
-//   })
-// }
 
 const communicationEndpointNames = async (
   _parent,
@@ -317,9 +240,6 @@ export {
   flows,
   serverConfig,
   deviceTrafficToCountries,
-  // adsAndTrackerBytes,
-  // unencryptedHttpTrafficBytes,
-  // weakEncryptionBytes,
   dataUploadedToCounterParty,
   communicationEndpointNames,
   networkActivity
