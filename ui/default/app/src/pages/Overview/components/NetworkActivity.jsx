@@ -15,45 +15,19 @@ const HIGH_USEAGE_QUERY = gql`
   }
 `
 
-const ADS_AND_TRACKERS_QUERY = gql`
-  query Query($currentTime: Int) {
-    adsAndTrackerBytes(current_time: $currentTime) {
-      _sum
-    }
-  }
-`
-
-const UNENCRYPTED_HTTP_TRAFFIC_QUERY = gql`
-  query Query($currentTime: Int) {
-    unencryptedHttpTrafficBytes(current_time: $currentTime) {
-      _sum
-    }
-  }
-`
-
-const WEAK_ENCRYPTION_QUERY = gql`
-  query Query($currentTime: Int) {
-    weakEncryptionBytes(current_time: $currentTime) {
-      _sum
+const NETWORK_ACTIVITY_QUERY = gql`
+  query Query {
+    networkActivity {
+      weak_encryption
+      unencrypted_http_traffic
+      ads_and_trackers
     }
   }
 `
 
 const NetworkActivityDashboard = () => {
-  const adsTrackingResponse = useIntervalQuery(
-    ADS_AND_TRACKERS_QUERY,
-    null,
-    5000
-  )
-
-  const unencryptedHttpTrafficResponse = useIntervalQuery(
-    UNENCRYPTED_HTTP_TRAFFIC_QUERY,
-    null,
-    5000
-  )
-
-  const weakEncryptionResponse = useIntervalQuery(
-    WEAK_ENCRYPTION_QUERY,
+  const networkActivityResponse = useIntervalQuery(
+    NETWORK_ACTIVITY_QUERY,
     null,
     5000
   )
@@ -89,10 +63,7 @@ const NetworkActivityDashboard = () => {
             <div className="grid grid-cols-2 gap-2 py-4">
               {highUseageResponse?.data?.devices &&
                 highUseageResponse?.data?.devices.map((device, i) => (
-                  <DataCard
-                    key={i}
-                    bytes={device.outbound_byte_count}
-                  >
+                  <DataCard key={i} bytes={device.outbound_byte_count}>
                     <span className="text-xs">{device.auto_name}</span>
                     <br />
                     <span className="text-xs">{device.ip}</span>
@@ -104,31 +75,38 @@ const NetworkActivityDashboard = () => {
             <p>
               Monitored devices sent/recieved
               <br />
-              <strong>
+               <strong>
                 {dataUseage(
-                  adsTrackingResponse?.data?.adsAndTrackerBytes?._sum +
-                    unencryptedHttpTrafficResponse?.data
-                      ?.unencryptedHttpTrafficBytes?._sum +
-                    weakEncryptionResponse?.data?.weakEncryptionBytes?._sum
+                  networkActivityResponse?.data?.networkActivity
+                  ?.ads_and_trackers + networkActivityResponse?.data?.networkActivity
+                  ?.unencrypted_http_traffic + networkActivityResponse?.data?.networkActivity
+                  ?.weak_encryption
                 )}
               </strong>
             </p>
+            {console.log(networkActivityResponse?.data)}
             <div className="grid grid-cols-2 gap-2 py-4">
               <DataCard
-                bytes={adsTrackingResponse?.data?.adsAndTrackerBytes?._sum}
+                bytes={
+                  networkActivityResponse?.data?.networkActivity
+                    ?.ads_and_trackers
+                }
               >
                 <span className="text-xs">Ads & Trackers</span>
               </DataCard>
               <DataCard
                 bytes={
-                  unencryptedHttpTrafficResponse?.data
-                    ?.unencryptedHttpTrafficBytes?._sum
+                  networkActivityResponse?.data?.networkActivity
+                    ?.unencrypted_http_traffic
                 }
               >
                 <span className="text-xs">Unencrypted HTTP Traffic</span>
               </DataCard>
               <DataCard
-                bytes={weakEncryptionResponse?.data?.weakEncryptionBytes?._sum}
+                bytes={
+                  networkActivityResponse?.data?.networkActivity
+                    ?.weak_encryption
+                }
               >
                 <span className="text-xs">Weak Encryption</span>
               </DataCard>

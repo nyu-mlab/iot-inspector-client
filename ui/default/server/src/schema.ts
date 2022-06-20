@@ -1,17 +1,16 @@
-import { prisma } from '@prisma/client'
 import { gql } from 'apollo-server'
-import { Context } from './context'
 import {
   deviceTrafficToCountries,
   device,
   devices,
   flows,
   serverConfig,
-  adsAndTrackerBytes,
-  unencryptedHttpTrafficBytes,
-  weakEncryptionBytes,
+  // adsAndTrackerBytes,
+  // unencryptedHttpTrafficBytes,
+  // weakEncryptionBytes,
   dataUploadedToCounterParty,
-  communicationEndpointNames
+  communicationEndpointNames,
+  networkActivity
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -27,6 +26,12 @@ export const typeDefs = gql`
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!
     device: Device
+  }
+  
+  type NetworkActivity {
+    weak_encryption: Int
+    unencrypted_http_traffic: Int
+    ads_and_trackers: Int
   }
 
   type CommunicationEndpointName {
@@ -63,7 +68,7 @@ export const typeDefs = gql`
     transport_layer_protocol: String!
     uses_weak_encryption: Int!
     ts: Float!
-    ts_mod_60: Float!
+    ts_mod_60: Float!   # every 1 minute
     ts_mod_600: Float!  # every 10 minutes
     ts_mod_3600: Float! # Every 1 hour
     window_size: Float!
@@ -80,11 +85,12 @@ export const typeDefs = gql`
     flows(current_time: Int, device_id: String): [Flow!]!
     serverConfig: ServerConfig
     deviceTrafficToCountries(device_id: String!): [DeviceByCountry!]!
-    adsAndTrackerBytes(current_time: Int): Flow
-    unencryptedHttpTrafficBytes(current_time: Int): Flow
-    weakEncryptionBytes(current_time: Int): Flow
+    # adsAndTrackerBytes(current_time: Int): Flow
+    # unencryptedHttpTrafficBytes(current_time: Int): Flow
+    # weakEncryptionBytes(current_time: Int): Flow
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
+    networkActivity(current_time: Int): NetworkActivity
   }
 `
 
@@ -95,9 +101,10 @@ export const resolvers = {
     flows,
     serverConfig,
     deviceTrafficToCountries,
-    adsAndTrackerBytes,
-    unencryptedHttpTrafficBytes,
-    weakEncryptionBytes,
+    // adsAndTrackerBytes,
+    // unencryptedHttpTrafficBytes,
+    // weakEncryptionBytes,
+    networkActivity,
     dataUploadedToCounterParty,
     communicationEndpointNames
   },
