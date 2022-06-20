@@ -84,7 +84,6 @@ const NetworkActivityDashboard = () => {
                 )}
               </strong>
             </p>
-            {console.log(networkActivityResponse?.data)}
             <div className="grid grid-cols-2 gap-2 py-4">
               <DataCard
                 bytes={
