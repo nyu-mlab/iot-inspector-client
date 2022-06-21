@@ -71,6 +71,7 @@ const NetworkActivityDashboard = () => {
                 ))}
             </div>
           </div>
+          {console.log(networkActivityResponse)}
           <div>
             <p>
               Monitored devices sent/recieved

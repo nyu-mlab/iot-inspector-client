@@ -10,19 +10,6 @@ const SERVER_START_TIME = Math.round(
  * @param _parent
  * @param args
  * @param context
- * @returns Type Device
- */
-const device = (_parent, args: { device_id: string }, context: Context) => {
-  return context.prisma.devices.findUnique({
-    where: { device_id: args.device_id || undefined },
-  })
-}
-
-/**
- *
- * @param _parent
- * @param args
- * @param context
  * @returns Array Type Devices
  */
 const devices = async (_parent, args, context: Context) => {
@@ -76,11 +63,9 @@ const flows = (
 /**
  *
  * @param _parent
- * @param args
- * @param context
  * @returns Type ServerConfig
  */
-const serverConfig = (_parent, args, context: Context) => {
+const serverConfig = (_parent) => {
   return {
     start_timestamp: SERVER_START_TIME,
   }
@@ -235,7 +220,6 @@ const communicationEndpointNames = async (
 }
 
 export {
-  device,
   devices,
   flows,
   serverConfig,

@@ -1,13 +1,8 @@
 import { gql } from 'apollo-server'
 import {
-  deviceTrafficToCountries,
-  device,
   devices,
   flows,
   serverConfig,
-  // adsAndTrackerBytes,
-  // unencryptedHttpTrafficBytes,
-  // weakEncryptionBytes,
   dataUploadedToCounterParty,
   communicationEndpointNames,
   networkActivity
@@ -83,10 +78,6 @@ export const typeDefs = gql`
     devices: [Device!]!
     flows(current_time: Int, device_id: String): [Flow!]!
     serverConfig: ServerConfig
-    deviceTrafficToCountries(device_id: String!): [DeviceByCountry!]!
-    # adsAndTrackerBytes(current_time: Int): Flow
-    # unencryptedHttpTrafficBytes(current_time: Int): Flow
-    # weakEncryptionBytes(current_time: Int): Flow
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
     networkActivity(current_time: Int): NetworkActivity
@@ -95,14 +86,9 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    device,
     devices,
     flows,
     serverConfig,
-    deviceTrafficToCountries,
-    // adsAndTrackerBytes,
-    // unencryptedHttpTrafficBytes,
-    // weakEncryptionBytes,
     networkActivity,
     dataUploadedToCounterParty,
     communicationEndpointNames
