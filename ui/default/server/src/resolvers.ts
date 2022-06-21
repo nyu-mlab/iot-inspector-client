@@ -121,37 +121,6 @@ const dataUploadedToCounterParty = async (
   return devices
 }
 
-/**
- *
- * @param _parent
- * @param args
- * @param context
- * @returns Type DeviceByCountry
- */
-const deviceTrafficToCountries = async (
-  _parent,
-  args: { device_id: string },
-  context: Context,
-) => {
-  const response: any = await context.prisma.flows.groupBy({
-    by: ['counterparty_country'],
-    _max: { ts: true },
-    _sum: { outbound_byte_count: true },
-    where: {
-      device_id: args.device_id,
-    },
-  })
-
-  const data = response.map((d) => {
-    return {
-      country_code: d.counterparty_country,
-      outbound_byte_count: d._sum.outbound_byte_count,
-      last_updated_time_per_country: d._max.ts,
-    }
-  })
-
-  return data
-}
 
 /**
  * 
@@ -202,7 +171,13 @@ const networkActivity = async (
   }
 }
 
-
+/**
+ * 
+ * @param _parent 
+ * @param args 
+ * @param context 
+ * @returns Counter Party Host Names
+ */
 const communicationEndpointNames = async (
   _parent,
   args: { device_id: string },
@@ -223,7 +198,6 @@ export {
   devices,
   flows,
   serverConfig,
-  deviceTrafficToCountries,
   dataUploadedToCounterParty,
   communicationEndpointNames,
   networkActivity

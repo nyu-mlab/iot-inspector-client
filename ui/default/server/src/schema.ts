@@ -74,7 +74,6 @@ export const typeDefs = gql`
   }
 
   type Query {
-    device(device_id: String): Device
     devices: [Device!]!
     flows(current_time: Int, device_id: String): [Flow!]!
     serverConfig: ServerConfig
