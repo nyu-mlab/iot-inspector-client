@@ -25,7 +25,7 @@
 
 CREATE TABLE IF NOT EXISTS device_info (
     -- Same device IDs as the other tables
-    device_id TEXT PRIMARY KEY,
+    device_id TEXT PRIMARY KEY NOT NULL,
     -- User-entered name of the device
     device_name TEXT DEFAULT "" NOT NULL,
     -- User-entered name of the manufacturer
