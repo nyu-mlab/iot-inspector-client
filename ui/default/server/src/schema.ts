@@ -76,10 +76,10 @@ export const typeDefs = gql`
   type Query {
     devices: [Device!]!
     flows(current_time: Int, device_id: String): [Flow!]!
-    serverConfig: ServerConfig
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
     networkActivity(current_time: Int): NetworkActivity
+    serverConfig: ServerConfig
   }
 `
 
