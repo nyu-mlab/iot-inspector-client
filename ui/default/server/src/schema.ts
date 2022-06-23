@@ -5,7 +5,8 @@ import {
   serverConfig,
   dataUploadedToCounterParty,
   communicationEndpointNames,
-  networkActivity
+  networkActivity,
+  addDeviceInfo
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -22,7 +23,7 @@ export const typeDefs = gql`
     last_updated_time_per_country: Float!
     device: Device
   }
-  
+
   type NetworkActivity {
     weak_encryption: Int
     unencrypted_http_traffic: Int
@@ -46,6 +47,7 @@ export const typeDefs = gql`
     last_updated_ts: Float!
     outbound_byte_count: Int # Included from the Flow Type
     flows: [Flow]
+    device_info: DeviceInfo
   }
 
   type Flow {
@@ -63,14 +65,23 @@ export const typeDefs = gql`
     transport_layer_protocol: String!
     uses_weak_encryption: Int!
     ts: Float!
-    ts_mod_60: Float!   # every 1 minute
-    ts_mod_600: Float!  # every 10 minutes
+    ts_mod_60: Float! # every 1 minute
+    ts_mod_600: Float! # every 10 minutes
     ts_mod_3600: Float! # Every 1 hour
     window_size: Float!
     inbound_byte_count: Int!
     outbound_byte_count: Int!
     inbound_packet_count: Int!
     outbound_packet_count: Int!
+  }
+
+  type DeviceInfo {
+    device_id: String!
+    device_name: String!
+    vendor_name: String!
+    tag_list: String!
+    is_inspected: Int!
+    is_blocked: Int!
   }
 
   type Query {
@@ -81,6 +92,17 @@ export const typeDefs = gql`
     networkActivity(current_time: Int): NetworkActivity
     serverConfig: ServerConfig
   }
+
+  type Mutation {
+    addDeviceInfo(
+      device_id: String!
+      device_name: String
+      vendor_name: String
+      tag_list: String
+      is_inspected: Int
+      is_blocked: Int
+    ): DeviceInfo
+  }
 `
 
 export const resolvers = {
@@ -90,6 +112,9 @@ export const resolvers = {
     serverConfig,
     networkActivity,
     dataUploadedToCounterParty,
-    communicationEndpointNames
+    communicationEndpointNames,
+  },
+  Mutation: {
+    addDeviceInfo
   },
 }

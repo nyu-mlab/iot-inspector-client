@@ -1,11 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient as NetworkTrafficClient } from '../prisma/generated/network_traffic_client'
+import { PrismaClient as ConfigsClient } from '../prisma/generated/configs_client'
 
-const prisma = new PrismaClient()
+const networkTrafficPrismaClient = new NetworkTrafficClient()
+const configsPrismaClient = new ConfigsClient()
 
 export interface Context {
-  prisma: PrismaClient
+  NetworkTrafficClient: NetworkTrafficClient,
+  ConfigsClient: ConfigsClient
 }
 
 export const context: Context = {
-  prisma: prisma,
+  NetworkTrafficClient: networkTrafficPrismaClient,
+  ConfigsClient: configsPrismaClient
 }

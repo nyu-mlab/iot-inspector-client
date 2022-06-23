@@ -4,8 +4,7 @@ import { BiSortAlt2 } from 'react-icons/bi'
 
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
-import { gql } from '@apollo/client'
-import useIntervalQuery from '../../../hooks/useIntervalQuery'
+import { gql, useQuery } from '@apollo/client'
 import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
 
 const DEVICES_QUERY = gql`
@@ -22,7 +21,9 @@ const DEVICES_QUERY = gql`
 
 const InspectingDevicesDashboard = () => {
   const [cardView, setCardView] = useState(false)
-  const devicesResponse = useIntervalQuery(DEVICES_QUERY, null, 5000)
+  const devicesResponse = useQuery(DEVICES_QUERY, {
+    pollInterval: 5000,
+  })
 
   const [searchValue, setSearchValue] = useState('')
   const [devices, setDevices] = useState([])

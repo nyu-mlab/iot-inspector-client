@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import Chart from 'react-apexcharts'
 import { format } from 'date-fns'
 import '../../utils/array'
-import useIntervalQuery from '../../hooks/useIntervalQuery'
 import useServerConfig from '../../hooks/useServerConfig'
 import { datesBetween } from '../../utils/utils'
 
@@ -41,10 +40,11 @@ const BarChart = ({ deviceId }) => {
   /*
   const variables = deviceId ? { deviceId } : null
 
-  const networkDownloadActivityResponse = useIntervalQuery(
+  const networkDownloadActivityResponse = useQuery(
     NETWORK_DOWNLOAD_ACTIVITY_QUERY,
-    variables,
-    60000 // 1 minute
+    {
+    pollInterval: 60000, // 1 minute
+  }
   )
 
   // populate x-axis / y-axis

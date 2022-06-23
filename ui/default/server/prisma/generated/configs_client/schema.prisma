@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/configs_client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../../../../inspector/configs.db"
+}
+
+model device_info {
+  device_id    String @id
+  device_name  String @default("")
+  vendor_name  String @default("")
+  tag_list     String @default("[]")
+  is_inspected Int    @default(0)
+  is_blocked   Int    @default(0)
+}
+
+model state_kv {
+  state_key        String @id
+  state_value_json String
+}
