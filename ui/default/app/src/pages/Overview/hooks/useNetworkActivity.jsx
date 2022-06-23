@@ -12,7 +12,7 @@ const NETWORK_ACTIVITY_QUERY = gql`
 `
 
 const useNetworkActivity = () => {
-  const [networkActivityData, setNetworkActivityData] = useState()
+  const [networkActivityData, setNetworkActivityData] = useState([])
 
   const { data, loading: networkActivityDataLoading } = useQuery(
     NETWORK_ACTIVITY_QUERY,
