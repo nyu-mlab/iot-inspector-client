@@ -12,7 +12,7 @@ const NETWORK_ACTIVITY_QUERY = gql`
 `
 
 const useNetworkActivity = () => {
-  const [networkActivityData, setNetworkActivityData] = useState([])
+  const [networkActivityData, setNetworkActivityData] = useState([])  // TODO: Can we leverage useMemo in place https://github.com/ocupop/iot-inspector-client/issues/17
 
   const { data, loading: networkActivityDataLoading } = useQuery(
     NETWORK_ACTIVITY_QUERY,

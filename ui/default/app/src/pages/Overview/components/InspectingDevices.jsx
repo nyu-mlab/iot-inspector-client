@@ -4,7 +4,6 @@ import { BiSortAlt2 } from 'react-icons/bi'
 
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
-import { gql, useQuery } from '@apollo/client'
 import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
 import useDevices from '../hooks/useDevices'
 
@@ -49,7 +48,7 @@ const InspectingDevicesDashboard = () => {
         <button
           className="flex items-center justify-center gap-1 p-2 text-sm"
           onClick={() => {
-            const s = sortDirection === 'ASC' ? 'DESC' : 'ASC'
+            const s = sortDirection === 'ASC' ? 'DESC' : 'ASC' // TODO: boolean https://github.com/ocupop/iot-inspector-client/issues/18
             setSortDirection(s)
             sortDevicesData('outbound_byte_count', sortDirection)
 
@@ -80,6 +79,7 @@ const InspectingDevicesDashboard = () => {
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
           {devicesData
+          // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
             ?.filter((device) => {
               if (!searchValue) return true
               if (
