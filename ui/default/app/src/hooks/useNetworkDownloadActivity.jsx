@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { gql, useQuery } from '@apollo/client'
+import { useMemo } from 'react'
 
 const NETWORK_DOWNLOAD_ACTIVITY_QUERY = gql`
   query Query($deviceId: String) {
@@ -15,7 +16,7 @@ const NETWORK_DOWNLOAD_ACTIVITY_QUERY = gql`
 
 const useNetworkDownloadActivity = (props) => {
   const initialValues = {
-    pullInterval: props.pullInterval || 600000
+    pullInterval: props.pullInterval || 600000,
   }
   const [networkDownloadActivity, setNetworkDownloadActivity] = useState([])
   const [filters, setFilters] = useState({
@@ -35,21 +36,22 @@ const useNetworkDownloadActivity = (props) => {
     }
   )
 
-  useEffect(() => {
-    if (data?.flows) {
-      const d = data.flows.slice().sort((a, b) => {
-        if (a[filters.sort.by] < b[filters.sort.by]) {
-          return -1
-        }
-        if (a[filters.sort.by] > b[filters.sort.by]) {
-          return 1
-        }
+  const calculate = (data) => {
+    if (!data) return
+    const d = data.slice().sort((a, b) => {
+      if (a[filters.sort.by] < b[filters.sort.by]) {
+        return -1
+      }
+      if (a[filters.sort.by] > b[filters.sort.by]) {
+        return 1
+      }
 
-        return 0
-      })
-      setNetworkDownloadActivity(d)
-    }
-  }, [data?.flows])
+      return 0
+    })
+    setNetworkDownloadActivity(d)
+  }
+
+  useMemo(() => calculate(data?.flows), [data?.flows])
 
   const sortNetworkDownloadActivity = (sortBy, ascending = true) => {
     setFilters({
