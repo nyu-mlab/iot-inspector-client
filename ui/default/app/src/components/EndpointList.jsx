@@ -33,7 +33,7 @@ const EndpointList = ({ data }) => {
             </tr>
           </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((device, i) => (
+          {data && data?.length > 0 && data.map((device, i) => (
             <tr key={device.device_id+i}>
               <td className="w-full py-4 pl-4 pr-3 text-sm font-medium text-dark max-w-0 sm:w-auto sm:max-w-none sm:pl-6">
                 {device.counterparty_hostname}

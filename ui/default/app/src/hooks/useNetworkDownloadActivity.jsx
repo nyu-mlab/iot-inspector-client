@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { gql, useQuery } from '@apollo/client'
 import { useMemo } from 'react'
 
@@ -17,14 +17,13 @@ const NETWORK_DOWNLOAD_ACTIVITY_QUERY = gql`
 const useNetworkDownloadActivity = (props) => {
   const initialValues = {
     pullInterval: props.pullInterval || 600000,
+    filters: {
+      sort: {
+        by: props?.filters?.sort?.by ||  'ts',
+        ascending: props?.filters?.sort?.ascending ||  true,
+      },
+    }
   }
-  const [networkDownloadActivity, setNetworkDownloadActivity] = useState([])
-  const [filters, setFilters] = useState({
-    sort: {
-      by: 'ts',
-      ascending: true,
-    },
-  })
 
   const variables = props?.deviceId ? { deviceId: props.deviceId } : null
 
@@ -37,35 +36,36 @@ const useNetworkDownloadActivity = (props) => {
   )
 
   const calculate = (data) => {
-    if (!data) return
+    if (!data) return []
     const d = data.slice().sort((a, b) => {
-      if (a[filters.sort.by] < b[filters.sort.by]) {
+      if (a[initialValues.filters.sort.by] < b[initialValues.filters.sort.by]) {
         return -1
       }
-      if (a[filters.sort.by] > b[filters.sort.by]) {
+      if (a[initialValues.filters.sort.by] > b[initialValues.filters.sort.by]) {
         return 1
       }
 
       return 0
     })
-    setNetworkDownloadActivity(d)
+
+    return d
   }
 
-  useMemo(() => calculate(data?.flows), [data?.flows])
+  const networkDownloadActivity = useMemo(() => calculate(data?.flows), [data?.flows])
 
-  const sortNetworkDownloadActivity = (sortBy, ascending = true) => {
-    setFilters({
-      sort: {
-        by: sortBy,
-        ascending,
-      },
-    })
-  }
+  // const sortNetworkDownloadActivity = (sortBy, ascending = true) => {
+  //   setFilters({
+  //     sort: {
+  //       by: sortBy,
+  //       ascending,
+  //     },
+  //   })
+  // }
 
   return {
     networkDownloadActivity,
     networkDownloadActivityLoading,
-    sortNetworkDownloadActivity,
+    // sortNetworkDownloadActivity,
   }
 }
 

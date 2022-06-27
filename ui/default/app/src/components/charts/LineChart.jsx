@@ -8,7 +8,16 @@ import useNetworkDownloadActivity from '../../hooks/useNetworkDownloadActivity'
 const LineChart = ({ deviceId }) => {
   const { start_timestamp } = useServerConfig()
   const { networkDownloadActivity, networkDownloadActivityLoading } =
-    useNetworkDownloadActivity({ deviceId, pullInterval: 3000 })
+    useNetworkDownloadActivity({
+      deviceId,
+      pullInterval: 1500,
+      filters: {
+        sort: {
+          by: 'ts',
+          ascending: true,
+        },
+      },
+    })
   const [chartOptions, setChartOptions] = useState({
     chart: {
       id: 'realtime',
@@ -16,13 +25,13 @@ const LineChart = ({ deviceId }) => {
         enabled: true,
         easing: 'linear',
         dynamicAnimation: {
-          speed: 2000
+          speed: 2000,
         },
       },
     },
     xaxis: {
       categories: [],
-      range: 30
+      range: 30,
     },
     stroke: {
       curve: 'smooth',
@@ -59,19 +68,25 @@ const LineChart = ({ deviceId }) => {
   }, [networkDownloadActivity])
 
   return (
-    <div className="network-bar-chart">
-      <div className="row">
-        <div className="mixed-chart">
-          <Chart
-            options={chartOptions}
-            series={chartSeries}
-            type="line"
-            width="100%"
-            height="300"
-          />
+    <>
+      {networkDownloadActivityLoading ? (
+        <>loading...</>
+      ) : (
+        <div className="network-bar-chart">
+          <div className="row">
+            <div className="mixed-chart">
+              <Chart
+                options={chartOptions}
+                series={chartSeries}
+                type="line"
+                width="100%"
+                height="300"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 

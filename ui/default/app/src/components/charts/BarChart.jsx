@@ -26,7 +26,17 @@ const BarChart = ({ deviceId }) => {
     },
   })
   const [chartSeries, setChartSeries] = useState([])
-  const { networkDownloadActivity, networkDownloadActivityLoading } = useNetworkDownloadActivity({ deviceId })
+  const { networkDownloadActivity, networkDownloadActivityLoading } = useNetworkDownloadActivity({
+    deviceId,
+    pullInterval: 180000, // 3 minutes
+    filters: {
+      sort: {
+        by: 'ts',
+        ascending: true,
+      },
+    },
+  })
+
   console.log(networkDownloadActivity)
 
   /*
