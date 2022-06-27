@@ -8,7 +8,7 @@ import useNetworkDownloadActivity from '../../hooks/useNetworkDownloadActivity'
 const LineChart = ({ deviceId }) => {
   const { start_timestamp } = useServerConfig()
   const { networkDownloadActivity, networkDownloadActivityLoading } =
-    useNetworkDownloadActivity({ deviceId })
+    useNetworkDownloadActivity({ deviceId, pullInterval: 3000 })
   const [chartOptions, setChartOptions] = useState({
     chart: {
       id: 'realtime',
