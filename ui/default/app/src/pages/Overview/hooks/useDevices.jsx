@@ -1,5 +1,5 @@
-import { gql, useQuery } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
+import { gql, useQuery } from '@apollo/client'
 
 const DEVICES_QUERY = gql`
   query Query {

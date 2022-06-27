@@ -5,17 +5,7 @@ import { format } from 'date-fns'
 import '../../utils/array'
 import useServerConfig from '../../hooks/useServerConfig'
 import { datesBetween } from '../../utils/utils'
-
-const NETWORK_DOWNLOAD_ACTIVITY_QUERY = gql`
-  query Query($deviceId: String) {
-    flows(device_id: $deviceId) {
-      device_id
-      ts_mod_600
-      ts_mod_3600
-      inbound_byte_count
-    }
-  }
-`
+import useNetworkDownloadActivity from '../../hooks/useNetworkDownloadActivity'
 
 const BarChart = ({ deviceId }) => {
   const { start_timestamp } = useServerConfig()
@@ -36,6 +26,8 @@ const BarChart = ({ deviceId }) => {
     },
   })
   const [chartSeries, setChartSeries] = useState([])
+  const { networkDownloadActivity, networkDownloadActivityLoading } = useNetworkDownloadActivity({ deviceId })
+  console.log(networkDownloadActivity)
 
   /*
   const variables = deviceId ? { deviceId } : null

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import DeviceDrawer from './components/DeviceDrawer'
 import EndpointList from '../../components/EndpointList'
-import BarChart from '../../components/charts/BarChart'
+import LineChart from '../../components/charts/LineChart'
 import MapChart from '../../components/charts/MapChart'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '../../hooks/useQueryParam'
@@ -35,7 +35,7 @@ const DeviceActivity = () => {
                 deviceCountriesData[0].device.auto_name}
             </span>
           </h1>
-          <BarChart deviceId={deviceId} />
+          <LineChart deviceId={deviceId} />
         </section>
         <section>
           <h2>Device Communication Endpoints</h2>
