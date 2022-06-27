@@ -16,6 +16,7 @@ const BarChart = ({ deviceId }) => {
     },
     xaxis: {
       categories: [],
+      range: 30
     },
     options: {
       plotOptions: {
@@ -31,13 +32,44 @@ const BarChart = ({ deviceId }) => {
     pullInterval: 180000, // 3 minutes
     filters: {
       sort: {
-        by: 'ts',
+        by: 'ts_mod_3600',
         ascending: true,
       },
     },
   })
 
   console.log(networkDownloadActivity)
+  return <></>
+
+  
+  useEffect(() => {
+    if (!networkDownloadActivity.length) return
+
+    const dates = networkDownloadActivity?.map((activity) => {
+      return format(activity.ts_mod_3600 * 1000, 'yyyy-MM-dd HH:mm:ss')
+    })
+
+    setChartOptions({
+      ...chartOptions,
+      xaxis: {
+        categories: dates,
+      },
+    })
+
+    // group items
+    const yAxis = networkDownloadActivity.groupBy('device_id')
+
+    console.log(yAxis)
+    // const chartData = yAxis.map((data) => {
+    //   const d = {}
+    //   d.name = data.field
+    //   d.data = data.groupList.map((dd) => dd.inbound_byte_count)
+    //   return d
+    // })
+
+    // setChartSeries(chartData)
+
+  }, [networkDownloadActivity])
 
   /*
   const variables = deviceId ? { deviceId } : null
@@ -92,7 +124,6 @@ const BarChart = ({ deviceId }) => {
   }, [start_timestamp, networkDownloadActivityResponse])
   */
 
-  return <></>
   return (
     <div className="network-bar-chart">
       <div className="row">

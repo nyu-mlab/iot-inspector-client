@@ -7,14 +7,14 @@ const NETWORK_DOWNLOAD_ACTIVITY_QUERY = gql`
     flows(device_id: $deviceId) {
       device_id
       ts
-      # ts_mod_600
-      # ts_mod_3600
+      ts_mod_3600
       inbound_byte_count
     }
   }
 `
 
 const useNetworkDownloadActivity = (props) => {
+  console.log("@DEBUG::06272022-032704", 'useNetworkDownloadActivity', props);
   const initialValues = {
     pullInterval: props.pullInterval || 600000,
     filters: {
@@ -31,7 +31,7 @@ const useNetworkDownloadActivity = (props) => {
     NETWORK_DOWNLOAD_ACTIVITY_QUERY,
     {
       variables,
-      pollInterval: initialValues,
+      pollInterval: initialValues.pullInterval,
     }
   )
 
@@ -46,7 +46,7 @@ const useNetworkDownloadActivity = (props) => {
       }
 
       return 0
-    })
+    }).groupBy('device_id')
 
     return d
   }

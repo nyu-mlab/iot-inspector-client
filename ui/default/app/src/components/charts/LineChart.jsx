@@ -10,7 +10,7 @@ const LineChart = ({ deviceId }) => {
   const { networkDownloadActivity, networkDownloadActivityLoading } =
     useNetworkDownloadActivity({
       deviceId,
-      pullInterval: 1500,
+      pullInterval: 1000, // anything lower than 5 seconds may see performance hits
       filters: {
         sort: {
           by: 'ts',
@@ -25,13 +25,13 @@ const LineChart = ({ deviceId }) => {
         enabled: true,
         easing: 'linear',
         dynamicAnimation: {
-          speed: 2000,
+          speed: 1000,
         },
       },
     },
     xaxis: {
       categories: [],
-      range: 30,
+      range: 15,
     },
     stroke: {
       curve: 'smooth',
@@ -44,8 +44,10 @@ const LineChart = ({ deviceId }) => {
     if (!networkDownloadActivity.length) return
 
     const dates = networkDownloadActivity?.map((activity) => {
-      return format(activity.ts * 1000, 'yyyy-MM-dd HH:mm:ss')
-    })
+      return activity?.groupList.map((a) =>
+        format(a.ts * 1000, 'yyyy-MM-dd HH:mm:ss')
+      )
+    })[0]
 
     setChartOptions({
       ...chartOptions,
@@ -55,9 +57,9 @@ const LineChart = ({ deviceId }) => {
     })
 
     // group items
-    const yAxis = networkDownloadActivity.groupBy('device_id')
+    // const yAxis = networkDownloadActivity.groupBy('device_id')
 
-    const chartData = yAxis.map((data) => {
+    const chartData = networkDownloadActivity.map((data) => {
       const d = {}
       d.name = data.field
       d.data = data.groupList.map((dd) => dd.inbound_byte_count)

@@ -17,7 +17,7 @@ const useNetworkActivity = () => {
   const { data, loading: networkActivityDataLoading } = useQuery(
     NETWORK_ACTIVITY_QUERY,
     {
-      pollInterval: 5000,
+      // pollInterval: 5000,
     }
   )
 

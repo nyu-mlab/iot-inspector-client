@@ -19,12 +19,13 @@ const deviceCountriesQuery = gql`
 `
 
 const useDeviceTrafficToCountries = ({ deviceId }) => {
+  console.log("@DEBUG::06272022-035758", 'useDeviceTrafficToCountries');
   // const [deviceCountriesData, setDeviceCountriesData] = useState([])
 
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
     {
-      pollInterval: 5000,
+      // pollInterval: 5000,
     }
   )
 
