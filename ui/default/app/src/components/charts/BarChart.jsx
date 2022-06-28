@@ -7,6 +7,20 @@ import useServerConfig from '../../hooks/useServerConfig'
 import { datesBetween } from '../../utils/utils'
 import useNetworkDownloadActivity from '../../hooks/useNetworkDownloadActivity'
 
+// TODO:
+// - Check server time stamp if gte an hour:
+// hours will be your xaxis, use the most recent 8
+
+// - seconds / 1 min / 10 min / 1 hour
+
+// Server star time at 0 (server just started)
+// local time < +60 minutes
+//  get data by minute
+// Local time > +60 minutes
+//  get data by 10 minutes (taking the last 6, which is the last hour)
+// local time > +6 hours
+//  get data by hour (taking the last 6, which is the last 6 hours)
+
 const BarChart = ({ deviceId }) => {
   const { start_timestamp } = useServerConfig()
   const [chartOptions, setChartOptions] = useState({
@@ -17,8 +31,23 @@ const BarChart = ({ deviceId }) => {
     xaxis: {
       // categories: [],
       // range: 30,
-      categories: [1991],
-      type: 'numeric'
+      categories:  [
+           '2022-06-27 18:00:00',
+           '2022-06-27 19:00:00',
+           '2022-06-27 20:00:00',
+           '2022-06-27 21:00:00',
+           '2022-06-27 22:00:00',
+           '2022-06-27 23:00:00',
+           '2022-06-28 00:00:00',
+           '2022-06-28 07:00:00',
+           '2022-06-28 08:00:00',
+           '2022-06-28 09:00:00',
+           '2022-06-28 10:00:00',
+           '2022-06-28 11:00:00',
+           '2022-06-28 12:00:00',
+           '2022-06-28 13:00:00'
+         ],
+      type: 'string',
     },
     options: {
       plotOptions: {
@@ -28,113 +57,90 @@ const BarChart = ({ deviceId }) => {
       },
     },
   })
-  const [chartSeries, setChartSeries] = useState([])
-  const { networkDownloadActivity, networkDownloadActivityLoading } =
-    useNetworkDownloadActivity({
-      deviceId,
-      // pullInterval: 180000, // 3 minutes
-      filters: {
-        sort: {
-          by: 'ts_mod_3600',
-          ascending: true,
-        },
-      },
-    })
-
-  useEffect(() => {
-    if (!networkDownloadActivity.length) return
-    
-    // const dates = networkDownloadActivity?.map((activity) => {
-    //   return activity?.groupList.map((a) =>
-    //     format(a.ts_mod_3600 * 1000, 'yyyy-MM-dd HH:mm:ss')
-    //   )
-    // })[0].filter((v, i, a) => a.indexOf(v) === i);
-
-    // console.log(dates)
-
-    // setChartOptions({
-    //   ...chartOptions,
-    //   xaxis: {
-    //     categories: dates,
-    //   },
-    // })
-
-
-    // // // group items
-    console.log("@DEBUG::06272022-044754", chartSeries);
-    const chartData = networkDownloadActivity.map((data) => {
-      const d = {}
-      d.name = data.field
-      // d.data = [[1, 30], [2,40], [1,45], [1,50], [1,49], [1,60], [1,70], [1,91]]
-      // d.data = [{ x: '05/06/2014', y: [30, 40, 45, 50, 49, 60, 70, 91] }, { x: '05/08/2014', y: [30, 40, 45, 50, 49, 60, 70, 91] }]
-      // d.data = data.groupList.map((dd) => dd.inbound_byte_count)
-      d.data = data.groupList.map((dd) => {
-        return [dd.ts_mod_3600, dd.inbound_byte_count]
-      })
-      return d
-    })
-
-    console.log(chartData)
-
-    // setChartSeries([{ data:  [[1, 30], [2,40], [3,45], [1,50], [1,49], [1,60], [1,70], [1,91]] }])
-    setChartSeries(chartData)
-  }, [networkDownloadActivity])
-
-
-
-
-  /*
-  const variables = deviceId ? { deviceId } : null
-
-  const networkDownloadActivityResponse = useQuery(
-    NETWORK_DOWNLOAD_ACTIVITY_QUERY,
+  const [chartSeries, setChartSeries] = useState([
     {
-    pollInterval: 60000, // 1 minute
-  }
-  )
+      name: 's1663',
+      data: [
+        11539, 17059, 18357, 18513, 18049, 17807, 428, 454, 18154, 13702, 15270,
+        14557, 13557, 2715,
+      ],
+    },
+    {
+      name: 's5242',
+      data: [
+        12429, 17715, 17858, 17010, 18870, 16472, 371, 463, 17511, 15447, 16828,
+        14693, 14613, 2833,
+      ],
+    },
+    {
+      name: 's5969',
+      data: [
+        12537, 19359, 16781, 17843, 17961, 18183, 817, 257, 18059, 14470, 16635,
+        15007, 14239, 3056,
+      ],
+    },
+    {
+      name: 's6866',
+      data: [
+        11468, 18189, 18763, 17409, 16491, 17361, 678, 428, 18281, 14864, 15752,
+        14847, 14038, 2869,
+      ],
+    },
+    {
+      name: 's7311',
+      data: [
+        12539, 17985, 17644, 18193, 17398, 17781, 787, 832, 17634, 15790, 15559,
+        14472, 13639, 2297,
+      ],
+    },
+    {
+      name: 's7634',
+      data: [
+        11910, 18602, 16128, 18755, 17221, 18662, 754, 516, 19166, 14607, 15910,
+        14799, 13538, 2378,
+      ],
+    },
+    {
+      name: 's7890',
+      data: [
+        11181, 18282, 18186, 18470, 19123, 18243, 480, 528, 18473, 15221, 16099,
+        13693, 13057, 3008,
+      ],
+    },
+    {
+      name: 's8808',
+      data: [
+        10870, 18880, 16557, 17544, 17632, 17083, 271, 535, 17780, 14355, 16394,
+        13960, 14508, 2655,
+      ],
+    },
+    {
+      name: 's8961',
+      data: [
+        12066, 18219, 17138, 16743, 17761, 18205, 617, 483, 17154, 15059, 15905,
+        14776, 14274, 2610,
+      ],
+    },
+    {
+      name: 's9376',
+      data: [
+        12290, 18371, 17691, 16478, 17747, 17488, 416, 532, 17676, 14284, 17925,
+        14155, 14848, 2906,
+      ],
+    },
+  ])
 
-  // populate x-axis / y-axis
-  useEffect(() => {
-    if (!start_timestamp) return
-
-    let dates = start_timestamp
-      ? datesBetween(new Date(start_timestamp * 1000), new Date(), 'hour')
-      : []
-
-    dates = dates?.map((date) => {
-      return format(date, 'yyyy-MM-dd HH:mm:ss')
-    })
-
-    setChartOptions({
-      ...chartOptions,
-      xaxis: {
-        categories: dates,
-      },
-    })
-
-    if (!networkDownloadActivityResponse.data) return
-    let yAxis = networkDownloadActivityResponse.data.flows
-    // filter unique items
-    yAxis = [
-      ...new Map(yAxis.map((item) => [item['ts_mod_3600'], item])).values(),
-    ]
-
-    // group items
-    yAxis = yAxis.groupBy('device_id')
-
-    const chartData = yAxis.map((data) => {
-      const d = {}
-      d.name = data.field
-      d.data = data.groupList.map((dd) => dd.inbound_byte_count)
-      // We don't need the last element as its for the current hour...
-      d.data.pop()
-      return d
-    })
-
-
-    setChartSeries(chartData)
-  }, [start_timestamp, networkDownloadActivityResponse])
-  */
+  // const { networkDownloadActivity, networkDownloadActivityLoading } =
+  //   useNetworkDownloadActivity({
+  //     deviceId,
+  //     // pullInterval: 180000, // 3 minutes
+  //     filters: {
+  //       sort: {
+  //         by: 'ts_mod_3600',
+  //         ascending: true,
+  //       },
+  //     },
+  //   })
 
   return (
     <div className="network-bar-chart">

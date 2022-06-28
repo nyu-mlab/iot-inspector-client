@@ -1,4 +1,5 @@
 import React from 'react'
+import { gql, useMutation } from '@apollo/client'
 
 const UPDATE_DEVICE_INFO = gql`
   mutation Mutation(
@@ -28,12 +29,18 @@ const UPDATE_DEVICE_INFO = gql`
 `
 
 const useDeviceInfo = ({ deviceId }) => {
-  const [updateDeviceInfoFn, { data, loading, error }] =
-    useMutation(UPDATE_DEVICE_INFO)
+  const [
+    updateDeviceInfoFn,
+    { data: updatedDeviceInfo, loading: updateDeviceInfoLoading, error },
+  ] = useMutation(UPDATE_DEVICE_INFO)
 
-  const updateDeviceInfo = (
-    { deviceName, vendorName, tagList, isInspected, isBlocked }
-  ) => {
+  const updateDeviceInfo = ({
+    deviceName,
+    vendorName,
+    tagList,
+    isInspected,
+    isBlocked,
+  }) => {
     updateDeviceInfoFn({
       variables: {
         deviceId,
@@ -47,9 +54,9 @@ const useDeviceInfo = ({ deviceId }) => {
   }
 
   return {
-    updateDeviceInfo
-    // loading
-    // data
+    updateDeviceInfo,
+    updateDeviceInfoLoading,
+    updatedDeviceInfo,
   }
 }
 

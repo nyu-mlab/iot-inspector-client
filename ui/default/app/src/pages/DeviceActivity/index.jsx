@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import DeviceDrawer from './components/DeviceDrawer'
 import EndpointList from '../../components/EndpointList'
 import LineChart from '../../components/charts/LineChart'

@@ -1,6 +1,22 @@
 import React from 'react'
+import useDeviceInfo from '../hooks/useDeviceInfo'
 
 const DeviceDrawer = () => {
+  const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } = useDeviceInfo({ deviceId: 's1663' })
+
+  const onSubmit = (e) => {
+    e.preventDefault()
+    const data = {
+      deviceName: 'Custom Device Name1',
+      vendorName: 'Custom Vendor Name1',
+      tagList: JSON.stringify(['tag 1a', 'tag 2a', 'tag 3a']),
+    }
+
+    updateDeviceInfo(data)
+  }
+
+  console.log("loading...", updateDeviceInfoLoading, updatedDeviceInfo)
+
   return (
     <aside className="menu-drawer">
       <p>Naming and tagging helps with our research</p>
@@ -49,7 +65,9 @@ const DeviceDrawer = () => {
           className="flex flex-1 w-full px-4 py-2 bg-white rounded-md"
         />
       </form>
-      <button className="w-full btn btn-primary">Save Device Details</button>
+      <button className="w-full btn btn-primary" onClick={onSubmit}>
+        Save Device Details
+      </button>
     </aside>
   )
 }
