@@ -3,8 +3,15 @@ import { add, format } from 'date-fns'
 
 // const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 const SERVER_START_TIME = Math.round(
-  new Date('June 27, 2022 10:50:00').getTime() / 1000,
+  new Date('June 28, 2022 14:00:00').getTime() / 1000,
 )
+
+enum TimeType {
+  ts = 'ts',
+  ts_mod_60 = 'ts_mod_60',
+  ts_mod_600 = 'ts_mod_600',
+  ts_mod_3600 = 'ts_mod_3600',
+}
 
 const getDeviceById = async (deviceId: string, context: Context) => {
   const device = await context.NetworkTrafficClient.devices.findUnique({
@@ -40,6 +47,57 @@ const getDeviceInfoForDevice = async (deviceId: string, context: Context) => {
   return {
     ...device,
     device_info,
+  }
+}
+
+const unixTime = (date) => {
+  return Math.round(date.getTime() / 1000)
+}
+
+const groupBy = function (array, key) {
+  return array.reduce(function (rv, x) {
+    ;(rv[x[key]] = rv[x[key]] || []).push(x)
+    return rv
+  }, {})
+}
+
+const generateFlowXYChartData = async (
+  timeType: TimeType,
+  time: Date,
+  context: Context,
+) => {
+  const params: any = {
+    by: ['device_id', timeType],
+    where: {
+      // device_id: args.device_id || undefined,
+      [timeType]: { gt: unixTime(time) },
+    },
+    _sum: {
+      outbound_byte_count: true,
+    },
+  }
+
+  console.log(params)
+
+  const data = await context.NetworkTrafficClient.flows.groupBy(params)
+
+  const xAxis = data
+    .map((item) => format(item[timeType] * 1000, 'yyyy-MM-dd HH:mm:ss'))
+    .filter((value, index, self) => self.indexOf(value) === index)
+
+  let yAxis = groupBy(data, 'device_id')
+  yAxis = Object.keys(yAxis).map((key, index) => {
+    return {
+      name: key,
+      data: yAxis[key].map((flow) => {
+        return flow._sum.outbound_byte_count
+      }),
+    }
+  })
+
+  return {
+    yAxis,
+    xAxis,
   }
 }
 
@@ -116,97 +174,62 @@ const flows = async (
   return flows
 }
 
-const unixTime = (date) => {
-  return Math.round(date.getTime() / 1000)
-}
-
-const groupBy = function (array, key) {
-  return array.reduce(function (rv, x) {
-    ;(rv[x[key]] = rv[x[key]] || []).push(x)
-    return rv
-  }, {})
-}
-
+// Server star time at 0 (server just started)
+// local time < +60 minutes
+//  get data by minute
+// Local time > +60 minutes
+//  get data by 10 minutes (taking the last 6, which is the last hour)
+// local time > +6 hours
+//  get data by hour (taking the last 6, which is the last 6 hours)
 const chartActivity = async (
   _parent,
   args: { current_time: number; device_id: string },
   context: Context,
 ) => {
-  const currentTime = new Date(args.current_time * 1000)
-  const datePlus1Hour = add(new Date(SERVER_START_TIME * 1000), { hours: 1 })
-  const datePlus6Hours = add(new Date(SERVER_START_TIME * 1000), { hours: 6 })
+  const clientTime = new Date(args.current_time * 1000)
+  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), { hours: 1 })
+  const serverDatePlus6Hours = add(new Date(SERVER_START_TIME * 1000), { hours: 6 })
 
-  console.log(currentTime, ' - ', datePlus1Hour)
+  console.log(`server time: ${new Date(SERVER_START_TIME * 1000)}`)
+  console.log(`client time: ${clientTime}`)
+  console.log(`server time +1 hour: ${serverDatePlus1Hour}`)
+  console.log(`server time +6 hours: ${serverDatePlus6Hours}`)
+  console.log('-----------------------')
 
-  let flows: any = []
+  let data: any = {}
   // get by hour
   // should expect 6 results
-  if (currentTime > datePlus6Hours) {
-    console.log('get data by ts_mod_3600')
-
-    const data = await context.NetworkTrafficClient.flows.groupBy({
-      by: ['device_id', 'ts_mod_3600'],
-      where: {
-        device_id: args.device_id || undefined,
-        ts_mod_3600: { gt: unixTime(datePlus6Hours) },
-      },
-      _sum: {
-        outbound_byte_count: true,
-      },
-    })
-
-    const xAxis = data
-      .map((item) => format(item.ts_mod_3600*1000, 'yyyy-MM-dd HH:mm:ss'))
-      .filter((value, index, self) => self.indexOf(value) === index)
-
-      console.log(xAxis)
-
-    let yAxis = groupBy(data, 'device_id')
-    yAxis = Object.keys(yAxis).map((key, index) => {
-      return {
-        name: key,
-        data: yAxis[key].map((flow) => {
-          return flow._sum.outbound_byte_count
-        }),
-      }
-    })
-
-    console.log(yAxis)
-    console.log(xAxis)
-
-    // const xAxis = data.map((flow) => {
-    //   // return { name: flow.device_id
-    //   // data: flow.
-    //   // }
-    // })
-
-    // const chartData = {
-    //   categories: [],
-    //   series: [
-    //     {name: 'foo', data:[]}
-    //   ]
-    // }
+  if (clientTime > serverDatePlus6Hours) {
+    console.log('get data by ts_mod_3600 (1 hour)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_3600,
+      serverDatePlus6Hours,
+      context,
+    )
   }
   // get by minute
   // should expect 6 results
-  else if (currentTime < datePlus1Hour) {
-    console.log('get data by ts_mod_60')
+  else if (clientTime < serverDatePlus1Hour) {
+    console.log('get data by ts_mod_60 (1 minute)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_60,
+      serverDatePlus1Hour,
+      context,
+    )
   }
 
   // get by 10 minute
   // should expect 6 results
-  else if (currentTime > datePlus1Hour) {
-    console.log('get data by ts_mod_600')
+  else if (clientTime > serverDatePlus1Hour) {
+    console.log('get data by ts_mod_600 (10 minutes)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_600,
+      serverDatePlus1Hour,
+      context,
+    )
   }
 
-  // const flows = await context.NetworkTrafficClient.flows.findMany({
-  //   where: {
-  //     ts: { gte: args.current_time || SERVER_START_TIME },
-  //     device_id: args.device_id || undefined,
-  //   },
-  // })
-
-  return flows
+  return data
 }
 
 /**
