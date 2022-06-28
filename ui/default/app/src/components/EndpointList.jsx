@@ -1,64 +1,107 @@
-import React from 'react'
-// import { format } from 'date-fns'
+import React, { useMemo } from 'react'
 import { dataUseage } from '../utils/utils'
-import { format } from 'timeago.js';
+import { format } from 'timeago.js'
+import { useTable, useSortBy } from 'react-table'
 
 const EndpointList = ({ data }) => {
+  const tableData = useMemo(() => {
+    return data.map((device) => {
+      return {
+        remoteParty: device.counterparty_hostname,
+        country: device.name,
+        device: device.device.auto_name,
+        dateUseage: dataUseage(device.outbound_byte_count),
+        lastUpdated: format(
+          new Date(device.last_updated_time_per_country * 1000),
+          'en_US',
+          'yyyy-MM-dd HH:mm:ss'
+        ),
+      }
+    })
+  }, [data])
+
+  const columns = useMemo(
+    () => [
+      { Header: 'Remote Party', accessor: 'remoteParty' },
+      { Header: 'Country', accessor: 'country' },
+      { Header: 'Device', accessor: 'device' },
+      { Header: 'Data Useage', accessor: 'dateUseage' },
+      { Header: 'Last Updated', accessor: 'lastUpdated' },
+    ],
+    []
+  )
+
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
+    useTable(
+      {
+        columns,
+        data: tableData,
+      },
+      useSortBy
+    )
+
   return (
-      <table className="min-w-full my-4 overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg">
+    <>
+      <table
+        {...getTableProps()}
+        className="min-w-full my-4 overflow-hidden border-collapse divide-y divide-gray-300 rounded-t-lg"
+      >
         <thead className=" bg-dark">
-            <tr>
-              <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-light sm:pl-6">
-                Remote Party
-              </th>
-              <th
-                scope="col"
-                className="hidden px-3 py-3.5 text-left text-sm font-semibold text-light sm:table-cell"
-              >
-                Country
-              </th>
-              <th
-                scope="col"
-                className="hidden px-3 py-3.5 text-left text-sm font-semibold text-light sm:table-cell"
-              >
-                Device
-              </th>
-              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-light">
-                Data Usage
-              </th>
-              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-light">
-                Last Updated
-              </th>
-
-            </tr>
-          </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data && data?.length > 0 && data.map((device, i) => (
-            <tr key={device.device_id+i}>
-              <td className="w-full py-4 pl-4 pr-3 text-sm font-medium text-dark max-w-0 sm:w-auto sm:max-w-none sm:pl-6">
-                {device.counterparty_hostname}
-                <dl className="font-normal lg:hidden">
-                  <dt className="sr-only sm:hidden">Country</dt>
-                  <dd className="mt-1 text-gray-500 truncate sm:hidden">{device.name}</dd>
-                </dl>
-              </td>
-
-              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">{device.name}</td>
-              <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell"><a href={`/device-activity?deviceid=${device.device_id}`}>{device.device.auto_name}</a></td>
-              <td className="px-3 py-4 text-sm text-gray-500">{dataUseage(device.outbound_byte_count)}</td>
-              <td className="px-3 py-4 text-sm text-gray-500">{format(new Date(device.last_updated_time_per_country*1000), 'en_US', 'yyyy-MM-dd HH:mm:ss')}</td>
-            </tr>
-          ))}
+          {
+            // Loop over the header rows
+            headerGroups.map((headerGroup) => (
+              // Apply the header row props
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {
+                  // Loop over the headers in each row
+                  headerGroup.headers.map((column) => (
+                    // Apply the header cell props
+                    <th
+                      {...column.getHeaderProps(column.getSortByToggleProps())}
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-light"
+                    >
+                      {
+                        // Render the header
+                        column.render('Header')
+                      }
+                    </th>
+                  ))
+                }
+              </tr>
+            ))
+          }
+        </thead>
+        {/* Apply the table body props */}
+        <tbody {...getTableBodyProps()}>
+          {
+            // Loop over the table rows
+            rows.map((row) => {
+              // Prepare the row for display
+              prepareRow(row)
+              return (
+                // Apply the row props
+                <tr {...row.getRowProps()}>
+                  {
+                    // Loop over the rows cells
+                    row.cells.map((cell) => {
+                      // Apply the cell props
+                      return (
+                        <td {...cell.getCellProps()}>
+                          {
+                            // Render the cell contents
+                            cell.render('Cell')
+                          }
+                        </td>
+                      )
+                    })
+                  }
+                </tr>
+              )
+            })
+          }
         </tbody>
-
-        {/* <tr className="even:bg-gray-100 odd:bg-white">
-          <td className="p-2">[ remote party ]</td>
-          <td className="p-2">[ country ]</td>
-          <td className="p-2">[ device name ]</td>
-          <td className="p-2">[ data usage ]</td>
-          <td className="p-2">[ last update time ]</td>
-        </tr> */}
       </table>
+    </>
   )
 }
 
