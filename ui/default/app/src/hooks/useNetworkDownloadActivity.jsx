@@ -37,18 +37,19 @@ const useNetworkDownloadActivity = (props) => {
 
   const calculate = (data) => {
     if (!data) return []
-    const d = data.slice().sort((a, b) => {
-      if (a[initialValues.filters.sort.by] < b[initialValues.filters.sort.by]) {
-        return -1
-      }
-      if (a[initialValues.filters.sort.by] > b[initialValues.filters.sort.by]) {
-        return 1
-      }
+    // const d = data.slice().sort((a, b) => {
+    //   if (a[initialValues.filters.sort.by] < b[initialValues.filters.sort.by]) {
+    //     return -1
+    //   }
+    //   if (a[initialValues.filters.sort.by] > b[initialValues.filters.sort.by]) {
+    //     return 1
+    //   }
 
-      return 0
-    }).groupBy('device_id')
+    //   return 0
+    // }).groupBy('device_id')
 
-    return d
+    // return d
+    return data.groupBy('device_id')
   }
 
   const networkDownloadActivity = useMemo(() => calculate(data?.flows), [data?.flows])

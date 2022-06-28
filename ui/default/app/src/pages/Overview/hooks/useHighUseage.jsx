@@ -15,7 +15,7 @@ const useHighUseage = () => {
   const [highUseageData, setHighUseageData] = useState([])
 
   const { data, loading: highUseageDataLoading } = useQuery(HIGH_USEAGE_QUERY, {
-    pollInterval: 20000,
+    // pollInterval: 20000,
   })
 
   useEffect(() => {

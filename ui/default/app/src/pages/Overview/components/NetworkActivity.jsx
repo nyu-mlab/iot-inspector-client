@@ -12,10 +12,12 @@ const NetworkActivityDashboard = () => {
 
   return (
     <>
+      {highUseageDataLoading ? (<>loading...</>) : (
       <section className="flex flex-col gap-4">
         <h1>Network Activity</h1>
-        {/* <BarChart /> */}
+        <BarChart />
       </section>
+      )}
       <section className="flex flex-col gap-4 bg-gray-50">
         <div className="grid gap-6 py-8 lg:grid-cols-2 md:py-4">
           <div>

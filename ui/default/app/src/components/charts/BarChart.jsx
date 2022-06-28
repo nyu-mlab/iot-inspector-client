@@ -15,8 +15,10 @@ const BarChart = ({ deviceId }) => {
       stacked: true,
     },
     xaxis: {
-      categories: [],
-      range: 30
+      // categories: [],
+      // range: 30,
+      categories: [1991],
+      type: 'numeric'
     },
     options: {
       plotOptions: {
@@ -27,49 +29,59 @@ const BarChart = ({ deviceId }) => {
     },
   })
   const [chartSeries, setChartSeries] = useState([])
-  const { networkDownloadActivity, networkDownloadActivityLoading } = useNetworkDownloadActivity({
-    deviceId,
-    pullInterval: 180000, // 3 minutes
-    filters: {
-      sort: {
-        by: 'ts_mod_3600',
-        ascending: true,
+  const { networkDownloadActivity, networkDownloadActivityLoading } =
+    useNetworkDownloadActivity({
+      deviceId,
+      // pullInterval: 180000, // 3 minutes
+      filters: {
+        sort: {
+          by: 'ts_mod_3600',
+          ascending: true,
+        },
       },
-    },
-  })
+    })
 
-  console.log(networkDownloadActivity)
-  return <></>
-
-  
   useEffect(() => {
     if (!networkDownloadActivity.length) return
+    
+    // const dates = networkDownloadActivity?.map((activity) => {
+    //   return activity?.groupList.map((a) =>
+    //     format(a.ts_mod_3600 * 1000, 'yyyy-MM-dd HH:mm:ss')
+    //   )
+    // })[0].filter((v, i, a) => a.indexOf(v) === i);
 
-    const dates = networkDownloadActivity?.map((activity) => {
-      return format(activity.ts_mod_3600 * 1000, 'yyyy-MM-dd HH:mm:ss')
-    })
+    // console.log(dates)
 
-    setChartOptions({
-      ...chartOptions,
-      xaxis: {
-        categories: dates,
-      },
-    })
-
-    // group items
-    const yAxis = networkDownloadActivity.groupBy('device_id')
-
-    console.log(yAxis)
-    // const chartData = yAxis.map((data) => {
-    //   const d = {}
-    //   d.name = data.field
-    //   d.data = data.groupList.map((dd) => dd.inbound_byte_count)
-    //   return d
+    // setChartOptions({
+    //   ...chartOptions,
+    //   xaxis: {
+    //     categories: dates,
+    //   },
     // })
 
-    // setChartSeries(chartData)
 
+    // // // group items
+    console.log("@DEBUG::06272022-044754", chartSeries);
+    const chartData = networkDownloadActivity.map((data) => {
+      const d = {}
+      d.name = data.field
+      // d.data = [[1, 30], [2,40], [1,45], [1,50], [1,49], [1,60], [1,70], [1,91]]
+      // d.data = [{ x: '05/06/2014', y: [30, 40, 45, 50, 49, 60, 70, 91] }, { x: '05/08/2014', y: [30, 40, 45, 50, 49, 60, 70, 91] }]
+      // d.data = data.groupList.map((dd) => dd.inbound_byte_count)
+      d.data = data.groupList.map((dd) => {
+        return [dd.ts_mod_3600, dd.inbound_byte_count]
+      })
+      return d
+    })
+
+    console.log(chartData)
+
+    // setChartSeries([{ data:  [[1, 30], [2,40], [3,45], [1,50], [1,49], [1,60], [1,70], [1,91]] }])
+    setChartSeries(chartData)
   }, [networkDownloadActivity])
+
+
+
 
   /*
   const variables = deviceId ? { deviceId } : null

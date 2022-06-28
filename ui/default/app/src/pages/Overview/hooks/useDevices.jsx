@@ -18,7 +18,7 @@ const useDevices = () => {
   const [filters, setFilters] = useState({})
 
   const { data, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
-    pollInterval: 5000,
+    // pollInterval: 5000,
   })
 
   useEffect(() => {
