@@ -53,14 +53,15 @@ const DeviceDrawer = ({ deviceId }) => {
           onSubmit={(values) => handleSubmit(values)}
         >
           {({ values, setFieldValue, dirty }) => (
-            <Form id="device-info-form">
+            <Form id="device-info-form" className="flex flex-col justify-between h-full">
+              <div className="grid gap-4">
               <Field
                 autoComplete="off"
                 name="deviceName"
                 type="text"
                 label="Device Name"
                 component={TextInput}
-                className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
+                className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('deviceName', value)}
               />
               <Field
@@ -69,7 +70,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 type="text"
                 label="Manufacturer"
                 component={TextInput}
-                className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
+                className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('vendorName', value)}
               />
               <Field
@@ -84,6 +85,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 }}
                 label="Tags"
               />
+              </div>
               <button
                 type="submit"
                 form="device-info-form"
