@@ -23,12 +23,12 @@ const useDevices = (props) => {
   const [filters, setFilters] = useState({})
 
   const variables = {
-    deviceId: props?.deviceId || null,
+    ...(props?.deviceId || null),
   }
 
   const { data, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
-    // pollInterval: 5000,
     variables,
+    ...props?.queryOptions,
   })
 
   useEffect(() => {

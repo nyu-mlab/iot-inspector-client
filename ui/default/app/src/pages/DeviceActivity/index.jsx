@@ -4,10 +4,12 @@ import LineChart from '../../components/charts/LineChart'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '../../hooks/useQueryParam'
 import DeviceCommunication from './components/DeviceCommunication'
+import DeviceName from './components/DeviceName'
 
 const DeviceActivity = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
+
 
   return (
     <div className="flex bg-white">
@@ -19,7 +21,7 @@ const DeviceActivity = () => {
         </section>
         <section className="relative">
           <h1>
-            <strong>Device Activity</strong>{' '}
+            <strong>Device Activity</strong>{' '}<DeviceName deviceId={deviceId} />
             {/* <span className="font-thin">
               {deviceCountriesData &&
                 deviceCountriesData.length > 0 &&

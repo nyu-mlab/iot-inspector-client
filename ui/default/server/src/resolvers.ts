@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { add, format } from 'date-fns'
+import { add, sub, format } from 'date-fns'
 
 // const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 const SERVER_START_TIME = Math.round(
@@ -240,12 +240,10 @@ const chartActivityBySecond = async (
   args: { current_time: number; device_id: string },
   context: Context,
 ) => {
-  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
-    hours: 1,
-  }) // TODO This doesn't seem right...
+  const currentTimeSub1Hour = sub(new Date(args.current_time * 1000), { hours: 1 })
   const data = await generateFlowXYChartData(
     TimeType.ts,
-    serverDatePlus1Hour,
+    currentTimeSub1Hour,
     context,
     args.device_id,
   )
