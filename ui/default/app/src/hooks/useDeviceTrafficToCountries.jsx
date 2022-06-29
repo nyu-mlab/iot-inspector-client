@@ -22,13 +22,9 @@ const deviceCountriesQuery = gql`
 `
 
 const useDeviceTrafficToCountries = (props) => {
-  // const [deviceCountriesData, setDeviceCountriesData] = useState([])
-
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
-    {
-      // pollInterval: 7000,
-    }
+    props.queryOptions
   )
 
   const calculate = (data) => {

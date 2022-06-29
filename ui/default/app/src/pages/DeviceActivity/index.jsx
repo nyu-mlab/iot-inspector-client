@@ -1,22 +1,15 @@
 import React from 'react'
 import DeviceDrawer from './components/DeviceDrawer'
-import EndpointList from '../../components/EndpointList'
 import LineChart from '../../components/charts/LineChart'
-import MapChart from '../../components/charts/MapChart'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '../../hooks/useQueryParam'
-import useDeviceTrafficToCountries from '../../hooks/useDeviceTrafficToCountries'
+import DeviceCommunication from './components/DeviceCommunication'
+import DeviceName from './components/DeviceName'
 
 const DeviceActivity = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
 
-  const { deviceCountriesData, deviceCountriesDataLoading } =
-    useDeviceTrafficToCountries({ deviceId })
-    
-  if (deviceCountriesDataLoading) {
-    return <>loading...</>
-  }
 
   return (
     <div className="flex bg-white">
@@ -28,22 +21,16 @@ const DeviceActivity = () => {
         </section>
         <section className="relative">
           <h1>
-            <strong>Device Activity</strong>{' '}
-            <span className="font-thin">
+            <strong>Device Activity</strong>{' '}<DeviceName deviceId={deviceId} />
+            {/* <span className="font-thin">
               {deviceCountriesData &&
                 deviceCountriesData.length > 0 &&
                 deviceCountriesData[0].device.auto_name}
-            </span>
+            </span> */}
           </h1>
           <LineChart deviceId={deviceId} />
         </section>
-        <section>
-          <h2>Device Communication Endpoints</h2>
-          <EndpointList data={deviceCountriesData} />
-        </section>
-        <section>
-          <MapChart data={deviceCountriesData} />
-        </section>
+        <DeviceCommunication deviceId={deviceId} />
         <section>
           <hr className="w-100" />
           <div className="flex justify-between py-8">

@@ -21,7 +21,6 @@ const DeviceDrawer = ({ deviceId }) => {
 
   useEffect(() => {
     if (!devicesData[0]?.device_info) return
-    console.log(devicesData[0])
     setInitialValues({
       deviceName:
         devicesData[0]?.device_info?.device_name ||
