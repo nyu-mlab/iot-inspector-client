@@ -8,10 +8,18 @@ const DeviceDrawer = () => {
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
     useDeviceInfo({ deviceId: 's1663' })
 
-  const initialValues = {}
+  const initialValues = {
+    deviceName: 'TEMP:DEVICE_NAME_VALUE',
+    vendorName: '',
+    tags: []
+  }
 
   const handleSubmit = (values) => {
     console.log(values)
+    const tagList = values.tags.map(tag => tag.label)
+    console.log(tagList)
+
+
     // const data = {
     //   deviceName: 'Custom Device Name1',
     //   vendorName: 'Custom Vendor Name1',
@@ -25,7 +33,7 @@ const DeviceDrawer = () => {
     <aside className="menu-drawer">
       <Formik
         initialValues={initialValues}
-        onSubmit={(values, { resetForm }) => handleSubmit(values, resetForm)}
+        onSubmit={(values) => handleSubmit(values)}
       >
         {({ values, setFieldValue, dirty }) => (
           <Form id="device-info-form">
@@ -57,12 +65,15 @@ const DeviceDrawer = () => {
               onChange={(value) => setFieldValue('vendorName', value)}
             />
             <Field
-              name="tagList"
+              name="tags"
               type="text"
               component={CreateSelect}
               isMulti
               // options={searchDistanceOptions}
-              onChange={({ value }) => setFieldValue('tagList', value)}
+              onChange={(value) => {
+                console.log(value)
+                setFieldValue('tags', value)
+              }}
               label="Tags"
             />
             <button
