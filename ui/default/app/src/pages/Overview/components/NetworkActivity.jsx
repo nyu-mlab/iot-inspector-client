@@ -1,5 +1,5 @@
 import React from 'react'
-import DataCard from '../../../components/DataCard'           // TODO: 1. Move to aliases 2. create index files 3. relative components 4. move hooks to global, index to group https://github.com/ocupop/iot-inspector-client/issues/16
+import DataCard from '../../../components/DataCard' // TODO: 1. Move to aliases 2. create index files 3. relative components 4. move hooks to global, index to group https://github.com/ocupop/iot-inspector-client/issues/16
 import BarChart from '../../../components/charts/BarChart'
 import { dataUseage } from '../../../utils/utils'
 import useHighUseage from '../hooks/useHighUseage'
@@ -12,11 +12,13 @@ const NetworkActivityDashboard = () => {
 
   return (
     <>
-      {highUseageDataLoading ? (<>loading...</>) : (
-      <section className="flex flex-col gap-4">
-        <h1>Network Activity</h1>
-        <BarChart />
-      </section>
+      {highUseageDataLoading ? (
+        <>loading...</>
+      ) : (
+        <section className="flex flex-col gap-4">
+          <h1>Network Activity</h1>
+          <BarChart />
+        </section>
       )}
       <section className="flex flex-col gap-4 bg-gray-50">
         <div className="grid gap-6 py-8 lg:grid-cols-2 md:py-4">

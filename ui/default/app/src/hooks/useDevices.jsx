@@ -2,28 +2,38 @@ import React, { useEffect, useState } from 'react'
 import { gql, useQuery } from '@apollo/client'
 
 const DEVICES_QUERY = gql`
-  query Query {
-    devices {
+  query Devices($deviceId: String) {
+    devices(device_id: $deviceId) {
       device_id
       auto_name
       ip
       mac
       outbound_byte_count
+      device_info {
+        device_name
+        vendor_name
+        tag_list
+      }
     }
   }
 `
 
-const useDevices = () => {
+const useDevices = (props) => {
   const [devicesData, setDevicesData] = useState([])
   const [filters, setFilters] = useState({})
 
+  const variables = {
+    deviceId: props?.deviceId || null,
+  }
+
   const { data, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
     // pollInterval: 5000,
+    variables,
   })
 
   useEffect(() => {
     if (data?.devices) {
-      let d = data.devices  // TODO: preset filters, filter here https://github.com/ocupop/iot-inspector-client/issues/18
+      let d = data.devices // TODO: preset filters, filter here https://github.com/ocupop/iot-inspector-client/issues/18
 
       if (filters?.sort) {
         console.log('TODO: SORT')
@@ -59,7 +69,7 @@ const useDevices = () => {
       }
       console.groupEnd()
       */
-    }
+      }
 
       setDevicesData(d)
     }

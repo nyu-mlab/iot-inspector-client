@@ -6,7 +6,9 @@ import {
   dataUploadedToCounterParty,
   communicationEndpointNames,
   networkActivity,
-  addDeviceInfo
+  chartActivity,
+  chartActivityBySecond,
+  addDeviceInfo,
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -75,18 +77,29 @@ export const typeDefs = gql`
     outbound_packet_count: Int!
   }
 
+  type ChartActivityXAxis {
+    name: String!
+    data: [String]!
+  }
+  type ChartActivity {
+    xAxis: [String]!
+    yAxis: [ChartActivityXAxis]!
+  }
+
   type DeviceInfo {
     device_id: String!
-    device_name: String!
-    vendor_name: String!
-    tag_list: String!
-    is_inspected: Int!
-    is_blocked: Int!
+    device_name: String
+    vendor_name: String
+    tag_list: String
+    is_inspected: Int
+    is_blocked: Int
   }
 
   type Query {
-    devices: [Device!]!
-    flows(current_time: Int, device_id: String): [Flow!]!
+    devices(device_id: String): [Device!]!
+    flows(current_time: Int, device_id: String):  [Flow!]!
+    chartActivity(current_time: Int!, device_id: String): ChartActivity!
+    chartActivityBySecond(current_time: Int, device_id: String!): ChartActivity!
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
     networkActivity(current_time: Int): NetworkActivity
@@ -113,8 +126,10 @@ export const resolvers = {
     networkActivity,
     dataUploadedToCounterParty,
     communicationEndpointNames,
+    chartActivity,
+    chartActivityBySecond
   },
   Mutation: {
-    addDeviceInfo
+    addDeviceInfo,
   },
 }

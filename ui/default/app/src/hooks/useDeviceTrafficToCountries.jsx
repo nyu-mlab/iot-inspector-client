@@ -9,6 +9,7 @@ const deviceCountriesQuery = gql`
       device_id
       device {
         auto_name
+        # device_info
       }
       outbound_byte_count
       last_updated_time_per_country
@@ -18,14 +19,13 @@ const deviceCountriesQuery = gql`
   }
 `
 
-const useDeviceTrafficToCountries = ({ deviceId }) => {
-  console.log("@DEBUG::06272022-035758", 'useDeviceTrafficToCountries');
+const useDeviceTrafficToCountries = (props) => {
   // const [deviceCountriesData, setDeviceCountriesData] = useState([])
 
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
     {
-      // pollInterval: 5000,
+      // pollInterval: 7000,
     }
   )
 
@@ -39,8 +39,8 @@ const useDeviceTrafficToCountries = ({ deviceId }) => {
       }
     })
 
-    if (deviceId) {
-      rawData = rawData?.filter((d) => d.device_id === deviceId)
+    if (props?.deviceId) {
+      rawData = rawData?.filter((d) => d.device_id === props.deviceId)
     }
 
     return rawData

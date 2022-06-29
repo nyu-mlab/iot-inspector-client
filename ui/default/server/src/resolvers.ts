@@ -1,15 +1,22 @@
 import { Context } from './context'
+import { add, format } from 'date-fns'
 
 // const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 const SERVER_START_TIME = Math.round(
-  new Date('June 26, 2022 06:24:00').getTime() / 1000,
+  new Date('June 28, 2022 14:00:00').getTime() / 1000,
 )
 
+enum TimeType {
+  ts = 'ts',
+  ts_mod_60 = 'ts_mod_60',
+  ts_mod_600 = 'ts_mod_600',
+  ts_mod_3600 = 'ts_mod_3600',
+}
 
 const getDeviceById = async (deviceId: string, context: Context) => {
   const device = await context.NetworkTrafficClient.devices.findUnique({
     where: {
-      device_id: deviceId
+      device_id: deviceId,
     },
   })
 
@@ -19,7 +26,7 @@ const getDeviceById = async (deviceId: string, context: Context) => {
 const getDeviceInfoById = async (deviceId: string, context: Context) => {
   const deviceInfo = await context.ConfigsClient.device_info.findUnique({
     where: {
-      device_id: deviceId
+      device_id: deviceId,
     },
   })
 
@@ -28,18 +35,68 @@ const getDeviceInfoById = async (deviceId: string, context: Context) => {
 
 /**
  * Maps DeviceInfo to a Device
- * 
- * @param deviceId 
- * @param context 
+ *
+ * @param deviceId
+ * @param context
  * @return Device with DeviceInfo
  */
 const getDeviceInfoForDevice = async (deviceId: string, context: Context) => {
   const device = await getDeviceById(deviceId, context)
-  const deviceInfo = await getDeviceInfoById(deviceId, context)
+  const device_info = await getDeviceInfoById(deviceId, context)
 
   return {
     ...device,
-    device_info: deviceInfo
+    device_info,
+  }
+}
+
+const unixTime = (date) => {
+  return Math.round(date.getTime() / 1000)
+}
+
+const groupBy = function (array, key) {
+  return array.reduce(function (rv, x) {
+    ;(rv[x[key]] = rv[x[key]] || []).push(x)
+    return rv
+  }, {})
+}
+
+const generateFlowXYChartData = async (
+  timeType: TimeType,
+  time: Date,
+  context: Context,
+  device_id?: String,
+) => {
+  const params: any = {
+    by: ['device_id', timeType],
+    where: {
+      device_id: device_id || undefined,
+      [timeType]: { gt: unixTime(time) },
+    },
+    _sum: {
+      outbound_byte_count: true,
+    },
+  }
+
+  const data = await context.NetworkTrafficClient.flows.groupBy(params)
+
+  const xAxis = data
+    .map((item) => format(item[timeType] * 1000, 'yyyy-MM-dd HH:mm:ss'))
+    .filter((value, index, self) => self.indexOf(value) === index)
+
+  let yAxis = groupBy(data, 'device_id')
+  yAxis = Object.keys(yAxis).map((key, index) => {
+    return {
+      name: key,
+      data: yAxis[key].map((flow) => {
+        return flow._sum.outbound_byte_count
+      }),
+    }
+  })
+
+  return {
+    yAxis,
+    xAxis,
   }
 }
 
@@ -50,7 +107,11 @@ const getDeviceInfoForDevice = async (deviceId: string, context: Context) => {
  * @param context
  * @returns Array Type Devices
  */
-const devices = async (_parent, args, context: Context) => {
+const devices = async (
+  _parent,
+  args: { device_id: string },
+  context: Context,
+) => {
   const devicesResult = await context.NetworkTrafficClient.flows.groupBy({
     by: ['device_id'],
     _sum: {
@@ -60,13 +121,18 @@ const devices = async (_parent, args, context: Context) => {
   // map the devices to the flow device_id
   let devices = await Promise.all(
     devicesResult.map(async (flow) => {
-      const mappedDevice = await getDeviceInfoForDevice(flow.device_id, context)
+      const deviceId = args.device_id || flow.device_id
+      const mappedDevice = await getDeviceInfoForDevice(deviceId, context)
       return {
         ...mappedDevice,
         outbound_byte_count: flow._sum.outbound_byte_count,
       }
     }),
   )
+
+  if (args.device_id) {
+    return [devices[0]]
+  }
 
   return devices
 }
@@ -87,7 +153,7 @@ const flows = async (
     where: {
       ts: { gte: args.current_time || SERVER_START_TIME },
       device_id: args.device_id || undefined,
-    }
+    },
   })
 
   // TODO:
@@ -105,7 +171,86 @@ const flows = async (
   // )
 
   return flows
+}
 
+// Server star time at 0 (server just started)
+// local time < +60 minutes
+//  get data by minute
+// Local time > +60 minutes
+//  get data by 10 minutes (taking the last 6, which is the last hour)
+// local time > +6 hours
+//  get data by hour (taking the last 6, which is the last 6 hours)
+const chartActivity = async (
+  _parent,
+  args: { current_time: number; device_id: string },
+  context: Context,
+) => {
+  const clientTime = new Date(args.current_time * 1000)
+  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 1,
+  })
+  const serverDatePlus6Hours = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 6,
+  })
+
+  console.log(`server time: ${new Date(SERVER_START_TIME * 1000)}`)
+  console.log(`client time: ${clientTime}`)
+  console.log(`server time +1 hour: ${serverDatePlus1Hour}`)
+  console.log(`server time +6 hours: ${serverDatePlus6Hours}`)
+  console.log('-----------------------')
+
+  let data: any = {}
+  // get by hour
+  // should expect 6 results
+  if (clientTime > serverDatePlus6Hours) {
+    console.log('get data by ts_mod_3600 (1 hour)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_3600,
+      serverDatePlus6Hours,
+      context,
+    )
+  }
+  // get by minute
+  // should expect 6 results
+  else if (clientTime < serverDatePlus1Hour) {
+    console.log('get data by ts_mod_60 (1 minute)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_60,
+      serverDatePlus1Hour,
+      context,
+    )
+  }
+
+  // get by 10 minute
+  // should expect 6 results
+  else if (clientTime > serverDatePlus1Hour) {
+    console.log('get data by ts_mod_600 (10 minutes)')
+    data = await generateFlowXYChartData(
+      TimeType.ts_mod_600,
+      serverDatePlus1Hour,
+      context,
+    )
+  }
+
+  return data
+}
+
+const chartActivityBySecond = async (
+  _parent,
+  args: { current_time: number; device_id: string },
+  context: Context,
+) => {
+  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 1,
+  }) // TODO This doesn't seem right...
+  const data = await generateFlowXYChartData(
+    TimeType.ts,
+    serverDatePlus1Hour,
+    context,
+    args.device_id,
+  )
+
+  return data
 }
 
 /**
@@ -148,11 +293,12 @@ const dataUploadedToCounterParty = async (
 
   const devices = await Promise.all(
     response.map(async (flow) => {
-      const device = await context.NetworkTrafficClient.devices.findUnique({
-        where: {
-          device_id: flow.device_id,
-        },
-      })
+      // const device = await context.NetworkTrafficClient.devices.findUnique({
+      //   where: {
+      //     device_id: flow.device_id,
+      //   },
+      // })
+      const device = getDeviceInfoForDevice(flow.device_id, context)
 
       return {
         device: device,
@@ -169,12 +315,11 @@ const dataUploadedToCounterParty = async (
   return devices
 }
 
-
 /**
- * 
- * @param _parent 
- * @param args 
- * @param context 
+ *
+ * @param _parent
+ * @param args
+ * @param context
  * @returns Network Activity In Bytes
  */
 const networkActivity = async (
@@ -192,15 +337,16 @@ const networkActivity = async (
     },
   })
 
-  const unencryptedHttpTraffic = await context.NetworkTrafficClient.flows.aggregate({
-    where: {
-      counterparty_port: 80,
-      ts: { gte: args.current_time || SERVER_START_TIME },
-    },
-    _sum: {
-      outbound_byte_count: true,
-    },
-  })
+  const unencryptedHttpTraffic =
+    await context.NetworkTrafficClient.flows.aggregate({
+      where: {
+        counterparty_port: 80,
+        ts: { gte: args.current_time || SERVER_START_TIME },
+      },
+      _sum: {
+        outbound_byte_count: true,
+      },
+    })
 
   const adsAndTracker = await context.NetworkTrafficClient.flows.aggregate({
     where: {
@@ -220,10 +366,10 @@ const networkActivity = async (
 }
 
 /**
- * 
- * @param _parent 
- * @param args 
- * @param context 
+ *
+ * @param _parent
+ * @param args
+ * @param context
  * @returns Counter Party Host Names
  */
 const communicationEndpointNames = async (
@@ -244,33 +390,33 @@ const communicationEndpointNames = async (
 
 /**
  * Adds a Device Info
- * 
- * @param _parent 
- * @param args 
- * @param context 
- * @returns 
+ *
+ * @param _parent
+ * @param args
+ * @param context
+ * @returns
  */
- const addDeviceInfo = async (
+const addDeviceInfo = async (
   _parent,
   args: {
-    device_id: string,
+    device_id: string
     device_name: string
-    vendor_name: string,
-    tag_list: string,
-    is_inspected: number,
+    vendor_name: string
+    tag_list: string
+    is_inspected: number
     is_blocked: number
   },
   context: Context,
 ) => {
   const updatedDeviceInfo = await context.ConfigsClient.device_info.update({
     where: {
-      device_id: args.device_id
+      device_id: args.device_id,
     },
     data: {
-      ...args
-    }
+      ...args,
+    },
   })
-  console.log(updatedDeviceInfo)
+
   return updatedDeviceInfo
 }
 
@@ -281,5 +427,7 @@ export {
   serverConfig,
   dataUploadedToCounterParty,
   communicationEndpointNames,
-  networkActivity
+  networkActivity,
+  chartActivity,
+  chartActivityBySecond,
 }
