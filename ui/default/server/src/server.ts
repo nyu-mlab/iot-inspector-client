@@ -52,11 +52,12 @@ async function startApolloServer(typeDefs, resolvers, context) {
   })
 
   await server.start()
-  const staticClientPath = path.join(__dirname,'../../html')
-  app.use(express.static(staticClientPath)) //serving client side from express
-  app.get('*', (req, res) => {
-    res.sendFile(`${staticClientPath}/index.html`)
-  })
+  // ----
+  // const staticClientPath = path.join(__dirname,'../../html')
+  // app.use(express.static(staticClientPath)) //serving client side from express
+  // app.get('*', (req, res) => {
+  //   res.sendFile(`${staticClientPath}/index.html`)
+  // })
   // --- 
   server.applyMiddleware({ app })
   httpServer.listen({ port: 4000 })

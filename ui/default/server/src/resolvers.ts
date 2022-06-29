@@ -3,7 +3,7 @@ import { add, sub, format } from 'date-fns'
 
 // const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 const SERVER_START_TIME = Math.round(
-  new Date('June 28, 2022 14:00:00').getTime() / 1000,
+  new Date('June 29, 2022 10:00:00').getTime() / 1000,
 )
 
 enum TimeType {
@@ -246,15 +246,19 @@ const chartActivityBySecond = async (
   args: { current_time: number; device_id: string },
   context: Context,
 ) => {
-  const currentTimeSub1Hour = sub(new Date(args.current_time * 1000), {
+  console.log(args.current_time)
+  const currentTimeSub1Hour = sub(new Date(), {
     hours: 1,
   })
+  console.log(currentTimeSub1Hour)
   const data = await generateFlowXYChartData(
     TimeType.ts,
     currentTimeSub1Hour,
     context,
     args.device_id,
   )
+
+  console.log(data)
 
   return data
 }
