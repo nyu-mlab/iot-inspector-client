@@ -98,7 +98,7 @@ export const typeDefs = gql`
   type Query {
     devices(device_id: String): [Device!]!
     flows(current_time: Int, device_id: String):  [Flow!]!
-    chartActivity(current_time: Int!, device_id: String): ChartActivity!
+    chartActivity(device_id: String): ChartActivity!
     chartActivityBySecond(current_time: Int, device_id: String!): ChartActivity!
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!

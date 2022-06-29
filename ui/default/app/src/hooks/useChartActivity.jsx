@@ -3,8 +3,8 @@ import { gql, useQuery } from '@apollo/client'
 import { useMemo } from 'react'
 
 const CHART_ACTIVITY_QUERY = gql`
-  query Query($currentTime: Int!) {
-    chartActivity(current_time: $currentTime) {
+  query Query {
+    chartActivity {
       xAxis
       yAxis {
         name
@@ -27,7 +27,6 @@ const useChartActivity = (props) => {
 
   const variables = {
     deviceId: props?.deviceId || null,
-    currentTime: Math.round((new Date()).getTime() / 1000)
   }
 
   const {
