@@ -39,7 +39,7 @@ const MapChart = ({ data }) => {
   //
 
   useEffect(() => {
-    if (!data.length) return
+    if (!data?.length) return
     if (map.current) return // Dont load the map twice
     map.current = new mapboxgl.Map({
       container: mapContainer.current,

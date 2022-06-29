@@ -1,17 +1,14 @@
-import { prisma } from '@prisma/client'
 import { gql } from 'apollo-server'
-import { Context } from './context'
 import {
-  deviceTrafficToCountries,
-  device,
   devices,
   flows,
   serverConfig,
-  adsAndTrackerBytes,
-  unencryptedHttpTrafficBytes,
-  weakEncryptionBytes,
   dataUploadedToCounterParty,
-  communicationEndpointNames
+  communicationEndpointNames,
+  networkActivity,
+  chartActivity,
+  chartActivityBySecond,
+  addDeviceInfo,
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -27,6 +24,12 @@ export const typeDefs = gql`
     outbound_byte_count: Int!
     last_updated_time_per_country: Float!
     device: Device
+  }
+
+  type NetworkActivity {
+    weak_encryption: Int
+    unencrypted_http_traffic: Int
+    ads_and_trackers: Int
   }
 
   type CommunicationEndpointName {
@@ -46,6 +49,7 @@ export const typeDefs = gql`
     last_updated_ts: Float!
     outbound_byte_count: Int # Included from the Flow Type
     flows: [Flow]
+    device_info: DeviceInfo
   }
 
   type Flow {
@@ -63,42 +67,69 @@ export const typeDefs = gql`
     transport_layer_protocol: String!
     uses_weak_encryption: Int!
     ts: Float!
-    ts_mod_60: Float!
-    ts_mod_600: Float!  # every 10 minutes
+    ts_mod_60: Float! # every 1 minute
+    ts_mod_600: Float! # every 10 minutes
     ts_mod_3600: Float! # Every 1 hour
     window_size: Float!
     inbound_byte_count: Int!
     outbound_byte_count: Int!
     inbound_packet_count: Int!
     outbound_packet_count: Int!
-    _sum: Int
+  }
+
+  type ChartActivityXAxis {
+    name: String!
+    data: [String]!
+  }
+  type ChartActivity {
+    xAxis: [String]!
+    yAxis: [ChartActivityXAxis]!
+  }
+
+  type DeviceInfo {
+    device_id: String!
+    device_name: String
+    vendor_name: String
+    tag_list: String
+    is_inspected: Int
+    is_blocked: Int
   }
 
   type Query {
-    device(device_id: String): Device
-    devices: [Device!]!
-    flows(current_time: Int, device_id: String): [Flow!]!
-    serverConfig: ServerConfig
-    deviceTrafficToCountries(device_id: String!): [DeviceByCountry!]!
-    adsAndTrackerBytes(current_time: Int): Flow
-    unencryptedHttpTrafficBytes(current_time: Int): Flow
-    weakEncryptionBytes(current_time: Int): Flow
+    devices(device_id: String): [Device!]!
+    flows(current_time: Int, device_id: String):  [Flow!]!
+    chartActivity(current_time: Int!, device_id: String): ChartActivity!
+    chartActivityBySecond(current_time: Int, device_id: String!): ChartActivity!
     dataUploadedToCounterParty(current_time: Int): [DeviceByCountry]
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
+    networkActivity(current_time: Int): NetworkActivity
+    serverConfig: ServerConfig
+  }
+
+  type Mutation {
+    addDeviceInfo(
+      device_id: String!
+      device_name: String
+      vendor_name: String
+      tag_list: String
+      is_inspected: Int
+      is_blocked: Int
+    ): DeviceInfo
   }
 `
 
 export const resolvers = {
   Query: {
-    device,
     devices,
     flows,
     serverConfig,
-    deviceTrafficToCountries,
-    adsAndTrackerBytes,
-    unencryptedHttpTrafficBytes,
-    weakEncryptionBytes,
+    networkActivity,
     dataUploadedToCounterParty,
-    communicationEndpointNames
+    communicationEndpointNames,
+    chartActivity,
+    chartActivityBySecond
+  },
+  Mutation: {
+    addDeviceInfo,
   },
 }

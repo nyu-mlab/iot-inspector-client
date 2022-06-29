@@ -1,7 +1,7 @@
+import React from 'react'
 import { gql, useQuery } from '@apollo/client'
-import React, { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import countries from '../constants/countries.json'
-import useIntervalQuery from './useIntervalQuery'
 
 const deviceCountriesQuery = gql`
   query Query {
@@ -9,6 +9,7 @@ const deviceCountriesQuery = gql`
       device_id
       device {
         auto_name
+        # device_info
       }
       outbound_byte_count
       last_updated_time_per_country
@@ -18,26 +19,39 @@ const deviceCountriesQuery = gql`
   }
 `
 
-const useDeviceTrafficToCountries = () => {
-  const [deviceCountriesData, setDeviceCountriesData] = useState([])
-  
-  const { data: deviceCountriesRawData, loading: deviceCountriesRawLoading } =
-  useIntervalQuery(deviceCountriesQuery, null, 4500)
+const useDeviceTrafficToCountries = ({ deviceId }) => {
+  // const [deviceCountriesData, setDeviceCountriesData] = useState([])
 
-  useEffect(() => {
-    if (!deviceCountriesRawLoading && deviceCountriesRawData) {
-      const data = deviceCountriesRawData?.dataUploadedToCounterParty?.map((device) => {
-        const country = countries.find((c) => c.country === device.country_code)
-        return {
-          ...device,
-          ...country,
-        }
-      })
-      setDeviceCountriesData(data)
+  const { data, loading: deviceCountriesDataLoading } = useQuery(
+    deviceCountriesQuery,
+    {
+      // pollInterval: 5000,
     }
-  }, [deviceCountriesRawLoading])
+  )
 
-  return deviceCountriesData
+  const calculate = (data) => {
+    if (!data) return []
+    let rawData = data.map((device) => {
+      const country = countries.find((c) => c.country === device.country_code)
+      return {
+        ...device,
+        ...country,
+      }
+    })
+
+    if (deviceId) {
+      rawData = rawData?.filter((d) => d.device_id === deviceId)
+    }
+
+    return rawData
+  }
+
+  const deviceCountriesData = useMemo(() => calculate(data?.dataUploadedToCounterParty), [data?.dataUploadedToCounterParty])
+
+  return {
+    deviceCountriesData,
+    deviceCountriesDataLoading,
+  }
 }
 
 export default useDeviceTrafficToCountries

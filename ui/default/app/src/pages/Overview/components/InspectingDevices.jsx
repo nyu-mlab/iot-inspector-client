@@ -4,34 +4,14 @@ import { BiSortAlt2 } from 'react-icons/bi'
 
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
-import { gql } from '@apollo/client'
-import useIntervalQuery from '../../../hooks/useIntervalQuery'
 import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
-
-const DEVICES_QUERY = gql`
-  query Query {
-    devices {
-      device_id
-      auto_name
-      ip
-      mac
-      outbound_byte_count
-    }
-  }
-`
+import useDevices from '../hooks/useDevices'
 
 const InspectingDevicesDashboard = () => {
-  const [cardView, setCardView] = useState(false)
-  const devicesResponse = useIntervalQuery(DEVICES_QUERY, null, 5000)
-
+  const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
   const [searchValue, setSearchValue] = useState('')
-  const [devices, setDevices] = useState([])
-
-  useEffect(() => {
-    if (devicesResponse?.data?.devices) {
-      setDevices(devicesResponse?.data?.devices)
-    }
-  }, [devicesResponse?.data?.devices])
+  const [sortDirection, setSortDirection] = useState('ASC')
+  const [cardView, setCardView] = useState(false)
 
   return (
     <section className="bg-gray-50 flex-flex-col-gap-4" id="inspecting-devices">
@@ -68,23 +48,10 @@ const InspectingDevicesDashboard = () => {
         <button
           className="flex items-center justify-center gap-1 p-2 text-sm"
           onClick={() => {
-            // const d = devices.sort((a, b) =>
-            //   a.outbound_byte_count > b.outbound_byte_count
-            //     ? 1
-            //     : b.outbound_byte_count > a.outbound_byte_count
-            //     ? -1
-            //     : 0
-            // )
+            const s = sortDirection === 'ASC' ? 'DESC' : 'ASC' // TODO: boolean https://github.com/ocupop/iot-inspector-client/issues/18
+            setSortDirection(s)
+            sortDevicesData('outbound_byte_count', sortDirection)
 
-            const d = devices.sort((a, b) => {
-              if ( a.outbound_byte_count > b.outbound_byte_count) {
-                return 1
-              }
-              console.log(a.outbound_byte_count)
-              return 0
-            })
-
-            setDevices(d)
           }}
         >
           Traffic
@@ -107,25 +74,32 @@ const InspectingDevicesDashboard = () => {
           </Switch>
         </div>
       </div>
-      <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
-        {devices
-          ?.filter((device) => {
-            if (!searchValue) return true
-            if (
-              device.auto_name.toLowerCase().includes(searchValue.toLowerCase())
-            ) {
-              return true
-            }
-          })
-          .map((device) => (
-            <li
-              key={device.device_id}
-              className={`${cardView ? 'card-view' : 'list-view'} py-2`}
-            >
-              <DeviceItem device={device} />
-            </li>
-          ))}
-      </ul>
+      {devicesDataLoading ? (
+        <>loading...</>
+      ) : (
+        <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
+          {devicesData
+          // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
+            ?.filter((device) => {
+              if (!searchValue) return true
+              if (
+                device.auto_name
+                  .toLowerCase()
+                  .includes(searchValue.toLowerCase())
+              ) {
+                return true
+              }
+            })
+            .map((device) => (
+              <li
+                key={device.device_id}
+                className={`${cardView ? 'card-view' : 'list-view'} py-2`}
+              >
+                <DeviceItem device={device} />
+              </li>
+            ))}
+        </ul>
+      )}
     </section>
   )
 }

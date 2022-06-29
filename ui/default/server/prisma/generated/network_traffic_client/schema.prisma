@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/network_traffic_client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../../../../inspector/network_traffic.db"
+}
+
+model counterparties {
+  id          Int    @id @default(autoincrement())
+  remote_ip   String
+  hostname    String
+  device_id   String
+  source      String
+  resolver_ip String @default("")
+  ts          Float
+}
+
+model devices {
+  // id                 Int    @id @default(autoincrement())
+  device_id          String  @id
+  ip                 String
+  mac                String
+  dhcp_hostname_list String  @default("[]")
+  netdisco_list      String  @default("[]")
+  user_agent_list    String  @default("[]")
+  syn_scan_port_list String  @default("[]")
+  auto_name          String  @default("")
+  last_updated_ts    Float
+  flows              flows[]
+}
+
+model flows {
+  id                           Int     @id @default(autoincrement())
+  device_id                    String
+  device                       devices @relation(fields: [device_id], references: [device_id])
+  device_port                  Int     @default(0)
+  counterparty_ip              String
+  counterparty_port            Int     @default(0)
+  counterparty_hostname        String  @default("")
+  counterparty_friendly_name   String  @default("")
+  counterparty_country         String  @default("")
+  counterparty_is_ad_tracking  Int     @default(0)
+  counterparty_local_device_id String  @default("")
+  transport_layer_protocol     String  @default("")
+  uses_weak_encryption         Int     @default(0)
+  ts                           Float
+  ts_mod_60                    Float
+  ts_mod_600                   Float
+  ts_mod_3600                  Float
+  window_size                  Float
+  inbound_byte_count           Int     @default(0)
+  outbound_byte_count          Int     @default(0)
+  inbound_packet_count         Int     @default(0)
+  outbound_packet_count        Int     @default(0)
+}
