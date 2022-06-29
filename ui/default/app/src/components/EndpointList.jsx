@@ -4,7 +4,6 @@ import { format } from 'timeago.js'
 import { useTable, useSortBy } from 'react-table'
 
 const EndpointList = ({ data }) => {
-  console.log(data)
   // TODO Data should be pulled in here to limit component refreshes....
   const tableData = useMemo(() => {
     return data.map((device) => {

@@ -41,8 +41,6 @@ const DeviceDrawer = ({ deviceId }) => {
       tagList
     }
 
-    console.log(data)
-
     updateDeviceInfo(data)
   }
 
