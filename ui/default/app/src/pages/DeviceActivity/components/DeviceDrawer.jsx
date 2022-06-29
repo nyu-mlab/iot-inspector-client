@@ -1,10 +1,16 @@
 import React from 'react'
+import { Field, Form, Formik } from 'formik'
 import useDeviceInfo from '../hooks/useDeviceInfo'
+import TextInput from '../../../components/fields/TextInput'
+import SelectInput from '../../../components/fields/SelectInput'
 
 const DeviceDrawer = () => {
-  const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } = useDeviceInfo({ deviceId: 's1663' })
+  const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
+    useDeviceInfo({ deviceId: 's1663' })
 
-  const onSubmit = (e) => {
+  const initialValues = {}
+
+  const handleSubmit = (e) => {
     e.preventDefault()
     const data = {
       deviceName: 'Custom Device Name1',
@@ -14,6 +20,56 @@ const DeviceDrawer = () => {
 
     updateDeviceInfo(data)
   }
+
+  return (
+    <aside className="menu-drawer">
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(values, { resetForm }) => handleSubmit(values, resetForm)}
+      >
+        {({ values, setFieldValue, dirty }) => (
+          <Form id="device-info-form">
+            <Field
+              autoComplete="off"
+              name="deviceName"
+              type="text"
+              label="Device Name"
+              component={TextInput}
+              className="sr-only"
+              onChange={(value) => setFieldValue('deviceName', value)}
+            />
+            <Field
+              autoComplete="off"
+              name="deviceType"
+              type="text"
+              label="Device Type"
+              component={TextInput}
+              className="sr-only"
+              onChange={(value) => setFieldValue('deviceType', value)}
+            />
+            <Field
+              autoComplete="off"
+              name="vendorName"
+              type="text"
+              label="Manufacturer"
+              component={TextInput}
+              className="sr-only"
+              onChange={(value) => setFieldValue('vendorName', value)}
+            />
+            <Field
+              name="tagList"
+              type="text"
+              component={SelectInput}
+              isMulti
+              // options={searchDistanceOptions}
+              onChange={({ value }) => setFieldValue('tagList', value)}
+              label="Tags"
+            />
+          </Form>
+        )}
+      </Formik>
+    </aside>
+  )
 
   return (
     <aside className="menu-drawer">
