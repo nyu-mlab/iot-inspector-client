@@ -26,8 +26,10 @@
     }
   }
   .skeleton{
+    background-size: 400%;
     @apply w-full rounded-xl;
-    @apply bg-gradient-to-l from-gray-50 to-gray-200;
+    @apply bg-gradient-to-l from-gray-100 to-gray-300;
+    animation: skeletonAnimation 3s ease infinite;
   }
 
   .card-grid{
@@ -122,5 +124,19 @@
     @apply p-3 mb-3;
     @apply bg-white rounded-md shadow-md;
     @apply md:px-4;
+  }
+  .react-select-container .css-b62m3t-container{
+    @apply !border-none rounded-md bg-gray-300/50;
+  }
+
+
+  @keyframes skeletonAnimation {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 }
