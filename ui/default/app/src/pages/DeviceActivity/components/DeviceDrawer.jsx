@@ -2,7 +2,7 @@ import React from 'react'
 import { Field, Form, Formik } from 'formik'
 import useDeviceInfo from '../hooks/useDeviceInfo'
 import TextInput from '../../../components/fields/TextInput'
-import SelectInput from '../../../components/fields/SelectInput'
+import CreateSelect from '../../../components/fields/CreateSelect'
 
 const DeviceDrawer = () => {
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
@@ -10,15 +10,15 @@ const DeviceDrawer = () => {
 
   const initialValues = {}
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const data = {
-      deviceName: 'Custom Device Name1',
-      vendorName: 'Custom Vendor Name1',
-      tagList: JSON.stringify(['tag 1a', 'tag 2a', 'tag 3a']),
-    }
+  const handleSubmit = (values) => {
+    console.log(values)
+    // const data = {
+    //   deviceName: 'Custom Device Name1',
+    //   vendorName: 'Custom Vendor Name1',
+    //   tagList: JSON.stringify(['tag 1a', 'tag 2a', 'tag 3a']),
+    // }
 
-    updateDeviceInfo(data)
+    // updateDeviceInfo(data)
   }
 
   return (
@@ -59,12 +59,20 @@ const DeviceDrawer = () => {
             <Field
               name="tagList"
               type="text"
-              component={SelectInput}
+              component={CreateSelect}
               isMulti
               // options={searchDistanceOptions}
               onChange={({ value }) => setFieldValue('tagList', value)}
               label="Tags"
             />
+            <button
+              type="submit"
+              form="device-info-form"
+              className="w-full btn btn-primary"
+              // disabled={dirty ? false : true}
+            >
+              Save Device Details
+            </button>
           </Form>
         )}
       </Formik>

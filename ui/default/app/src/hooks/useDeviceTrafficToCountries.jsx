@@ -25,7 +25,7 @@ const useDeviceTrafficToCountries = (props) => {
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
     {
-      // pollInterval: 5000,
+      pollInterval: 7000,
     }
   )
 

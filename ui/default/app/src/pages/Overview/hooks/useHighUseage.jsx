@@ -14,9 +14,7 @@ const HIGH_USEAGE_QUERY = gql`
 const useHighUseage = () => {
   const [highUseageData, setHighUseageData] = useState([])
 
-  const { data, loading: highUseageDataLoading } = useQuery(HIGH_USEAGE_QUERY, {
-    // pollInterval: 20000,
-  })
+  const { data, loading: highUseageDataLoading } = useQuery(HIGH_USEAGE_QUERY)
 
   useEffect(() => {
     if (data?.devices) {
