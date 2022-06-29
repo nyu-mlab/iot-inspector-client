@@ -25,7 +25,7 @@ const CommunicationEndpoints = () => {
       <section>
         <h1>Communication Endpoints</h1>
         {deviceCountriesDataLoading ? (
-        <div className="h-[calc(100vh -80px)] p-8">
+        <div className="h-[600px] p-8">
           <div className="h-full skeleton" />
         </div>
         ) : (

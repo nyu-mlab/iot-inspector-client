@@ -125,8 +125,11 @@
     @apply bg-white rounded-md shadow-md;
     @apply md:px-4;
   }
-  .react-select-container .css-b62m3t-container{
-    @apply !border-none rounded-md bg-gray-300/50;
+  .react-select__control{
+    &.css-x19aeh-control{
+      border: none !important;
+      @apply !border-none rounded-md bg-gray-300/50;
+    }
   }
 
 

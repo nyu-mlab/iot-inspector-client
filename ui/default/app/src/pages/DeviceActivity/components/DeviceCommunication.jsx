@@ -8,7 +8,7 @@ const DeviceCommunication = ({ deviceId }) => {
     useDeviceTrafficToCountries({deviceId, queryOptions: { pollInterval: 7000, }})
 
   if (deviceCountriesDataLoading) {
-    <div className="h-[calc(100vh -80px)] p-8">
+    <div className="h-[600px] p-8">
       <div className="h-full skeleton" />
     </div>
   }

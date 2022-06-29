@@ -11,7 +11,7 @@ export default function loadable(loadFunc) {
   return function LoadableWrapper(loadableProps) {
     return (
       <Suspense fallback={<>
-      <div className="h-[calc(100vh -80px)] p-8">
+      <div className="h-[600px] p-8">
         <div className="h-full skeleton" />
       </div>
 
