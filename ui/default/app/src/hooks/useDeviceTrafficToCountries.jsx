@@ -40,7 +40,7 @@ const useDeviceTrafficToCountries = (props) => {
     })
 
     if (props?.deviceId) {
-      rawData = rawData?.filter((d) => d.device_id === deviceId)
+      rawData = rawData?.filter((d) => d.device_id === props.deviceId)
     }
 
     return rawData
