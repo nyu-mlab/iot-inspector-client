@@ -72,7 +72,9 @@ const LineChart = ({ deviceId }) => {
   return (
     <>
       {networkDownloadActivityLoading ? (
-        <>loading...</>
+
+        <div className="skeleton h-[300px]">
+        </div>
       ) : (
         <div className="network-bar-chart">
           <div className="row">

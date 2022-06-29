@@ -39,7 +39,8 @@ const NetworkActivityDashboard = () => {
             </div>
           </div>
           {networkActivityDataLoading ? (
-            <>loading...</>
+                <div className="skeleton h-[114px]">
+        </div>
           ) : (
             <div>
               <p>
