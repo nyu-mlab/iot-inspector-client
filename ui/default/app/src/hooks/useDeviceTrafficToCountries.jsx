@@ -19,7 +19,7 @@ const deviceCountriesQuery = gql`
   }
 `
 
-const useDeviceTrafficToCountries = ({ deviceId }) => {
+const useDeviceTrafficToCountries = (props) => {
   // const [deviceCountriesData, setDeviceCountriesData] = useState([])
 
   const { data, loading: deviceCountriesDataLoading } = useQuery(
@@ -39,7 +39,7 @@ const useDeviceTrafficToCountries = ({ deviceId }) => {
       }
     })
 
-    if (deviceId) {
+    if (props?.deviceId) {
       rawData = rawData?.filter((d) => d.device_id === deviceId)
     }
 
