@@ -7,4 +7,11 @@
     @apply p-6 ;
     @apply md:px-8 lg:px-12;
   }
+  .device-details{
+
+  input{
+    @apply w-full p-2 mt-2 mb-1;
+    @apply rounded-md bg-gray-300/50;
+    }
+  }
 }

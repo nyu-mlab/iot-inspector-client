@@ -123,4 +123,7 @@
     @apply bg-white rounded-md shadow-md;
     @apply md:px-4;
   }
+  .css-x19aeh-control{
+    @apply !border-none rounded-md bg-gray-300/50;
+  }
 }

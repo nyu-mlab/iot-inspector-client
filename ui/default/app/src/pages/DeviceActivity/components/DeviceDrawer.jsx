@@ -45,7 +45,7 @@ const DeviceDrawer = ({ deviceId }) => {
   }
 
   return (
-    <aside className="menu-drawer">
+    <aside className="menu-drawer device-details">
       {!initialValues ? (
         <>loading...</>
       ) : (
