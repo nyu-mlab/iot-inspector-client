@@ -15,7 +15,6 @@ const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
 `
 
 const useChartActivityBySecond = (props) => {
-  console.log('@DEBUG::06272022-032704', 'useChartActivityBySecond', props)
   const initialValues = {
     pullInterval: props?.pullInterval || 600000,
     filters: {

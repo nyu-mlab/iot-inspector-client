@@ -15,8 +15,6 @@ const DeviceDrawer = () => {
     updateDeviceInfo(data)
   }
 
-  console.log("loading...", updateDeviceInfoLoading, updatedDeviceInfo)
-
   return (
     <aside className="menu-drawer">
       <p>Naming and tagging helps with our research</p>

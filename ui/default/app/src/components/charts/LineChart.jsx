@@ -63,7 +63,6 @@ const LineChart = ({ deviceId }) => {
 
   useEffect(() => {
     if (!chartActivityBySecondData?.chartActivityBySecond) return
-    console.log(chartActivityBySecondData?.chartActivityBySecond.yAxis)
     setChartOptions({
       ...chartOptions,
       xaxis: {
@@ -101,9 +100,6 @@ const LineChart = ({ deviceId }) => {
   // const chartSeries = useMemo(() => {
   //   return chartActivityBySecondData?.chartActivityBySecond?.yAxis || []
   // }, [chartActivityBySecondData])
-
-  console.log("@DEBUG::06282022-041852");
-
 
   return (
     <>
