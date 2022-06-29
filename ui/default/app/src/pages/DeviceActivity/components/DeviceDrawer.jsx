@@ -46,7 +46,9 @@ const DeviceDrawer = ({ deviceId }) => {
   return (
     <aside className="menu-drawer device-details">
       {!initialValues ? (
-        <>loading...</>
+        <div className="h-[calc(100vh -80px)] p-8">
+          <div className="h-full skeleton" />
+        </div>
       ) : (
         <Formik
           initialValues={initialValues}
