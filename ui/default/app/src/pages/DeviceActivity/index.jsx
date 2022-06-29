@@ -10,8 +10,6 @@ const DeviceActivity = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
 
-  return <><LineChart deviceId={deviceId} /></>
-
   return (
     <div className="flex bg-white">
       <div className="w-full">

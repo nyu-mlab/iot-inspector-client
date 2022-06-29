@@ -19,19 +19,24 @@ const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
 `
 
 const LineChart = ({ deviceId }) => {
+  const { start_timestamp } = useServerConfig()
+  // const { chartActivityBySecondData, chartActivityBySecondDataLoading } =
+  //   useChartActivityBySecond({
+  //     deviceId,
+  //     pullInterval: 5000, // anything lower than 5 seconds may see performance hits
+  //   })
+
   const chartActivityBySecondDataLoading = false
-  const x = useQuery(CHART_ACTIVITY_BY_SECOND_QUERY, {
+  const {
+    data:chartActivityBySecondData ,
+    // loading: chartActivityBySecondDataLoading
+  } = useQuery(CHART_ACTIVITY_BY_SECOND_QUERY, {
     variables: {
       deviceId,
       currentTime: Math.round(new Date().getTime() / 1000),
     },
+    pollInterval:10000,
   })
-
-  // console.log(x)
-
-  console.log("@DEBUG::06292022-034657", x);
-
-  return <></>
 
   const [chartOptions, setChartOptions] = useState({
     chart: {

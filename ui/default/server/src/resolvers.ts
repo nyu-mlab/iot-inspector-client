@@ -65,13 +65,15 @@ const generateFlowXYChartData = async (
   timeType: TimeType,
   time: Date,
   context: Context,
+  timeSort: any='lt',
+  totalAmount: number=-6,
   device_id?: String,
 ) => {
   const params: any = {
     by: ['device_id', timeType],
     where: {
       device_id: device_id || undefined,
-      [timeType]: { lt: unixTime(time) },
+      [timeType]: { [timeSort]: unixTime(time) },
     },
     _sum: {
       outbound_byte_count: true,
@@ -83,7 +85,7 @@ const generateFlowXYChartData = async (
   const xAxis: any = data
     .map((item) => format(item[timeType] * 1000, 'yyyy-MM-dd HH:mm:ss'))
     .filter((value, index, self) => self.indexOf(value) === index)
-    .slice(-6)
+    .slice(totalAmount)
 
     
   let yAxis = groupBy(data, 'device_id')
@@ -92,7 +94,7 @@ const generateFlowXYChartData = async (
       name: key,
       data: yAxis[key].map((flow) => {
         return flow._sum.outbound_byte_count
-      }).slice(-6)
+      }).slice(totalAmount)
     }
   })
 
@@ -248,13 +250,15 @@ const chartActivityBySecond = async (
 ) => {
   console.log(args.current_time)
   const currentTimeSub1Hour = sub(new Date(), {
-    hours: 1,
+    minutes: 1,
   })
   console.log(currentTimeSub1Hour)
   const data = await generateFlowXYChartData(
     TimeType.ts,
     currentTimeSub1Hour,
     context,
+    'gt',
+    -20,
     args.device_id,
   )
 
