@@ -52,7 +52,7 @@ const DeviceActivity = () => {
           </div>
         </section>
       </div>
-      <DeviceDrawer />
+      <DeviceDrawer deviceId={deviceId} />
     </div>
   )
 }

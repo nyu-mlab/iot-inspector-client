@@ -1,92 +1,112 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Field, Form, Formik } from 'formik'
 import useDeviceInfo from '../hooks/useDeviceInfo'
 import TextInput from '../../../components/fields/TextInput'
 import CreateSelect from '../../../components/fields/CreateSelect'
+import useDevices from '../../../hooks/useDevices'
+import { useEffect } from 'react'
 
-const DeviceDrawer = () => {
+const DeviceDrawer = ({ deviceId }) => {
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
-    useDeviceInfo({ deviceId: 's1663' })
+    useDeviceInfo({ deviceId })
+  const { devicesData, devicesDataLoading } = useDevices({ deviceId })
 
-  const initialValues = {
-    deviceName: 'TEMP:DEVICE_NAME_VALUE',
-    vendorName: '',
-    tags: []
+  const [initialValues, setInitialValues] = useState(undefined)
+
+  const parseTags = (jsonString) => {
+    let tags = JSON.parse(jsonString)
+    tags = tags.map((tag) => ({ label: tag, value: tag }))
+    return tags
   }
 
-  const handleSubmit = (values) => {
-    console.log(values)
-    const tagList = values.tags.map(tag => tag.label)
-    console.log(tagList)
+  useEffect(() => {
+    if (!devicesData[0]?.device_info) return
+    setInitialValues({
+      deviceName:
+        devicesData[0]?.device_info?.device_name ||
+        devicesData[0]?.auto_name ||
+        '',
+      vendorName: devicesData[0]?.device_info?.vendor_name || '',
+      tags: parseTags(devicesData[0]?.device_info?.tag_list) || [],
+    })
+  }, [devicesData[0]?.device_info])
 
+  const handleSubmit = ({deviceName, vendorName, tags}) => {
+    const tagList = JSON.stringify(tags.map((tag) => tag.label))
+    console.log()
+    const data = {
+      deviceName,
+      vendorName,
+      tagList
+    }
 
-    // const data = {
-    //   deviceName: 'Custom Device Name1',
-    //   vendorName: 'Custom Vendor Name1',
-    //   tagList: JSON.stringify(['tag 1a', 'tag 2a', 'tag 3a']),
-    // }
+    console.log(data)
 
     // updateDeviceInfo(data)
   }
 
   return (
     <aside className="menu-drawer">
-      <Formik
-        initialValues={initialValues}
-        onSubmit={(values) => handleSubmit(values)}
-      >
-        {({ values, setFieldValue, dirty }) => (
-          <Form id="device-info-form">
-            <Field
-              autoComplete="off"
-              name="deviceName"
-              type="text"
-              label="Device Name"
-              component={TextInput}
-              className="sr-only"
-              onChange={(value) => setFieldValue('deviceName', value)}
-            />
-            <Field
-              autoComplete="off"
-              name="deviceType"
-              type="text"
-              label="Device Type"
-              component={TextInput}
-              className="sr-only"
-              onChange={(value) => setFieldValue('deviceType', value)}
-            />
-            <Field
-              autoComplete="off"
-              name="vendorName"
-              type="text"
-              label="Manufacturer"
-              component={TextInput}
-              className="sr-only"
-              onChange={(value) => setFieldValue('vendorName', value)}
-            />
-            <Field
-              name="tags"
-              type="text"
-              component={CreateSelect}
-              isMulti
-              // options={searchDistanceOptions}
-              onChange={(value) => {
-                console.log(value)
-                setFieldValue('tags', value)
-              }}
-              label="Tags"
-            />
-            <button
-              type="submit"
-              form="device-info-form"
-              className="w-full btn btn-primary"
-              // disabled={dirty ? false : true}
-            >
-              Save Device Details
-            </button>
-          </Form>
-        )}
-      </Formik>
+      {!initialValues ? (
+        <>loading...</>
+      ) : (
+        <Formik
+          initialValues={initialValues}
+          onSubmit={(values) => handleSubmit(values)}
+        >
+          {({ values, setFieldValue, dirty }) => (
+            <Form id="device-info-form">
+              <Field
+                autoComplete="off"
+                name="deviceName"
+                type="text"
+                label="Device Name"
+                component={TextInput}
+                className="sr-only"
+                onChange={(value) => setFieldValue('deviceName', value)}
+              />
+              <Field
+                autoComplete="off"
+                name="deviceType"
+                type="text"
+                label="Device Type"
+                component={TextInput}
+                className="sr-only"
+                onChange={(value) => setFieldValue('deviceType', value)}
+              />
+              <Field
+                autoComplete="off"
+                name="vendorName"
+                type="text"
+                label="Manufacturer"
+                component={TextInput}
+                className="sr-only"
+                onChange={(value) => setFieldValue('vendorName', value)}
+              />
+              <Field
+                name="tags"
+                type="text"
+                component={CreateSelect}
+                isMulti
+                // options={searchDistanceOptions}
+                onChange={(value) => {
+                  console.log(value)
+                  setFieldValue('tags', value)
+                }}
+                label="Tags"
+              />
+              <button
+                type="submit"
+                form="device-info-form"
+                className="w-full btn btn-primary"
+                // disabled={dirty ? false : true}
+              >
+                Save Device Details
+              </button>
+            </Form>
+          )}
+        </Formik>
+      )}
     </aside>
   )
 
