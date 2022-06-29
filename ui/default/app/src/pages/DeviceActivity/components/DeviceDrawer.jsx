@@ -21,6 +21,7 @@ const DeviceDrawer = ({ deviceId }) => {
 
   useEffect(() => {
     if (!devicesData[0]?.device_info) return
+    console.log(devicesData[0])
     setInitialValues({
       deviceName:
         devicesData[0]?.device_info?.device_name ||
@@ -42,7 +43,7 @@ const DeviceDrawer = ({ deviceId }) => {
 
     console.log(data)
 
-    // updateDeviceInfo(data)
+    updateDeviceInfo(data)
   }
 
   return (
@@ -62,17 +63,8 @@ const DeviceDrawer = ({ deviceId }) => {
                 type="text"
                 label="Device Name"
                 component={TextInput}
-                className="sr-only"
+                className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('deviceName', value)}
-              />
-              <Field
-                autoComplete="off"
-                name="deviceType"
-                type="text"
-                label="Device Type"
-                component={TextInput}
-                className="sr-only"
-                onChange={(value) => setFieldValue('deviceType', value)}
               />
               <Field
                 autoComplete="off"
@@ -80,7 +72,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 type="text"
                 label="Manufacturer"
                 component={TextInput}
-                className="sr-only"
+                className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('vendorName', value)}
               />
               <Field

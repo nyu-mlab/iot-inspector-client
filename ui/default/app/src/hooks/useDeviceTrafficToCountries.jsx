@@ -9,7 +9,9 @@ const deviceCountriesQuery = gql`
       device_id
       device {
         auto_name
-        # device_info
+        device_info {
+          device_name
+        }
       }
       outbound_byte_count
       last_updated_time_per_country
