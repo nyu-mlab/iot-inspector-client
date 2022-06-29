@@ -81,13 +81,13 @@ const EndpointList = ({ data }) => {
               prepareRow(row)
               return (
                 // Apply the row props
-                <tr {...row.getRowProps()}>
+                <tr {...row.getRowProps()} className="even:bg-gray-100">
                   {
                     // Loop over the rows cells
                     row.cells.map((cell) => {
                       // Apply the cell props
                       return (
-                        <td {...cell.getCellProps()}>
+                        <td {...cell.getCellProps()} className="px-3 py-2 text-sm">
                           {
                             // Render the cell contents
                             cell.render('Cell')
