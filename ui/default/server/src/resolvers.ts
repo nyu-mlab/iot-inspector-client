@@ -65,19 +65,18 @@ const generateFlowXYChartData = async (
   timeType: TimeType,
   time: Date,
   context: Context,
+  device_id?: String,
 ) => {
   const params: any = {
     by: ['device_id', timeType],
     where: {
-      // device_id: args.device_id || undefined,
+      device_id: device_id || undefined,
       [timeType]: { gt: unixTime(time) },
     },
     _sum: {
       outbound_byte_count: true,
     },
   }
-
-  console.log(params)
 
   const data = await context.NetworkTrafficClient.flows.groupBy(params)
 
@@ -187,8 +186,12 @@ const chartActivity = async (
   context: Context,
 ) => {
   const clientTime = new Date(args.current_time * 1000)
-  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), { hours: 1 })
-  const serverDatePlus6Hours = add(new Date(SERVER_START_TIME * 1000), { hours: 6 })
+  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 1,
+  })
+  const serverDatePlus6Hours = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 6,
+  })
 
   console.log(`server time: ${new Date(SERVER_START_TIME * 1000)}`)
   console.log(`client time: ${clientTime}`)
@@ -228,6 +231,24 @@ const chartActivity = async (
       context,
     )
   }
+
+  return data
+}
+
+const chartActivityBySecond = async (
+  _parent,
+  args: { current_time: number; device_id: string },
+  context: Context,
+) => {
+  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
+    hours: 1,
+  }) // TODO This doesn't seem right...
+  const data = await generateFlowXYChartData(
+    TimeType.ts,
+    serverDatePlus1Hour,
+    context,
+    args.device_id,
+  )
 
   return data
 }
@@ -408,4 +429,5 @@ export {
   communicationEndpointNames,
   networkActivity,
   chartActivity,
+  chartActivityBySecond,
 }

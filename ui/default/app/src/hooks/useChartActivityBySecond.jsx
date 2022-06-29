@@ -2,9 +2,9 @@ import React from 'react'
 import { gql, useQuery } from '@apollo/client'
 import { useMemo } from 'react'
 
-const CHART_ACTIVITY_QUERY = gql`
-  query Query($currentTime: Int!) {
-    chartActivity(current_time: $currentTime) {
+const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
+  query ChartActivityBySecond($currentTime: Int!, $deviceId: String!) {
+    chartActivityBySecond(current_time: $currentTime, device_id: $deviceId) {
       xAxis
       yAxis {
         name
@@ -14,7 +14,8 @@ const CHART_ACTIVITY_QUERY = gql`
   }
 `
 
-const useChartActivity = (props) => {
+const useChartActivityBySecond = (props) => {
+  console.log('@DEBUG::06272022-032704', 'useChartActivityBySecond', props)
   const initialValues = {
     pullInterval: props?.pullInterval || 600000,
     filters: {
@@ -25,20 +26,25 @@ const useChartActivity = (props) => {
     },
   }
 
+  // const variables = props?.deviceId ? { deviceId: props.deviceId } : null
   const variables = {
-    deviceId: props?.deviceId || null,
-    currentTime: Math.round((new Date()).getTime() / 1000)
+    deviceId: props.deviceId || null,
+    currentTime: Math.round(new Date().getTime() / 1000),
   }
 
   const {
-    data: networkDownloadActivity,
-    loading: networkDownloadActivityLoading,
-  } = useQuery(CHART_ACTIVITY_QUERY, {
+    data,
+    loading: chartActivityBySecondDataLoading,
+  } = useQuery(CHART_ACTIVITY_BY_SECOND_QUERY, {
     variables,
-    // pollInterval: initialValues.pullInterval,
+    pollInterval: initialValues.pullInterval,
   })
 
-  // const networkDownloadActivity = useMemo(() => {
+const chartActivityBySecondData = useMemo(() => {
+  return data
+}, [data])
+
+  // const chartActivityBySecondData = useMemo(() => {
   //   const d = data.flows
   //     .slice()
   //     .sort((a, b) => {
@@ -60,7 +66,7 @@ const useChartActivity = (props) => {
   //   return d
   // }, [data?.flows])
 
-  // const sortNetworkDownloadActivity = (sortBy, ascending = true) => {
+  // const sortchartActivityBySecondData = (sortBy, ascending = true) => {
   //   setFilters({
   //     sort: {
   //       by: sortBy,
@@ -70,10 +76,10 @@ const useChartActivity = (props) => {
   // }
 
   return {
-    networkDownloadActivity,
-    networkDownloadActivityLoading,
-    // sortNetworkDownloadActivity,
+    chartActivityBySecondData,
+    // chartActivityBySecondDataLoading,
+    // sortchartActivityBySecondData,
   }
 }
 
-export default useChartActivity
+export default useChartActivityBySecond

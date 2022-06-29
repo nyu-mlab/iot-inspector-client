@@ -1,23 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import Chart from 'react-apexcharts'
 import { format } from 'date-fns'
+import { gql, useQuery } from '@apollo/client'
 import '../../utils/array'
 import useServerConfig from '../../hooks/useServerConfig'
-import useNetworkDownloadActivity from '../../hooks/useNetworkDownloadActivity'
+import useChartActivityBySecond from '../../hooks/useChartActivityBySecond'
+
+const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
+  query ChartActivityBySecond($currentTime: Int!, $deviceId: String!) {
+    chartActivityBySecond(current_time: $currentTime, device_id: $deviceId) {
+      xAxis
+      yAxis {
+        name
+        data
+      }
+    }
+  }
+`
 
 const LineChart = ({ deviceId }) => {
   const { start_timestamp } = useServerConfig()
-  const { networkDownloadActivity, networkDownloadActivityLoading } =
-    useNetworkDownloadActivity({
+  // const { chartActivityBySecondData, chartActivityBySecondDataLoading } =
+  //   useChartActivityBySecond({
+  //     deviceId,
+  //     pullInterval: 5000, // anything lower than 5 seconds may see performance hits
+  //   })
+
+  const chartActivityBySecondDataLoading = false
+  const {
+    data:chartActivityBySecondData ,
+    // loading: chartActivityBySecondDataLoading
+  } = useQuery(CHART_ACTIVITY_BY_SECOND_QUERY, {
+    variables: {
       deviceId,
-      pullInterval: 1000, // anything lower than 5 seconds may see performance hits
-      filters: {
-        sort: {
-          by: 'ts',
-          ascending: true,
-        },
-      },
-    })
+      currentTime: Math.round(new Date().getTime() / 1000),
+    },
+    pollInterval:10000,
+  })
+    
   const [chartOptions, setChartOptions] = useState({
     chart: {
       id: 'realtime',
@@ -25,13 +45,14 @@ const LineChart = ({ deviceId }) => {
         enabled: true,
         easing: 'linear',
         dynamicAnimation: {
-          speed: 1000,
+          speed: 1500,
         },
       },
     },
     xaxis: {
       categories: [],
-      range: 15,
+      type: 'string',
+      range: 10,
     },
     stroke: {
       curve: 'smooth',
@@ -41,37 +62,52 @@ const LineChart = ({ deviceId }) => {
   const [chartSeries, setChartSeries] = useState([])
 
   useEffect(() => {
-    if (!networkDownloadActivity.length) return
-
-    const dates = networkDownloadActivity?.map((activity) => {
-      return activity?.groupList.map((a) =>
-        format(a.ts * 1000, 'yyyy-MM-dd HH:mm:ss')
-      )
-    })[0]
-
+    if (!chartActivityBySecondData?.chartActivityBySecond) return
+    console.log(chartActivityBySecondData?.chartActivityBySecond.yAxis)
     setChartOptions({
       ...chartOptions,
       xaxis: {
-        categories: dates,
+        categories: chartActivityBySecondData?.chartActivityBySecond.xAxis,
       },
     })
 
-    // group items
-    // const yAxis = networkDownloadActivity.groupBy('device_id')
+    setChartSeries( chartActivityBySecondData?.chartActivityBySecond.yAxis)
+  }, [chartActivityBySecondData?.chartActivityBySecond])
 
-    const chartData = networkDownloadActivity.map((data) => {
-      const d = {}
-      d.name = data.field
-      d.data = data.groupList.map((dd) => dd.inbound_byte_count)
-      return d
-    })
+  // const chartOptions = useMemo(() => {
+  //   return {
+  //     chart: {
+  //       id: 'realtime',
+  //       animations: {
+  //         enabled: true,
+  //         easing: 'linear',
+  //         dynamicAnimation: {
+  //           speed: 1000,
+  //         },
+  //       },
+  //     },
+  //     xaxis: {
+  //       categories:
+  //         chartActivityBySecondData?.chartActivityBySecond?.xAxis || [],
+  //       type: 'string',
+  //       range: 10,
+  //     },
+  //     stroke: {
+  //       curve: 'smooth',
+  //     },
+  //   }
+  // }, [chartActivityBySecondData])
 
-    setChartSeries(chartData)
-  }, [networkDownloadActivity])
+  // const chartSeries = useMemo(() => {
+  //   return chartActivityBySecondData?.chartActivityBySecond?.yAxis || []
+  // }, [chartActivityBySecondData])
+
+  console.log("@DEBUG::06282022-041852");
+
 
   return (
     <>
-      {networkDownloadActivityLoading ? (
+      {chartActivityBySecondDataLoading ? (
         <>loading...</>
       ) : (
         <div className="network-bar-chart">

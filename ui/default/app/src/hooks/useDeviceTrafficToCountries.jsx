@@ -32,7 +32,6 @@ const useDeviceTrafficToCountries = ({ deviceId }) => {
 
   const calculate = (data) => {
     if (!data) return []
-    console.log("@DEBUG::06282022-094123", data)
     let rawData = data.map((device) => {
       const country = countries.find((c) => c.country === device.country_code)
       return {
