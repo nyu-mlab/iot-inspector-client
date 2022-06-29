@@ -75,7 +75,8 @@ const InspectingDevicesDashboard = () => {
         </div>
       </div>
       {devicesDataLoading ? (
-        <>loading...</>
+        <div className="skeleton h-[600px]">
+        </div>
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
           {devicesData

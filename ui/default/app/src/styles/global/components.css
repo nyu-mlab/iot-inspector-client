@@ -25,6 +25,10 @@
       @apply opacity-100;
     }
   }
+  .skeleton{
+    @apply w-full rounded-xl;
+    @apply bg-gradient-to-l from-gray-50 to-gray-200;
+  }
 
   .card-grid{
     @apply grid grid-cols-2 gap-4;
