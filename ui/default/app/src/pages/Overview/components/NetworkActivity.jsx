@@ -17,18 +17,16 @@ const NetworkActivityDashboard = () => {
       ) : (
         <section className="flex flex-col gap-4">
           <h1>Network Activity</h1>
-          <BarChart />
-        </section>
-      )}
-      <section className="flex flex-col gap-4 bg-gray-50">
-        <div className="grid gap-6 py-8 lg:grid-cols-2 md:py-4">
-          <div>
             <p>
               High data usage devices in the past 24 hours
               <br />
               <a href="#inspecting-devices">View all devices</a>
             </p>
-            <div className="grid grid-cols-2 gap-2 py-4">
+          <BarChart />
+          <div className="grid">
+                      <div>
+
+            <div className="grid gap-2 py-4 md:grid-cols-2 lg:grid-cols-3">
               {highUseageDataLoading && <>loading...</>}
               {highUseageData &&
                 highUseageData.slice(0, 3).map((device, i) => (
@@ -39,15 +37,14 @@ const NetworkActivityDashboard = () => {
                   </DataCard>
                 ))}
             </div>
-          </div>
+            <div className="grid gap-6 py-8 md:py-4">
+              <hr />
           {networkActivityDataLoading ? (
-                <div className="skeleton h-[114px]">
-        </div>
+          <div className="skeleton h-[114px]" />
           ) : (
             <div>
               <p>
-                Monitored devices sent/recieved
-                <br />
+                All monitored devices sent/recieved &nbsp;
                 <strong>
                   {dataUseage(
                     networkActivityData?.ads_and_trackers +
@@ -55,8 +52,9 @@ const NetworkActivityDashboard = () => {
                       networkActivityData?.weak_encryption
                   )}
                 </strong>
+                &nbsp; of data
               </p>
-              <div className="grid grid-cols-2 gap-2 py-4">
+              <div className="grid gap-2 py-4 md:grid-cols-2 lg:grid-cols-3">
                 <DataCard bytes={networkActivityData?.ads_and_trackers}>
                   <span className="text-xs">Ads & Trackers</span>
                 </DataCard>
@@ -70,6 +68,12 @@ const NetworkActivityDashboard = () => {
             </div>
           )}
         </div>
+          </div>
+          </div>
+        </section>
+      )}
+      <section className="flex flex-col gap-4 bg-gray-50">
+
       </section>
     </>
   )
