@@ -82,8 +82,13 @@ const generateFlowXYChartData = async (
 
   let data = await context.NetworkTrafficClient.flows.groupBy(params)
 
+  let dateFormat =  'yyyy-MM-dd HH:mm:ss'
+  if (timeType === TimeType.ts || timeType === TimeType.ts_mod_60 ||  TimeType.ts_mod_600) {
+    dateFormat='hh:mm:ss a'
+  }
+
   const xAxis: any = data
-    .map((item) => format(item[timeType] * 1000, 'yyyy-MM-dd HH:mm:ss'))
+    .map((item) => format(item[timeType] * 1000, dateFormat))
     .filter((value, index, self) => self.indexOf(value) === index)
     .slice(totalAmount)
 
@@ -250,7 +255,7 @@ const chartActivityBySecond = async (
 ) => {
   console.log(args.current_time)
   const currentTimeSub1Hour = sub(new Date(), {
-    minutes: 1,
+    minutes: 5,
   })
   console.log(currentTimeSub1Hour)
   const data = await generateFlowXYChartData(
@@ -258,7 +263,7 @@ const chartActivityBySecond = async (
     currentTimeSub1Hour,
     context,
     'gt',
-    -20,
+    -40,
     args.device_id,
   )
 
