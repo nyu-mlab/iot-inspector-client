@@ -103,6 +103,11 @@ const generateFlowXYChartData = async (
     }
   })
 
+  console.log({
+    xAxis,
+    yAxis,
+  })
+
   return {
     xAxis,
     yAxis,
@@ -266,8 +271,6 @@ const chartActivityBySecond = async (
     -40,
     args.device_id,
   )
-
-  console.log(data)
 
   return data
 }
