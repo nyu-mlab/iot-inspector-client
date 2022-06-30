@@ -25,6 +25,12 @@
       @apply opacity-100;
     }
   }
+  .skeleton{
+    background-size: 400%;
+    @apply w-full rounded-xl;
+    @apply bg-gradient-to-l from-gray-100 to-gray-300;
+    animation: skeletonAnimation 3s ease infinite;
+  }
 
   .card-grid{
     @apply grid grid-cols-2 gap-4;
@@ -118,5 +124,39 @@
     @apply p-3 mb-3;
     @apply bg-white rounded-md shadow-md;
     @apply md:px-4;
+  }
+  .form-group{
+  .react-select__control{
+    &.css-x19aeh-control, &.css-1g4a7uq-control{
+      border: none !important;
+      @apply !border-none rounded-md bg-gray-300/50;
+      @apply py-2;
+      &:hover {
+        @apply !border-none py-2;
+      }
+    }
+  }
+  .css-13jmfyo-multiValue{
+    &.react-select__multi-value{
+      @apply px-4 py-1;
+      @apply text-sm text-white bg-gray-600 rounded-full h-fit;
+    }
+  }
+  .css-10ku62j{
+    &.react-select__multi-value__label{
+      @apply text-white;
+    }
+  }
+}
+
+
+  @keyframes skeletonAnimation {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 }

@@ -31,7 +31,7 @@ const BarChart = ({ deviceId }) => {
   }, [networkDownloadActivity])
 
   const chartSeries = useMemo(() => {
-    return networkDownloadActivity?.chartActivity?.yAxis || []
+    return networkDownloadActivity?.chartActivity?.yAxis.slice(0,3) || []
   }, [networkDownloadActivity])
 
   return (

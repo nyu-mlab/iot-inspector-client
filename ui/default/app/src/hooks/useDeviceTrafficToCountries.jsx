@@ -9,7 +9,9 @@ const deviceCountriesQuery = gql`
       device_id
       device {
         auto_name
-        # device_info
+        device_info {
+          device_name
+        }
       }
       outbound_byte_count
       last_updated_time_per_country
@@ -19,14 +21,10 @@ const deviceCountriesQuery = gql`
   }
 `
 
-const useDeviceTrafficToCountries = ({ deviceId }) => {
-  // const [deviceCountriesData, setDeviceCountriesData] = useState([])
-
+const useDeviceTrafficToCountries = (props) => {
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
-    {
-      // pollInterval: 5000,
-    }
+    props.queryOptions
   )
 
   const calculate = (data) => {
@@ -39,8 +37,8 @@ const useDeviceTrafficToCountries = ({ deviceId }) => {
       }
     })
 
-    if (deviceId) {
-      rawData = rawData?.filter((d) => d.device_id === deviceId)
+    if (props?.deviceId) {
+      rawData = rawData?.filter((d) => d.device_id === props.deviceId)
     }
 
     return rawData

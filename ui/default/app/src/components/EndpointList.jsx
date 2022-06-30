@@ -4,12 +4,13 @@ import { format } from 'timeago.js'
 import { useTable, useSortBy } from 'react-table'
 
 const EndpointList = ({ data }) => {
+  // TODO Data should be pulled in here to limit component refreshes....
   const tableData = useMemo(() => {
     return data.map((device) => {
       return {
         remoteParty: device.counterparty_hostname,
         country: device.name,
-        device: device.device.auto_name,
+        device: device.device.device_info?.device_name || device.device.auto_name,
         dateUseage: dataUseage(device.outbound_byte_count),
         lastUpdated: format(
           new Date(device.last_updated_time_per_country * 1000),
@@ -80,13 +81,13 @@ const EndpointList = ({ data }) => {
               prepareRow(row)
               return (
                 // Apply the row props
-                <tr {...row.getRowProps()}>
+                <tr {...row.getRowProps()} className="even:bg-gray-100">
                   {
                     // Loop over the rows cells
                     row.cells.map((cell) => {
                       // Apply the cell props
                       return (
-                        <td {...cell.getCellProps()}>
+                        <td {...cell.getCellProps()} className="px-3 py-2 text-sm">
                           {
                             // Render the cell contents
                             cell.render('Cell')

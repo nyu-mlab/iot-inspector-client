@@ -10,7 +10,12 @@ export default function loadable(loadFunc) {
   const OtherComponent = React.lazy(loadFunc)
   return function LoadableWrapper(loadableProps) {
     return (
-      <Suspense fallback={<>Loading...</>}>
+      <Suspense fallback={<>
+      <div className="h-[600px] p-8">
+        <div className="h-full skeleton" />
+      </div>
+
+      </>}>
         <OtherComponent {...loadableProps} />
       </Suspense>
     )

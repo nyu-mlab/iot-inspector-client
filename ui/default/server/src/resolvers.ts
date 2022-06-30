@@ -1,9 +1,9 @@
 import { Context } from './context'
-import { add, format } from 'date-fns'
+import { add, sub, format } from 'date-fns'
 
 // const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 const SERVER_START_TIME = Math.round(
-  new Date('June 28, 2022 14:00:00').getTime() / 1000,
+  new Date('June 29, 2022 10:00:00').getTime() / 1000,
 )
 
 enum TimeType {
@@ -65,38 +65,47 @@ const generateFlowXYChartData = async (
   timeType: TimeType,
   time: Date,
   context: Context,
+  timeSort: any='lt',
+  totalAmount: number=-6,
   device_id?: String,
 ) => {
   const params: any = {
     by: ['device_id', timeType],
     where: {
       device_id: device_id || undefined,
-      [timeType]: { gt: unixTime(time) },
+      [timeType]: { [timeSort]: unixTime(time) },
     },
     _sum: {
       outbound_byte_count: true,
     },
   }
 
-  const data = await context.NetworkTrafficClient.flows.groupBy(params)
+  let data = await context.NetworkTrafficClient.flows.groupBy(params)
 
-  const xAxis = data
-    .map((item) => format(item[timeType] * 1000, 'yyyy-MM-dd HH:mm:ss'))
+  let dateFormat =  'yyyy-MM-dd HH:mm:ss'
+  if (timeType === TimeType.ts || timeType === TimeType.ts_mod_60 ||  TimeType.ts_mod_600) {
+    dateFormat='hh:mm:ss a'
+  }
+
+  const xAxis: any = data
+    .map((item) => format(item[timeType] * 1000, dateFormat))
     .filter((value, index, self) => self.indexOf(value) === index)
+    .slice(totalAmount)
 
+    
   let yAxis = groupBy(data, 'device_id')
-  yAxis = Object.keys(yAxis).map((key, index) => {
+  yAxis = Object.keys(yAxis).map((key) => {
     return {
       name: key,
       data: yAxis[key].map((flow) => {
         return flow._sum.outbound_byte_count
-      }),
+      }).slice(totalAmount)
     }
   })
 
   return {
-    yAxis,
     xAxis,
+    yAxis,
   }
 }
 
@@ -174,18 +183,19 @@ const flows = async (
 }
 
 // Server star time at 0 (server just started)
-// local time < +60 minutes
+// client time < +60 minutes
 //  get data by minute
-// Local time > +60 minutes
+// client time > +60 minutes
 //  get data by 10 minutes (taking the last 6, which is the last hour)
-// local time > +6 hours
+// client time > +6 hours (server time)
 //  get data by hour (taking the last 6, which is the last 6 hours)
 const chartActivity = async (
   _parent,
-  args: { current_time: number; device_id: string },
+  args: { device_id: string },
   context: Context,
 ) => {
-  const clientTime = new Date(args.current_time * 1000)
+  const currentTime = new Date()
+
   const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
     hours: 1,
   })
@@ -194,7 +204,7 @@ const chartActivity = async (
   })
 
   console.log(`server time: ${new Date(SERVER_START_TIME * 1000)}`)
-  console.log(`client time: ${clientTime}`)
+  console.log(`client time: ${currentTime}`)
   console.log(`server time +1 hour: ${serverDatePlus1Hour}`)
   console.log(`server time +6 hours: ${serverDatePlus6Hours}`)
   console.log('-----------------------')
@@ -202,35 +212,38 @@ const chartActivity = async (
   let data: any = {}
   // get by hour
   // should expect 6 results
-  if (clientTime > serverDatePlus6Hours) {
+  if (currentTime >= serverDatePlus6Hours) {
     console.log('get data by ts_mod_3600 (1 hour)')
     data = await generateFlowXYChartData(
       TimeType.ts_mod_3600,
-      serverDatePlus6Hours,
+      currentTime,
       context,
     )
-  }
-  // get by minute
-  // should expect 6 results
-  else if (clientTime < serverDatePlus1Hour) {
-    console.log('get data by ts_mod_60 (1 minute)')
-    data = await generateFlowXYChartData(
-      TimeType.ts_mod_60,
-      serverDatePlus1Hour,
-      context,
-    )
+
+    return data
   }
 
   // get by 10 minute
   // should expect 6 results
-  else if (clientTime > serverDatePlus1Hour) {
+  if (currentTime >= serverDatePlus1Hour) {
     console.log('get data by ts_mod_600 (10 minutes)')
     data = await generateFlowXYChartData(
       TimeType.ts_mod_600,
-      serverDatePlus1Hour,
+      currentTime,
       context,
     )
+
+    return data
   }
+
+  // get by minute
+  // should expect 6 results
+  console.log('get data by ts_mod_60 (1 minute)')
+  data = await generateFlowXYChartData(
+    TimeType.ts_mod_60,
+    currentTime,
+    context,
+  )
 
   return data
 }
@@ -240,15 +253,21 @@ const chartActivityBySecond = async (
   args: { current_time: number; device_id: string },
   context: Context,
 ) => {
-  const serverDatePlus1Hour = add(new Date(SERVER_START_TIME * 1000), {
-    hours: 1,
-  }) // TODO This doesn't seem right...
+  console.log(args.current_time)
+  const currentTimeSub1Hour = sub(new Date(), {
+    minutes: 5,
+  })
+  console.log(currentTimeSub1Hour)
   const data = await generateFlowXYChartData(
     TimeType.ts,
-    serverDatePlus1Hour,
+    currentTimeSub1Hour,
     context,
+    'gt',
+    -40,
     args.device_id,
   )
+
+  console.log(data)
 
   return data
 }

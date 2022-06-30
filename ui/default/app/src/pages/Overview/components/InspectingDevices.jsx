@@ -5,7 +5,7 @@ import { BiSortAlt2 } from 'react-icons/bi'
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
 import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
-import useDevices from '../hooks/useDevices'
+import useDevices from '../../../hooks/useDevices'
 
 const InspectingDevicesDashboard = () => {
   const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
@@ -75,7 +75,8 @@ const InspectingDevicesDashboard = () => {
         </div>
       </div>
       {devicesDataLoading ? (
-        <>loading...</>
+        <div className="skeleton h-[600px]">
+        </div>
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
           {devicesData

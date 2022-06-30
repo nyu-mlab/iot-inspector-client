@@ -37,7 +37,7 @@ const LineChart = ({ deviceId }) => {
     },
     pollInterval:10000,
   })
-    
+
   const [chartOptions, setChartOptions] = useState({
     chart: {
       id: 'realtime',
@@ -104,7 +104,9 @@ const LineChart = ({ deviceId }) => {
   return (
     <>
       {chartActivityBySecondDataLoading ? (
-        <>loading...</>
+
+        <div className="skeleton h-[300px]">
+        </div>
       ) : (
         <div className="network-bar-chart">
           <div className="row">
