@@ -67,30 +67,46 @@ def main():
 
     print('Preparing tables.')
 
-    device_id_list = generate_mock_devices()
-    generate_mock_traffic(device_id_list)
-
-    print('Done.')
-
-
-def generate_mock_devices(mock_device_count=MOCK_DEVICE_COUNT):
-    """
-    Populates the device_info table once with N mock devices, where N =
-    `mock_device_count`.
-
-    Returns a list of the mock device IDs.
-
-    """
-    # Reset device_info
+    # Reset tables
     config_db.execute('DROP TABLE IF EXISTS device_info')
+    traffic_db.execute('DROP TABLE IF EXISTS devices')
 
     # Initialize tables
+    with open('network_traffic.schema.sql') as fp:
+        traffic_db.executescript(fp.read())
     with open('configs.schema.sql') as fp:
         config_db.executescript(fp.read())
 
+    device_id_list = []
+
+    try:
+        while True:
+
+            # Continuously generate new devices until max
+            new_device_id_list = []
+            if len(device_id_list) < MOCK_DEVICE_COUNT:
+                new_device_id_list = generate_mock_devices()
+                device_id_list += new_device_id_list
+
+            # Generate fake traffic from all devices for 10 seconds
+
+            generate_mock_traffic(new_device_id_list, device_id_list)
+
+    except KeyboardInterrupt:
+        print('Done.')
+        return
+
+
+def generate_mock_devices(new_device_count=2):
+    """
+    Populates the device_info table with 2 mock devices at a time.
+
+    Returns a list of the newly created mock device IDs.
+
+    """
     # Prepare mock device IDs
     device_id_list = []
-    for _ in range(mock_device_count):
+    for _ in range(new_device_count):
         device_id = 's' + str(random.randint(1000, 9999))
         device_id_list.append(device_id)
 
@@ -102,10 +118,12 @@ def generate_mock_devices(mock_device_count=MOCK_DEVICE_COUNT):
         ]
     )
 
+    print('Created two new devices.')
+
     return device_id_list
 
 
-def generate_mock_traffic(device_id_list):
+def generate_mock_traffic(new_device_id_list, device_id_list):
     """
     Generates mock traffic forever, until the user kills this process.
 
@@ -113,16 +131,9 @@ def generate_mock_traffic(device_id_list):
     generate_mock_devices().
 
     """
-    # Reset the devices table
-    traffic_db.execute('DROP TABLE IF EXISTS devices')
-
-    # Initialize tables
-    with open('network_traffic.schema.sql') as fp:
-        traffic_db.executescript(fp.read())
-
-    # Prepopulates devices
+    # Prepopulates new devices
     device_list = []
-    for device_id in device_id_list:
+    for device_id in new_device_id_list:
         device_list.append({
             'device_id': device_id,
             'ip': '10.0.{}.{}'.format(random.randint(2, 255), random.randint(2, 255)),
@@ -134,25 +145,23 @@ def generate_mock_traffic(device_id_list):
     # Insert the mock devices into the devices table
     insert_many(traffic_db, 'devices', device_list)
 
-    # Generate flows continuously
-    print('Generating flows forever. Hit Control + C to exit.')
+    # Generate flows continuously, but up to 5 devices at a time
+    print('Generating flows for 10 seconds')
+    start_ts = time.time()
     prev_ts = None
-    while True:
-        try:
-            sleep_time = random.randint(10, 15) / 10.0
-            time.sleep(sleep_time)
-            current_ts = time.time()
-            random.shuffle(device_id_list)
-            if prev_ts is None:
-                window_size = 9999999
-            else:
-                window_size = current_ts - prev_ts
-            for device_id in device_id_list[0 : random.randint(0, 5)]:
-                generate_mock_traffic_helper(device_id, current_ts, window_size)
-            prev_ts = current_ts
+    while time.time() - start_ts < 10:
+        sleep_time = random.randint(10, 15) / 10.0
+        time.sleep(sleep_time)
+        current_ts = time.time()
+        random.shuffle(device_id_list)
+        if prev_ts is None:
+            window_size = 9999999
+        else:
+            window_size = current_ts - prev_ts
+        for device_id in device_id_list[0 : random.randint(2, 5)]:
+            generate_mock_traffic_helper(device_id, current_ts, window_size)
+        prev_ts = current_ts
 
-        except KeyboardInterrupt:
-            return
 
 
 def generate_mock_traffic_helper(device_id, ts, window_size):

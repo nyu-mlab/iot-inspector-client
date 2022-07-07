@@ -1,3 +1,6 @@
+import sqlite3
+
+
 def insert_many(db_conn, target_table_name, dict_list):
     """
     Shortcut for inserting one or multiple rows into a database.
@@ -17,6 +20,9 @@ def insert_many(db_conn, target_table_name, dict_list):
             ])
 
     """
+    if len(dict_list) == 0:
+        return
+
     # Get all the column names
     col_set = set()
     for input_dict in dict_list:
@@ -37,7 +43,12 @@ def insert_many(db_conn, target_table_name, dict_list):
     sql += ') VALUES ('
     sql += ', '.join(['?'] * len(col_list)) + ')'
 
-    return db_conn.executemany(sql, insert_list)
+    try:
+        return db_conn.executemany(sql, insert_list)
+    except sqlite3.OperationalError:
+        print('Error in SQL query:')
+        print(sql)
+        raise
 
 
 def round_down(input_number, mod_n):
