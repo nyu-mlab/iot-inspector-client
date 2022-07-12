@@ -33,7 +33,6 @@ const DeviceDrawer = ({ deviceId }) => {
 
   const handleSubmit = ({deviceName, vendorName, tags}) => {
     const tagList = JSON.stringify(tags.map((tag) => tag.label))
-    console.log()
     const data = {
       deviceName,
       vendorName,

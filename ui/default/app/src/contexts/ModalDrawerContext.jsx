@@ -1,6 +1,7 @@
 import React, { createContext, useState } from 'react'
 import PropTypes from 'prop-types'
 import ModalWrapper from '@components/ModalWrapper'
+import DrawerWrapper from '@components/DrawerWrapper'
 import DeviceDiscoveryDrawer from '@components/DeviceDiscoveryDrawer'
 
 
@@ -31,6 +32,11 @@ const ModalDrawerProvider = ({ children }) => {
       const modalComponent = modalLookup[name]
       setData({ type, open: true, modalComponent, props })
     }
+
+    if (type === 'drawer') {
+      const modalComponent = modalLookup[name]
+      setData({ type, open: true, modalComponent, props })
+    }
   }
 
   const close = ({ type, name }) => {
@@ -43,8 +49,11 @@ const ModalDrawerProvider = ({ children }) => {
   return (
     <ModalDrawerContext.Provider value={{ open, close }}>
         {data.open && data.type === 'modal' && (
-        <ModalWrapper modal={data.modalComponent} props={data.props} />
-      )}
+          <ModalWrapper modal={data.modalComponent} props={data.props} />
+        )}
+        {data.open && data.type === 'drawer' && (
+          <DrawerWrapper modal={data.modalComponent} props={data.props} />
+        )}
       {children}
     </ModalDrawerContext.Provider>
   )

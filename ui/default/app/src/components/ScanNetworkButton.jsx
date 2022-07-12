@@ -7,11 +7,10 @@ const { open } = useModalDrawer()
 
   return (
     <>
-    {console.log(open)}
       <button
         onClick={() => {
           open({
-            type: 'modal',
+            type: 'drawer',
             name: 'DeviceDiscoveryDrawer',
             props: {
               foo: 'bar'

@@ -5,8 +5,8 @@ import RefreshSpinner from "./graphics/RefreshSpinner"
 const DeviceDiscoveryDrawer = () => {
   return (
     <>
-    <div className="modal-backdrop"></div>
-    <div className="slide-panel">
+    {/* <div className="modal-backdrop"></div>
+    <div className="slide-panel"> */}
       <div className="flex items-center gap-4 px-2">
         <div className="w-8 h-8 animate-spin-slow">
           <RefreshSpinner />
@@ -36,7 +36,7 @@ const DeviceDiscoveryDrawer = () => {
         </div>
       </form>
       <button className="w-fit btn btn-primary">Monitor Devices</button>
-    </div>
+    {/* </div> */}
     </>
   )
 }
