@@ -2,8 +2,8 @@ import React from 'react'
 import DataCard from '@components/DataCard'
 import BarChart from '@components/charts/BarChart'
 import { dataUseage } from '@utils/utils'
-import useHighUseage from '../hooks/useHighUseage'
-import useNetworkActivity from '../hooks/useNetworkActivity'
+import useHighUseage from '@hooks/useHighUseage'
+import useNetworkActivity from '@hooks/useNetworkActivity'
 
 const NetworkActivityDashboard = () => {
   const { highUseageData, highUseageDataLoading } = useHighUseage()
