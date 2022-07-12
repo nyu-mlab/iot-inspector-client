@@ -2,7 +2,7 @@ import React from 'react'
 import DeviceDiscoveryCard from "./DeviceDiscoveryCard"
 import RefreshSpinner from "./graphics/RefreshSpinner"
 
-const DeviceDiscoverySlide = () => {
+const DeviceDiscoveryDrawer = () => {
   return (
     <>
     <div className="modal-backdrop"></div>
@@ -41,4 +41,4 @@ const DeviceDiscoverySlide = () => {
   )
 }
 
-export default DeviceDiscoverySlide
+export default DeviceDiscoveryDrawer

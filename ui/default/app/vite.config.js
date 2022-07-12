@@ -12,6 +12,7 @@ export default defineConfig({
       '@components': resolve(__dirname, 'src/components'),
       '@hooks': resolve(__dirname, 'src/hooks'),
       '@utils': resolve(__dirname, 'src/utils'),
+      '@contexts': resolve(__dirname, 'src/contexts'),
     }
   },
   build: {
