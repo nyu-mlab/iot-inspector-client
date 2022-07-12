@@ -1,5 +1,5 @@
 import React from 'react'
-import { dataUseage } from '../../../utils/utils'
+import { dataUseage } from '@utils/utils'
 
 const DeviceItem = ({ device }) => {
   return (

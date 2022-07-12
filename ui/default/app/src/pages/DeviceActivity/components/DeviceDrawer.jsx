@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Field, Form, Formik } from 'formik'
 import useDeviceInfo from '../hooks/useDeviceInfo'
-import TextInput from '../../../components/fields/TextInput'
-import CreateSelect from '../../../components/fields/CreateSelect'
-import useDevices from '../../../hooks/useDevices'
+import TextInput from '@components/fields/TextInput'
+import CreateSelect from '@components/fields/CreateSelect'
+import useDevices from '@hooks/useDevices'
 import { useEffect } from 'react'
 
 const DeviceDrawer = ({ deviceId }) => {

@@ -1,7 +1,7 @@
 import React from 'react'
-import MapChart from '../../../components/charts/MapChart'
-import EndpointList from '../../../components/EndpointList'
-import useDeviceTrafficToCountries from '../../../hooks/useDeviceTrafficToCountries'
+import MapChart from '@components/charts/MapChart'
+import EndpointList from '@components/EndpointList'
+import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
 
 const DeviceCommunication = ({ deviceId }) => {
   const { deviceCountriesData, deviceCountriesDataLoading } =

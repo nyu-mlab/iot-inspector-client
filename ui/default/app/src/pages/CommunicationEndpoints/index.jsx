@@ -1,10 +1,10 @@
 import React from 'react'
-import EndpointList from '../../components/EndpointList'
-import MapChart from '../../components/charts/MapChart'
+import EndpointList from '@components/EndpointList'
+import MapChart from '@components/charts/MapChart'
 import { HiChevronRight } from 'react-icons/hi'
 
-import useQueryParam from '../../hooks/useQueryParam'
-import useDeviceTrafficToCountries from '../../hooks/useDeviceTrafficToCountries'
+import useQueryParam from '@hooks/useQueryParam'
+import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
 
 const CommunicationEndpoints = () => {
   const query = useQueryParam()

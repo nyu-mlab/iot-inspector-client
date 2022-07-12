@@ -1,5 +1,5 @@
 import React from 'react'
-import useDevices from '../../../hooks/useDevices'
+import useDevices from '@hooks/useDevices'
 
 const DeviceName = (deviceId) => {
   const { devicesData, devicesDataLoading } = useDevices({

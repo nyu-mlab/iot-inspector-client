@@ -4,8 +4,8 @@ import { BiSortAlt2 } from 'react-icons/bi'
 
 import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
-import RefreshSpinner from '../../../components/graphics/RefreshSpinner'
-import useDevices from '../../../hooks/useDevices'
+import RefreshSpinner from '@components/graphics/RefreshSpinner'
+import useDevices from '@hooks/useDevices'
 
 const InspectingDevicesDashboard = () => {
   const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
