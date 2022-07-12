@@ -7,7 +7,7 @@ import useChartActivity from '../../hooks/useChartActivity'
 
 const BarChart = ({ deviceId }) => {
   const { networkDownloadActivity, networkDownloadActivityLoading } =
-    useChartActivity()
+    useChartActivity({ pullInterval: 60000 })
 
   const chartOptions = useMemo(() => {
     return {

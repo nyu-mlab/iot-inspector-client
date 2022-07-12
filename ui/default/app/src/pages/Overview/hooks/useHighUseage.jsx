@@ -14,7 +14,7 @@ const HIGH_USEAGE_QUERY = gql`
 const useHighUseage = () => {
   const [highUseageData, setHighUseageData] = useState([])
 
-  const { data, loading: highUseageDataLoading } = useQuery(HIGH_USEAGE_QUERY)
+  const { data, loading: highUseageDataLoading } = useQuery(HIGH_USEAGE_QUERY, { pollInterval: 20000 })
 
   useEffect(() => {
     if (data?.devices) {
@@ -24,6 +24,7 @@ const useHighUseage = () => {
         return b.outbound_byte_count - a.outbound_byte_count
       })
 
+     console.log("@DEBUG::07122022-080904"); 
       setHighUseageData(sorted)
     }
   }, [data?.devices])
