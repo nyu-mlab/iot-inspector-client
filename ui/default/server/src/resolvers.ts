@@ -1,10 +1,10 @@
 import { Context } from './context'
 import { add, sub, format } from 'date-fns'
 
-// const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
-const SERVER_START_TIME = Math.round(
-  new Date('June 29, 2022 10:00:00').getTime() / 1000,
-)
+const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
+// const SERVER_START_TIME = Math.round(
+//   new Date('June 29, 2022 10:00:00').getTime() / 1000,
+// )
 
 enum TimeType {
   ts = 'ts',
@@ -92,7 +92,7 @@ const generateFlowXYChartData = async (
     .filter((value, index, self) => self.indexOf(value) === index)
     .slice(totalAmount)
 
-    
+
   let yAxis = groupBy(data, 'device_id')
   yAxis = Object.keys(yAxis).map((key) => {
     return {

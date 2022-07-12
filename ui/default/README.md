@@ -4,6 +4,7 @@
 From within `ui/default` directory
 ```bash
 yarn install:all  # This will install dependencies within server and client
+yarn prisma:generate  # This will compile a prisma server for your OS/architecture.
 ```
 
 If this is your first time running the app, spin up the database so that we have it in place. Note this will spin it up and run it, you'll need to run this in a separate terminal window
@@ -14,12 +15,12 @@ yarn mockdb
 ### Running the App
 Spin both the client and graphql server up. Note this should be run within the `ui/default` directory. It will concurrently run both client and server.
 ```bash
-yarn dev 
+yarn dev
 ```
 
 Within another tab (if not already running), to run the mock database (which needs to be run when running the app) run:
 ```bash
-yarn mockdb 
+yarn mockdb
 ```
 
 This will run the mock database and generate database files.
@@ -27,7 +28,7 @@ This will run the mock database and generate database files.
 ### Building the App
 From within `ui/default` run:
 ```bash
-yarn build:client
+yarn client:build
 ```
 
 This will output a distribution to: `ui/default/html`

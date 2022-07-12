@@ -35,14 +35,14 @@ const LineChart = ({ deviceId }) => {
       deviceId,
       currentTime: Math.round(new Date().getTime() / 1000),
     },
-    pollInterval:10000,
+    pollInterval:2000,
   })
 
   const [chartOptions, setChartOptions] = useState({
     chart: {
       id: 'realtime',
       animations: {
-        enabled: true,
+        enabled: false,
         easing: 'linear',
         dynamicAnimation: {
           speed: 1500,
