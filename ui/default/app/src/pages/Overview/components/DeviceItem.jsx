@@ -1,7 +1,10 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { dataUseage } from '@utils/utils'
 
 const DeviceItem = ({ device }) => {
+  const taglist = device.device_info.tag_list
+
   return (
     // device item classes based on filled in details -- status-empty / status-inprogress / status-complete
     <div className="device-item status-empty">
@@ -20,14 +23,17 @@ const DeviceItem = ({ device }) => {
       </div>
 
       <div className="device-tags">
-        {/* {device.device_info.tag_list.forEach((tag) => {
+        {console.log(taglist)}
+        {/* {taglist && taglist.length > 0 && taglist.map((tag) => {
         <div className="tag">
           tag
         </div>
         })} */}
-        <div className="tag">
-          tag
-        </div>
+
+
+        {/* {device.device_info.tag_list.length
+        ? <div className="tag">{device.device_info.tag_list}</div>
+        : <p>no dice</p>} */}
 
       </div>
       <div className="device-details">
@@ -38,6 +44,10 @@ const DeviceItem = ({ device }) => {
       </div>
     </div>
   )
+}
+
+DeviceItem.propTypes = {
+  tagList: PropTypes.array
 }
 
 export default DeviceItem
