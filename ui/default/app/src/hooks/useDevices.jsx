@@ -13,6 +13,7 @@ const DEVICES_QUERY = gql`
         device_name
         vendor_name
         tag_list
+        is_inspected
       }
     }
   }
