@@ -18,10 +18,17 @@ const DeviceItem = ({ device }) => {
           </p>
         </div>
       </div>
+
       <div className="device-tags">
+        {/* {device.device_info.tag_list.forEach((tag) => {
         <div className="tag">
           tag
         </div>
+        })} */}
+        <div className="tag">
+          tag
+        </div>
+
       </div>
       <div className="device-details">
         {device && (<div className="flex items-center justify-center px-4 text-sm border-r border-gray-300 w-fit">{dataUseage(device.outbound_byte_count)}</div>)}
