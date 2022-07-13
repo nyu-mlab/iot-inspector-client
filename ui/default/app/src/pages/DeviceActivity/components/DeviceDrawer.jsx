@@ -65,6 +65,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 name="deviceName"
                 type="text"
                 label="Device Name"
+                placeholder="Device Name"
                 component={TextInput}
                 className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('deviceName', value)}
@@ -74,6 +75,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 name="vendorName"
                 type="text"
                 label="Manufacturer"
+                placeholder="Manufacturer"
                 component={TextInput}
                 className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('vendorName', value)}
@@ -83,6 +85,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 type="text"
                 component={CreateSelect}
                 isMulti
+                placeholder="Add Device Tags"
                 // options={searchDistanceOptions}
                 onChange={(value) => {
                   console.log(value)

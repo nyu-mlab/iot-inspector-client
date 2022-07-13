@@ -23,17 +23,12 @@ const DeviceItem = ({ device }) => {
       </div>
 
       <div className="device-tags">
-        {console.log(taglist)}
-        {/* {taglist && taglist.length > 0 && taglist.map((tag) => {
-        <div className="tag">
-          tag
+
+        {JSON.parse(taglist).map((tag) => (
+        <div className="tag" key={tag}>
+          { tag }
         </div>
-        })} */}
-
-
-        {/* {device.device_info.tag_list.length
-        ? <div className="tag">{device.device_info.tag_list}</div>
-        : <p>no dice</p>} */}
+        ))}
 
       </div>
       <div className="device-details">
