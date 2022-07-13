@@ -6,6 +6,7 @@ import CreateSelect from '@components/fields/CreateSelect'
 import useDevices from '@hooks/useDevices'
 import { useEffect } from 'react'
 
+
 const DeviceDrawer = ({ deviceId }) => {
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
     useDeviceInfo({ deviceId })
@@ -20,16 +21,20 @@ const DeviceDrawer = ({ deviceId }) => {
   }
 
   useEffect(() => {
-    if (!devicesData[0]?.device_info) return
+    if (!devicesData.length) return
+
+    const selectedDevice = devicesData.find(d => d.device_id === deviceId)
+
+    console.log("@DEBUG::07132022-100303", selectedDevice);
     setInitialValues({
       deviceName:
-        devicesData[0]?.device_info?.device_name ||
-        devicesData[0]?.auto_name ||
+        selectedDevice?.device_info?.device_name ||
+        selectedDevice?.auto_name ||
         '',
-      vendorName: devicesData[0]?.device_info?.vendor_name || '',
-      tags: parseTags(devicesData[0]?.device_info?.tag_list) || [],
+      vendorName: selectedDevice?.device_info?.vendor_name || '',
+      tags: parseTags(selectedDevice?.device_info?.tag_list) || [],
     })
-  }, [devicesData[0]?.device_info])
+  }, [devicesData])
 
   const handleSubmit = ({deviceName, vendorName, tags}) => {
     const tagList = JSON.stringify(tags.map((tag) => tag.label))
