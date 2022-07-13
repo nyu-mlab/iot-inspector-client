@@ -25,7 +25,6 @@ const DeviceDrawer = ({ deviceId }) => {
 
     const selectedDevice = devicesData.find(d => d.device_id === deviceId)
 
-    console.log("@DEBUG::07132022-100303", selectedDevice);
     setInitialValues({
       deviceName:
         selectedDevice?.device_info?.device_name ||
