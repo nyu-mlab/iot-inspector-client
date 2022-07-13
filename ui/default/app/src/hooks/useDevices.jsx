@@ -35,8 +35,7 @@ const useDevices = (props) => {
   useEffect(() => {
     if (data?.devices) {
       let d = data.devices // TODO: preset filters, filter here https://github.com/ocupop/iot-inspector-client/issues/18
-      console.table(d)
-
+      
       if (filters?.sort) {
         console.table('TODO: SORT')
         /*
