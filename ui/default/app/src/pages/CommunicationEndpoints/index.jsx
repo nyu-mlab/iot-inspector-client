@@ -1,8 +1,8 @@
 import React from 'react'
 import EndpointList from '@components/EndpointList'
 import MapChart from '@components/charts/MapChart'
+import EndpointDrawer from '../../components/EndpointDrawer'
 import { HiChevronRight } from 'react-icons/hi'
-
 import useQueryParam from '@hooks/useQueryParam'
 import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
 
@@ -25,19 +25,18 @@ const CommunicationEndpoints = () => {
       <section>
         <h1>Communication Endpoints</h1>
         {deviceCountriesDataLoading ? (
-        <div className="h-[600px] p-8">
+
           <div className="h-full skeleton" />
-        </div>
         ) : (
           <>
             <div>
               <MapChart data={deviceCountriesData} />
             </div>
-
             <EndpointList data={deviceCountriesData} />
           </>
         )}
       </section>
+      <EndpointDrawer />
     </>
   )
 }

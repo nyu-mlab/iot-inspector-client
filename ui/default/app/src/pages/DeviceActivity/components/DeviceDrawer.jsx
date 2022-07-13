@@ -38,7 +38,6 @@ const DeviceDrawer = ({ deviceId }) => {
 
   const handleSubmit = ({deviceName, vendorName, tags}) => {
     const tagList = JSON.stringify(tags.map((tag) => tag.label))
-    console.log()
     const data = {
       deviceName,
       vendorName,
@@ -51,7 +50,7 @@ const DeviceDrawer = ({ deviceId }) => {
   return (
     <aside className="menu-drawer device-details">
       {!initialValues ? (
-        <div className="h-[600px] p-8">
+        <div className="h-[600px]">
           <div className="h-full skeleton" />
         </div>
       ) : (

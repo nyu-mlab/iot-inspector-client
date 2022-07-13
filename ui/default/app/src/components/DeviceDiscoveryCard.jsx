@@ -1,16 +1,20 @@
 import React from 'react'
+import PropTypes from 'prop-types'
+import { dataUseage } from '@utils/utils'
 
-const DeviceDiscoveryCard = () => {
+const DeviceDiscoveryCard = ({ device }) => {
   return (
      <div className="device-discovery-card">
       <form className="absolute top-2 right-3">
         <input type="checkbox" id="deviceID" checked/>
         <label htmlFor="deviceID" className="sr-only">Device Name</label>
       </form>
-      <h3>Unknown Device</h3>
+      <h3>{device?.device_info?.device_name ||
+        device?.auto_name ||
+        'Unknown Device'}</h3>
       <div className="flex flex-row gap-4">
-        <p>19.168.0.1</p>
-        <p>C6:xx:xx:xx:xx:xx</p>
+        <p>{device && device.ip}</p>
+        <p>{device && device.mac}</p>
       </div>
       <form className="grid grid-cols-3 gap-2 py-2">
         <div>
