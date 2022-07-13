@@ -30,9 +30,6 @@ const DeviceDiscoveryDrawer = () => {
       </div>
       )}
 
-
-
-
       <form className="flex justify-between py-4">
         <div className="flex items-center gap-2">
           <input type="checkbox" id="autoScan" checked/>
