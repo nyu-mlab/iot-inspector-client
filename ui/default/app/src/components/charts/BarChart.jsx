@@ -35,14 +35,24 @@ const BarChart = ({ deviceId }) => {
 
   const chartSeries = useMemo(() => {
     if (!devicesData || !networkDownloadActivity) return []
-    const data = networkDownloadActivity
-    console.log(networkDownloadActivity)
-    // data?.chartActivity.map(activity => {
-    //   console.log(activity)
-    //   return activity
-    // })
+    let data = networkDownloadActivity
+    data = data.chartActivity.yAxis.map(activity => {
+      const device = devicesData.find(d => d.device_id === activity.name)
 
-    return networkDownloadActivity?.chartActivity?.yAxis.slice(0, 3) || []
+      return {
+        ...activity,
+        name: device.device_info.device_name || device.auto_name || `Unknown Device - ${d.device_id}`
+      }
+    })
+
+    data = {
+      ...networkDownloadActivity,
+      chartActivity: {
+        yAxis: data
+      }
+    }
+
+    return data?.chartActivity?.yAxis.slice(0, 3) || []
   }, [networkDownloadActivity, devicesData])
 
   return (
