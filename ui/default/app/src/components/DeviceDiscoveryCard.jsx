@@ -25,7 +25,6 @@ const DeviceDiscoveryCard = ({ device }) => {
     updateDeviceInfo(v)
   }
 
-
   return (
     <Formik
       initialValues={initialValues}
