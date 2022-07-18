@@ -6,8 +6,6 @@ import { Field, Form, Formik } from 'formik'
 
 const DeviceDiscoveryDrawer = () => {
   const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
-  const [initialValues, setInitialValues] = useState(undefined)
-
   return (
     <>
       <div className="flex items-center gap-4 px-2">
@@ -30,36 +28,24 @@ const DeviceDiscoveryDrawer = () => {
         </div>
       )}
 
-{/* 
-      <Formik
-        initialValues={initialValues}
-        onSubmit={(values) => handleSubmit(values)}
-      >
-        {({ values, setFieldValue, dirty }) => (
-          <Form>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="autoScan" checked />
-              <label htmlFor="autoScan" className="p text-dark/50">
-                Automatically inspect new devices as they are discovered
-              </label>
-            </div>
-            <Field
-              type="checkbox"
-              name="toggle"
-              label="Select All"
-              className="w-4 h-4 !bg-gray-100"
-            />
-            <button
-              type="submit"
-              form="device-info-form"
-              className="w-full btn btn-primary"
-            >
-              Monitor Devices
-            </button>
-          </Form>
-        )}
-      </Formik>
-    */}
+      {/* <Formik className="flex justify-between py-4">
+        <div className="flex items-center gap-2">
+          <input type="checkbox" id="autoScan" checked />
+          <label htmlFor="autoScan" className="p text-dark/50">Automatically inspect new devices as they are discovered</label>
+        </div>
+        <Field
+          type="checkbox"
+          name="toggle"
+          label="Select All"
+          className="w-4 h-4 !bg-gray-100"
+        />
+        <button
+          type="submit"
+          form="device-info-form"
+          className="w-full btn btn-primary"
+        >
+          Monitor Devices</button>
+      </Formik> */}
     </>
   )
 }

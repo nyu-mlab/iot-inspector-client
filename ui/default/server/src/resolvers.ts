@@ -44,10 +44,13 @@ const getDeviceInfoForDevice = async (deviceId: string, context: Context) => {
   const device = await getDeviceById(deviceId, context)
   const device_info = await getDeviceInfoById(deviceId, context)
 
+  if (!device) return null
+
   return {
     ...device,
     device_info,
   }
+
 }
 
 const unixTime = (date) => {
@@ -56,7 +59,7 @@ const unixTime = (date) => {
 
 const groupBy = function (array, key) {
   return array.reduce(function (rv, x) {
-    ;(rv[x[key]] = rv[x[key]] || []).push(x)
+    ; (rv[x[key]] = rv[x[key]] || []).push(x)
     return rv
   }, {})
 }
@@ -65,8 +68,8 @@ const generateFlowXYChartData = async (
   timeType: TimeType,
   time: Date,
   context: Context,
-  timeSort: any='lt',
-  totalAmount: number=-6,
+  timeSort: any = 'lt',
+  totalAmount: number = -6,
   device_id?: String,
 ) => {
   const params: any = {
@@ -82,9 +85,9 @@ const generateFlowXYChartData = async (
 
   let data = await context.NetworkTrafficClient.flows.groupBy(params)
 
-  let dateFormat =  'yyyy-MM-dd HH:mm:ss'
-  if (timeType === TimeType.ts || timeType === TimeType.ts_mod_60 ||  TimeType.ts_mod_600) {
-    dateFormat='hh:mm:ss a'
+  let dateFormat = 'yyyy-MM-dd HH:mm:ss'
+  if (timeType === TimeType.ts || timeType === TimeType.ts_mod_60 || TimeType.ts_mod_600) {
+    dateFormat = 'hh:mm:ss a'
   }
 
   const xAxis: any = data
@@ -137,9 +140,15 @@ const devices = async (
     devicesResult.map(async (flow) => {
       const deviceId = args.device_id || flow.device_id
       const mappedDevice = await getDeviceInfoForDevice(deviceId, context)
-      return {
-        ...mappedDevice,
-        outbound_byte_count: flow._sum.outbound_byte_count,
+
+      if (mappedDevice) {
+        return {
+          ...mappedDevice,
+          outbound_byte_count: flow._sum.outbound_byte_count,
+        }
+      }
+      else {
+        console.error(`Device ID not found within devices ${deviceId}`)
       }
     }),
   )

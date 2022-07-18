@@ -74,8 +74,8 @@ const DeviceDrawer = ({ deviceId }) => {
                 autoComplete="off"
                 name="vendorName"
                 type="text"
-                label="Manufacturer"
-                placeholder="Manufacturer"
+                label="Vendor"
+                placeholder="Vendor Name"
                 component={TextInput}
                 className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('vendorName', value)}
