@@ -2,10 +2,10 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Field, Form, Formik } from 'formik'
 import TextInput from '@components/fields/TextInput'
+import SwitchInput from '@components/fields/SwitchInput'
 import useDeviceInfo from '@hooks/useDeviceInfo'
 
 const DeviceDiscoveryCard = ({ device }) => {
-
   const { updateDeviceInfo } = useDeviceInfo({ deviceId: device.device_id })
 
   const initialValues = {
@@ -18,7 +18,11 @@ const DeviceDiscoveryCard = ({ device }) => {
   }
 
   const handleSubmit = (values) => {
-    updateDeviceInfo(values)
+    const v = {
+      ...values,
+      isInspected: values.isInspected ? 1 : 0
+    }
+    updateDeviceInfo(v)
   }
 
 
@@ -41,9 +45,15 @@ const DeviceDiscoveryCard = ({ device }) => {
                 </div>
               </div>
               <Field
+                name='isInspected'
+                // className="mb-0"
                 type="checkbox"
-                name="isInspected"
-                className="w-4 h-4 !bg-gray-100"
+                toggle
+                component={SwitchInput}
+                onChange={(value) => {
+                  setFieldValue('isInspected', !values.isInspected)
+                }}
+              // label=""
               />
             </div>
             <div className="grid grid-cols-3 gap-2 py-2 network-devices">
