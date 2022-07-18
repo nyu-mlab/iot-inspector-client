@@ -53,3 +53,13 @@ CREATE TABLE IF NOT EXISTS state_kv (
     state_value_json TEXT NOT NULL
 );
 
+
+/*
+    Used to store user configs from the UX app
+*/
+CREATE TABLE IF NOT EXISTS user_configs (
+    id  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    can_contribute_to_research INTEGER DEFAULT 0 NOT NULL,
+    can_auto_inspect_device INTEGER DEFAULT 0 NOT NULL,
+    can_consent INTEGER DEFAULT 0 NOT NULL
+);

@@ -1,8 +1,8 @@
 import React from 'react'
 import DeviceDrawer from './components/DeviceDrawer'
-import LineChart from '../../components/charts/LineChart'
+import LineChart from '@components/charts/LineChart'
 import { HiChevronRight } from 'react-icons/hi'
-import useQueryParam from '../../hooks/useQueryParam'
+import useQueryParam from '@hooks/useQueryParam'
 import DeviceCommunication from './components/DeviceCommunication'
 import DeviceName from './components/DeviceName'
 

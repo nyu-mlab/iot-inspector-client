@@ -1,9 +1,9 @@
 import React from 'react'
-import DataCard from '../../../components/DataCard' // TODO: 1. Move to aliases 2. create index files 3. relative components 4. move hooks to global, index to group https://github.com/ocupop/iot-inspector-client/issues/16
-import BarChart from '../../../components/charts/BarChart'
-import { dataUseage } from '../../../utils/utils'
-import useHighUseage from '../hooks/useHighUseage'
-import useNetworkActivity from '../hooks/useNetworkActivity'
+import DataCard from '@components/DataCard'
+import BarChart from '@components/charts/BarChart'
+import { dataUseage } from '@utils/utils'
+import useHighUseage from '@hooks/useHighUseage'
+import useNetworkActivity from '@hooks/useNetworkActivity'
 
 const NetworkActivityDashboard = () => {
   const { highUseageData, highUseageDataLoading } = useHighUseage()

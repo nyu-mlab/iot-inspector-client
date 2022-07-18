@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { Field, Form, Formik } from 'formik'
-import useDeviceInfo from '../hooks/useDeviceInfo'
-import TextInput from '../../../components/fields/TextInput'
-import CreateSelect from '../../../components/fields/CreateSelect'
-import useDevices from '../../../hooks/useDevices'
+import useDeviceInfo from '@hooks/useDeviceInfo'
+import TextInput from '@components/fields/TextInput'
+import CreateSelect from '@components/fields/CreateSelect'
+import useDevices from '@hooks/useDevices'
 import { useEffect } from 'react'
+
 
 const DeviceDrawer = ({ deviceId }) => {
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
@@ -20,20 +21,22 @@ const DeviceDrawer = ({ deviceId }) => {
   }
 
   useEffect(() => {
-    if (!devicesData[0]?.device_info) return
+    if (!devicesData.length) return
+
+    const selectedDevice = devicesData.find(d => d.device_id === deviceId)
+
     setInitialValues({
       deviceName:
-        devicesData[0]?.device_info?.device_name ||
-        devicesData[0]?.auto_name ||
+        selectedDevice?.device_info?.device_name ||
+        selectedDevice?.auto_name ||
         '',
-      vendorName: devicesData[0]?.device_info?.vendor_name || '',
-      tags: parseTags(devicesData[0]?.device_info?.tag_list) || [],
+      vendorName: selectedDevice?.device_info?.vendor_name || '',
+      tags: parseTags(selectedDevice?.device_info?.tag_list) || [],
     })
-  }, [devicesData[0]?.device_info])
+  }, [devicesData])
 
   const handleSubmit = ({deviceName, vendorName, tags}) => {
     const tagList = JSON.stringify(tags.map((tag) => tag.label))
-    console.log()
     const data = {
       deviceName,
       vendorName,
@@ -46,7 +49,7 @@ const DeviceDrawer = ({ deviceId }) => {
   return (
     <aside className="menu-drawer device-details">
       {!initialValues ? (
-        <div className="h-[600px] p-8">
+        <div className="h-[600px]">
           <div className="h-full skeleton" />
         </div>
       ) : (
@@ -62,6 +65,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 name="deviceName"
                 type="text"
                 label="Device Name"
+                placeholder="Device Name"
                 component={TextInput}
                 className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('deviceName', value)}
@@ -70,7 +74,8 @@ const DeviceDrawer = ({ deviceId }) => {
                 autoComplete="off"
                 name="vendorName"
                 type="text"
-                label="Manufacturer"
+                label="Vendor"
+                placeholder="Vendor Name"
                 component={TextInput}
                 className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
                 onChange={(value) => setFieldValue('vendorName', value)}
@@ -80,6 +85,7 @@ const DeviceDrawer = ({ deviceId }) => {
                 type="text"
                 component={CreateSelect}
                 isMulti
+                placeholder="Add Device Tags"
                 // options={searchDistanceOptions}
                 onChange={(value) => {
                   console.log(value)

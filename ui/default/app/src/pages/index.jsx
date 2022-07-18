@@ -6,6 +6,7 @@ import CommunicationEndpointsRoutes from './CommunicationEndpoints/routes'
 import DeviceActivityRoutes from './DeviceActivity/routes'
 import GettingStartedRoutes from './GettingStarted/routes'
 
+
 const Routes = () => {
   return useRoutes([
     OverviewRoutes,

@@ -1,6 +1,8 @@
 import { gql, useLazyQuery } from '@apollo/client'
 import React, { useEffect } from 'react'
-import DeviceDiscoverySlide from './DeviceDiscoverySlide'
+
+import ScanNetworkButton from './ScanNetworkButton'
+
 
 const COMMUNICATION_NAMES_QUERY = gql`
   query Query($deviceId: String) {
@@ -20,6 +22,8 @@ const EndpointDrawer = ({ deviceId }) => {
   if (loading) {
     return <></>
   }
+
+
 
   return (
     <>
@@ -54,8 +58,7 @@ const EndpointDrawer = ({ deviceId }) => {
             </a>
           </div>
         </div>
-        <button className="w-full btn btn-primary">Scan Network</button>
-        {/* <DeviceDiscoverySlide /> */}
+        <ScanNetworkButton />
       </aside>
     </>
   )

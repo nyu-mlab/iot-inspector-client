@@ -24,7 +24,7 @@ const deviceCountriesQuery = gql`
 const useDeviceTrafficToCountries = (props) => {
   const { data, loading: deviceCountriesDataLoading } = useQuery(
     deviceCountriesQuery,
-    props.queryOptions
+    props?.queryOptions
   )
 
   const calculate = (data) => {
