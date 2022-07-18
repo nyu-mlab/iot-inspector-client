@@ -61,14 +61,12 @@ const InspectingDevicesDashboard = () => {
           <Switch checked={cardView} onChange={setCardView}>
             <span className="flex">
               <HiViewGrid
-                className={`${
-                  cardView ? 'text-white rounded-lg bg-secondary' : 'text-dark'
-                } w-10 h-10 md:w-8 md:h-8 p-1 `}
+                className={`${cardView ? 'text-white rounded-lg bg-secondary' : 'text-dark'
+                  } w-10 h-10 md:w-8 md:h-8 p-1 `}
               />
               <HiViewList
-                className={`${
-                  cardView ? 'text-dark' : 'text-white rounded-lg bg-secondary'
-                } w-10 h-10 md:w-8 md:h-8 p-1 `}
+                className={`${cardView ? 'text-dark' : 'text-white rounded-lg bg-secondary'
+                  } w-10 h-10 md:w-8 md:h-8 p-1 `}
               />
             </span>
           </Switch>
@@ -80,7 +78,7 @@ const InspectingDevicesDashboard = () => {
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
           {devicesData
-          // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
+            // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
             ?.filter((device) => {
               if (!searchValue) return true
               if (
@@ -92,12 +90,16 @@ const InspectingDevicesDashboard = () => {
               }
             })
             .map((device) => (
-              <li
-                key={device.device_id}
-                className={`${cardView ? 'card-view' : 'list-view'} py-2`}
-              >
-                <DeviceItem device={device} />
-              </li>
+              <>
+                {device.device_info.is_inspected == 1 && (
+                  <li
+                    key={device.device_id}
+                    className={`${cardView ? 'card-view' : 'list-view'} py-2`}
+                  >
+                    <DeviceItem device={device} />
+                  </li>
+                )}
+              </>
             ))}
         </ul>
       )}
