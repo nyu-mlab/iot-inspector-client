@@ -1,5 +1,6 @@
 import React from 'react'
 import { gql, useMutation } from '@apollo/client'
+import useNotifications from '@hooks/useNotifications'
 
 const UPDATE_DEVICE_INFO = gql`
   mutation Mutation(
@@ -29,19 +30,21 @@ const UPDATE_DEVICE_INFO = gql`
 `
 
 const useDeviceInfo = ({ deviceId }) => {
+  const { showSuccess } = useNotifications()
+
   const [
     updateDeviceInfoFn,
     { data: updatedDeviceInfo, loading: updateDeviceInfoLoading, error },
   ] = useMutation(UPDATE_DEVICE_INFO)
 
-  const updateDeviceInfo = ({
+  const updateDeviceInfo = async ({
     deviceName,
     vendorName,
     tagList,
     isInspected,
     isBlocked,
   }) => {
-    updateDeviceInfoFn({
+    await updateDeviceInfoFn({
       variables: {
         deviceId,
         deviceName,
@@ -51,6 +54,9 @@ const useDeviceInfo = ({ deviceId }) => {
         isBlocked,
       },
     })
+
+    showSuccess("Record Updated")
+    
   }
 
   return {
