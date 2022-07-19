@@ -49,10 +49,8 @@ const Onboarding = () => {
                   </div>
                 </div>
                 ))}
-
-
               </div>
-              <button className="btn btn-primary">Get Started</button>
+              <a className="btn btn-primary" href="/consent">Get Started</a>
             </div>
           </div>
 

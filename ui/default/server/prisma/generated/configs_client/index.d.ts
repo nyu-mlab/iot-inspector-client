@@ -34,6 +34,17 @@ export type state_kv = {
   state_value_json: string
 }
 
+/**
+ * Model user_configs
+ * 
+ */
+export type user_configs = {
+  id: number
+  is_consent: number
+  is_auto_inspect_device: number
+  is_contribute_to_research: number
+}
+
 
 /**
  * ##  Prisma Client ʲˢ
@@ -194,6 +205,16 @@ export class PrismaClient<
     * ```
     */
   get state_kv(): Prisma.state_kvDelegate<GlobalReject>;
+
+  /**
+   * `prisma.user_configs`: Exposes CRUD operations for the **user_configs** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more User_configs
+    * const user_configs = await prisma.user_configs.findMany()
+    * ```
+    */
+  get user_configs(): Prisma.user_configsDelegate<GlobalReject>;
 }
 
 export namespace Prisma {
@@ -224,7 +245,7 @@ export namespace Prisma {
 
   /**
    * Prisma Client JS version: 3.14.0
-   * Query Engine version: 461d6a05159055555eb7dfb337c9fb271cbd4d7e
+   * Query Engine version: da41d2bb3406da22087b849f0e911199ba4fbf11
    */
   export type PrismaVersion = {
     client: string
@@ -609,7 +630,8 @@ export namespace Prisma {
 
   export const ModelName: {
     device_info: 'device_info',
-    state_kv: 'state_kv'
+    state_kv: 'state_kv',
+    user_configs: 'user_configs'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2367,6 +2389,830 @@ export namespace Prisma {
 
 
   /**
+   * Model user_configs
+   */
+
+
+  export type AggregateUser_configs = {
+    _count: User_configsCountAggregateOutputType | null
+    _avg: User_configsAvgAggregateOutputType | null
+    _sum: User_configsSumAggregateOutputType | null
+    _min: User_configsMinAggregateOutputType | null
+    _max: User_configsMaxAggregateOutputType | null
+  }
+
+  export type User_configsAvgAggregateOutputType = {
+    id: number | null
+    is_consent: number | null
+    is_auto_inspect_device: number | null
+    is_contribute_to_research: number | null
+  }
+
+  export type User_configsSumAggregateOutputType = {
+    id: number | null
+    is_consent: number | null
+    is_auto_inspect_device: number | null
+    is_contribute_to_research: number | null
+  }
+
+  export type User_configsMinAggregateOutputType = {
+    id: number | null
+    is_consent: number | null
+    is_auto_inspect_device: number | null
+    is_contribute_to_research: number | null
+  }
+
+  export type User_configsMaxAggregateOutputType = {
+    id: number | null
+    is_consent: number | null
+    is_auto_inspect_device: number | null
+    is_contribute_to_research: number | null
+  }
+
+  export type User_configsCountAggregateOutputType = {
+    id: number
+    is_consent: number
+    is_auto_inspect_device: number
+    is_contribute_to_research: number
+    _all: number
+  }
+
+
+  export type User_configsAvgAggregateInputType = {
+    id?: true
+    is_consent?: true
+    is_auto_inspect_device?: true
+    is_contribute_to_research?: true
+  }
+
+  export type User_configsSumAggregateInputType = {
+    id?: true
+    is_consent?: true
+    is_auto_inspect_device?: true
+    is_contribute_to_research?: true
+  }
+
+  export type User_configsMinAggregateInputType = {
+    id?: true
+    is_consent?: true
+    is_auto_inspect_device?: true
+    is_contribute_to_research?: true
+  }
+
+  export type User_configsMaxAggregateInputType = {
+    id?: true
+    is_consent?: true
+    is_auto_inspect_device?: true
+    is_contribute_to_research?: true
+  }
+
+  export type User_configsCountAggregateInputType = {
+    id?: true
+    is_consent?: true
+    is_auto_inspect_device?: true
+    is_contribute_to_research?: true
+    _all?: true
+  }
+
+  export type User_configsAggregateArgs = {
+    /**
+     * Filter which user_configs to aggregate.
+     * 
+    **/
+    where?: user_configsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_configs to fetch.
+     * 
+    **/
+    orderBy?: Enumerable<user_configsOrderByWithRelationInput>
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     * 
+    **/
+    cursor?: user_configsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_configs from the position of the cursor.
+     * 
+    **/
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_configs.
+     * 
+    **/
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned user_configs
+    **/
+    _count?: true | User_configsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: User_configsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: User_configsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: User_configsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: User_configsMaxAggregateInputType
+  }
+
+  export type GetUser_configsAggregateType<T extends User_configsAggregateArgs> = {
+        [P in keyof T & keyof AggregateUser_configs]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUser_configs[P]>
+      : GetScalarType<T[P], AggregateUser_configs[P]>
+  }
+
+
+
+
+  export type User_configsGroupByArgs = {
+    where?: user_configsWhereInput
+    orderBy?: Enumerable<user_configsOrderByWithAggregationInput>
+    by: Array<User_configsScalarFieldEnum>
+    having?: user_configsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: User_configsCountAggregateInputType | true
+    _avg?: User_configsAvgAggregateInputType
+    _sum?: User_configsSumAggregateInputType
+    _min?: User_configsMinAggregateInputType
+    _max?: User_configsMaxAggregateInputType
+  }
+
+
+  export type User_configsGroupByOutputType = {
+    id: number
+    is_consent: number
+    is_auto_inspect_device: number
+    is_contribute_to_research: number
+    _count: User_configsCountAggregateOutputType | null
+    _avg: User_configsAvgAggregateOutputType | null
+    _sum: User_configsSumAggregateOutputType | null
+    _min: User_configsMinAggregateOutputType | null
+    _max: User_configsMaxAggregateOutputType | null
+  }
+
+  type GetUser_configsGroupByPayload<T extends User_configsGroupByArgs> = PrismaPromise<
+    Array<
+      PickArray<User_configsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof User_configsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], User_configsGroupByOutputType[P]>
+            : GetScalarType<T[P], User_configsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type user_configsSelect = {
+    id?: boolean
+    is_consent?: boolean
+    is_auto_inspect_device?: boolean
+    is_contribute_to_research?: boolean
+  }
+
+  export type user_configsGetPayload<
+    S extends boolean | null | undefined | user_configsArgs,
+    U = keyof S
+      > = S extends true
+        ? user_configs
+    : S extends undefined
+    ? never
+    : S extends user_configsArgs | user_configsFindManyArgs
+    ?'include' extends U
+    ? user_configs 
+    : 'select' extends U
+    ? {
+    [P in TrueKeys<S['select']>]:
+    P extends keyof user_configs ? user_configs[P] : never
+  } 
+    : user_configs
+  : user_configs
+
+
+  type user_configsCountArgs = Merge<
+    Omit<user_configsFindManyArgs, 'select' | 'include'> & {
+      select?: User_configsCountAggregateInputType | true
+    }
+  >
+
+  export interface user_configsDelegate<GlobalRejectSettings> {
+    /**
+     * Find zero or one User_configs that matches the filter.
+     * @param {user_configsFindUniqueArgs} args - Arguments to find a User_configs
+     * @example
+     * // Get one User_configs
+     * const user_configs = await prisma.user_configs.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findUnique<T extends user_configsFindUniqueArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
+      args: SelectSubset<T, user_configsFindUniqueArgs>
+    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'user_configs'> extends True ? CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>> : CheckSelect<T, Prisma__user_configsClient<user_configs | null >, Prisma__user_configsClient<user_configsGetPayload<T> | null >>
+
+    /**
+     * Find the first User_configs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_configsFindFirstArgs} args - Arguments to find a User_configs
+     * @example
+     * // Get one User_configs
+     * const user_configs = await prisma.user_configs.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+    **/
+    findFirst<T extends user_configsFindFirstArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
+      args?: SelectSubset<T, user_configsFindFirstArgs>
+    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findFirst', 'user_configs'> extends True ? CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>> : CheckSelect<T, Prisma__user_configsClient<user_configs | null >, Prisma__user_configsClient<user_configsGetPayload<T> | null >>
+
+    /**
+     * Find zero or more User_configs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_configsFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all User_configs
+     * const user_configs = await prisma.user_configs.findMany()
+     * 
+     * // Get first 10 User_configs
+     * const user_configs = await prisma.user_configs.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const user_configsWithIdOnly = await prisma.user_configs.findMany({ select: { id: true } })
+     * 
+    **/
+    findMany<T extends user_configsFindManyArgs>(
+      args?: SelectSubset<T, user_configsFindManyArgs>
+    ): CheckSelect<T, PrismaPromise<Array<user_configs>>, PrismaPromise<Array<user_configsGetPayload<T>>>>
+
+    /**
+     * Create a User_configs.
+     * @param {user_configsCreateArgs} args - Arguments to create a User_configs.
+     * @example
+     * // Create one User_configs
+     * const User_configs = await prisma.user_configs.create({
+     *   data: {
+     *     // ... data to create a User_configs
+     *   }
+     * })
+     * 
+    **/
+    create<T extends user_configsCreateArgs>(
+      args: SelectSubset<T, user_configsCreateArgs>
+    ): CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>>
+
+    /**
+     * Delete a User_configs.
+     * @param {user_configsDeleteArgs} args - Arguments to delete one User_configs.
+     * @example
+     * // Delete one User_configs
+     * const User_configs = await prisma.user_configs.delete({
+     *   where: {
+     *     // ... filter to delete one User_configs
+     *   }
+     * })
+     * 
+    **/
+    delete<T extends user_configsDeleteArgs>(
+      args: SelectSubset<T, user_configsDeleteArgs>
+    ): CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>>
+
+    /**
+     * Update one User_configs.
+     * @param {user_configsUpdateArgs} args - Arguments to update one User_configs.
+     * @example
+     * // Update one User_configs
+     * const user_configs = await prisma.user_configs.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    update<T extends user_configsUpdateArgs>(
+      args: SelectSubset<T, user_configsUpdateArgs>
+    ): CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>>
+
+    /**
+     * Delete zero or more User_configs.
+     * @param {user_configsDeleteManyArgs} args - Arguments to filter User_configs to delete.
+     * @example
+     * // Delete a few User_configs
+     * const { count } = await prisma.user_configs.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+    **/
+    deleteMany<T extends user_configsDeleteManyArgs>(
+      args?: SelectSubset<T, user_configsDeleteManyArgs>
+    ): PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more User_configs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_configsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many User_configs
+     * const user_configs = await prisma.user_configs.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+    **/
+    updateMany<T extends user_configsUpdateManyArgs>(
+      args: SelectSubset<T, user_configsUpdateManyArgs>
+    ): PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one User_configs.
+     * @param {user_configsUpsertArgs} args - Arguments to update or create a User_configs.
+     * @example
+     * // Update or create a User_configs
+     * const user_configs = await prisma.user_configs.upsert({
+     *   create: {
+     *     // ... data to create a User_configs
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the User_configs we want to update
+     *   }
+     * })
+    **/
+    upsert<T extends user_configsUpsertArgs>(
+      args: SelectSubset<T, user_configsUpsertArgs>
+    ): CheckSelect<T, Prisma__user_configsClient<user_configs>, Prisma__user_configsClient<user_configsGetPayload<T>>>
+
+    /**
+     * Count the number of User_configs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_configsCountArgs} args - Arguments to filter User_configs to count.
+     * @example
+     * // Count the number of User_configs
+     * const count = await prisma.user_configs.count({
+     *   where: {
+     *     // ... the filter for the User_configs we want to count
+     *   }
+     * })
+    **/
+    count<T extends user_configsCountArgs>(
+      args?: Subset<T, user_configsCountArgs>,
+    ): PrismaPromise<
+      T extends _Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], User_configsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a User_configs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {User_configsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends User_configsAggregateArgs>(args: Subset<T, User_configsAggregateArgs>): PrismaPromise<GetUser_configsAggregateType<T>>
+
+    /**
+     * Group by User_configs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {User_configsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends User_configsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: User_configsGroupByArgs['orderBy'] }
+        : { orderBy?: User_configsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends TupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, User_configsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUser_configsGroupByPayload<T> : PrismaPromise<InputErrors>
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for user_configs.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export class Prisma__user_configsClient<T> implements PrismaPromise<T> {
+    [prisma]: true;
+    private readonly _dmmf;
+    private readonly _fetcher;
+    private readonly _queryType;
+    private readonly _rootField;
+    private readonly _clientMethod;
+    private readonly _args;
+    private readonly _dataPath;
+    private readonly _errorFormat;
+    private readonly _measurePerformance?;
+    private _isList;
+    private _callsite;
+    private _requestPromise?;
+    constructor(_dmmf: runtime.DMMFClass, _fetcher: PrismaClientFetcher, _queryType: 'query' | 'mutation', _rootField: string, _clientMethod: string, _args: any, _dataPath: string[], _errorFormat: ErrorFormat, _measurePerformance?: boolean | undefined, _isList?: boolean);
+    readonly [Symbol.toStringTag]: 'PrismaClientPromise';
+
+
+    private get _document();
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+  }
+
+  // Custom InputTypes
+
+  /**
+   * user_configs findUnique
+   */
+  export type user_configsFindUniqueArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * Throw an Error if a user_configs can't be found
+     * 
+    **/
+    rejectOnNotFound?: RejectOnNotFound
+    /**
+     * Filter, which user_configs to fetch.
+     * 
+    **/
+    where: user_configsWhereUniqueInput
+  }
+
+
+  /**
+   * user_configs findFirst
+   */
+  export type user_configsFindFirstArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * Throw an Error if a user_configs can't be found
+     * 
+    **/
+    rejectOnNotFound?: RejectOnNotFound
+    /**
+     * Filter, which user_configs to fetch.
+     * 
+    **/
+    where?: user_configsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_configs to fetch.
+     * 
+    **/
+    orderBy?: Enumerable<user_configsOrderByWithRelationInput>
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for user_configs.
+     * 
+    **/
+    cursor?: user_configsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_configs from the position of the cursor.
+     * 
+    **/
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_configs.
+     * 
+    **/
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of user_configs.
+     * 
+    **/
+    distinct?: Enumerable<User_configsScalarFieldEnum>
+  }
+
+
+  /**
+   * user_configs findMany
+   */
+  export type user_configsFindManyArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * Filter, which user_configs to fetch.
+     * 
+    **/
+    where?: user_configsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_configs to fetch.
+     * 
+    **/
+    orderBy?: Enumerable<user_configsOrderByWithRelationInput>
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing user_configs.
+     * 
+    **/
+    cursor?: user_configsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_configs from the position of the cursor.
+     * 
+    **/
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_configs.
+     * 
+    **/
+    skip?: number
+    distinct?: Enumerable<User_configsScalarFieldEnum>
+  }
+
+
+  /**
+   * user_configs create
+   */
+  export type user_configsCreateArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * The data needed to create a user_configs.
+     * 
+    **/
+    data: XOR<user_configsCreateInput, user_configsUncheckedCreateInput>
+  }
+
+
+  /**
+   * user_configs update
+   */
+  export type user_configsUpdateArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * The data needed to update a user_configs.
+     * 
+    **/
+    data: XOR<user_configsUpdateInput, user_configsUncheckedUpdateInput>
+    /**
+     * Choose, which user_configs to update.
+     * 
+    **/
+    where: user_configsWhereUniqueInput
+  }
+
+
+  /**
+   * user_configs updateMany
+   */
+  export type user_configsUpdateManyArgs = {
+    /**
+     * The data used to update user_configs.
+     * 
+    **/
+    data: XOR<user_configsUpdateManyMutationInput, user_configsUncheckedUpdateManyInput>
+    /**
+     * Filter which user_configs to update
+     * 
+    **/
+    where?: user_configsWhereInput
+  }
+
+
+  /**
+   * user_configs upsert
+   */
+  export type user_configsUpsertArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * The filter to search for the user_configs to update in case it exists.
+     * 
+    **/
+    where: user_configsWhereUniqueInput
+    /**
+     * In case the user_configs found by the `where` argument doesn't exist, create a new user_configs with this data.
+     * 
+    **/
+    create: XOR<user_configsCreateInput, user_configsUncheckedCreateInput>
+    /**
+     * In case the user_configs was found with the provided `where` argument, update it with this data.
+     * 
+    **/
+    update: XOR<user_configsUpdateInput, user_configsUncheckedUpdateInput>
+  }
+
+
+  /**
+   * user_configs delete
+   */
+  export type user_configsDeleteArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+    /**
+     * Filter which user_configs to delete.
+     * 
+    **/
+    where: user_configsWhereUniqueInput
+  }
+
+
+  /**
+   * user_configs deleteMany
+   */
+  export type user_configsDeleteManyArgs = {
+    /**
+     * Filter which user_configs to delete
+     * 
+    **/
+    where?: user_configsWhereInput
+  }
+
+
+  /**
+   * user_configs without action
+   */
+  export type user_configsArgs = {
+    /**
+     * Select specific fields to fetch from the user_configs
+     * 
+    **/
+    select?: user_configsSelect | null
+  }
+
+
+
+  /**
    * Enums
    */
 
@@ -2391,6 +3237,16 @@ export namespace Prisma {
   };
 
   export type State_kvScalarFieldEnum = (typeof State_kvScalarFieldEnum)[keyof typeof State_kvScalarFieldEnum]
+
+
+  export const User_configsScalarFieldEnum: {
+    id: 'id',
+    is_consent: 'is_consent',
+    is_auto_inspect_device: 'is_auto_inspect_device',
+    is_contribute_to_research: 'is_contribute_to_research'
+  };
+
+  export type User_configsScalarFieldEnum = (typeof User_configsScalarFieldEnum)[keyof typeof User_configsScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -2490,6 +3346,49 @@ export namespace Prisma {
     state_value_json?: StringWithAggregatesFilter | string
   }
 
+  export type user_configsWhereInput = {
+    AND?: Enumerable<user_configsWhereInput>
+    OR?: Enumerable<user_configsWhereInput>
+    NOT?: Enumerable<user_configsWhereInput>
+    id?: IntFilter | number
+    is_consent?: IntFilter | number
+    is_auto_inspect_device?: IntFilter | number
+    is_contribute_to_research?: IntFilter | number
+  }
+
+  export type user_configsOrderByWithRelationInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+  }
+
+  export type user_configsWhereUniqueInput = {
+    id?: number
+  }
+
+  export type user_configsOrderByWithAggregationInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+    _count?: user_configsCountOrderByAggregateInput
+    _avg?: user_configsAvgOrderByAggregateInput
+    _max?: user_configsMaxOrderByAggregateInput
+    _min?: user_configsMinOrderByAggregateInput
+    _sum?: user_configsSumOrderByAggregateInput
+  }
+
+  export type user_configsScalarWhereWithAggregatesInput = {
+    AND?: Enumerable<user_configsScalarWhereWithAggregatesInput>
+    OR?: Enumerable<user_configsScalarWhereWithAggregatesInput>
+    NOT?: Enumerable<user_configsScalarWhereWithAggregatesInput>
+    id?: IntWithAggregatesFilter | number
+    is_consent?: IntWithAggregatesFilter | number
+    is_auto_inspect_device?: IntWithAggregatesFilter | number
+    is_contribute_to_research?: IntWithAggregatesFilter | number
+  }
+
   export type device_infoCreateInput = {
     device_id: string
     device_name?: string
@@ -2572,6 +3471,48 @@ export namespace Prisma {
   export type state_kvUncheckedUpdateManyInput = {
     state_key?: StringFieldUpdateOperationsInput | string
     state_value_json?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type user_configsCreateInput = {
+    id: number
+    is_consent?: number
+    is_auto_inspect_device?: number
+    is_contribute_to_research?: number
+  }
+
+  export type user_configsUncheckedCreateInput = {
+    id: number
+    is_consent?: number
+    is_auto_inspect_device?: number
+    is_contribute_to_research?: number
+  }
+
+  export type user_configsUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    is_consent?: IntFieldUpdateOperationsInput | number
+    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type user_configsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    is_consent?: IntFieldUpdateOperationsInput | number
+    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type user_configsUpdateManyMutationInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    is_consent?: IntFieldUpdateOperationsInput | number
+    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type user_configsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    is_consent?: IntFieldUpdateOperationsInput | number
+    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
   }
 
   export type StringFilter = {
@@ -2682,6 +3623,41 @@ export namespace Prisma {
   export type state_kvMinOrderByAggregateInput = {
     state_key?: SortOrder
     state_value_json?: SortOrder
+  }
+
+  export type user_configsCountOrderByAggregateInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+  }
+
+  export type user_configsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+  }
+
+  export type user_configsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+  }
+
+  export type user_configsMinOrderByAggregateInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
+  }
+
+  export type user_configsSumOrderByAggregateInput = {
+    id?: SortOrder
+    is_consent?: SortOrder
+    is_auto_inspect_device?: SortOrder
+    is_contribute_to_research?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {

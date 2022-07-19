@@ -451,6 +451,50 @@ const addDeviceInfo = async (
   return updatedDeviceInfo
 }
 
+
+const userConfigs = async (
+  _parent,
+  args: { device_id: string },
+  context: Context,
+)  => {
+  const user_configs = await context.ConfigsClient.user_configs.findUnique({
+    where: {
+      id: 0,
+    },
+  })
+
+  return user_configs
+}
+
+/**
+ * Updates user configs
+ *
+ * @param _parent
+ * @param args
+ * @param context
+ * @returns
+ */
+ const updateUserConfigs = async (
+  _parent,
+  args: {
+    is_contribute_to_research: number,
+    is_auto_inspect_device: number,
+    is_consent: number
+  },
+  context: Context,
+) => {
+  const updatedUserConfigs = await context.ConfigsClient.user_configs.update({
+    where: {
+      id: 0,
+    },
+    data: {
+      ...args,
+    },
+  })
+
+  return updatedUserConfigs
+}
+
 export {
   devices,
   addDeviceInfo,
@@ -461,4 +505,6 @@ export {
   networkActivity,
   chartActivity,
   chartActivityBySecond,
+  userConfigs,
+  updateUserConfigs
 }

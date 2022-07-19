@@ -20,7 +20,7 @@ const Consent = () => {
               <input type="checkbox" id="ScanDevices" checked/>
               <label htmlFor="ScanDevices" className="text-dark/50 h4">Scan for devices on my network</label>
             </form>
-            <a className="btn btn-primary" href="/">
+            <a className="btn btn-primary" href="/overview">
               I hereby give my consent
             </a>
             <a className="text-dark/50 h4" href="/">No, I do not give my consent</a>

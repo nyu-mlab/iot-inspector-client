@@ -9,6 +9,8 @@ import {
   chartActivity,
   chartActivityBySecond,
   addDeviceInfo,
+  userConfigs,
+  updateUserConfigs
 } from './resolvers'
 
 export const typeDefs = gql`
@@ -95,6 +97,12 @@ export const typeDefs = gql`
     is_blocked: Int
   }
 
+  type UserConfigs {
+    is_contribute_to_research: Int!
+    is_auto_inspect_device: Int!
+    is_consent: Int!
+  }
+
   type Query {
     devices(device_id: String): [Device!]!
     flows(current_time: Int, device_id: String):  [Flow!]!
@@ -104,6 +112,7 @@ export const typeDefs = gql`
     communicationEndpointNames(device_id: String): [CommunicationEndpointName]!
     networkActivity(current_time: Int): NetworkActivity
     serverConfig: ServerConfig
+    userConfigs: UserConfigs
   }
 
   type Mutation {
@@ -127,9 +136,11 @@ export const resolvers = {
     dataUploadedToCounterParty,
     communicationEndpointNames,
     chartActivity,
-    chartActivityBySecond
+    chartActivityBySecond,
+    userConfigs
   },
   Mutation: {
     addDeviceInfo,
+    // updateUserConfigs
   },
 }

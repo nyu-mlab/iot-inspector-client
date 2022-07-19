@@ -6,6 +6,6 @@ const Overview = loadable(() => import('./index.jsx'))
 
 // route definition
 export default {
-  path: '/',
+  path: '/overview',
   children: [{ index: true, element: <Overview /> }]
 }

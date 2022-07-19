@@ -6,6 +6,6 @@ const GettingStarted = loadable(() => import('./index.jsx'))
 
 // route definition
 export default {
-  path: '/getting-started',
+  path: '/',
   children: [{ index: true, element: <GettingStarted /> }]
 }
