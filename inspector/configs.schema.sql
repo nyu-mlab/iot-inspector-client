@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS state_kv (
     Used to store user configs from the UX app
 */
 CREATE TABLE IF NOT EXISTS user_configs (
-    id  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    id  INTEGER PRIMARY KEY NOT NULL,
     can_contribute_to_research INTEGER DEFAULT 0 NOT NULL,
     can_auto_inspect_device INTEGER DEFAULT 0 NOT NULL,
     can_consent INTEGER DEFAULT 0 NOT NULL
