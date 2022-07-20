@@ -477,8 +477,8 @@ const userConfigs = async (
  const updateUserConfigs = async (
   _parent,
   args: {
-    is_contribute_to_research: number,
-    is_auto_inspect_device: number,
+    can_contribute_to_research: number,
+    can_auto_inspect_device: number,
     is_consent: number
   },
   context: Context,

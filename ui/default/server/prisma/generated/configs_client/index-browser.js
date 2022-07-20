@@ -12,11 +12,11 @@ exports.Prisma = Prisma
 
 /**
  * Prisma Client JS version: 3.14.0
- * Query Engine version: da41d2bb3406da22087b849f0e911199ba4fbf11
+ * Query Engine version: 8d8414deb360336e4698a65aa45a1fbaf1ce13d8
  */
 Prisma.prismaVersion = {
   client: "3.14.0",
-  engine: "da41d2bb3406da22087b849f0e911199ba4fbf11"
+  engine: "8d8414deb360336e4698a65aa45a1fbaf1ce13d8"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -93,8 +93,8 @@ exports.Prisma.State_kvScalarFieldEnum = makeEnum({
 exports.Prisma.User_configsScalarFieldEnum = makeEnum({
   id: 'id',
   is_consent: 'is_consent',
-  is_auto_inspect_device: 'is_auto_inspect_device',
-  is_contribute_to_research: 'is_contribute_to_research'
+  can_auto_inspect_device: 'can_auto_inspect_device',
+  can_contribute_to_research: 'can_contribute_to_research'
 });
 
 exports.Prisma.SortOrder = makeEnum({

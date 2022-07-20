@@ -23,8 +23,8 @@ model state_kv {
 }
 
 model user_configs {
-  id                          Int    @id
-  is_consent                  Int    @default(0)
-  is_auto_inspect_device      Int    @default(1)
-  is_contribute_to_research   Int    @default(0)
+  id                           Int    @id
+  is_consent                   Int    @default(0)
+  can_auto_inspect_device      Int    @default(1)
+  can_contribute_to_research   Int    @default(0)
 }

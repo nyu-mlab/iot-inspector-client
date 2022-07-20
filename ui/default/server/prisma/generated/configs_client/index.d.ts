@@ -41,8 +41,8 @@ export type state_kv = {
 export type user_configs = {
   id: number
   is_consent: number
-  is_auto_inspect_device: number
-  is_contribute_to_research: number
+  can_auto_inspect_device: number
+  can_contribute_to_research: number
 }
 
 
@@ -245,7 +245,7 @@ export namespace Prisma {
 
   /**
    * Prisma Client JS version: 3.14.0
-   * Query Engine version: da41d2bb3406da22087b849f0e911199ba4fbf11
+   * Query Engine version: 8d8414deb360336e4698a65aa45a1fbaf1ce13d8
    */
   export type PrismaVersion = {
     client: string
@@ -2404,36 +2404,36 @@ export namespace Prisma {
   export type User_configsAvgAggregateOutputType = {
     id: number | null
     is_consent: number | null
-    is_auto_inspect_device: number | null
-    is_contribute_to_research: number | null
+    can_auto_inspect_device: number | null
+    can_contribute_to_research: number | null
   }
 
   export type User_configsSumAggregateOutputType = {
     id: number | null
     is_consent: number | null
-    is_auto_inspect_device: number | null
-    is_contribute_to_research: number | null
+    can_auto_inspect_device: number | null
+    can_contribute_to_research: number | null
   }
 
   export type User_configsMinAggregateOutputType = {
     id: number | null
     is_consent: number | null
-    is_auto_inspect_device: number | null
-    is_contribute_to_research: number | null
+    can_auto_inspect_device: number | null
+    can_contribute_to_research: number | null
   }
 
   export type User_configsMaxAggregateOutputType = {
     id: number | null
     is_consent: number | null
-    is_auto_inspect_device: number | null
-    is_contribute_to_research: number | null
+    can_auto_inspect_device: number | null
+    can_contribute_to_research: number | null
   }
 
   export type User_configsCountAggregateOutputType = {
     id: number
     is_consent: number
-    is_auto_inspect_device: number
-    is_contribute_to_research: number
+    can_auto_inspect_device: number
+    can_contribute_to_research: number
     _all: number
   }
 
@@ -2441,36 +2441,36 @@ export namespace Prisma {
   export type User_configsAvgAggregateInputType = {
     id?: true
     is_consent?: true
-    is_auto_inspect_device?: true
-    is_contribute_to_research?: true
+    can_auto_inspect_device?: true
+    can_contribute_to_research?: true
   }
 
   export type User_configsSumAggregateInputType = {
     id?: true
     is_consent?: true
-    is_auto_inspect_device?: true
-    is_contribute_to_research?: true
+    can_auto_inspect_device?: true
+    can_contribute_to_research?: true
   }
 
   export type User_configsMinAggregateInputType = {
     id?: true
     is_consent?: true
-    is_auto_inspect_device?: true
-    is_contribute_to_research?: true
+    can_auto_inspect_device?: true
+    can_contribute_to_research?: true
   }
 
   export type User_configsMaxAggregateInputType = {
     id?: true
     is_consent?: true
-    is_auto_inspect_device?: true
-    is_contribute_to_research?: true
+    can_auto_inspect_device?: true
+    can_contribute_to_research?: true
   }
 
   export type User_configsCountAggregateInputType = {
     id?: true
     is_consent?: true
-    is_auto_inspect_device?: true
-    is_contribute_to_research?: true
+    can_auto_inspect_device?: true
+    can_contribute_to_research?: true
     _all?: true
   }
 
@@ -2569,8 +2569,8 @@ export namespace Prisma {
   export type User_configsGroupByOutputType = {
     id: number
     is_consent: number
-    is_auto_inspect_device: number
-    is_contribute_to_research: number
+    can_auto_inspect_device: number
+    can_contribute_to_research: number
     _count: User_configsCountAggregateOutputType | null
     _avg: User_configsAvgAggregateOutputType | null
     _sum: User_configsSumAggregateOutputType | null
@@ -2595,8 +2595,8 @@ export namespace Prisma {
   export type user_configsSelect = {
     id?: boolean
     is_consent?: boolean
-    is_auto_inspect_device?: boolean
-    is_contribute_to_research?: boolean
+    can_auto_inspect_device?: boolean
+    can_contribute_to_research?: boolean
   }
 
   export type user_configsGetPayload<
@@ -3242,8 +3242,8 @@ export namespace Prisma {
   export const User_configsScalarFieldEnum: {
     id: 'id',
     is_consent: 'is_consent',
-    is_auto_inspect_device: 'is_auto_inspect_device',
-    is_contribute_to_research: 'is_contribute_to_research'
+    can_auto_inspect_device: 'can_auto_inspect_device',
+    can_contribute_to_research: 'can_contribute_to_research'
   };
 
   export type User_configsScalarFieldEnum = (typeof User_configsScalarFieldEnum)[keyof typeof User_configsScalarFieldEnum]
@@ -3352,15 +3352,15 @@ export namespace Prisma {
     NOT?: Enumerable<user_configsWhereInput>
     id?: IntFilter | number
     is_consent?: IntFilter | number
-    is_auto_inspect_device?: IntFilter | number
-    is_contribute_to_research?: IntFilter | number
+    can_auto_inspect_device?: IntFilter | number
+    can_contribute_to_research?: IntFilter | number
   }
 
   export type user_configsOrderByWithRelationInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type user_configsWhereUniqueInput = {
@@ -3370,8 +3370,8 @@ export namespace Prisma {
   export type user_configsOrderByWithAggregationInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
     _count?: user_configsCountOrderByAggregateInput
     _avg?: user_configsAvgOrderByAggregateInput
     _max?: user_configsMaxOrderByAggregateInput
@@ -3385,8 +3385,8 @@ export namespace Prisma {
     NOT?: Enumerable<user_configsScalarWhereWithAggregatesInput>
     id?: IntWithAggregatesFilter | number
     is_consent?: IntWithAggregatesFilter | number
-    is_auto_inspect_device?: IntWithAggregatesFilter | number
-    is_contribute_to_research?: IntWithAggregatesFilter | number
+    can_auto_inspect_device?: IntWithAggregatesFilter | number
+    can_contribute_to_research?: IntWithAggregatesFilter | number
   }
 
   export type device_infoCreateInput = {
@@ -3476,43 +3476,43 @@ export namespace Prisma {
   export type user_configsCreateInput = {
     id: number
     is_consent?: number
-    is_auto_inspect_device?: number
-    is_contribute_to_research?: number
+    can_auto_inspect_device?: number
+    can_contribute_to_research?: number
   }
 
   export type user_configsUncheckedCreateInput = {
     id: number
     is_consent?: number
-    is_auto_inspect_device?: number
-    is_contribute_to_research?: number
+    can_auto_inspect_device?: number
+    can_contribute_to_research?: number
   }
 
   export type user_configsUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     is_consent?: IntFieldUpdateOperationsInput | number
-    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
-    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+    can_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    can_contribute_to_research?: IntFieldUpdateOperationsInput | number
   }
 
   export type user_configsUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     is_consent?: IntFieldUpdateOperationsInput | number
-    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
-    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+    can_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    can_contribute_to_research?: IntFieldUpdateOperationsInput | number
   }
 
   export type user_configsUpdateManyMutationInput = {
     id?: IntFieldUpdateOperationsInput | number
     is_consent?: IntFieldUpdateOperationsInput | number
-    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
-    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+    can_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    can_contribute_to_research?: IntFieldUpdateOperationsInput | number
   }
 
   export type user_configsUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     is_consent?: IntFieldUpdateOperationsInput | number
-    is_auto_inspect_device?: IntFieldUpdateOperationsInput | number
-    is_contribute_to_research?: IntFieldUpdateOperationsInput | number
+    can_auto_inspect_device?: IntFieldUpdateOperationsInput | number
+    can_contribute_to_research?: IntFieldUpdateOperationsInput | number
   }
 
   export type StringFilter = {
@@ -3628,36 +3628,36 @@ export namespace Prisma {
   export type user_configsCountOrderByAggregateInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type user_configsAvgOrderByAggregateInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type user_configsMaxOrderByAggregateInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type user_configsMinOrderByAggregateInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type user_configsSumOrderByAggregateInput = {
     id?: SortOrder
     is_consent?: SortOrder
-    is_auto_inspect_device?: SortOrder
-    is_contribute_to_research?: SortOrder
+    can_auto_inspect_device?: SortOrder
+    can_contribute_to_research?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {

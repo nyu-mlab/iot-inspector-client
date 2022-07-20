@@ -98,8 +98,8 @@ export const typeDefs = gql`
   }
 
   type UserConfigs {
-    is_contribute_to_research: Int!
-    is_auto_inspect_device: Int!
+    can_contribute_to_research: Int!
+    can_auto_inspect_device: Int!
     is_consent: Int!
   }
 
@@ -124,6 +124,11 @@ export const typeDefs = gql`
       is_inspected: Int
       is_blocked: Int
     ): DeviceInfo
+    updateUserConfigs(
+      is_consent: Int
+      can_auto_inspect_device: Int
+      can_contribute_to_research: Int
+    ): UserConfigs
   }
 `
 
@@ -141,6 +146,6 @@ export const resolvers = {
   },
   Mutation: {
     addDeviceInfo,
-    // updateUserConfigs
+    updateUserConfigs
   },
 }
