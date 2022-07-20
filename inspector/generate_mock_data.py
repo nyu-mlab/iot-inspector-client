@@ -77,6 +77,14 @@ def main():
     with open('configs.schema.sql') as fp:
         config_db.executescript(fp.read())
 
+    # Insert a single row in the user_configs table if it is not already there
+    if len(list(config_db.execute('SELECT * FROM user_configs LIMIT 1'))) == 0:
+        insert_many(
+            config_db,
+            'user_configs',
+            [{'id': 0}]
+        )
+
     device_id_list = []
 
     try:
