@@ -43,7 +43,7 @@ const useDeviceInfo = ({ deviceId }) => {
     tagList,
     isInspected,
     isBlocked,
-  }) => {
+  }, showToast = true) => {
     await updateDeviceInfoFn({
       variables: {
         deviceId,
@@ -55,8 +55,10 @@ const useDeviceInfo = ({ deviceId }) => {
       },
     })
 
-    showSuccess("Record Updated")
-    
+    if (showToast) {
+      showSuccess("Record Updated")
+    }
+
   }
 
   return {
