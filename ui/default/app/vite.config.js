@@ -13,6 +13,7 @@ export default defineConfig({
       '@hooks': resolve(__dirname, 'src/hooks'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@contexts': resolve(__dirname, 'src/contexts'),
+      '@constants': resolve(__dirname, 'src/constants'),
     }
   },
   build: {
