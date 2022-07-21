@@ -11,12 +11,7 @@ function App() {
       <ModalDrawerProvider>
         <DefaultLayout>
           <div className="App">
-            {/* <main className="flex-1 md:pr-64 lg:md:pr-80"> */}
-            {/* <main className="flex-1"> */}
-              {/* <div className=""> */}
-                <Router />
-              {/* </div> */}
-            {/* </main> */}
+            <Router />
           </div>
         </DefaultLayout>
       </ModalDrawerProvider>
