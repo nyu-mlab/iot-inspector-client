@@ -15,28 +15,30 @@ const CommunicationEndpoints = () => {
 
   return (
     <>
-      <section className="flex items-center gap-2 pb-2 w-fit">
-        <a href="/">Network Activity</a>
-        <HiChevronRight className="text-gray-600/50" />
-        <span className="font-bold text-gray-600/50">
-          Communication Endpoints
-        </span>
-      </section>
-      <section>
-        <h1>Communication Endpoints</h1>
-        {deviceCountriesDataLoading ? (
+      <main className="flex-1 md:pr-64 lg:md:pr-80">
+        <section className="flex items-center gap-2 pb-2 w-fit">
+          <a href="/">Network Activity</a>
+          <HiChevronRight className="text-gray-600/50" />
+          <span className="font-bold text-gray-600/50">
+            Communication Endpoints
+          </span>
+        </section>
+        <section>
+          <h1>Communication Endpoints</h1>
+          {deviceCountriesDataLoading ? (
 
-          <div className="h-full skeleton" />
-        ) : (
-          <>
-            <div>
-              <MapChart data={deviceCountriesData} />
-            </div>
-            <EndpointList data={deviceCountriesData} />
-          </>
-        )}
-      </section>
-      <EndpointDrawer />
+            <div className="h-full skeleton" />
+          ) : (
+            <>
+              <div>
+                <MapChart data={deviceCountriesData} />
+              </div>
+              <EndpointList data={deviceCountriesData} />
+            </>
+          )}
+        </section>
+        <EndpointDrawer />
+      </main>
     </>
   )
 }

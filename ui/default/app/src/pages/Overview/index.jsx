@@ -5,11 +5,11 @@ import EndpointDrawer from '../../components/EndpointDrawer'
 
 const index = () => {
   return (
-    <>
+    <main className="flex-1 md:pr-64 lg:md:pr-80">
       <NetworkActivityDashboard />
       <InspectingDevicesDashboard />
       <EndpointDrawer />
-    </>
+    </main>
   )
 }
 
