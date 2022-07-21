@@ -40,7 +40,7 @@ const Onboarding = () => {
 
                 {inspectorUseCase.map((card) => (
                 <div className="flex flex-col gap-4 text-center" key={card.key}>
-                  <div className="flex items-center justify-center border-b-8 border-primary bg-light rounded-xl">
+                  <div className="flex items-center justify-center border-b-8 border-primary bg-light rounded-xl lg:p-6">
                     {card.icon}
                   </div>
                   <div className="flex flex-col gap-2 sm:px-4">
