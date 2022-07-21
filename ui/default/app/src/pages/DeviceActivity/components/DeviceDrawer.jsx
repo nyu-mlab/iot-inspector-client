@@ -36,8 +36,6 @@ const DeviceDrawer = ({ deviceId }) => {
     
   }, [SELECTS])
 
-  console.log(deviceSelects)
-
   useEffect(() => {
     if (!devicesData.length) return
 
