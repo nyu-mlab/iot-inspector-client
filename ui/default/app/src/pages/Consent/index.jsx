@@ -14,7 +14,7 @@ const Consent = () => {
   const handleSubmit = async () => {
     await updateUserConfigs({
       isConsent: 1,
-      canAutoInspectDevice: canAutoInspectDevice ? 1 : 0
+      canAutoInspectDevice: 1
     })
 
     navigate('/overview')
@@ -35,12 +35,6 @@ const Consent = () => {
               </p>
             </div>
             <hr className="w-full md:w-9/12" />
-            <form className="flex items-center gap-2 ">
-              <input type="checkbox" defaultChecked={canAutoInspectDevice} onChange={() => setCanAutoInspectDevice(!canAutoInspectDevice)} id="ScanDevices" />
-              <label htmlFor="ScanDevices" className="text-dark/50 h4">Scan for devices on my network</label>
-
-
-            </form>
             <button className="btn btn-primary" onClick={handleSubmit}>
               I hereby give my consent
             </button>
