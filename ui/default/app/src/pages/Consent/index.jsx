@@ -1,6 +1,25 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom';
+import useUserConfigs from '@hooks/useUserConfigs'
 
 const Consent = () => {
+  const { userConfigsData, userConfigsDataLoading, updateUserConfigs } = useUserConfigs()
+  const [canAutoInspectDevice, setCanAutoInspectDevice] = useState(true)
+  const navigate = useNavigate();
+
+  if (userConfigsDataLoading) {
+    return ''
+  }
+
+  const handleSubmit = async () => {
+    await updateUserConfigs({
+      isConsent: 1,
+      canAutoInspectDevice: canAutoInspectDevice ? 1 : 0
+    })
+
+    navigate('/overview')
+  }
+
   return (
     <>
       <main className="flex w-full h-full bg-gray-100">
@@ -17,12 +36,14 @@ const Consent = () => {
             </div>
             <hr className="w-full md:w-9/12" />
             <form className="flex items-center gap-2 ">
-              <input type="checkbox" id="ScanDevices" checked/>
+              <input type="checkbox" defaultChecked={canAutoInspectDevice} onChange={() => setCanAutoInspectDevice(!canAutoInspectDevice)} id="ScanDevices" />
               <label htmlFor="ScanDevices" className="text-dark/50 h4">Scan for devices on my network</label>
+
+
             </form>
-            <a className="btn btn-primary" href="/overview">
+            <button className="btn btn-primary" onClick={handleSubmit}>
               I hereby give my consent
-            </a>
+            </button>
             <a className="text-dark/50 h4" href="/">No, I do not give my consent</a>
           </div>
         </div>
