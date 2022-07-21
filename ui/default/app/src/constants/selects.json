@@ -1,0 +1,73 @@
+{
+  "TV": {
+    "image": "",
+    "keywords": [
+      "TV",
+      "television",
+      "media player",
+      "set top"
+    ]
+  },
+  "Appliance": {
+    "image": "",
+    "keywords": [
+      "fridge",
+      "clothes Dryer",
+      "Clothes Washing Machine",
+      "Range",
+      "Dishwasher",
+      "vacuum"
+    ]
+  },
+  "Camera": {
+    "image": "",
+    "keywords": [
+      "video",
+      "doorbell",
+      "camera",
+      "home security",
+      "monitor"
+    ]
+  },
+  "Smart Speaker": {
+    "image": "",
+    "keywords": [
+      "alexa"
+    ]
+  },
+  "Home Automation": {
+    "image": "",
+    "keywords": [
+      "Smart",
+      "Thermostats",
+      "plug",
+      "light"
+    ]
+  },
+  "Computer": {
+    "image": "",
+    "keywords": [
+      "Laptop",
+      "Macbook",
+      "Portable"
+    ]
+  },
+  "Phone": {
+    "image": "",
+    "keywords": [
+      "Laptop",
+      "Macbook",
+      "Portable"
+    ]
+  },
+  "Printers": {
+    "image": "",
+    "keywords": [
+      "printer"
+    ]
+  },
+  "Unknown": {
+    "image": "",
+    "keywords": []
+  }
+}

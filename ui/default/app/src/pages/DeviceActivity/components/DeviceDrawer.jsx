@@ -4,7 +4,9 @@ import useDeviceInfo from '@hooks/useDeviceInfo'
 import TextInput from '@components/fields/TextInput'
 import CreateSelect from '@components/fields/CreateSelect'
 import useDevices from '@hooks/useDevices'
+import SELECTS from '@constants/selects'
 import { useEffect } from 'react'
+import { useMemo } from 'react'
 
 
 const DeviceDrawer = ({ deviceId }) => {
@@ -19,6 +21,20 @@ const DeviceDrawer = ({ deviceId }) => {
     tags = tags.map((tag) => ({ label: tag, value: tag }))
     return tags
   }
+
+  const deviceSelects = useMemo(() => {
+    // get all keywords into a value/label array.
+    // filter out unique values only
+    return Object.keys(SELECTS).map((key) => {
+      return SELECTS[key].keywords.map(keyword => {
+        return {
+          label: keyword,
+          value: keyword
+        }
+      })
+    }).flat(1);
+    
+  }, [SELECTS])
 
   useEffect(() => {
     if (!devicesData.length) return
@@ -35,7 +51,7 @@ const DeviceDrawer = ({ deviceId }) => {
     })
   }, [devicesData])
 
-  const handleSubmit = ({deviceName, vendorName, tags}) => {
+  const handleSubmit = ({ deviceName, vendorName, tags }) => {
     const tagList = JSON.stringify(tags.map((tag) => tag.label))
     const data = {
       deviceName,
@@ -60,45 +76,46 @@ const DeviceDrawer = ({ deviceId }) => {
           {({ values, setFieldValue, dirty }) => (
             <Form id="device-info-form" className="flex flex-col justify-between h-full">
               <div className="grid gap-4">
-              <Field
-                autoComplete="off"
-                name="deviceName"
-                type="text"
-                label="Device Name"
-                placeholder="Device Name"
-                component={TextInput}
-                className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
-                onChange={(value) => setFieldValue('deviceName', value)}
-              />
-              <Field
-                autoComplete="off"
-                name="vendorName"
-                type="text"
-                label="Vendor"
-                placeholder="Vendor Name"
-                component={TextInput}
-                className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
-                onChange={(value) => setFieldValue('vendorName', value)}
-              />
-              <Field
-                name="tags"
-                type="text"
-                component={CreateSelect}
-                isMulti
-                placeholder="Add Device Tags"
-                // options={searchDistanceOptions}
-                onChange={(value) => {
-                  console.log(value)
-                  setFieldValue('tags', value)
-                }}
-                label="Tags"
-              />
+                <Field
+                  autoComplete="off"
+                  name="deviceName"
+                  type="text"
+                  label="Device Name"
+                  placeholder="Device Name"
+                  component={TextInput}
+                  className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
+                  onChange={(value) => setFieldValue('deviceName', value)}
+                />
+                <Field
+                  autoComplete="off"
+                  name="vendorName"
+                  type="text"
+                  label="Vendor"
+                  placeholder="Vendor Name"
+                  component={TextInput}
+                  className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
+                  onChange={(value) => setFieldValue('vendorName', value)}
+                />
+                <Field
+                  name="tags"
+                  type="text"
+                  component={CreateSelect}
+                  options={deviceSelects}
+                  isMulti
+                  placeholder="Add Device Tags"
+                  // options={searchDistanceOptions}
+                  onChange={(value) => {
+                    console.log(value)
+                    setFieldValue('tags', value)
+                  }}
+                  label="Tags"
+                />
               </div>
               <button
                 type="submit"
                 form="device-info-form"
                 className="w-full btn btn-primary"
-                // disabled={dirty ? false : true}
+              // disabled={dirty ? false : true}
               >
                 Save Device Details
               </button>
@@ -106,60 +123,6 @@ const DeviceDrawer = ({ deviceId }) => {
           )}
         </Formik>
       )}
-    </aside>
-  )
-
-  return (
-    <aside className="menu-drawer">
-      <p>Naming and tagging helps with our research</p>
-      <form className="flex flex-col gap-4 py-4">
-        <div>
-          <input
-            type="input"
-            id="deviceName"
-            className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
-            placeholder="Device Name"
-          />
-          <label htmlFor="deviceName" className="sr-only">
-            Device Name
-          </label>
-        </div>
-        <div>
-          <input
-            type="input"
-            id="deviceType"
-            className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
-            placeholder="Device Type"
-          />
-          <label htmlFor="deviceType" className="sr-only">
-            Device Type
-          </label>
-        </div>
-        <div>
-          <input
-            type="input"
-            id="manufacturerName"
-            className="w-full px-4 py-2 bg-white border-l-4 border-yellow-600 rounded-md"
-            placeholder="Manufacturer"
-          />
-          <label htmlFor="manufacturerName" className="sr-only">
-            Manufacturer
-          </label>
-        </div>
-      </form>
-      <form className="flex flex-col flex-1 pb-4 md:pb-8 md:pt-4">
-        <label htmlFor="tags" className="text-sm text-dark/50">
-          Device Tags
-        </label>
-        <input
-          type="input"
-          id="tags"
-          className="flex flex-1 w-full px-4 py-2 bg-white rounded-md"
-        />
-      </form>
-      <button className="w-full btn btn-primary" onClick={onSubmit}>
-        Save Device Details
-      </button>
     </aside>
   )
 }
