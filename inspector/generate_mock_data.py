@@ -153,7 +153,7 @@ def generate_mock_traffic(new_device_id_list, device_id_list):
     # Insert the mock devices into the devices table
     insert_many(traffic_db, 'devices', device_list)
 
-    # Generate flows continuously, but up to 5 devices at a time
+    # Generate flows continuously
     print('Generating flows for 10 seconds')
     start_ts = time.time()
     prev_ts = None
@@ -166,7 +166,7 @@ def generate_mock_traffic(new_device_id_list, device_id_list):
             window_size = 9999999
         else:
             window_size = current_ts - prev_ts
-        for device_id in device_id_list[0 : random.randint(2, 5)]:
+        for device_id in device_id_list:
             generate_mock_traffic_helper(device_id, current_ts, window_size)
         prev_ts = current_ts
 
