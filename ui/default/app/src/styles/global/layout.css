@@ -4,7 +4,7 @@
   }
   .header{
     @apply w-full;
-    @apply sticky top-0 left-0 z-20 ;
+    @apply sticky top-0 left-0 z-50 ;
     @apply bg-white shadow-md;
     .primary-nav{
       @apply flex flex-col justify-between;

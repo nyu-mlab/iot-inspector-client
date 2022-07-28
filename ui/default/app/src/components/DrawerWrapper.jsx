@@ -18,7 +18,7 @@ const DrawerWrapper = ({ modal, props }) => {
     <>
     <Dialog
         as="div"
-        className="relative z-10 bg-red-400"
+        className="relative z-20"
         open={true}
         onClose={() => {
           close({
