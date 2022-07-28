@@ -9,11 +9,9 @@ function App() {
   return (
     <NotificationsProvider>
       <ModalDrawerProvider>
-        <DefaultLayout>
-          <div className="App">
-            <Router />
-          </div>
-        </DefaultLayout>
+        <div className="App">
+          <Router />
+        </div>
       </ModalDrawerProvider>
     </NotificationsProvider>
   )

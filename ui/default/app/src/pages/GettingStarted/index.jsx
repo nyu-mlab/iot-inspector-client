@@ -2,6 +2,8 @@ import React from 'react'
 import HomeSecurity from "@components/graphics/HomeSecurity"
 import BackgroundScanning from "@components/graphics/BackgroundScanning"
 import ResearchData from "@components/graphics/ResearchData"
+import NoConsentLayout from '../../layouts/NoConsentLayout'
+
 
 const inspectorUseCase = [
   {
@@ -30,9 +32,8 @@ const inspectorUseCase = [
 const Onboarding = () => {
   return (
     <>
-      <div className="App">
-        {/* <Header /> */}
-        <main className="flex h-full bg-gray-100">
+      <NoConsentLayout>
+        <main className="flex flex-1 bg-gray-100">
           <div className="w-full p-4 m-2 bg-white shadow-md md:m-8 rounded-2xl">
             <div className="flex flex-col items-center justify-center h-full max-w-6xl gap-8 mx-auto text-center">
               <h1>Start Inspecting</h1>
@@ -55,7 +56,7 @@ const Onboarding = () => {
           </div>
 
         </main>
-      </div>
+      </NoConsentLayout>
     </>
   )
 }

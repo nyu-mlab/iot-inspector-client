@@ -24,9 +24,13 @@ const Header = () => {
               </a>
               <div className="flex items-center gap-4">
 
-                <div className="hidden gap-2 md:flex">
+                {userConfigsData?.userConfigs?.is_consent == 1
+                ? <div className="hidden gap-2 md:flex">
                   <AnalyzingTraffic />
                 </div>
+                : '/'
+                }
+
 
                 <div className="flex lg:hidden">
                   <Disclosure.Button className="inline-flex items-center justify-center p-2 text-gray-400 rounded-md hover:text-white hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
