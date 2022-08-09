@@ -2,6 +2,8 @@ import React from 'react'
 import HomeSecurity from "@components/graphics/HomeSecurity"
 import BackgroundScanning from "@components/graphics/BackgroundScanning"
 import ResearchData from "@components/graphics/ResearchData"
+import NoConsentLayout from '../../layouts/NoConsentLayout'
+
 
 const inspectorUseCase = [
   {
@@ -30,9 +32,8 @@ const inspectorUseCase = [
 const Onboarding = () => {
   return (
     <>
-      <div className="App">
-        {/* <Header /> */}
-        <main className="flex h-full bg-gray-100">
+      <NoConsentLayout>
+        <main className="flex flex-1 bg-gray-100">
           <div className="w-full p-4 m-2 bg-white shadow-md md:m-8 rounded-2xl">
             <div className="flex flex-col items-center justify-center h-full max-w-6xl gap-8 mx-auto text-center">
               <h1>Start Inspecting</h1>
@@ -40,7 +41,7 @@ const Onboarding = () => {
 
                 {inspectorUseCase.map((card) => (
                 <div className="flex flex-col gap-4 text-center" key={card.key}>
-                  <div className="flex items-center justify-center border-b-8 border-primary bg-light rounded-xl">
+                  <div className="flex items-center justify-center border-b-8 border-primary bg-light rounded-xl lg:p-6">
                     {card.icon}
                   </div>
                   <div className="flex flex-col gap-2 sm:px-4">
@@ -49,15 +50,13 @@ const Onboarding = () => {
                   </div>
                 </div>
                 ))}
-
-
               </div>
-              <button className="btn btn-primary">Get Started</button>
+              <a className="btn btn-primary" href="/consent">Get Started</a>
             </div>
           </div>
 
         </main>
-      </div>
+      </NoConsentLayout>
     </>
   )
 }

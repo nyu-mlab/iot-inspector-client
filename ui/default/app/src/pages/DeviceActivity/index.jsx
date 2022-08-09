@@ -11,7 +11,8 @@ const DeviceActivity = () => {
   const deviceId = query.get('deviceid')
 
   return (
-    <div className="flex bg-white">
+    <main className="flex-1 md:pr-64 lg:md:pr-80">
+      <div className="flex bg-white">
       <div className="w-full">
         <section className="flex items-center gap-2 pb-2 w-fit">
           <a href="/">Network Activity</a>
@@ -39,7 +40,8 @@ const DeviceActivity = () => {
         </section>
       </div>
       <DeviceDrawer deviceId={deviceId} />
-    </div>
+      </div>
+    </main>
   )
 }
 

@@ -60,6 +60,6 @@ CREATE TABLE IF NOT EXISTS state_kv (
 CREATE TABLE IF NOT EXISTS user_configs (
     id  INTEGER PRIMARY KEY NOT NULL,
     can_contribute_to_research INTEGER DEFAULT 0 NOT NULL,
-    can_auto_inspect_device INTEGER DEFAULT 0 NOT NULL,
-    can_consent INTEGER DEFAULT 0 NOT NULL
+    can_auto_inspect_device INTEGER DEFAULT 1 NOT NULL,
+    is_consent INTEGER DEFAULT 0 NOT NULL
 );

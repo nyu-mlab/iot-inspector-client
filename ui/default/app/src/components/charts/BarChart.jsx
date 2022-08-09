@@ -37,11 +37,11 @@ const BarChart = ({ deviceId }) => {
     if (!devicesData || !networkDownloadActivity) return []
     let data = networkDownloadActivity
     data = data.chartActivity.yAxis.map(activity => {
-      const device = devicesData.find(d => d.device_id === activity.name)
+      const device = devicesData.devices.find(d => d.device_id === activity.name)
 
       return {
         ...activity,
-        name: device.device_info.device_name || device.auto_name || `Unknown Device - ${d.device_id}`
+        name: device?.device_info.device_name || device?.auto_name || `Unknown Device - ${device?.device_id}`
       }
     })
 

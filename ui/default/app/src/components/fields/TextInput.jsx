@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import Label from './label'
 
 const TextInput = (props) => {
-  const { children, className, hint, type, label, placeholder, autocomplete, required, field, form: { errors, touched }} = props
+  const { children, className, hint, type, label, placeholder, autocomplete, onChange, required, field, form: { errors, touched }} = props
   const status = touched[field.name] && errors[field.name] ? 'is-invalid' : ''
 
   const [editing, setEditing] = useState(false)
@@ -19,6 +19,7 @@ const TextInput = (props) => {
           <input
             className={`form-control ${status}`}
             {...field}
+            onChange={onChange}
             placeholder={placeholder}
             type={type}
             autoComplete={autocomplete}

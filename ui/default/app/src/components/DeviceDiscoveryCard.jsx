@@ -25,6 +25,10 @@ const DeviceDiscoveryCard = ({ device }) => {
     updateDeviceInfo(v)
   }
 
+  const handleChange = (values) => {
+    updateDeviceInfo(values, false)
+  }
+
   return (
     <Formik
       initialValues={initialValues}
@@ -51,6 +55,8 @@ const DeviceDiscoveryCard = ({ device }) => {
                 component={SwitchInput}
                 onChange={(value) => {
                   setFieldValue('isInspected', !values.isInspected)
+                  const isInspected = values.isInspected ? 0 : 1
+                  handleChange({isInspected})
                 }}
               // label=""
               />
@@ -64,7 +70,10 @@ const DeviceDiscoveryCard = ({ device }) => {
                 placeholder="Device Name"
                 component={TextInput}
                 className="w-full p-1 bg-gray-100 rounded-md"
-                onChange={(value) => setFieldValue('deviceName', value)}
+                onChange={(changeEvent) => {
+                  setFieldValue('deviceName', changeEvent.target.value)
+                  handleChange({deviceName: changeEvent.target.value})
+                }}
               />
               {/* <Field
                 autoComplete="off"
@@ -85,16 +94,19 @@ const DeviceDiscoveryCard = ({ device }) => {
                 placeholder="Manufacturer"
                 component={TextInput}
                 className="w-full p-1 bg-gray-100 rounded-md"
-                onChange={(value) => setFieldValue('vendorName', value)}
+                onChange={(changeEvent) => {
+                  setFieldValue('vendorName', changeEvent.target.value)
+                  handleChange({vendorName: changeEvent.target.value})
+                }}
               />
-              <button
+              {/* <button
                 type="submit"
                 form={`device-info-form_${device.device_id}`}
                 className="btn btn-primary"
               // disabled={dirty ? false : true}
               >
                 Save
-              </button>
+              </button> */}
             </div>
           </div>
         </Form>

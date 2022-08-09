@@ -1,10 +1,10 @@
 import React from 'react'
-import Header from '@components/Header'
+import HeaderNoConsent from '@components/HeaderNoConsent'
 
 const DefaultLayout = ({ children }) => {
   return (
     <>
-      <Header />
+      <HeaderNoConsent />
       {children}
     </>
   )

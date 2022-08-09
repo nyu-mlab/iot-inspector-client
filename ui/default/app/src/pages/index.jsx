@@ -5,10 +5,12 @@ import ConsentRoutes from './Consent/routes'
 import CommunicationEndpointsRoutes from './CommunicationEndpoints/routes'
 import DeviceActivityRoutes from './DeviceActivity/routes'
 import GettingStartedRoutes from './GettingStarted/routes'
+import SandboxRoutes from './Sandbox/routes'
 
 
 const Routes = () => {
   return useRoutes([
+    SandboxRoutes,
     OverviewRoutes,
     ConsentRoutes,
     CommunicationEndpointsRoutes,
