@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { useMemo } from 'react'
 
 const DEVICES_QUERY = gql`
   query Devices($deviceId: String) {
@@ -30,15 +29,12 @@ const useDevices = (props) => {
 
   const { data: devicesData, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
     variables,
-    pullInterval: props?.pullInterval || 5000,
-    fetchPolicy: "no-cache" 
+    fetchPolicy: 'network-only',
+    pollInterval: 30000,
+    // onCompleted: () => console.log('called'),
+    // fetchPolicy: 'no-cache',
     // ...props?.queryOptions,
   })
-
-  console.log(devicesData)
-
-  const x = useMemo(() => devicesData, [devicesData])
-  console.log("tt", x)
 
   // useEffect(() => {
   //   console.log('123')
