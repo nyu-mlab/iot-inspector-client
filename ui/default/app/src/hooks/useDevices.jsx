@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { gql, useQuery } from '@apollo/client'
+import { useMemo } from 'react'
 
 const DEVICES_QUERY = gql`
   query Devices($deviceId: String) {
@@ -20,60 +21,70 @@ const DEVICES_QUERY = gql`
 `
 
 const useDevices = (props) => {
-  const [devicesData, setDevicesData] = useState([])
+  // const [devicesData, setDevicesData] = useState([])
   const [filters, setFilters] = useState({})
 
   const variables = {
     ...(props?.deviceId || null),
   }
 
-  const { data, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
+  const { data: devicesData, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
     variables,
-    ...props?.queryOptions,
+    pullInterval: props?.pullInterval || 5000,
+    fetchPolicy: "no-cache" 
+    // ...props?.queryOptions,
   })
 
-  useEffect(() => {
-    if (data?.devices) {
-      let d = data.devices // TODO: preset filters, filter here https://github.com/ocupop/iot-inspector-client/issues/18
-      if (filters?.sort) {
-        console.table('TODO: SORT')
-        /*
-        d = d.slice().sort((a, b) => {
-          if (filters.sort.direction === 'DESC') {
-            if (a[filters.sort.by] > b[filters.sort.by]) {
-              console.log('@DEBUG::06232022-015741')
-              return -1
-            }
+  console.log(devicesData)
 
-            if (a[filters.sort.by] > b[filters.sort.by]) {
-              console.log('@DEBUG::06232022-015741')
-              return 1
-            }
-          }
+  const x = useMemo(() => devicesData, [devicesData])
+  console.log("tt", x)
 
-          if (a[filters.sort.by] > b[filters.sort.by]) {
-            console.log('@DEBUG::06232022-015741')
-            return 1
-          }
-          if (a[filters.sort.by] > b[filters.sort.by]) {
-            console.log('@DEBUG::06232022-015741')
-            return -1
-          }
-          return 0
-        })
-      }
+  // useEffect(() => {
+  //   console.log('123')
+  //   if (data?.devices) {
+  //     let d = data.devices // TODO: preset filters, filter here https://github.com/ocupop/iot-inspector-client/issues/18
+  //     if (filters?.sort) {
+  //       console.table('TODO: SORT')
+  //       /*
+  //       d = d.slice().sort((a, b) => {
+  //         if (filters.sort.direction === 'DESC') {
+  //           if (a[filters.sort.by] > b[filters.sort.by]) {
+  //             console.log('@DEBUG::06232022-015741')
+  //             return -1
+  //           }
 
-      console.group()
-      for (const x of d) {
-        console.log(x.auto_name, x.outbound_byte_count)
-      }
-      console.groupEnd()
-      */
-      }
+  //           if (a[filters.sort.by] > b[filters.sort.by]) {
+  //             console.log('@DEBUG::06232022-015741')
+  //             return 1
+  //           }
+  //         }
 
-      setDevicesData(d)
-    }
-  }, [data?.devices, filters])
+  //         if (a[filters.sort.by] > b[filters.sort.by]) {
+  //           console.log('@DEBUG::06232022-015741')
+  //           return 1
+  //         }
+  //         if (a[filters.sort.by] > b[filters.sort.by]) {
+  //           console.log('@DEBUG::06232022-015741')
+  //           return -1
+  //         }
+  //         return 0
+  //       })
+  //     }
+
+  //     console.group()
+  //     for (const x of d) {
+  //       console.log(x.auto_name, x.outbound_byte_count)
+  //     }
+  //     console.groupEnd()
+  //     */
+  //     }
+
+  //     console.log(d)
+
+  //     setDevicesData(d)
+  //   }
+  // }, [data, filters])
 
   const sortDevicesData = (sortBy, direction = 'ASC') => {
     setFilters({

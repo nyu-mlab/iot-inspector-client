@@ -77,7 +77,7 @@ const InspectingDevicesDashboard = () => {
         </div>
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
-          {devicesData
+          {devicesData.devices
             // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
             ?.filter((device) => {
               if (!searchValue) return true
@@ -90,7 +90,7 @@ const InspectingDevicesDashboard = () => {
               }
             })
             .map((device) => (
-              <>
+              <div key={device.device_id}>
                 {device.device_info.is_inspected == 1 && (
                   <li
                     key={device.device_id}
@@ -99,7 +99,7 @@ const InspectingDevicesDashboard = () => {
                     <DeviceItem device={device} />
                   </li>
                 )}
-              </>
+              </div>
             ))}
         </ul>
       )}
