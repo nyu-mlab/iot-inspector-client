@@ -22,9 +22,9 @@ const DEVICES_QUERY = gql`
 const useDevices = (props) => {
   // const [devicesData, setDevicesData] = useState([])
   const [filters, setFilters] = useState({})
-
+  
   const variables = {
-    ...(props?.deviceId || null),
+    ...(props || null),
   }
 
   const { data: devicesData, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {

@@ -37,9 +37,9 @@ const DeviceDrawer = ({ deviceId }) => {
   }, [SELECTS])
 
   useEffect(() => {
-    if (!devicesData.length) return
+    if (!devicesData?.devices.length) return
 
-    const selectedDevice = devicesData.find(d => d.device_id === deviceId)
+    const selectedDevice = devicesData.devices.find(d => d.device_id === deviceId)
 
     setInitialValues({
       deviceName:
