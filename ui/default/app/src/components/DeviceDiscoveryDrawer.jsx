@@ -6,6 +6,7 @@ import { Field, Form, Formik } from 'formik'
 
 const DeviceDiscoveryDrawer = () => {
   const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
+  console.log(devicesData)
   return (
     <>
       <div className="flex items-center gap-4 px-2">
@@ -22,7 +23,7 @@ const DeviceDiscoveryDrawer = () => {
         <div className="skeleton h-[600px]"></div>
       ) : (
         <div className="flex flex-col flex-1 gap-2 py-4 overflow-auto border-b md:py-8">
-          {devicesData.map((device) => (
+          {devicesData.devices.map((device) => (
             <DeviceDiscoveryCard key={device.device_id} device={device} />
           ))}
         </div>
