@@ -25,7 +25,17 @@ const SettingsModal = () => {
               </Switch>
               <Switch.Label className="h4 text-dark">Contributing Research</Switch.Label>
             </div>
-            <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.</p>
+            <div className="md:pl-14">
+              <p className="text-dark/80">By toggling on this option, you are participating in a research study by contributing your network’s data to a larger research effort. The NYU researchers behind this study are particularly interested in learning more about the security and privacy of smart homes.</p>
+              <p className="text-dark/80">
+              If you agree to be in this study, HDI will securely and anonymously send some of the collected data to the NYU researchers. You can find out more about what data we share with the NYU researchers, and how the researchers protect your data by following this FAQ.
+              </p>
+              <dl className="grid gap-4 py-6 text-sm md:pl-6 text-dark/80">
+                  <dt>Your participation is voluntary. You are free to toggle on/off this option as frequently and for as long as you like.</dt>
+                  <dd><strong>Risks:</strong> When you agree to contribute your data to research, HDI may be slower and may consume extra bandwidth, as it transmits the collected data about your network to the NYU researchers.</dd>
+                  <dd><strong>Benefits:</strong> You will feel good! — your altruism will lead to real-world data from your smart home being shared with security and privacy researchers.</dd>
+              </dl>
+            </div>
           </div>
         </Switch.Group>
         <Switch.Group>
@@ -44,7 +54,9 @@ const SettingsModal = () => {
             </Switch>
             <Switch.Label className="h4 text-dark">Automatically inspect new devices as they are discovered</Switch.Label>
           </div>
-          <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.</p>
+          <div className="md:pl-14">
+            <p className="text-dark/80">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.</p>
+          </div>
           </div>
         </Switch.Group>
       </div>
