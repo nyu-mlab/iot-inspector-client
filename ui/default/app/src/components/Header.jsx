@@ -136,7 +136,8 @@ const Header = () => {
                         </button>
                       )}
                     </Tab>
-                    <Tab as={Fragment}>
+                    {/* TODO ADD ACHIEVMENTS */}
+                    {/* <Tab as={Fragment}>
                       {({ selected }) => (
                         <button
                           className={
@@ -146,7 +147,7 @@ const Header = () => {
                           Achievments
                         </button>
                       )}
-                    </Tab>
+                    </Tab> */}
                     <Tab as={Fragment}>
                       {({ selected }) => (
                         <button

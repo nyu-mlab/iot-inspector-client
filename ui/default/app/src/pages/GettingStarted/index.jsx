@@ -7,25 +7,25 @@ import NoConsentLayout from '../../layouts/NoConsentLayout'
 
 const inspectorUseCase = [
   {
-    label: 'Home Security',
+    label: 'What is Home Data Inspector?',
     color: 'primary',
     key: 'homeSecurity',
     icon: <HomeSecurity />,
-    description: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.'
+    description: 'This software monitors the network activities of all internet-connected devices in your home network (e.g., your “smart” electronics.  (For those who would like to see the open source software, click here).'
   },
   {
-    label: 'Background Scanning',
+    label: 'Why you should care',
     color: 'blue-600',
     key: 'backgroundScanning',
     icon: <BackgroundScanning />,
-    description: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.'
+    description: 'Our Home Data Inspector will let you see which devices in your home connect to the internet, see who those devices are sending data to, and identify potential security and privacy violations. '
   },
   {
-    label: 'Data for Research',
+    label: 'Why we care',
     color: 'dark',
     key: 'researchData',
     icon: <ResearchData />,
-    description: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.'
+    description: 'Home Data Inspector is also a research tool – it can collect anonymized data that helps us better understand the impact of these connected devices on users security, privacy, and network performance.  We hope you’ll share your findings with our researchers! '
   }
 ]
 
