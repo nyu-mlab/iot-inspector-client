@@ -77,7 +77,7 @@ const InspectingDevicesDashboard = () => {
         </div>
       ) : (
         <ul className={cardView ? 'card-grid' : 'min-h-[200px]'}>
-          {devicesData.devices
+          {devicesData?.devices
             // TODO move this filter into a hook https://github.com/ocupop/iot-inspector-client/issues/18
             ?.filter((device) => {
               if (!searchValue) return true
