@@ -46,6 +46,7 @@ brew install yarn
 cd ~/cr-dev/iot-inspector-client/ui/default
 yarn install:all  # This will install dependencies within server and client
 yarn prisma:generate  # This will compile a prisma server for your OS/architecture.
+yarn dev # Run the UI
 ```
 
 4. Open any browser and navigate to http://localhost:4000
