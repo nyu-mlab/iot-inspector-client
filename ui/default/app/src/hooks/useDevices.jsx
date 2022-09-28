@@ -30,7 +30,7 @@ const useDevices = (props) => {
   const { data: devicesData, loading: devicesDataLoading } = useQuery(DEVICES_QUERY, {
     variables,
     fetchPolicy: 'network-only',
-    pollInterval: 30000,
+    pollInterval: 20000,
     // onCompleted: () => console.log('called'),
     // fetchPolicy: 'no-cache',
     // ...props?.queryOptions,
