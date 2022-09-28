@@ -81,7 +81,7 @@ class ArpSpoof(object):
             utils.log(
                 '[ARP Spoof] Whitelist:{} devices, {}'.format(len_of_whitelist, self._host_state.device_whitelist)
             )
-            
+
             # Get gateway MAC addr
             try:
                 gateway_mac = ip_mac_dict[gateway_ip]
@@ -96,11 +96,11 @@ class ArpSpoof(object):
             # Build device-to-device whitelist
             for ip, mac in ip_mac_dict.items():
                 device_id = utils.get_device_id(mac, self._host_state)
-                if device_id not in self._host_state.device_whitelist:
-                    utils.log('[ARP Spoof] Ignore:', ip, mac)
-                    continue
+                # if device_id not in self._host_state.device_whitelist:
+                #     utils.log('[ARP Spoof] Ignore:', ip, mac)
+                #     continue
                 whitelist_ip_mac.append((ip, mac))
-            
+
             # print('Spoof devices:', whitelist_ip_mac)
 
             # Spoof individual devices on the network.
@@ -112,9 +112,9 @@ class ArpSpoof(object):
                 # Check against whitelist.
                 victim_device_id = \
                     utils.get_device_id(victim_mac, self._host_state)
-                if victim_device_id not in self._host_state.device_whitelist:
-                    utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
-                    continue
+                # if victim_device_id not in self._host_state.device_whitelist:
+                #     utils.log('[ARP Spoof] Ignore:', victim_ip, victim_mac)
+                #     continue
 
                 if utils.TEST_OUI_LIST:
                     victim_mac_oui = utils.get_oui(victim_mac)
@@ -143,7 +143,7 @@ class ArpSpoof(object):
 
             if victim_ip == dest_ip:
                 continue
-            # send ARP spoof request to destination 
+            # send ARP spoof request to destination
             # victim -> host -> destination
             dest_arp = sc.ARP()
             dest_arp.op = 1
@@ -205,10 +205,10 @@ class ArpSpoof(object):
             # Build device-to-device whitelist
             for ip, mac in ip_mac_dict.items():
                 device_id = utils.get_device_id(mac, self._host_state)
-                if device_id not in self._host_state.device_whitelist:
-                    utils.log('[ARP Spoof] Ignore:', ip, mac)
-                    logger.info(f'[ARP] igonore the device {ip}, {mac}')
-                    continue
+                # if device_id not in self._host_state.device_whitelist:
+                #     utils.log('[ARP Spoof] Ignore:', ip, mac)
+                #     logger.info(f'[ARP] igonore the device {ip}, {mac}')
+                #     continue
                 whitelist_ip_mac.append((ip, mac))
             logger.info(f"Allowed list: {whitelist_ip_mac}")
             logger.info(f"Target list: {ip_mac_dict}")
@@ -218,8 +218,8 @@ class ArpSpoof(object):
             self._arp_spoof_loop_multiprocessing(whitelist_ip_mac)
             #self._arp_spoof_loop_multithreaded(whitelist_ip_mac)
             '''
-            or it could be made async if this method is declared async 
-            and _arp_spoof_loop, and _arp_spoof is made async. 
+            or it could be made async if this method is declared async
+            and _arp_spoof_loop, and _arp_spoof is made async.
             We would have to call async version _arp_spoof with asyncio.to_thread(_arp_spoof_async)
             '''
 
@@ -250,7 +250,7 @@ class ArpSpoof(object):
             logger.info("Caught Keyboard interrupt. Going to stop spoofing now...")
             self._host_state.spoof_arp = False
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                executor.map(self._arp_spoof_multithreaded, params_victim_mac, params_victim_ip, params_whitelist)                
+                executor.map(self._arp_spoof_multithreaded, params_victim_mac, params_victim_ip, params_whitelist)
             logger.info("MAC addresses are restored!")
         finally:
             logger.info("Done in this loop")
@@ -265,14 +265,14 @@ class ArpSpoof(object):
             if spoof_arp:
                 logger.info(f"Poisioning ARP caches of {whitelist_ip_mac} for {victim_ip}: {victim_mac}")
             else:
-                logger.info(f"Restoreing ARP caches of {whitelist_ip_mac} for {victim_ip}: {victim_mac}")    
+                logger.info(f"Restoreing ARP caches of {whitelist_ip_mac} for {victim_ip}: {victim_mac}")
             pkt_list = list()
             for dest_ip, dest_mac in whitelist_ip_mac:
                 if victim_ip == dest_ip:
                     continue
                 victim_arp = sc.Ether(dst=victim_mac)/sc.ARP(op="is-at",
                             pdst=victim_ip, hwdst=victim_mac,
-                            hwsrc=host_mac, psrc=dest_ip)            
+                            hwsrc=host_mac, psrc=dest_ip)
                 if not spoof_arp:
                     victim_arp.hwsrc = dest_mac
                     utils.log('[Arp Spoof] Restoring', dest_ip, '->', victim_ip)
@@ -307,7 +307,7 @@ class ArpSpoof(object):
             with multiprocessing.Pool() as pool:
                 pool.starmap(ArpSpoof._arp_spoof_static, params)
         except KeyboardInterrupt:
-            logger.info("Caught Keyboard interrupt. Going to stop spoofing now...")               
+            logger.info("Caught Keyboard interrupt. Going to stop spoofing now...")
             for i in range(len(whitelist_ip_mac.items())):
                 params_i = params[i]
                 params_i[1] = False
@@ -330,9 +330,9 @@ class ArpSpoof(object):
             for dest_ip, dest_mac in whitelist_ip_mac:
                 if victim_ip == dest_ip:
                     continue
-                victim_arp_pkt = sc.Ether(dst=victim_mac)/sc.ARP(op="is-at", #op="who-has", 
+                victim_arp_pkt = sc.Ether(dst=victim_mac)/sc.ARP(op="is-at", #op="who-has",
                             pdst=victim_ip, hwdst=victim_mac,
-                            hwsrc=host_mac, psrc=dest_ip)    
+                            hwsrc=host_mac, psrc=dest_ip)
                 if not spoof_arp:
                     victim_arp_pkt[sc.ARP].hwsrc = dest_mac
                     utils.log('[Arp Spoof] Restoring', dest_ip, '->', victim_ip)

@@ -42,7 +42,7 @@ class HostState(object):
         self.pending_syn_scan_dict = {}  # device_id -> port_list
         self.status_text = None
         self.device_whitelist = []
-        self.has_consent = False
+        self.has_consent = True
         self.byte_count = 0
         self.is_inspecting_traffic = True
         self.fast_arp_scan = True  # Persists for first 5 mins

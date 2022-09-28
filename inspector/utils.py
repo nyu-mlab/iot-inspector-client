@@ -65,16 +65,16 @@ def get_user_config():
     except Exception:
         pass
 
-    while True:
-        user_key = requests.get(server_config.NEW_USER_URL).text.strip()
+    # while True:
+    #     user_key = requests.get(server_config.NEW_USER_URL).text.strip()
 
-        # Make sure we're not getting server's error messages
-        if len(user_key) == 32:
-            break
+    #     # Make sure we're not getting server's error messages
+    #     if len(user_key) == 32:
+    #         break
 
-        time.sleep(1)
+    #     time.sleep(1)
 
-    user_key = user_key.replace('-', '')
+    user_key = 's' + str(uuid.uuid4())
     secret_salt = str(uuid.uuid4())
 
     with open(user_config_file, 'w') as fp:
@@ -134,7 +134,7 @@ def _get_routes():
 
 def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
-    # Discover the active/preferred network interface 
+    # Discover the active/preferred network interface
     # by connecting to Google's public DNS server
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -159,11 +159,11 @@ def get_default_route():
 
         log('get_default_route: retrying')
         time.sleep(1)
-    
+
 
     # If we are using windows, conf.route.routes table doesn't update.
     # We have to update routing table manually for packets
-    # to pick the correct route. 
+    # to pick the correct route.
     if sys.platform.startswith('win'):
         for i, route in enumerate(routes):
             # if we see our selected iface, update the metrics to 0
@@ -201,11 +201,11 @@ def get_network_ip_range_windows():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
             break
-  
+
     network = netaddr.IPAddress(iface_ip)
     cidr = netaddr.IPAddress(netmask).netmask_bits()
     subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-  
+
     return ip_set
 
 def check_ethernet_network():

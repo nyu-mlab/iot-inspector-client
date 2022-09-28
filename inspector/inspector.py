@@ -40,9 +40,9 @@ Questions? Email us at iot-inspector@lists.cs.princeton.edu.
 def start():
     """
     Initializes inspector by spawning a number of background threads.
-    
+
     Returns the host state once all background threats are started.
-    
+
     """
     # Read from home directory the user_key. If non-existent, get one from
     # cloud.
@@ -119,20 +119,20 @@ def start():
 
     print('\n' * 100)
 
-    os_platform = utils.get_os()    
+    os_platform = utils.get_os()
 
     print(WINDOWS_STARTUP_TEXT.format(host_ip, server_config.BASE_URL, pretty_user_key))
 
     # Open a Chrome window that runs IoT Inspector since running IoT Inspector
-    # on Chrome is preferred. Note that a new webpage will be opened 
-    # in non-privileged mode. 
+    # on Chrome is preferred. Note that a new webpage will be opened
+    # in non-privileged mode.
 
-    # For users that do not use chrome, the default browser will be opened in 
+    # For users that do not use chrome, the default browser will be opened in
     # Windows 10, and Safari will be opened in macOS.
 
-    if os_platform == 'windows' or 'mac':
-        url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
-        utils.open_browser(url)
+    # if os_platform == 'windows' or 'mac':
+    #     url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
+    #     utils.open_browser(url)
     return state
 
 
