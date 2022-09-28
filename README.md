@@ -4,6 +4,55 @@ This branch is for the development of the new Inspector -- a collaboration
 between NYU, Consumer Reports, and Ocopop.
 
 
+## For internal testers
+
+So far, we are still working on an easily deployable version. Until then, all testers would have to use the command line to test-drive the latest Inspector.
+
+The following instructions assume that a tester uses macOS Big Sur and/or above, and that they have a basic understanding of the macOS Terminal.
+
+### Run the Python driver
+
+1. Run the following in the Terminal:
+
+```
+mkdir ~/cr-dev
+cd ~/cr-dev
+git clone https://github.com/nyu-mlab/iot-inspector-client.git
+cd ~/cr-dev/iot-inspector-client
+git checkout cr-dev # Switch to the CR branch
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt # Set up dependencies
+cd ~/cr-dev/iot-inspector-client/inspector
+sudo python start.py # Run the Python driver
+```
+
+2. Keep the above running, which automatically captures traffic from ALL devices on the network.
+
+
+### Setting up the UI
+
+Do the following in a separate terminal window.
+
+1. Install the Homebrew package manager: https://brew.sh/
+
+2. Install Yarn on the terminal:
+```
+brew install yarn
+```
+
+3. Spin up the UI on the terminal:
+```
+cd ~/cr-dev/iot-inspector-client/ui/default
+yarn install:all  # This will install dependencies within server and client
+yarn prisma:generate  # This will compile a prisma server for your OS/architecture.
+```
+
+4. Open any browser and navigate to http://localhost:4000
+
+
+
+
 ## Setting up the development environment
 
 ### For all developers
