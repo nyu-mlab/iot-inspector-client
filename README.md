@@ -10,6 +10,8 @@ So far, we are still working on an easily deployable version. Until then, all te
 
 The following instructions assume that a tester uses macOS Big Sur and/or above, and that they have a basic understanding of the macOS Terminal.
 
+You can also view a video walkthrough here: https://www.loom.com/share/ffbfff6db53d44bdb495952b58eb757d
+
 ### Run the Python driver
 
 1. Run the following in the Terminal:
