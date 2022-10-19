@@ -38,8 +38,11 @@ run_mac(){
         cd ~/iot_inspector
         git checkout cr-dev
 
+        python3 -m venv ~/iot_inspector_env
+        source ~/iot_inspector_env/bin/activate
+        
         cd $dir
-        pip3 install -r requirements.txt > /dev/null
+        pip3 install -r requirements.txt
         
         cd ~/iot_inspector/ui/default
         yarn install:all
@@ -55,10 +58,12 @@ run_mac(){
     terminate(){
         echo "Terminating app"
         pkill -SIGINT -P $$
-        # kill $(pgrep -f 'python start.py')
+        # kill $(pgrep -f 'python3 start.py')
+        deactivate
     } 
-    cd ~/iot_inspector/inspector && python3 start.py &
-    cd ~/iot_inspector/ui/default && yarn dev
+    source ~/iot_inspector_env/bin/activate
+    cd ~/iot_inspector/ui/default && yarn dev &
+    cd ~/iot_inspector/inspector && python3 start.py 
 }
 
 run_linux(){
@@ -71,6 +76,7 @@ run_linux(){
         sudo apt-get update
         echo "Installing python3..."
         ruby -e "$(sudo apt-get install python3.9)"
+        
     fi
 
     if test ! $(which node); then
@@ -94,8 +100,11 @@ run_linux(){
         cd ~/iot_inspector
         git checkout cr-dev
 
+        python3 -m venv ~/iot_inspector_env
+        source ~/iot_inspector_env/bin/activate
+
         cd ~/iot_inspector/inspector
-        pip3 install -r requirements.txt > /dev/null
+        pip3 install -r requirements.txt
 
         cd ~/iot_inspector/ui/default
         yarn install:all
@@ -112,10 +121,14 @@ run_linux(){
     terminate(){
         echo "Terminating app"
         pkill -SIGINT -P $$
+        deactivate
         # kill $(pgrep -f 'python start.py')
     } 
-    cd ~/iot_inspector/inspector && python3 start.py &
-    cd ~/iot_inspector/ui/default && yarn dev
+    
+    source ~/iot_inspector_env/bin/activate
+
+    cd ~/iot_inspector/ui/default && yarn dev &
+    cd ~/iot_inspector/inspector && python3 start.py 
 }
 
 if [ "$(uname)" == "Darwin" ]; then
