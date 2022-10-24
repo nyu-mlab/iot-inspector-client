@@ -11,8 +11,10 @@ run_mac(){
 
     if test ! $(which brew); then 
         echo "Installing homebrew..." 
-        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)" 
         echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+        echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.bashrc
+        echo 'export PATH="/opt/homebrew/sbin:$PATH"' >> ~/.bashrc
     fi
 
     if test ! $(which python3); then
@@ -53,8 +55,6 @@ run_mac(){
         yarn prisma:generate
     fi
 
-    # echo "app running on http://localhost:3000"
-    # open -a "Google Chrome" http://localhost:3000
     ## run python driver
     
     trap terminate SIGINT
