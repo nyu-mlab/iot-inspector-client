@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+dir=~/iot_inspector
+branch=cr-dev
+
 run_mac(){
-    # free port 3000 & 4000
+    
+    ## free up occupied ports
     lsof -i:3000 -t | xargs kill -9
     lsof -i:4000 -t | xargs kill -9
-    dir=~/iot_inspector
 
     if test ! $(which brew); then 
         echo "Installing homebrew..." 
@@ -35,8 +38,8 @@ run_mac(){
     if [ ! -d "$dir" ]; then
         echo "$dir does not exist."
         git clone https://github.com/nyu-mlab/iot-inspector-client.git $dir
-        cd ~/iot_inspector
-        git checkout cr-dev
+        cd $dir
+        git checkout $branch
 
         python3 -m venv ~/iot_inspector_env
         source ~/iot_inspector_env/bin/activate
@@ -44,39 +47,48 @@ run_mac(){
         cd $dir
         pip3 install -r requirements.txt
         
-        cd ~/iot_inspector/ui/default
+        cd $dir/ui/default
         yarn install:all
         yarn clean:db
         yarn prisma:generate
     fi
 
-    echo "app running on http://localhost:3000"
-    open -a "Google Chrome" http://localhost:3000
+    # echo "app running on http://localhost:3000"
+    # open -a "Google Chrome" http://localhost:3000
     ## run python driver
     
     trap terminate SIGINT
     terminate(){
         echo "Terminating app"
+       
+        deactivate
         pkill -SIGINT -P $$
         # kill $(pgrep -f 'python3 start.py')
-        deactivate
+        
     } 
+
     source ~/iot_inspector_env/bin/activate
-    cd ~/iot_inspector/ui/default && yarn dev &
-    cd ~/iot_inspector/inspector && python3 start.py 
+    cd $dir/ui/default && yarn dev &
+    sleep 5
+
+    echo "app running on http://localhost:4000"
+    open -a "Google Chrome" http://localhost:4000
+
+    sleep 2
+    clear;
+    osascript -e 'do shell script "cd ~/iot_inspector/inspector && sudo python3 start.py" with administrator privileges'
+    # cd ~/iot_inspector/inspector && sudo python3 start.py  
 }
 
 run_linux(){
  # free port 3000 & 4000
     lsof -i:3000 -t | xargs kill -9
     lsof -i:4000 -t | xargs kill -9
-    dir=~/iot_inspector
 
     if test ! $(which python3); then
         sudo apt-get update
         echo "Installing python3..."
         ruby -e "$(sudo apt-get install python3.9)"
-        
     fi
 
     if test ! $(which node); then
@@ -97,38 +109,42 @@ run_linux(){
     if [ ! -d "$dir" ]; then
         echo "$dir does not exist."
         git clone https://github.com/nyu-mlab/iot-inspector-client.git $dir
-        cd ~/iot_inspector
-        git checkout cr-dev
+        cd $dir
+        git checkout $branch
 
         python3 -m venv ~/iot_inspector_env
         source ~/iot_inspector_env/bin/activate
 
-        cd ~/iot_inspector/inspector
+        cd $dir/inspector
         pip3 install -r requirements.txt
 
-        cd ~/iot_inspector/ui/default
+        cd $dir/ui/default
         yarn install:all
         yarn clean:db
         yarn prisma:generate
     fi
 
-   
-    echo "app running on http://localhost:3000"
-    open -a "Google Chrome" http://localhost:3000
     ## run python driver
     
     trap terminate SIGINT
     terminate(){
         echo "Terminating app"
-        pkill -SIGINT -P $$
         deactivate
+        pkill -SIGINT -P $$
         # kill $(pgrep -f 'python start.py')
     } 
     
     source ~/iot_inspector_env/bin/activate
 
-    cd ~/iot_inspector/ui/default && yarn dev &
-    cd ~/iot_inspector/inspector && python3 start.py 
+    cd $dir/ui/default && yarn dev &
+    sleep 5
+
+    echo "app running on http://localhost:4000"
+    open -a "Google Chrome" http://localhost:4000
+
+    sleep 2
+    clear;
+    cd $dir/inspector && sudo python3 start.py 
 }
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -138,4 +154,3 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Do something under GNU/Linux platform
     run_linux
 fi
-
