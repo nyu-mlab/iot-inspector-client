@@ -72,7 +72,7 @@ run_mac(){
     sleep 5
 
     echo "app running on http://localhost:4000"
-    open -a "Google Chrome" http://localhost:4000
+    open http://localhost:4000
 
     sleep 2
     clear;
@@ -140,7 +140,7 @@ run_linux(){
     sleep 5
 
     echo "app running on http://localhost:4000"
-    open -a "Google Chrome" http://localhost:4000
+    xdg-open http://localhost:4000
 
     sleep 2
     clear;
