@@ -10,11 +10,13 @@ So far, we are still working on an easily deployable version. Until then, all te
 
 1. Open your terminal.
 2. Copy and paste the following command and hit "Enter".
+3. macOS will prompt you to enter a password or scan your fingerprint; just comply, because Inspector needs administrator privilege to run.
 
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nyu-mlab/iot-inspector-client/cr-dev/iot_app_runner.sh)" 
-
 ```
+
+Known issue: When you're done, you can't kill the processes with Control + C. You'd have to kill by doing `sudo pkill -9 -f yarn` and `sudo pkill -9 -f start.py`.
 
 ### For all developers
 
