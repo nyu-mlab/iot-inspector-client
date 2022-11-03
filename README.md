@@ -6,6 +6,7 @@ between NYU, Consumer Reports, and Ocopop.
 
 ## For internal testers
 * For macOS and Linux
+
 So far, we are still working on an easily deployable version. Until then, all testers would have to use the command line to test-drive the latest Inspector. The following instructions assume that a tester uses macOS Big Sur and/or above, and that they have a basic understanding of the macOS Terminal.
 
 1. Open your terminal.
