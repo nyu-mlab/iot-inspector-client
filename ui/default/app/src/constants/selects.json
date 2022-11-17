@@ -1,6 +1,6 @@
 {
   "TV": {
-    "image": "",
+    "image": "./src/constants/products/TVs Icon.svg",
     "keywords": [
       "TV",
       "television",
@@ -9,7 +9,7 @@
     ]
   },
   "Appliance": {
-    "image": "",
+    "image": "./src/constants/products/Refrigerators Icon.svg",
     "keywords": [
       "fridge",
       "clothes Dryer",
@@ -45,7 +45,7 @@
     ]
   },
   "Computer": {
-    "image": "",
+    "image": "./src/constants/products/Laptops Icon.svg",
     "keywords": [
       "Laptop",
       "Macbook",
@@ -53,7 +53,7 @@
     ]
   },
   "Phone": {
-    "image": "",
+    "image": "./src/constants/products/Smartphones Icon.svg",
     "keywords": [
       "Laptop",
       "Macbook",
