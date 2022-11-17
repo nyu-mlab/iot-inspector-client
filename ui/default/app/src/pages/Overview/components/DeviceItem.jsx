@@ -12,11 +12,11 @@ const DeviceItem = ({ device }) => {
   useEffect(() => {
     const tagList = JSON.parse(device.device_info.tag_list)
     setTags(tagList)
-    const [img] = tagList.map((tag) => {
-      return SELECTS[tag]?.image || undefined
-    })
-    if (img) {
-      setDeviceImage(img)
+
+    for (const select in SELECTS) {
+      if (SELECTS[select].keywords.some((r) => tagList.includes(r))) {
+        setDeviceImage(SELECTS[select].image)
+      }
     }
   }, [device.device_info.tag_list])
 
@@ -24,7 +24,6 @@ const DeviceItem = ({ device }) => {
     // device item classes based on filled in details -- status-empty / status-inprogress / status-complete
     <div className='device-item status-empty'>
       <div className='device-info'>
-        {console.log(deviceImage)}
         <img
           src={deviceImage}
           alt={device ? device.auto_name : 'Unknown Device'}
