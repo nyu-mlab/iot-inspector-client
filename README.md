@@ -6,6 +6,8 @@ between NYU, Consumer Reports, and Ocopop.
 
 ## For internal testers
 
+* For macOS and Linux
+
 So far, we are still working on an easily deployable version. Until then, all testers would have to use the command line to test-drive the latest Inspector. The following instructions assume that a tester uses macOS Big Sur and/or above, and that they have a basic understanding of the macOS Terminal.
 
 1. Open your terminal.
@@ -17,6 +19,16 @@ So far, we are still working on an easily deployable version. Until then, all te
 ```
 
 Known issue: When you're done, you can't kill the processes with Control + C. You'd have to kill by doing `sudo pkill -9 -f yarn` and `sudo pkill -9 -f start.py`.
+
+* For windows 64 bit machines
+
+1. Open your terminal.
+2. Copy and paste the following command and hit "Enter"
+3. If the system doesn't have pre-installed python3, nodejs and/or git, it will make the installations and the user will be prompted to complete these installations first.
+
+```
+curl -fsSL https://raw.githubusercontent.com/nyu-mlab/iot-inspector-client/cr-dev/iot_app_runner.bat && iot_app_runner.bat 
+```
 
 ### For all developers
 
