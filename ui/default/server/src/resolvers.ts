@@ -135,6 +135,7 @@ const devices = async (
       outbound_byte_count: true,
     },
   })
+
   // map the devices to the flow device_id
   let devices = await Promise.all(
     devicesResult.map(async (flow) => {
@@ -149,6 +150,7 @@ const devices = async (
       }
       else {
         console.error(`Device ID not found within devices ${deviceId}`)
+        throw new Error(`Device ID not found within devices ${deviceId}`)
       }
     }),
   )
