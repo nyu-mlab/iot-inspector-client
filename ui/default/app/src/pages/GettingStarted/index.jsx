@@ -3,40 +3,46 @@ import HomeSecurity from "@components/graphics/HomeSecurity"
 import BackgroundScanning from "@components/graphics/BackgroundScanning"
 import ResearchData from "@components/graphics/ResearchData"
 import NoConsentLayout from '../../layouts/NoConsentLayout'
+import useCopy from '@hooks/useCopy'
 
 
-const inspectorUseCase = [
-  {
-    label: 'What is Home Data Inspector?',
-    color: 'primary',
-    key: 'homeSecurity',
-    icon: <HomeSecurity />,
-    description: 'This software monitors the network activities of all internet-connected devices in your home network (e.g., your “smart” electronics.  (For those who would like to see the open source software, click here).'
-  },
-  {
-    label: 'Why you should care',
-    color: 'blue-600',
-    key: 'backgroundScanning',
-    icon: <BackgroundScanning />,
-    description: 'Our Home Data Inspector will let you see which devices in your home connect to the internet, see who those devices are sending data to, and identify potential security and privacy violations. '
-  },
-  {
-    label: 'Why we care',
-    color: 'dark',
-    key: 'researchData',
-    icon: <ResearchData />,
-    description: 'Home Data Inspector is also a research tool – it can collect anonymized data that helps us better understand the impact of these connected devices on users security, privacy, and network performance.  We hope you’ll share your findings with our researchers! '
-  }
-]
+
 
 const Onboarding = () => {
+  const { loading, data } = useCopy('/start.json')
+
+
+  const inspectorUseCase = [
+    {
+      label: data.sections ? data.sections[0].headline : '',
+      color: 'primary',
+      key: 'homeSecurity',
+      icon: <HomeSecurity />,
+      description: data.sections ? data.sections[0].copy : '',
+    },
+    {
+      label: data.sections ? data.sections[1].headline : '',
+      color: 'blue-600',
+      key: 'backgroundScanning',
+      icon: <BackgroundScanning />,
+      description: data.sections ? data.sections[1].copy : '',
+    },
+    {
+      label: data.sections ? data.sections[2].headline : '',
+      color: 'dark',
+      key: 'researchData',
+      icon: <ResearchData />,
+      description: data.sections ? data.sections[2].copy : '',
+    }
+  ]
+
   return (
     <>
       <NoConsentLayout>
         <main className="flex flex-1 bg-gray-100">
           <div className="w-full p-4 m-2 bg-white shadow-md md:m-8 rounded-2xl">
             <div className="flex flex-col items-center justify-center h-full max-w-6xl gap-8 mx-auto text-center">
-              <h1>Start Inspecting</h1>
+              <h1>{data.headline || 'Start Inspectin'}</h1>
               <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
 
                 {inspectorUseCase.map((card) => (
@@ -51,7 +57,7 @@ const Onboarding = () => {
                 </div>
                 ))}
               </div>
-              <a className="btn btn-primary" href="/consent">Get Started</a>
+              <a className="btn btn-primary" href="/consent">{data.cta_label ? data.cta_label : 'Get Started'}</a>
             </div>
           </div>
 
