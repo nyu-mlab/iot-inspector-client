@@ -7,20 +7,20 @@ import useCopy from '@hooks/useCopy'
 
 const FAQModal = () => {
   const { loading, data } = useCopy('/faq.json')
-  console.log("DATA",data.sections)
 
   return (
     <div>
       <h2>{data.headline || '...'}</h2>
 
-      {data.sections && data.sections.map((section,i) =>
-        <>
-        {section.faq && section.faq.length > 0 &&
+      {data.sections && data.sections.map((section,i) => {
+        if (!section.faqs || section.faqs.length == 0) return false
+
+        return (
         <section key={`section_${i}`}>
 
           <h3>{section.title}</h3>
 
-          {section.faq.map((faq) => (
+          {section.faqs.map((faq) => (
             <Disclosure key={faq.q} as="div" className="py-4">
             {({ open }) => (
              <>
@@ -52,9 +52,9 @@ const FAQModal = () => {
          </Disclosure>
           ))}
         </section>
-        }
-        </>
-      )}
+        )
+
+      })}
 
 
 
