@@ -122,7 +122,7 @@ const Header = () => {
             leaveTo="opacity-0 scale-95"
           >
             <div className="inspector-settings">
-              <Dialog.Panel className="inspector-settings-panel">
+              <Dialog.Panel className="inspector-settings-panel max-h-full">
                 <Tab.Group >
                   <Tab.List className="tab-nav">
                     <Tab as={Fragment}>
@@ -164,9 +164,9 @@ const Header = () => {
                     <Tab.Panel>
                       <SettingsModal />
                     </Tab.Panel>
-                    <Tab.Panel >
+                    {/* <Tab.Panel >
                       <AchievmentsModal />
-                    </Tab.Panel>
+                    </Tab.Panel> */}
                     <Tab.Panel>
                       <FAQModal />
                     </Tab.Panel>
