@@ -31,7 +31,7 @@ const Consent = () => {
         <main className='flex w-full h-full bg-gray-100'>
           <div className='p-4 mx-auto bg-white shadow-md md:p-8 md:my-8 rounded-2xl h-fit'>
             <div className='flex flex-col items-center justify-center max-w-2xl gap-8 mx-auto text-center h-fit'>
-              <h1>Consent Statement</h1>
+              <h1>{data.headline || 'Consent Statement'}</h1>
               <div className='overflow-scroll h-72 md:px-8 '>
                 {data && ReactHtmlParser(data.body)}
               </div>

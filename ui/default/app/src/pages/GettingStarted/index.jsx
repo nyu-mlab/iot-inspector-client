@@ -11,7 +11,6 @@ import useCopy from '@hooks/useCopy'
 const Onboarding = () => {
   const { loading, data } = useCopy('/start.json')
 
-
   const inspectorUseCase = [
     {
       label: data.sections ? data.sections[0].headline : '',
@@ -42,7 +41,7 @@ const Onboarding = () => {
         <main className="flex flex-1 bg-gray-100">
           <div className="w-full p-4 m-2 bg-white shadow-md md:m-8 rounded-2xl">
             <div className="flex flex-col items-center justify-center h-full max-w-6xl gap-8 mx-auto text-center">
-              <h1>{data.headline || 'Start Inspectin'}</h1>
+              <h1>{data.headline || 'Start Inspecting'}</h1>
               <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
 
                 {inspectorUseCase.map((card) => (
@@ -57,7 +56,7 @@ const Onboarding = () => {
                 </div>
                 ))}
               </div>
-              <a className="btn btn-primary" href="/consent">{data.cta_label ? data.cta_label : 'Get Started'}</a>
+              <a className="btn btn-primary" href="/consent">{data?.cta?.label ? data.cta.label : 'Get Started'}</a>
             </div>
           </div>
 
