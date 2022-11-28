@@ -1,11 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import DeviceDiscoveryCard from './DeviceDiscoveryCard'
 import RefreshSpinner from './graphics/RefreshSpinner'
 import useDevices from '@hooks/useDevices'
+import useNotifications from '@hooks/useNotifications'
 import { Field, Form, Formik } from 'formik'
 
 const DeviceDiscoveryDrawer = () => {
-  const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
+  const { devicesData, devicesDataLoading, sortDevicesData, error } = useDevices()
+  const { showError } = useNotifications()
+
+  useEffect(() => {
+    if(error) showError(error.message)
+  }, [error])
+
   return (
     <>
       <div className="flex items-center gap-4 px-2">
