@@ -150,16 +150,20 @@ const devices = async (
       }
       else {
         console.error(`Device ID not found within devices ${deviceId}`)
-        throw new Error(`Device ID not found within devices ${deviceId}`)
+        // Log this device id that isn't found.
+        return null
+        //throw new Error(`Device ID not found within devices ${deviceId}`)
       }
     }),
   )
+
 
   if (args.device_id) {
     return [devices[0]]
   }
 
-  return devices
+  // return devices, filter out devices that were not found.
+  return devices.filter(el =>  el != null)
 }
 
 /**

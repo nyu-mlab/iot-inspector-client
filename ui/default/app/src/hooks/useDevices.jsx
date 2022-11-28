@@ -22,11 +22,10 @@ const DEVICES_QUERY = gql`
 const useDevices = (props) => {
   // const [devicesData, setDevicesData] = useState([])
   const [filters, setFilters] = useState({})
-  
+
   const variables = {
     ...(props || null),
   }
-
   const { data: devicesData, loading: devicesDataLoading, error } = useQuery(DEVICES_QUERY, {
     variables,
     fetchPolicy: 'network-only',
@@ -35,9 +34,6 @@ const useDevices = (props) => {
     // fetchPolicy: 'no-cache',
     // ...props?.queryOptions,
   })
-
-  console.log("🐛 @DEBUG::11212022-011605P", error.message, devicesData)
-
 
   const sortDevicesData = (sortBy, direction = 'ASC') => {
     setFilters({
@@ -52,6 +48,7 @@ const useDevices = (props) => {
     devicesData,
     devicesDataLoading,
     sortDevicesData,
+    error: error ? error : null
   }
 }
 

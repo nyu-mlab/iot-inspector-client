@@ -19,13 +19,13 @@ NotificationsProvider.propTypes = {
 function NotificationsProvider({ children }) {
     const contextValue = {
         showSuccess: useCallback((message) =>
-            toast(message, { className: 'success' })
+            toast(message, { className: 'success bg-green-500 text-white' })
         ),
         showError: useCallback((message) =>
-            toast(message, { className: 'danger' })
+            toast(message, { className: 'danger bg-red-600 text-white' })
         ),
         showWarning: useCallback((message) =>
-            toast(message, { className: 'warning' })
+            toast(message, { className: 'warning bg-dark text-white' })
         )
     }
 
@@ -42,10 +42,10 @@ function NotificationsProvider({ children }) {
                         // Define default options
                         className: '',
                         duration: 5000,
-                        style: {
-                            background: '#363636',
-                            color: '#fff'
-                        },
+                        // style: {
+                        //     background: '#363636',
+                        //     color: '#fff'
+                        // },
                         // Default options for specific types
                         success: {
                             duration: 3000,

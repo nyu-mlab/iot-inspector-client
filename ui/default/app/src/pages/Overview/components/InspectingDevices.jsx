@@ -6,12 +6,19 @@ import DeviceItem from './DeviceItem'
 import { Switch } from '@headlessui/react'
 import RefreshSpinner from '@components/graphics/RefreshSpinner'
 import useDevices from '@hooks/useDevices'
+import useNotifications from '@hooks/useNotifications'
 
 const InspectingDevicesDashboard = () => {
-  const { devicesData, devicesDataLoading, sortDevicesData } = useDevices()
+  const { devicesData, devicesDataLoading, sortDevicesData, error } = useDevices()
+  const { showError } = useNotifications()
+
   const [searchValue, setSearchValue] = useState('')
   const [sortDirection, setSortDirection] = useState('ASC')
   const [cardView, setCardView] = useState(false)
+
+  useEffect(() => {
+    if(error) showError(error.message)
+  }, [error])
 
   return (
     <section className="bg-gray-50 flex-flex-col-gap-4" id="inspecting-devices">
