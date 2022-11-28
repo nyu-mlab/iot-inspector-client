@@ -1,6 +1,9 @@
 import { Context } from './context'
 import { add, sub, format } from 'date-fns'
 
+const logger = require('./utils/logger');
+logger.level = 'info'
+
 const SERVER_START_TIME = Math.round(new Date().getTime() / 1000)
 // const SERVER_START_TIME = Math.round(
 //   new Date('June 29, 2022 10:00:00').getTime() / 1000,
@@ -149,20 +152,17 @@ const devices = async (
         }
       }
       else {
-        console.error(`Device ID not found within devices ${deviceId}`)
-        // Log this device id that isn't found.
+        logger.warn(`Device ID not found within devices ${deviceId}`)
         return null
         //throw new Error(`Device ID not found within devices ${deviceId}`)
       }
     }),
   )
 
-
   if (args.device_id) {
     return [devices[0]]
   }
 
-  // return devices, filter out devices that were not found.
   return devices.filter(el =>  el != null)
 }
 
