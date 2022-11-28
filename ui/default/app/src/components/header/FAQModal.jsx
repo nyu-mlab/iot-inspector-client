@@ -2,15 +2,24 @@ import React from 'react'
 import { Disclosure, Transition } from '@headlessui/react'
 import { HiChevronDown } from "react-icons/hi";
 import useCopy from '@hooks/useCopy'
+import RefreshSpinner from "../graphics/RefreshSpinner"
 
 
 
 const FAQModal = () => {
   const { loading, data } = useCopy('/faq.json')
 
+  if(Object.keys(data).length === 0 && data.constructor === Object) {
+    return (
+      <div className="w-6 h-6 animate-spin-slow  mx-auto my-24">
+        <RefreshSpinner />
+      </div>
+    )
+  }
+
   return (
     <div>
-      <h2>{data.headline || '...'}</h2>
+      <h2>{data.headline || ''}</h2>
 
       {data.sections && data.sections.map((section,i) => {
         if (!section.faqs || section.faqs.length == 0) return false

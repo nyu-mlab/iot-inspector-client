@@ -1,12 +1,21 @@
 import React, { useState } from 'react'
 import { Switch } from '@headlessui/react'
 import ReactHtmlParser from 'react-html-parser'
+import RefreshSpinner from "../graphics/RefreshSpinner"
 import useCopy from '@hooks/useCopy'
 
 const SettingsModal = () => {
   const [contributingResearch, setContributingResearch] = useState(false)
   const [autoInspect, setAutoInspect] = useState(false)
   const { loading, data } = useCopy('/settings.json')
+
+  if(Object.keys(data).length === 0 && data.constructor === Object) {
+    return (
+      <div className="w-6 h-6 animate-spin-slow  mx-auto my-24">
+        <RefreshSpinner />
+      </div>
+    )
+  }
 
   return (
     <div  className="flex flex-col justify-between">
