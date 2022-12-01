@@ -31,7 +31,7 @@ git checkout cr-dev
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
-python inspector/start.py
+sudo python inspector/start.py
 ```
 
 If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, before doing `pip install -r requirements.txt`, you need to run `sudo apt-get install python3-dev`.
