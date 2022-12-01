@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import useNotifications from '@hooks/useNotifications'
+import { useState } from 'react'
 
 const UPDATE_USER_CONFIGS_MUTATION = gql`
 mutation Mutation($isConsent: Int, $canContributeToResearch: Int, $canAutoInspectDevice: Int) {
@@ -24,26 +25,39 @@ query UserConfigs {
 
 const useUserConfigs = () => {
   const { showSuccess } = useNotifications()
+  const [userConfigData, setUserConfigData] = useState()
   const { data: userConfigsRawData, loading: userConfigsDataLoading } = useQuery(USER_CONFIGS_QUERY)
+
+  console.log("🐛 @DEBUG::12012022-113124A", userConfigData)
+
+  // const [getUserConfigsFn, { called, loading: userConfigsDataLoading, data:userConfigsRawData  }] = useLazyQuery(
+  //   GET_GREETING,
+  //   { variables: { language: "english" } }
+  // );
 
   const [
     updateUserConfigsFn,
     { data: updatedUserConfigsRawData, loading: updateUserConfigsLoading, error },
   ] = useMutation(UPDATE_USER_CONFIGS_MUTATION)
 
-  const userConfigsData = useMemo(() => {
-    if (updatedUserConfigsRawData) {
-      return { userConfigs: updatedUserConfigsRawData.updateUserConfigs}
-    }
-    return userConfigsRawData
-  }, [userConfigsRawData, updatedUserConfigsRawData])
+  // const userConfigsData = useMemo(() => {
+  //   if (updatedUserConfigsRawData) {
+  //     return { userConfigs: updatedUserConfigsRawData.updateUserConfigs}
+  //   }
+  //   return userConfigsRawData
+  // }, [userConfigsRawData, updatedUserConfigsRawData])
+
+  useEffect(() => {
+    setUserConfigData(userConfigsRawData)
+  }, [userConfigsRawData])
+  
 
   const updateUserConfigs = async ({
     isConsent,
     canContributeToResearch,
     canAutoInspectDevice,
   }) => {
-    await updateUserConfigsFn({
+    const updatedConfigs = await updateUserConfigsFn({
       variables: {
         isConsent,
         canContributeToResearch,
@@ -51,11 +65,15 @@ const useUserConfigs = () => {
       },
     })
 
+    const x = {userConfigs: updatedUserConfigsRawData?.data?.updateUserConfigs}
+    setUserConfigData(x)
+
     showSuccess("Success!")
   }
 
   return {
-    userConfigsData,
+    userConfigData,
+    // userConfigsData,
     userConfigsDataLoading,
     updateUserConfigs
   }

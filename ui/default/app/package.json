@@ -34,7 +34,9 @@
     "react-tooltip": "^4.2.21",
     "tailwindcss": "^3.0.24",
     "timeago.js": "^4.0.2",
-    "vite-plugin-fonts": "^0.4.0"
+    "vite-plugin-fonts": "^0.4.0",
+    "winston": "^3.8.2",
+    "winston-react": "^1.0.0-RC.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

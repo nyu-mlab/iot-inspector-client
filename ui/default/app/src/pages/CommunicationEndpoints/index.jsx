@@ -1,7 +1,7 @@
 import React from 'react'
 import EndpointList from '@components/EndpointList'
 import MapChart from '@components/charts/MapChart'
-import EndpointDrawer from '../../components/EndpointDrawer'
+import EndpointDrawer from '@components/EndpointDrawer'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '@hooks/useQueryParam'
 import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
