@@ -3,6 +3,7 @@
 import Router from './pages'
 import { ModalDrawerProvider } from '@contexts/ModalDrawerContext'
 import { NotificationsProvider } from '@contexts/NotificationsContext'
+import { UserConfigsProvider } from '@contexts/UserConfigsContext'
 
 // const logger = winston.createLogger({
 //   // ...
@@ -14,13 +15,15 @@ import { NotificationsProvider } from '@contexts/NotificationsContext'
 
 function App() {
   return (
-    <NotificationsProvider>
-      <ModalDrawerProvider>
-        <div className="App">
-          <Router />
-        </div>
-      </ModalDrawerProvider>
-    </NotificationsProvider>
+    <UserConfigsProvider>
+      <NotificationsProvider>
+        <ModalDrawerProvider>
+          <div className='App'>
+            <Router />
+          </div>
+        </ModalDrawerProvider>
+      </NotificationsProvider>
+    </UserConfigsProvider>
   )
 }
 

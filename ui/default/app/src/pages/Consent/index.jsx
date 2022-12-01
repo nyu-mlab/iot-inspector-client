@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom'
-import useUserConfigs from '@hooks/useUserConfigs'
+import { useUserConfigs } from '@contexts/userConfigsContext'
 import ReactHtmlParser from 'react-html-parser'
 
 import NoConsentLayout from '../../layouts/NoConsentLayout'

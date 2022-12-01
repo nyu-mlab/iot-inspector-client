@@ -6,8 +6,6 @@ import CommunicationEndpointsRoutes from './CommunicationEndpoints/routes'
 import DeviceActivityRoutes from './DeviceActivity/routes'
 import GettingStartedRoutes from './GettingStarted/routes'
 import SandboxRoutes from './Sandbox/routes'
-// contexts
-import { UserConfigsProvider } from '@contexts/UserConfigsContext'
 
 const Routes = () => {
   return useRoutes([
@@ -24,9 +22,7 @@ const Routes = () => {
 export default function Router() {
   return (
     <BrowserRouter>
-      <UserConfigsProvider>
         <Routes />
-      </UserConfigsProvider>
     </BrowserRouter>
   )
 }

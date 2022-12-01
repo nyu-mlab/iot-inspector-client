@@ -5,7 +5,7 @@ import MapChart from '@components/charts/MapChart'
 import EndpointDrawer from '@components/EndpointDrawer'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '@hooks/useQueryParam'
-import useUserConfigs from '@hooks/useUserConfigs'
+import { useUserConfigs } from '@contexts/userConfigsContext'
 import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
 
 const CommunicationEndpoints = () => {

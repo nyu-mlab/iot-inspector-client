@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Switch } from '@headlessui/react'
-import useUserConfigs from '@hooks/useUserConfigs'
+import { useUserConfigs } from '@contexts/userConfigsContext'
 
 const DataToggle = () => {
    const [contributingResearch, setContributingResearch] = useState(false)

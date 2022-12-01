@@ -8,11 +8,13 @@ import { Dialog, Tab, Switch, Disclosure, Menu, Transition } from '@headlessui/r
 import SettingsModal from "./header/SettingsModal";
 import AchievmentsModal from "./header/AchievmentsModal";
 import FAQModal from "./header/FAQModal";
-import useUserConfigs from '@hooks/useUserConfigs'
+import { useUserConfigs } from '@contexts/userConfigsContext'
 
 const Header = () => {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const { userConfigData } = useUserConfigs()
+  const x = useUserConfigs()
+  console.log("🐛 @DEBUG::12012022-031650P", x)
+  const { userConfigData} = x
 
   return (
     <header className="header">

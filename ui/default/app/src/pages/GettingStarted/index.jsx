@@ -5,10 +5,7 @@ import BackgroundScanning from "@components/graphics/BackgroundScanning"
 import ResearchData from "@components/graphics/ResearchData"
 import NoConsentLayout from '../../layouts/NoConsentLayout'
 import useCopy from '@hooks/useCopy'
-import useUserConfigs from '@hooks/useUserConfigs'
-
-
-
+import { useUserConfigs } from '@contexts/userConfigsContext'
 
 const Onboarding = () => {
   const { loading, data } = useCopy('/start.json')

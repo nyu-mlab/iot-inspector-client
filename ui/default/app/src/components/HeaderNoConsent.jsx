@@ -1,7 +1,7 @@
 import React, { useState, Fragment } from 'react'
 import { Link } from 'react-router-dom';
 import Logo from './graphics/Logo'
-import useUserConfigs from '@hooks/useUserConfigs'
+import { useUserConfigs } from '@contexts/userConfigsContext'
 
 const Header = () => {
   const [settingsOpen, setSettingsOpen] = useState(false)
