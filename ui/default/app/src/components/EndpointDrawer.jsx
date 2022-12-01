@@ -1,4 +1,5 @@
 import { gql, useLazyQuery, useQuery } from '@apollo/client'
+import { Link } from 'react-router-dom';
 import React, { useEffect } from 'react'
 
 import ScanNetworkButton from './ScanNetworkButton'
@@ -45,12 +46,12 @@ const EndpointDrawer = ({ deviceId }) => {
             <ul>
               {data?.communicationEndpointNames?.map((endpoints, i) => (
                 <li key={i} className='py-0.5'>
-                  <a
-                    href='#'
+                  <Link
+                    to='#'
                     className='text-xs transition text-dark hover:text-secondary'
                   >
                     {endpoints.counterparty_hostname}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -61,12 +62,12 @@ const EndpointDrawer = ({ deviceId }) => {
             <div className='w-full h-px bg-secondary'></div>
           </div>
           <div className='absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2'>
-            <a
-              href='/communication-endpoints/'
+            <Link
+              to='/communication-endpoints/'
               className='p-5 font-semibold bg-white text-secondary'
             >
               View All
-            </a>
+            </Link>
           </div>
         </div>
         <ScanNetworkButton />

@@ -1,15 +1,18 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import HomeSecurity from "@components/graphics/HomeSecurity"
 import BackgroundScanning from "@components/graphics/BackgroundScanning"
 import ResearchData from "@components/graphics/ResearchData"
 import NoConsentLayout from '../../layouts/NoConsentLayout'
 import useCopy from '@hooks/useCopy'
+import useUserConfigs from '@hooks/useUserConfigs'
 
 
 
 
 const Onboarding = () => {
   const { loading, data } = useCopy('/start.json')
+  const { userConfigData, userConfigsDataLoading } = useUserConfigs()
 
   const inspectorUseCase = [
     {
@@ -56,7 +59,7 @@ const Onboarding = () => {
                 </div>
                 ))}
               </div>
-              <a className="btn btn-primary" href="/consent">{data?.cta?.label ? data.cta.label : 'Get Started'}</a>
+              <Link className="btn btn-primary" to={userConfigData?.is_consent == 1 ? '/overview' : '/consent'}>{data?.cta?.label ? data.cta.label : 'Get Started'}</Link>
             </div>
           </div>
 

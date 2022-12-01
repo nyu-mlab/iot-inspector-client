@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom'
 import useUserConfigs from '@hooks/useUserConfigs'
 import ReactHtmlParser from 'react-html-parser'
@@ -16,13 +17,12 @@ const Consent = () => {
     return ''
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (consentValue) => {
     await updateUserConfigs({
-      isConsent: 1,
-      canAutoInspectDevice: 1
+      isConsent: consentValue,
+      canAutoInspectDevice: consentValue
     })
-
-    navigate('/overview')
+    navigate(consentValue ? '/overview' : '/')
   }
 
   return (
@@ -36,12 +36,12 @@ const Consent = () => {
                 {data && ReactHtmlParser(data.body)}
               </div>
               <hr className='w-full md:w-9/12' />
-              <button className='btn btn-primary' onClick={handleSubmit}>
+              <button className='btn btn-primary' onClick={() => handleSubmit(1)}>
                 I hereby give my consent
               </button>
-              <a className='text-dark/50 h4' href='/'>
+              <button className='text-dark/50 h4'  onClick={() => handleSubmit(0)}>
                 No, I do not give my consent
-              </a>
+              </button>
             </div>
           </div>
         </main>

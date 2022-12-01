@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types'
 import { dataUseage } from '@utils/utils'
 import SELECTS from '@constants/selects'
@@ -57,12 +58,12 @@ const DeviceItem = ({ device }) => {
           </div>
         )}
         <div className='flex items-center justify-center px-4 text-sm w-fit'>
-          <a
-            href={`/device-activity?deviceid=${device.device_id}`}
+          <Link
+            to={`/device-activity?deviceid=${device.device_id}`}
             className=''
           >
             Details
-          </a>
+          </Link>
         </div>
       </div>
     </div>

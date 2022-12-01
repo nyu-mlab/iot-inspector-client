@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import DeviceDrawer from './components/DeviceDrawer'
 import LineChart from '@components/charts/LineChart'
 import { HiChevronRight } from 'react-icons/hi'
@@ -15,7 +16,7 @@ const DeviceActivity = () => {
       <div className="flex bg-white">
       <div className="w-full">
         <section className="flex items-center gap-2 pb-2 w-fit">
-          <a href="/">Network Activity</a>
+          <Link to="/">Network Activity</Link>
           <HiChevronRight className="text-gray-600/50" />
           <span className="font-bold text-gray-600/50">Device Activity</span>
         </section>

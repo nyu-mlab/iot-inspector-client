@@ -1,4 +1,5 @@
 import React, { useState, Fragment } from 'react'
+import { Link } from 'react-router-dom';
 import { HiBell, HiCog, HiMenu, HiX } from "react-icons/hi";
 import DataToggle from './DataToggle'
 import AnalyzingTraffic from "./AnalyzingTraffic";
@@ -11,9 +12,7 @@ import useUserConfigs from '@hooks/useUserConfigs'
 
 const Header = () => {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const { userConfigData, userConfigsDataLoading } = useUserConfigs()
-
-  console.log("🐛 @DEBUG::12012022-110250A", userConfigData)
+  const { userConfigData } = useUserConfigs()
 
   return (
     <header className="header">
@@ -21,12 +20,12 @@ const Header = () => {
         {({ open }) => (
           <>
             <div className="flex justify-between p-6 grow md:px-8 lg:px-12">
-              <a href={userConfigData?.userConfigs?.is_consent == 1 ? '/overview' : '/'} className="flex gap-2 font-semibold h2 text-dark">
+              <Link to={userConfigData?.is_consent == 1 ? '/overview' : '/'} className="flex gap-2 font-semibold h2 text-dark">
                 <Logo /> Home Data Inspector
-              </a>
+              </Link>
               <div className="flex items-center gap-4">
 
-                {userConfigData?.userConfigs?.is_consent == 1
+                {userConfigData?.is_consent == 1
                 ? <div className="hidden gap-2 md:flex">
                   <AnalyzingTraffic />
                 </div>
