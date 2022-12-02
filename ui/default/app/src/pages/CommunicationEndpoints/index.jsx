@@ -5,13 +5,13 @@ import MapChart from '@components/charts/MapChart'
 import EndpointDrawer from '@components/EndpointDrawer'
 import { HiChevronRight } from 'react-icons/hi'
 import useQueryParam from '@hooks/useQueryParam'
-import { useUserConfigs } from '@contexts/userConfigsContext'
+import useUserConfigs from '@hooks/useUserConfigs'
 import useDeviceTrafficToCountries from '@hooks/useDeviceTrafficToCountries'
 
 const CommunicationEndpoints = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
-  const { userConfigData } = useUserConfigs()
+  const { is_consent } = useUserConfigs()
 
   const { deviceCountriesData, deviceCountriesDataLoading } =
     useDeviceTrafficToCountries(deviceId)
@@ -20,7 +20,7 @@ const CommunicationEndpoints = () => {
     <>
       <main className="flex-1 md:pr-64 lg:md:pr-80">
         <section className="flex items-center gap-2 pb-2 w-fit">
-          <Link to={userConfigData?.is_consent == 1 ? '/overview' : '/'}>Network Activity</Link>
+          <Link to={is_consent == 1 ? '/overview' : '/'}>Network Activity</Link>
           <HiChevronRight className="text-gray-600/50" />
           <span className="font-bold text-gray-600/50">
             Communication Endpoints

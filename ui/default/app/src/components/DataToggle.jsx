@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { Switch } from '@headlessui/react'
-import { useUserConfigs } from '@contexts/userConfigsContext'
+import useUserConfigs from '@hooks/useUserConfigs'
 
 const DataToggle = () => {
    const [contributingResearch, setContributingResearch] = useState(false)
-   const { userConfigData, userConfigsDataLoading, updateUserConfigs } = useUserConfigs()
+   const  { can_contribute_to_research, userConfigsDataLoading, updateUserConfigs }  = useUserConfigs()
 
   const handleSwitchChange = async () => {
     await updateUserConfigs({
-      canContributeToResearch: !userConfigData?.can_contribute_to_research ? 1 : 0
+      canContributeToResearch: !can_contribute_to_research ? 1 : 0
     })
   }
 
@@ -21,13 +21,13 @@ const DataToggle = () => {
       <div className="flex items-center gap-2 flex-nowrap">
       {/* <div className="inline"> */}
         <Switch
-          checked={userConfigData?.can_contribute_to_research ? true : false}
+          checked={can_contribute_to_research ? true : false}
           onChange={handleSwitchChange}
           className="relative inline-flex items-center h-6 transition-colors rounded-full bg-light w-11 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           <span
             className={`${
-              userConfigData?.can_contribute_to_research? 'translate-x-6 bg-green-400' : 'translate-x-1 bg-gray-400/50'
+              can_contribute_to_research? 'translate-x-6 bg-green-400' : 'translate-x-1 bg-gray-400/50'
             } inline-block h-4 w-4 transform rounded-full  transition-transform`}
           />
         </Switch>
@@ -35,7 +35,7 @@ const DataToggle = () => {
           <span className="w-[30px] inline-block text-center">
           <strong>
             {
-              userConfigData?.can_contribute_to_research ? 'ON' : 'OFF'
+              can_contribute_to_research ? 'ON' : 'OFF'
             }
           </strong>
           </span>

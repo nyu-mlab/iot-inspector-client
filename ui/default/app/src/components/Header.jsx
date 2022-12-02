@@ -1,53 +1,60 @@
 import React, { useState, Fragment } from 'react'
-import { Link } from 'react-router-dom';
-import { HiBell, HiCog, HiMenu, HiX } from "react-icons/hi";
+import { Link } from 'react-router-dom'
+import { HiBell, HiCog, HiMenu, HiX } from 'react-icons/hi'
 import DataToggle from './DataToggle'
-import AnalyzingTraffic from "./AnalyzingTraffic";
+import AnalyzingTraffic from './AnalyzingTraffic'
 import Logo from './graphics/Logo'
-import { Dialog, Tab, Switch, Disclosure, Menu, Transition } from '@headlessui/react'
-import SettingsModal from "./header/SettingsModal";
-import AchievmentsModal from "./header/AchievmentsModal";
-import FAQModal from "./header/FAQModal";
-import { useUserConfigs } from '@contexts/userConfigsContext'
+import {
+  Dialog,
+  Tab,
+  Switch,
+  Disclosure,
+  Menu,
+  Transition
+} from '@headlessui/react'
+import SettingsModal from './header/SettingsModal'
+import AchievmentsModal from './header/AchievmentsModal'
+import FAQModal from './header/FAQModal'
+import useUserConfigs from '@hooks/useUserConfigs'
 
 const Header = () => {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const x = useUserConfigs()
-  console.log("🐛 @DEBUG::12012022-031650P", x)
-  const { userConfigData} = x
+  const { is_consent } = useUserConfigs()
 
   return (
-    <header className="header">
-      <Disclosure as="nav" className="primary-nav">
+    <header className='header'>
+      <Disclosure as='nav' className='primary-nav'>
         {({ open }) => (
           <>
-            <div className="flex justify-between p-6 grow md:px-8 lg:px-12">
-              <Link to={userConfigData?.is_consent == 1 ? '/overview' : '/'} className="flex gap-2 font-semibold h2 text-dark">
+            <div className='flex justify-between p-6 grow md:px-8 lg:px-12'>
+              <Link
+                to={is_consent == 1 ? '/overview' : '/'}
+                className='flex gap-2 font-semibold h2 text-dark'
+              >
                 <Logo /> Home Data Inspector
               </Link>
-              <div className="flex items-center gap-4">
+              <div className='flex items-center gap-4'>
+                {is_consent == 1 ? (
+                  <div className='hidden gap-2 md:flex'>
+                    <AnalyzingTraffic />
+                  </div>
+                ) : (
+                  '/'
+                )}
 
-                {userConfigData?.is_consent == 1
-                ? <div className="hidden gap-2 md:flex">
-                  <AnalyzingTraffic />
-                </div>
-                : '/'
-                }
-
-
-                <div className="flex lg:hidden">
-                  <Disclosure.Button className="inline-flex items-center justify-center p-2 text-gray-400 rounded-md hover:text-white hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
-                    <span className="sr-only">Open main menu</span>
+                <div className='flex lg:hidden'>
+                  <Disclosure.Button className='inline-flex items-center justify-center p-2 text-gray-400 rounded-md hover:text-white hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary'>
+                    <span className='sr-only'>Open main menu</span>
                     {open ? (
-                      <HiX className="block w-6 h-6" aria-hidden="true" />
+                      <HiX className='block w-6 h-6' aria-hidden='true' />
                     ) : (
-                      <HiMenu className="block w-6 h-6" aria-hidden="true" />
+                      <HiMenu className='block w-6 h-6' aria-hidden='true' />
                     )}
                   </Disclosure.Button>
                 </div>
               </div>
             </div>
-            <div className="hidden gap-8 p-6 text-white lg:flex bg-dark">
+            <div className='hidden gap-8 p-6 text-white lg:flex bg-dark'>
               <DataToggle />
               {/*
           TODO: Notifications
@@ -55,43 +62,42 @@ const Header = () => {
             <HiBell className="w-6 h-6" />
           </button> */}
               <button onClick={() => setSettingsOpen(true)}>
-                <HiCog className="w-6 h-6 transition hover:rotate-180 hover:text-primary" />
+                <HiCog className='w-6 h-6 transition hover:rotate-180 hover:text-primary' />
               </button>
             </div>
 
-
             {/* Responsive Navigation */}
-            <Disclosure.Panel className="lg:hidden">
-              <div className="px-4 pt-2 pb-3 space-y-1">
+            <Disclosure.Panel className='lg:hidden'>
+              <div className='px-4 pt-2 pb-3 space-y-1'>
                 <Disclosure.Button
-                  as="a"
-                  href="/"
-                  className="block pb-6 text-xl text-dark"
+                  as='a'
+                  href='/'
+                  className='block pb-6 text-xl text-dark'
                 >
                   Network Dashboard
                 </Disclosure.Button>
                 <Disclosure.Button
-                  as="a"
-                  href="/communication-endpoints/"
-                  className="block pb-6 text-xl text-dark"
+                  as='a'
+                  href='/communication-endpoints/'
+                  className='block pb-6 text-xl text-dark'
                 >
                   Communication Endpoints
                 </Disclosure.Button>
                 <Disclosure.Button
-                  as="button"
-                  href="/communication-endpoints/"
-                  className="block pb-6 text-xl font-semibold text-dark"
+                  as='button'
+                  href='/communication-endpoints/'
+                  className='block pb-6 text-xl font-semibold text-dark'
                   onClick={() => setSettingsOpen(true)}
                 >
                   Settings
                 </Disclosure.Button>
               </div>
-              <div className="px-4 py-6 bg-dark lg:hidden">
+              <div className='px-4 py-6 bg-dark lg:hidden'>
                 <DataToggle />
               </div>
 
               <hr />
-              <div className="px-4 py-6 md:hidden">
+              <div className='px-4 py-6 md:hidden'>
                 <AnalyzingTraffic />
               </div>
             </Disclosure.Panel>
@@ -102,37 +108,39 @@ const Header = () => {
         <Dialog
           // open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          className="relative z-50"
+          className='relative z-50'
         >
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+            enter='ease-out duration-300'
+            enterFrom='opacity-0'
+            enterTo='opacity-100'
+            leave='ease-in duration-200'
+            leaveFrom='opacity-100'
+            leaveTo='opacity-0'
           >
-            <div className="modal-backdrop" aria-hidden="true" />
+            <div className='modal-backdrop' aria-hidden='true' />
           </Transition.Child>
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
+            enter='ease-out duration-300'
+            enterFrom='opacity-0 scale-95'
+            enterTo='opacity-100 scale-100'
+            leave='ease-in duration-200'
+            leaveFrom='opacity-100 scale-100'
+            leaveTo='opacity-0 scale-95'
           >
-            <div className="inspector-settings">
-              <Dialog.Panel className="inspector-settings-panel max-h-full">
-                <Tab.Group >
-                  <Tab.List className="tab-nav">
+            <div className='inspector-settings'>
+              <Dialog.Panel className='inspector-settings-panel max-h-full'>
+                <Tab.Group>
+                  <Tab.List className='tab-nav'>
                     <Tab as={Fragment}>
                       {({ selected }) => (
                         <button
                           className={
-                            selected ? 'tab-nav-item tab-nav-item-active' : 'tab-nav-item'
+                            selected
+                              ? 'tab-nav-item tab-nav-item-active'
+                              : 'tab-nav-item'
                           }
                         >
                           Settings
@@ -144,7 +152,9 @@ const Header = () => {
                       {({ selected }) => (
                         <button
                           className={
-                            selected ? 'tab-nav-item tab-nav-item-active' : 'tab-nav-item'
+                            selected
+                              ? 'tab-nav-item tab-nav-item-active'
+                              : 'tab-nav-item'
                           }
                         >
                           Achievments
@@ -155,7 +165,9 @@ const Header = () => {
                       {({ selected }) => (
                         <button
                           className={
-                            selected ? 'tab-nav-item tab-nav-item-active' : 'tab-nav-item'
+                            selected
+                              ? 'tab-nav-item tab-nav-item-active'
+                              : 'tab-nav-item'
                           }
                         >
                           FAQs
@@ -163,11 +175,11 @@ const Header = () => {
                       )}
                     </Tab>
                   </Tab.List>
-                  <Tab.Panels className="px-8 py-6 md:py-8 md:px-12">
+                  <Tab.Panels className='px-8 py-6 md:py-8 md:px-12'>
                     <Tab.Panel>
                       <SettingsModal />
                     </Tab.Panel>
-                    <Tab.Panel >
+                    <Tab.Panel>
                       <AchievmentsModal />
                     </Tab.Panel>
                     <Tab.Panel>
@@ -180,7 +192,6 @@ const Header = () => {
           </Transition.Child>
         </Dialog>
       </Transition>
-
     </header>
   )
 }
