@@ -4,6 +4,7 @@ import Router from './pages'
 import { ModalDrawerProvider } from '@contexts/ModalDrawerContext'
 import { NotificationsProvider } from '@contexts/NotificationsContext'
 import { UserConfigsProvider } from '@contexts/UserConfigsContext'
+import { DeviceProvider } from '@contexts/DeviceContext'
 
 // const logger = winston.createLogger({
 //   // ...
@@ -18,9 +19,11 @@ function App() {
     <UserConfigsProvider>
       <NotificationsProvider>
         <ModalDrawerProvider>
-          <div className='App'>
-            <Router />
-          </div>
+          <DeviceProvider>
+            <div className='App'>
+              <Router />
+            </div>
+          </DeviceProvider>
         </ModalDrawerProvider>
       </NotificationsProvider>
     </UserConfigsProvider>

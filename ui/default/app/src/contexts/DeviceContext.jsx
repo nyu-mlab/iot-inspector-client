@@ -1,19 +1,44 @@
-import React, {createContext, useContext } from 'react'
+import React, { createContext, useContext } from 'react'
+import { gql, useQuery } from '@apollo/client'
 
-const initialState = {
-}
+const DEVICES_QUERY = gql`
+  query Devices($deviceId: String) {
+    devices(device_id: $deviceId) {
+      device_id
+      auto_name
+      ip
+      mac
+      outbound_byte_count
+      device_info {
+        device_name
+        vendor_name
+        tag_list
+        is_inspected
+      }
+    }
+  }
+`
 
-const MyContext = createContext(initialState)
+const initialState = {}
 
-const MyProvider = ({children}) => {
-  const values={}
+const DeviceContext = createContext(initialState)
+
+const DeviceProvider = ({ children }) => {
+  const {
+    data: devicesData,
+    loading: devicesDataLoading,
+    error
+  } = useQuery(DEVICES_QUERY, {
+    fetchPolicy: 'network-only',
+    pollInterval: 15000
+  })
+
+  const values = { devicesData, devicesDataLoading }
   return (
-    <MyContext.Provider value={values}>
-      {children}
-    </MyContext.Provider>
+    <DeviceContext.Provider value={values}>{children}</DeviceContext.Provider>
   )
 }
 
-const useMyProvider = () => useContext(MyContext)
+// const useDevices = () => useContext(DeviceContext)
 
-export { useMyProvider, MyProvider }
+export { DeviceContext, DeviceProvider }
