@@ -12,6 +12,7 @@ const CommunicationEndpoints = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
   const { is_consent } = useUserConfigs()
+  console.log("🐛 @DEBUG::12032022-014547P", is_consent)
 
   const { deviceCountriesData, deviceCountriesDataLoading } =
     useDeviceTrafficToCountries(deviceId)
@@ -20,7 +21,7 @@ const CommunicationEndpoints = () => {
     <>
       <main className="flex-1 md:pr-64 lg:md:pr-80">
         <section className="flex items-center gap-2 pb-2 w-fit">
-          <Link to={is_consent == 1 ? '/overview' : '/'}>Network Activity</Link>
+          <Link to={is_consent === 1 ? '/overview' : '/'}>Network Activity</Link>
           <HiChevronRight className="text-gray-600/50" />
           <span className="font-bold text-gray-600/50">
             Communication Endpoints
