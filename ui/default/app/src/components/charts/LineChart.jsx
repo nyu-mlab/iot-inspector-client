@@ -1,10 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import Chart from 'react-apexcharts'
-import { format } from 'date-fns'
 import { gql, useQuery } from '@apollo/client'
 import '../../utils/array'
-import useServerConfig from '../../hooks/useServerConfig'
-import useChartActivityBySecond from '../../hooks/useChartActivityBySecond'
 
 const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
   query ChartActivityBySecond($currentTime: Int!, $deviceId: String!) {
@@ -19,17 +16,9 @@ const CHART_ACTIVITY_BY_SECOND_QUERY = gql`
 `
 
 const LineChart = ({ deviceId }) => {
-  const { start_timestamp } = useServerConfig()
-  // const { chartActivityBySecondData, chartActivityBySecondDataLoading } =
-  //   useChartActivityBySecond({
-  //     deviceId,
-  //     pullInterval: 5000, // anything lower than 5 seconds may see performance hits
-  //   })
-
   const chartActivityBySecondDataLoading = false
   const {
     data:chartActivityBySecondData ,
-    // loading: chartActivityBySecondDataLoading
   } = useQuery(CHART_ACTIVITY_BY_SECOND_QUERY, {
     variables: {
       deviceId,
@@ -73,38 +62,10 @@ const LineChart = ({ deviceId }) => {
     setChartSeries( chartActivityBySecondData?.chartActivityBySecond.yAxis)
   }, [chartActivityBySecondData?.chartActivityBySecond])
 
-  // const chartOptions = useMemo(() => {
-  //   return {
-  //     chart: {
-  //       id: 'realtime',
-  //       animations: {
-  //         enabled: true,
-  //         easing: 'linear',
-  //         dynamicAnimation: {
-  //           speed: 1000,
-  //         },
-  //       },
-  //     },
-  //     xaxis: {
-  //       categories:
-  //         chartActivityBySecondData?.chartActivityBySecond?.xAxis || [],
-  //       type: 'string',
-  //       range: 10,
-  //     },
-  //     stroke: {
-  //       curve: 'smooth',
-  //     },
-  //   }
-  // }, [chartActivityBySecondData])
-
-  // const chartSeries = useMemo(() => {
-  //   return chartActivityBySecondData?.chartActivityBySecond?.yAxis || []
-  // }, [chartActivityBySecondData])
 
   return (
     <>
       {chartActivityBySecondDataLoading ? (
-
         <div className="skeleton h-[300px]">
         </div>
       ) : (

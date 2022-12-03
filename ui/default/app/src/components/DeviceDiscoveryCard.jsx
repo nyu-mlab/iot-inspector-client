@@ -3,46 +3,36 @@ import PropTypes from 'prop-types'
 import { Field, Form, Formik } from 'formik'
 import TextInput from '@components/fields/TextInput'
 import SwitchInput from '@components/fields/SwitchInput'
-import useDeviceInfo from '@hooks/useDeviceInfo'
+import useDevices from '@hooks/useDevices'
 
 const DeviceDiscoveryCard = ({ device }) => {
-  const { updateDeviceInfo } = useDeviceInfo({ deviceId: device.device_id })
-
+  const { updateDeviceInfo } = useDevices()
   const initialValues = {
-    deviceName: device?.device_info?.device_name ||
-      device?.auto_name ||
-      'Unknown Device',
-    vendorName: device?.device_info?.vendor_name ||
-      'Unknown Vendor',
+    deviceName:
+      device?.device_info?.device_name || device?.auto_name || 'Unknown Device',
+    vendorName: device?.device_info?.vendor_name || 'Unknown Vendor',
     isInspected: device?.device_info?.is_inspected || 0
   }
 
-  const handleSubmit = (values) => {
-    const v = {
-      ...values,
-      isInspected: values.isInspected ? 1 : 0
-    }
-    updateDeviceInfo(v)
-  }
-
   const handleChange = (values) => {
-    updateDeviceInfo(values, false)
+    updateDeviceInfo(values, false, device.device_id)
   }
 
   return (
     <Formik
       initialValues={initialValues}
-      onSubmit={(values) => handleSubmit(values)}
     >
       {({ values, setFieldValue, dirty }) => (
         <Form id={`device-info-form_${device.device_id}`}>
-          <div className="device-discovery-card">
-            <div className="flex justify-between">
+          <div className='device-discovery-card'>
+            <div className='flex justify-between'>
               <div>
-                <h3>{device?.device_info?.device_name ||
-                  device?.auto_name ||
-                  'Unknown Device'}</h3>
-                <div className="flex flex-row gap-4">
+                <h3>
+                  {device?.device_info?.device_name ||
+                    device?.auto_name ||
+                    'Unknown Device'}
+                </h3>
+                <div className='flex flex-row gap-4'>
                   <p>{device && device.ip}</p>
                   <p>{device && device.mac}</p>
                 </div>
@@ -50,29 +40,29 @@ const DeviceDiscoveryCard = ({ device }) => {
               <Field
                 name='isInspected'
                 // className="mb-0"
-                type="checkbox"
+                type='checkbox'
                 toggle
                 component={SwitchInput}
                 onChange={(value) => {
                   setFieldValue('isInspected', !values.isInspected)
                   const isInspected = values.isInspected ? 0 : 1
-                  handleChange({isInspected})
+                  handleChange({ isInspected })
                 }}
-              // label=""
+                // label=""
               />
             </div>
-            <div className="grid grid-cols-3 gap-2 py-2 network-devices">
+            <div className='grid grid-cols-3 gap-2 py-2 network-devices'>
               <Field
-                autoComplete="off"
-                name="deviceName"
-                type="text"
-                label="Device Name"
-                placeholder="Device Name"
+                autoComplete='off'
+                name='deviceName'
+                type='text'
+                label='Device Name'
+                placeholder='Device Name'
                 component={TextInput}
-                className="w-full p-1 bg-gray-100 rounded-md"
+                className='w-full p-1 bg-gray-100 rounded-md'
                 onChange={(changeEvent) => {
                   setFieldValue('deviceName', changeEvent.target.value)
-                  handleChange({deviceName: changeEvent.target.value})
+                  handleChange({ deviceName: changeEvent.target.value })
                 }}
               />
               {/* <Field
@@ -87,16 +77,16 @@ const DeviceDiscoveryCard = ({ device }) => {
               />
               */}
               <Field
-                autoComplete="off"
-                name="vendorName"
-                type="text"
-                label="Manufacturer"
-                placeholder="Manufacturer"
+                autoComplete='off'
+                name='vendorName'
+                type='text'
+                label='Manufacturer'
+                placeholder='Manufacturer'
                 component={TextInput}
-                className="w-full p-1 bg-gray-100 rounded-md"
+                className='w-full p-1 bg-gray-100 rounded-md'
                 onChange={(changeEvent) => {
                   setFieldValue('vendorName', changeEvent.target.value)
-                  handleChange({vendorName: changeEvent.target.value})
+                  handleChange({ vendorName: changeEvent.target.value })
                 }}
               />
               {/* <button

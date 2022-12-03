@@ -1,23 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Field, Form, Formik } from 'formik'
-import useDeviceInfo from '@hooks/useDeviceInfo'
 import TextInput from '@components/fields/TextInput'
 import CreateSelect from '@components/fields/CreateSelect'
 import useDevices from '@hooks/useDevices'
 import useNotifications from '@hooks/useNotifications'
 import SELECTS from '@constants/selects'
 
-
-const DeviceDrawer = ({ deviceId }) => {
-  console.log("DeviceDrawer")
-  const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
-    useDeviceInfo({ deviceId })
-
-  const { devicesData, devicesDataLoading, error } = useDevices({ deviceId })
+const DeviceDrawer = () => {
+  const { devicesData, selectedDevice, updateDeviceInfo, devicesError } = useDevices()
   const { showError } = useNotifications()
+
   useEffect(() => {
-    if(error) showError(error.message)
-  }, [error])
+    if (devicesError) showError(devicesError.message)
+  }, [devicesError])
 
   const [initialValues, setInitialValues] = useState(undefined)
 
@@ -30,21 +25,20 @@ const DeviceDrawer = ({ deviceId }) => {
   const deviceSelects = useMemo(() => {
     // get all keywords into a value/label array.
     // filter out unique values only
-    return Object.keys(SELECTS).map((key) => {
-      return SELECTS[key].keywords.map(keyword => {
-        return {
-          label: keyword,
-          value: keyword
-        }
+    return Object.keys(SELECTS)
+      .map((key) => {
+        return SELECTS[key].keywords.map((keyword) => {
+          return {
+            label: keyword,
+            value: keyword
+          }
+        })
       })
-    }).flat(1);
-
+      .flat(1)
   }, [SELECTS])
 
   useEffect(() => {
-    if (!devicesData?.devices.length) return
-
-    const selectedDevice = devicesData.devices.find(d => d.device_id === deviceId)
+    if (!selectedDevice) return
 
     setInitialValues({
       deviceName:
@@ -52,7 +46,7 @@ const DeviceDrawer = ({ deviceId }) => {
         selectedDevice?.auto_name ||
         '',
       vendorName: selectedDevice?.device_info?.vendor_name || '',
-      tags: parseTags(selectedDevice?.device_info?.tag_list) || [],
+      tags: parseTags(selectedDevice?.device_info?.tag_list) || []
     })
   }, [devicesData])
 
@@ -68,10 +62,10 @@ const DeviceDrawer = ({ deviceId }) => {
   }
 
   return (
-    <aside className="menu-drawer device-details">
+    <aside className='menu-drawer device-details'>
       {!initialValues ? (
-        <div className="h-[600px]">
-          <div className="h-full skeleton" />
+        <div className='h-[600px]'>
+          <div className='h-full skeleton' />
         </div>
       ) : (
         <Formik
@@ -79,48 +73,52 @@ const DeviceDrawer = ({ deviceId }) => {
           onSubmit={(values) => handleSubmit(values)}
         >
           {({ values, setFieldValue, dirty }) => (
-            <Form id="device-info-form" className="flex flex-col justify-between h-full">
-              <div className="grid gap-4">
+            <Form
+              id='device-info-form'
+              className='flex flex-col justify-between h-full'
+            >
+              <div className='grid gap-4'>
                 <Field
-                  autoComplete="off"
-                  name="deviceName"
-                  type="text"
-                  label="Device Name"
-                  placeholder="Device Name"
+                  autoComplete='off'
+                  name='deviceName'
+                  type='text'
+                  label='Device Name'
+                  placeholder='Device Name'
                   component={TextInput}
-                  className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
-                  onChange={(value) => setFieldValue('deviceName', value)}
+                  className='w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md'
+                  onChange={(e) => {
+                    setFieldValue('deviceName', e.target.value)}}
                 />
                 <Field
-                  autoComplete="off"
-                  name="vendorName"
-                  type="text"
-                  label="Vendor"
-                  placeholder="Vendor Name"
+                  autoComplete='off'
+                  name='vendorName'
+                  type='text'
+                  label='Vendor'
+                  placeholder='Vendor Name'
                   component={TextInput}
-                  className="w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md"
+                  className='w-full px-4 py-2 bg-gray-100 border-l-4 border-yellow-600 rounded-md'
                   onChange={(value) => setFieldValue('vendorName', value)}
                 />
                 <Field
-                  name="tags"
-                  type="text"
+                  name='tags'
+                  type='text'
                   component={CreateSelect}
                   options={deviceSelects}
                   isMulti
-                  placeholder="Add Device Tags"
+                  placeholder='Add Device Tags'
                   // options={searchDistanceOptions}
                   onChange={(value) => {
                     console.log(value)
                     setFieldValue('tags', value)
                   }}
-                  label="Tags"
+                  label='Tags'
                 />
               </div>
               <button
-                type="submit"
-                form="device-info-form"
-                className="w-full btn btn-primary"
-              // disabled={dirty ? false : true}
+                type='submit'
+                form='device-info-form'
+                className='w-full btn btn-primary'
+                // disabled={dirty ? false : true}
               >
                 Save Device Details
               </button>

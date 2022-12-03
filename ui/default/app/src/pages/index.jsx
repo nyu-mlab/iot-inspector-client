@@ -6,6 +6,10 @@ import CommunicationEndpointsRoutes from './CommunicationEndpoints/routes'
 import DeviceActivityRoutes from './DeviceActivity/routes'
 import GettingStartedRoutes from './GettingStarted/routes'
 import SandboxRoutes from './Sandbox/routes'
+import { ModalDrawerProvider } from '@contexts/ModalDrawerContext'
+import { NotificationsProvider } from '@contexts/NotificationsContext'
+import { UserConfigsProvider } from '@contexts/UserConfigsContext'
+import { DeviceProvider } from '@contexts/DeviceContext'
 
 const Routes = () => {
   return useRoutes([
@@ -18,11 +22,18 @@ const Routes = () => {
   ])
 }
 
-
 export default function Router() {
   return (
     <BrowserRouter>
-        <Routes />
+      <UserConfigsProvider>
+        <DeviceProvider>
+          <NotificationsProvider>
+            <ModalDrawerProvider>
+              <Routes />
+            </ModalDrawerProvider>
+          </NotificationsProvider>
+        </DeviceProvider>
+      </UserConfigsProvider>
     </BrowserRouter>
   )
 }
