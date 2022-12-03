@@ -1,10 +1,6 @@
 // import winston from 'winston';
 // import { WinstonProvider } from 'winston-react';
 import Router from './pages'
-import { ModalDrawerProvider } from '@contexts/ModalDrawerContext'
-import { NotificationsProvider } from '@contexts/NotificationsContext'
-import { UserConfigsProvider } from '@contexts/UserConfigsContext'
-import { DeviceProvider } from '@contexts/DeviceContext'
 
 // const logger = winston.createLogger({
 //   // ...
@@ -16,17 +12,9 @@ import { DeviceProvider } from '@contexts/DeviceContext'
 
 function App() {
   return (
-    <UserConfigsProvider>
-      <DeviceProvider>
-        <NotificationsProvider>
-          <ModalDrawerProvider>
-            <div className='App'>
-              <Router />
-            </div>
-          </ModalDrawerProvider>
-        </NotificationsProvider>
-      </DeviceProvider>
-    </UserConfigsProvider>
+    <div className='App'>
+      <Router />
+    </div>
   )
 }
 
