@@ -6,7 +6,7 @@ import useNotifications from '@hooks/useNotifications'
 import { Field, Form, Formik } from 'formik'
 
 const DeviceDiscoveryDrawer = () => {
-  const { devicesData, devicesDataLoading, sortDevicesData, error } = useDevices()
+  const { devicesData, devicesDataLoading, error } = useDevices()
   const { showError } = useNotifications()
 
   useEffect(() => {

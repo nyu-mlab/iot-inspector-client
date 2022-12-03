@@ -17,15 +17,15 @@ import { DeviceProvider } from '@contexts/DeviceContext'
 function App() {
   return (
     <UserConfigsProvider>
-      <NotificationsProvider>
-        <ModalDrawerProvider>
-          <DeviceProvider>
+      <DeviceProvider>
+        <NotificationsProvider>
+          <ModalDrawerProvider>
             <div className='App'>
               <Router />
             </div>
-          </DeviceProvider>
-        </ModalDrawerProvider>
-      </NotificationsProvider>
+          </ModalDrawerProvider>
+        </NotificationsProvider>
+      </DeviceProvider>
     </UserConfigsProvider>
   )
 }

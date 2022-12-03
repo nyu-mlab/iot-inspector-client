@@ -33,6 +33,8 @@ const DeviceProvider = ({ children }) => {
     pollInterval: 15000
   })
 
+  console.log("🐛 @DEBUG::12032022-092446A", devicesData)
+
   const values = { devicesData, devicesDataLoading }
   return (
     <DeviceContext.Provider value={values}>{children}</DeviceContext.Provider>
