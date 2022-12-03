@@ -1,6 +1,6 @@
 {
   "TV": {
-    "image": "",
+    "image": "./src/constants/products/tv.svg",
     "keywords": [
       "TV",
       "television",
@@ -9,7 +9,7 @@
     ]
   },
   "Appliance": {
-    "image": "",
+    "image": "./src/constants/products/appliance.svg",
     "keywords": [
       "fridge",
       "clothes Dryer",
@@ -20,7 +20,7 @@
     ]
   },
   "Camera": {
-    "image": "",
+    "image": "./src/constants/products/camera.svg",
     "keywords": [
       "video",
       "doorbell",
@@ -30,13 +30,13 @@
     ]
   },
   "Smart Speaker": {
-    "image": "",
+    "image": "./src/constants/products/speakers.svg",
     "keywords": [
       "alexa"
     ]
   },
   "Home Automation": {
-    "image": "",
+    "image": "./src/constants/products/home-automation.svg",
     "keywords": [
       "Smart",
       "Thermostats",
@@ -45,7 +45,7 @@
     ]
   },
   "Computer": {
-    "image": "",
+    "image": "./src/constants/products/computers.svg",
     "keywords": [
       "Laptop",
       "Macbook",
@@ -53,7 +53,7 @@
     ]
   },
   "Phone": {
-    "image": "",
+    "image": "./src/constants/products/phone.svg",
     "keywords": [
       "Laptop",
       "Macbook",
@@ -61,13 +61,13 @@
     ]
   },
   "Printers": {
-    "image": "",
+    "image": "./src/constants/products/printer.svg",
     "keywords": [
       "printer"
     ]
   },
   "Unknown": {
-    "image": "",
+    "image": "./src/constants/products/unknown.svg",
     "keywords": []
   }
 }

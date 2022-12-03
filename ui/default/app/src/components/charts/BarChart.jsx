@@ -1,16 +1,22 @@
 import { gql } from '@apollo/client'
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import Chart from 'react-apexcharts'
 import '@utils/array'
 
 import useChartActivity from '@hooks/useChartActivity'
 import useDevices from '@hooks/useDevices'
+import useNotifications from '@hooks/useNotifications'
 
 const BarChart = ({ deviceId }) => {
   const { networkDownloadActivity, networkDownloadActivityLoading } =
     useChartActivity({ pullInterval: 60000 })
 
-  const { devicesData } = useDevices()
+  const { devicesData, error } = useDevices()
+  const { showError } = useNotifications()
+  useEffect(() => {
+    if(error) showError(error.message)
+  }, [error])
+
 
   const chartOptions = useMemo(() => {
     return {

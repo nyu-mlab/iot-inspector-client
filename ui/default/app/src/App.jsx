@@ -1,19 +1,32 @@
-// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import DefaultLayout from './layouts/DefaultLayout'
+// import winston from 'winston';
+// import { WinstonProvider } from 'winston-react';
 import Router from './pages'
 import { ModalDrawerProvider } from '@contexts/ModalDrawerContext'
 import { NotificationsProvider } from '@contexts/NotificationsContext'
+import { UserConfigsProvider } from '@contexts/UserConfigsContext'
+import { DeviceProvider } from '@contexts/DeviceContext'
 
+// const logger = winston.createLogger({
+//   // ...
+//   transports: [
+//     // ...
+//     new winston.transports.Console()
+//   ]
+// });
 
 function App() {
   return (
-    <NotificationsProvider>
-      <ModalDrawerProvider>
-        <div className="App">
-          <Router />
-        </div>
-      </ModalDrawerProvider>
-    </NotificationsProvider>
+    <UserConfigsProvider>
+      <NotificationsProvider>
+        <ModalDrawerProvider>
+          <DeviceProvider>
+            <div className='App'>
+              <Router />
+            </div>
+          </DeviceProvider>
+        </ModalDrawerProvider>
+      </NotificationsProvider>
+    </UserConfigsProvider>
   )
 }
 

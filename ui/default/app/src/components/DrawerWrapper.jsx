@@ -39,7 +39,6 @@ const DrawerWrapper = ({ modal, props }) => {
                   <div className="flex flex-col h-full py-6 overflow-y-scroll bg-white shadow-xl">
                     <div className="px-4 sm:px-6">
                       <div className="flex items-start justify-between">
-                        <Dialog.Title className="text-lg font-medium text-gray-900"> Panel title </Dialog.Title>
                         <div className="flex items-center ml-3 h-7">
                           <button
                             type="button"

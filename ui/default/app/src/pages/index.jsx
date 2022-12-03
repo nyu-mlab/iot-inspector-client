@@ -7,7 +7,6 @@ import DeviceActivityRoutes from './DeviceActivity/routes'
 import GettingStartedRoutes from './GettingStarted/routes'
 import SandboxRoutes from './Sandbox/routes'
 
-
 const Routes = () => {
   return useRoutes([
     SandboxRoutes,
@@ -23,7 +22,7 @@ const Routes = () => {
 export default function Router() {
   return (
     <BrowserRouter>
-      <Routes />
+        <Routes />
     </BrowserRouter>
   )
 }

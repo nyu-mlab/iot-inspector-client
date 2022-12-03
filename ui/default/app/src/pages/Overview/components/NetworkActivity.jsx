@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import DataCard from '@components/DataCard'
 import BarChart from '@components/charts/BarChart'
 import { dataUseage } from '@utils/utils'
@@ -20,7 +21,7 @@ const NetworkActivityDashboard = () => {
             <p>
               High data usage devices in the past 24 hours
               <br />
-              <a href="#inspecting-devices">View all devices</a>
+              <Link to="#inspecting-devices">View all devices</Link>
             </p>
           <BarChart />
 

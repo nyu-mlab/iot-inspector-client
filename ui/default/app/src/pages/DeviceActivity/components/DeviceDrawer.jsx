@@ -1,18 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Field, Form, Formik } from 'formik'
 import useDeviceInfo from '@hooks/useDeviceInfo'
 import TextInput from '@components/fields/TextInput'
 import CreateSelect from '@components/fields/CreateSelect'
 import useDevices from '@hooks/useDevices'
+import useNotifications from '@hooks/useNotifications'
 import SELECTS from '@constants/selects'
-import { useEffect } from 'react'
-import { useMemo } from 'react'
 
 
 const DeviceDrawer = ({ deviceId }) => {
+  console.log("DeviceDrawer")
   const { updateDeviceInfo, updateDeviceInfoLoading, updatedDeviceInfo } =
     useDeviceInfo({ deviceId })
-  const { devicesData, devicesDataLoading } = useDevices({ deviceId })
+
+  const { devicesData, devicesDataLoading, error } = useDevices({ deviceId })
+  const { showError } = useNotifications()
+  useEffect(() => {
+    if(error) showError(error.message)
+  }, [error])
 
   const [initialValues, setInitialValues] = useState(undefined)
 
@@ -33,7 +38,7 @@ const DeviceDrawer = ({ deviceId }) => {
         }
       })
     }).flat(1);
-    
+
   }, [SELECTS])
 
   useEffect(() => {
