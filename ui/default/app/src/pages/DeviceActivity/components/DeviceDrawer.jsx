@@ -108,7 +108,6 @@ const DeviceDrawer = () => {
                   placeholder='Add Device Tags'
                   // options={searchDistanceOptions}
                   onChange={(value) => {
-                    console.log(value)
                     setFieldValue('tags', value)
                   }}
                   label='Tags'
