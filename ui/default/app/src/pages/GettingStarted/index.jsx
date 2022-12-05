@@ -60,7 +60,7 @@ const Onboarding = () => {
               </div>
               <Link
                 className='btn btn-primary'
-                to={is_consent == 1 ? '/overview' : '/consent'}
+                to='/overview'
               >
                 {data?.cta?.label ? data.cta.label : 'Get Started'}
               </Link>

@@ -12,7 +12,6 @@ const CommunicationEndpoints = () => {
   const query = useQueryParam()
   const deviceId = query.get('deviceid')
   const { is_consent } = useUserConfigs()
-  console.log("🐛 @DEBUG::12032022-014547P", is_consent)
 
   const { deviceCountriesData, deviceCountriesDataLoading } =
     useDeviceTrafficToCountries(deviceId)

@@ -71,6 +71,8 @@ const DeviceProvider = ({ children }) => {
     pollInterval: 15000
   })
 
+  if(devicesError) showError(devicesError.message) //  NO_DEVICES
+
   const selectedDevice = useMemo(() => {
     if (devicesData?.devices.length && selectedDeviceId) {
       return devicesData.devices.find((d) => d.device_id === selectedDeviceId)
@@ -100,7 +102,7 @@ const DeviceProvider = ({ children }) => {
     await refetchDevices()
 
     if (showToast) {
-      showSuccess('Record Updated')
+      showSuccess('SUCCESS_RECORD_UPDATED')
     }
   }
 
