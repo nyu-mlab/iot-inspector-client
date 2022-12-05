@@ -17,7 +17,7 @@ const DeviceActivity = () => {
       <div className='flex bg-white'>
         <div className='w-full'>
           <section className='flex items-center gap-2 pb-2 w-fit'>
-            <Link to='/'>Network Activity</Link>
+            <Link to='/overview'>Network Activity</Link>
             <HiChevronRight className='text-gray-600/50' />
             <span className='font-bold text-gray-600/50'>Device Activity</span>
           </section>
