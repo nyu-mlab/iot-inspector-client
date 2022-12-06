@@ -1,0 +1,7 @@
+import{e as d,a as e,F as r,g as m,u,j as a,L as s}from"./main.2be1b207.js";function h(){const{open:t}=d();return e(r,{children:e("button",{onClick:()=>{t({type:"drawer",name:"DeviceDiscoveryDrawer",props:{foo:"bar"}})},className:"w-full btn btn-primary",children:"Scan Network"})})}const p=m`
+  query Query($deviceId: String) {
+    communicationEndpointNames(device_id: $deviceId) {
+      counterparty_hostname
+    }
+  }
+`,y=({deviceId:t})=>{var l;const{data:n,loading:o}=u(p,{fetchPolicy:"network-only",pollInterval:2e4});return o?e(r,{}):e(r,{children:a("aside",{className:"menu-drawer",children:[a("div",{className:"flex flex-col flex-1 min-h-0",children:[a("h2",{className:"pr-16",children:["Communication",e("br",{}),"Endpoints"]}),e("div",{className:"flex flex-col flex-1 py-4 overflow-y-scroll",children:e("ul",{children:(l=n==null?void 0:n.communicationEndpointNames)==null?void 0:l.map((i,c)=>e("li",{className:"py-0.5",children:e(s,{to:"#",className:"text-xs transition text-dark hover:text-secondary",children:i.counterparty_hostname})},c))})})]}),a("div",{className:"relative h-12 my-8",children:[e("div",{className:"absolute w-full transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2",children:e("div",{className:"w-full h-px bg-secondary"})}),e("div",{className:"absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2",children:e(s,{to:"/communication-endpoints/",className:"p-5 font-semibold bg-white text-secondary",children:"View All"})})]}),e(h,{})]})})};export{y as E};
