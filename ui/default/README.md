@@ -5,6 +5,7 @@ From within `ui/default` directory
 ```bash
 yarn install:all  # This will install dependencies within server and client
 yarn prisma:generate  # This will compile a prisma server for your OS/architecture.
+yarn build 
 ```
 
 If this is your first time running the app, spin up the database so that we have it in place. Note this will spin it up and run it, you'll need to run this in a separate terminal window
