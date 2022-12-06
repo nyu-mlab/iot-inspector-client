@@ -6,11 +6,13 @@ import { HiChevronRight } from 'react-icons/hi'
 import DeviceCommunication from './components/DeviceCommunication'
 import DeviceName from './components/DeviceName'
 import useDevices from '@hooks/useDevices'
+import DefaultLayout from '../../layouts/DefaultLayout'
 
 const DeviceActivity = () => {
   const { selectedDevice } = useDevices()
 
   return (
+    <DefaultLayout>
     <main className='flex-1 md:pr-64 lg:md:pr-80'>
       <div className='flex bg-white'>
         <div className='w-full'>
@@ -37,6 +39,7 @@ const DeviceActivity = () => {
         <DeviceDrawer />
       </div>
     </main>
+    </DefaultLayout>
   )
 }
 

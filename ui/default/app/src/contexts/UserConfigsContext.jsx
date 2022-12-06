@@ -1,5 +1,7 @@
 import { gql, useMutation, useQuery } from '@apollo/client'
 import React, { createContext, useContext } from 'react'
+import useNotifications from '@hooks/useNotifications'
+
 
 const USER_CONFIGS_QUERY = gql`
   query UserConfigs {
@@ -38,30 +40,42 @@ const initialState = {
 const UserConfigsContext = createContext(initialState)
 
 const UserConfigsProvider = ({ children }) => {
+  const { showSuccess, showError } = useNotifications()
+
   const {
     data: userConfigData,
     loading: userConfigsDataLoading,
-    refetch
+    refetch,
+    error
   } = useQuery(USER_CONFIGS_QUERY)
 
+  if(error) showError(error.message) // Possible Error Code: ERROR_GETTING_USER_CONFIGS
+
   const [updateUserConfigsFn] = useMutation(UPDATE_USER_CONFIGS_MUTATION)
+
 
   const updateUserConfigs = async ({
     isConsent,
     canContributeToResearch,
     canAutoInspectDevice
   }) => {
-    await updateUserConfigsFn({
-      variables: {
-        isConsent,
-        canContributeToResearch,
-        canAutoInspectDevice
-      }
-    })
-
+    try{
+      await updateUserConfigsFn({
+        variables: {
+          isConsent,
+          canContributeToResearch,
+          canAutoInspectDevice
+        }
+      })
+    } catch (err) {
+      showError(err.message)
+      console.log(err.message) // Possible Error Code: ERROR_UPDATING_USER_CONSENT
+    }
     // refetch user configs
     await refetch()
+
   }
+
 
   const value = {
     ...userConfigData?.userConfigs,

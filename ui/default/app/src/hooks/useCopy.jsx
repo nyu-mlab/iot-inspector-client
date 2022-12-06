@@ -5,7 +5,7 @@ import { useState } from 'react'
 const API_ENDPOINT = 'https://adroit-parsnip.cloudvent.net/'
 
 const useCopy = (path) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [data, setData] = useState({})
 
   useEffect(() => {

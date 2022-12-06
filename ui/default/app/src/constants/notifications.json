@@ -1,0 +1,7 @@
+{
+  "ERROR_GETTING_DEVICES": "Error Getting Devices",
+  "NO_DEVICES": "No Devices were returned",
+  "ERROR_GETTING_USER_CONFIGS": "Error getting user config settings",
+  "ERROR_UPDATING_USER_CONSENT": "We could not update your settings",
+  "SUCCESS_RECORD_UPDATED": "Record Updated"
+}
