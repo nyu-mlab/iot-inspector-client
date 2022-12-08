@@ -1,6 +1,6 @@
 oui_dict = {}
 
-with open('oui.txt') as fp:
+with open('oui.txt',encoding="utf-8") as fp:
     for line in fp:
         try:
             (oui, vendor) = line.strip().split(',', 1)

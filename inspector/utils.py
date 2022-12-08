@@ -271,13 +271,16 @@ def get_my_mac():
     """Returns the MAC addr of the default route interface."""
 
     mac_set = get_my_mac_set(iface_filter=get_default_route()[1])
-    return mac_set.pop()
+    try:    
+        return mac_set.pop()
+    except KeyError:
+        print("no mac ?")
 
 
 def get_my_mac_set(iface_filter=None):
     """Returns a set of MAC addresses of the current host."""
-
     out_set = set()
+    
     if sys.platform.startswith("win"):
         from scapy.arch.windows import NetworkInterface
         if type(iface_filter) == NetworkInterface:
@@ -292,9 +295,8 @@ def get_my_mac_set(iface_filter=None):
             continue
         else:
             out_set.add(mac)
-
     return out_set
-
+        
 
 class _SafeRunError(object):
     """Used privately to denote error state in safe_run()."""

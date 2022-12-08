@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^4.7.1",
     "concurrently": "^7.2.1"
   },
   "scripts": {
@@ -13,6 +14,8 @@
     "clean:db": "(rm -rf ../../inspector/configs.db) && (rm -rf ../../inspector/configs.db-shm) && (rm -rf ../../inspector/configs.db-wal) && (rm -rf ../../inspector/network_traffic.db) && (rm -rf ../../inspector/network_traffic.db-shm) && (rm -rf ../../inspector/network_traffic.db-wal) && (rm -rf ../../inspector/network_traffic2.db)",
     "client:build": "(rm -rf ./html/*) && (cd app && yarn build) && ( mv -v ./app/dist/* ./html)",
     "prisma:generate": "npx prisma generate --schema server/prisma/network_traffic_schema.prisma ; npx prisma generate --schema server/prisma/configs_schema.prisma"
+  },
+  "devDependencies": {
+    "prisma": "^4.7.1"
   }
 }
-
