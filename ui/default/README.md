@@ -15,7 +15,7 @@ yarn mockdb
 ### Running the App
 Spin both the client and graphql server up. Note this should be run within the `ui/default` directory. It will concurrently run both client and server.
 ```bash
-yarn dev
+yarn start
 ```
 
 Within another tab (if not already running), to run the mock database (which needs to be run when running the app) run:

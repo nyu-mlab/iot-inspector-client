@@ -132,19 +132,32 @@ const devices = async (
   args: { device_id: string },
   context: Context,
 ) => {
-  const devicesResult = await context.NetworkTrafficClient.flows.groupBy({
-    by: ['device_id'],
-    _sum: {
-      outbound_byte_count: true,
-    },
-  })
+  let devicesResult
+  try{
+    devicesResult = await context.NetworkTrafficClient.flows.groupBy({
+      by: ['device_id'],
+      _sum: {
+        outbound_byte_count: true,
+      },
+    })
+
+  } catch (err) {
+    logger.error(`Error Getting Devices: ${err.message}`)
+    throw new Error('ERROR_GETTING_DEVICES')
+  }
+
+  if(devicesResult.length === 0){
+    logger.warn(`No Devices Found`)
+    throw new Error('NO_DEVICES')
+  }
 
   // map the devices to the flow device_id
   let devices = await Promise.all(
+
     devicesResult.map(async (flow) => {
       const deviceId = args.device_id || flow.device_id
-      const mappedDevice = await getDeviceInfoForDevice(deviceId, context)
 
+      const mappedDevice = await getDeviceInfoForDevice(deviceId, context)
       if (mappedDevice) {
         return {
           ...mappedDevice,
@@ -152,12 +165,13 @@ const devices = async (
         }
       }
       else {
+        // Device not found. Log this as a warning, and continue on.
         logger.warn(`Device ID not found within devices ${deviceId}`)
         return null
-        //throw new Error(`Device ID not found within devices ${deviceId}`)
       }
-    }),
+    })
   )
+
 
   if (args.device_id) {
     return [devices[0]]
@@ -458,19 +472,23 @@ const addDeviceInfo = async (
 }
 
 
-const userConfigs = async (
-  _parent,
-  args: { device_id: string },
-  context: Context,
-)  => {
-  const user_configs = await context.ConfigsClient.user_configs.findUnique({
-    where: {
-      id: 0,
-    },
-  })
-
-  return user_configs
-}
+  const userConfigs = async (
+    _parent,
+    args: { device_id: string },
+    context: Context,
+  )  => {
+    try {
+      const user_configs = await context.ConfigsClient.user_configs.findUnique({
+        where: {
+          id: 0,
+        },
+      })
+      return user_configs
+    } catch (err){
+      logger.error(`Error getting user configs. ${err.message}`)
+      throw new Error("ERROR_GETTING_USER_CONFIGS")
+    }
+  }
 
 /**
  * Updates user configs
@@ -489,16 +507,20 @@ const userConfigs = async (
   },
   context: Context,
 ) => {
-  const updatedUserConfigs = await context.ConfigsClient.user_configs.update({
-    where: {
-      id: 0,
-    },
-    data: {
-      ...args,
-    },
-  })
-
-  return updatedUserConfigs
+  try {
+    const updatedUserConfigs = await context.ConfigsClient.user_configs.update({
+      where: {
+        id: 0,
+      },
+      data: {
+        ...args,
+      },
+    })
+    return updatedUserConfigs
+  } catch (err){
+    logger.error(`Error updating user configs. ${err.message}`)
+    throw new Error('ERROR_UPDATING_USER_CONSENT')
+  }
 }
 
 export {

@@ -25,15 +25,15 @@ const Routes = () => {
 export default function Router() {
   return (
     <BrowserRouter>
-      <UserConfigsProvider>
-        <DeviceProvider>
-          <NotificationsProvider>
-            <ModalDrawerProvider>
-              <Routes />
-            </ModalDrawerProvider>
-          </NotificationsProvider>
-        </DeviceProvider>
-      </UserConfigsProvider>
+      <NotificationsProvider>
+        <UserConfigsProvider>
+          <DeviceProvider>
+              <ModalDrawerProvider>
+                <Routes />
+              </ModalDrawerProvider>
+          </DeviceProvider>
+        </UserConfigsProvider>
+      </NotificationsProvider>
     </BrowserRouter>
   )
 }

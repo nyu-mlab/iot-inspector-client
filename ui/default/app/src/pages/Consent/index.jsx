@@ -9,6 +9,10 @@ import useCopy from '@hooks/useCopy'
 
 const Consent = () => {
   const { userConfigsDataLoading, updateUserConfigs } = useUserConfigs()
+  const configdata = useUserConfigs()
+  console.log("data",configdata)
+
+
   const navigate = useNavigate()
 
   const { loading, data } = useCopy('/consent.json')
@@ -22,7 +26,8 @@ const Consent = () => {
       isConsent: consentValue,
       canAutoInspectDevice: consentValue
     })
-    navigate(consentValue ? '/overview' : '/')
+    // no consent given, redirect to the "Get Started" page.
+    if(!consentValue) navigate('/')
   }
 
   return (
