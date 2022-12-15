@@ -26,12 +26,14 @@ import sqlite3
 import random
 import time
 from common_functions import insert_many, round_down
+import subprocess
 
 
-# These database files will eventually be saved somewhere on user's directory.
-# For now, we'll save them in the source directory.
-TRAFFIC_DB_PATH = 'network_traffic.db'
-CONFIG_DB_PATH = 'configs.db'
+# If the call below fails, run this script with sudo (which means that you'd
+# also need to run yarn with sudo).
+assert subprocess.call('mkdir -p /Applications/inspector/') == 0
+TRAFFIC_DB_PATH = '/Applications/inspector/network_traffic.db'
+CONFIG_DB_PATH = '/Applications/inspector/configs.db'
 
 
 # Initialize the DB connections
