@@ -1,4 +1,3 @@
-from genericpath import isfile
 import sqlite3
 import os
 from common_functions import insert_many, round_down
@@ -11,10 +10,8 @@ import geoip2.database
 UPLOAD_INTERVAL = 2
 
 
-# These database files will eventually be saved somewhere on user's directory.
-# For now, we'll save them in the source directory.
-TRAFFIC_DB_PATH = 'network_traffic.db'
-CONFIG_DB_PATH = 'configs.db'
+TRAFFIC_DB_PATH = '/Applications/inspector/network_traffic.db'
+CONFIG_DB_PATH = '/Applications/inspector/configs.db'
 
 
 ip_country_parser = geoip2.database.Reader('maxmind-country.mmdb')
