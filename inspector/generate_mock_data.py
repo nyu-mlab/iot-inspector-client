@@ -31,7 +31,7 @@ import subprocess
 
 # If the call below fails, run this script with sudo (which means that you'd
 # also need to run yarn with sudo).
-assert subprocess.call('mkdir -p /Applications/inspector/') == 0
+assert subprocess.call('mkdir -p /Applications/inspector/', shell=True) == 0
 TRAFFIC_DB_PATH = '/Applications/inspector/network_traffic.db'
 CONFIG_DB_PATH = '/Applications/inspector/configs.db'
 
