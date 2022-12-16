@@ -99,11 +99,7 @@ def log(*args):
     log_str = '[%s] ' % datetime.datetime.today()
     log_str += ' '.join([str(v) for v in args])
 
-    log_file_path = os.path.join(
-        os.path.expanduser('~'),
-        'princeton-iot-inspector',
-        'iot_inspector_logs.txt'
-    )
+    log_file_path = '/Applications/inspector/inspector.log'
 
     with open(log_file_path, 'a') as fp:
         fp.write(log_str + '\n')
