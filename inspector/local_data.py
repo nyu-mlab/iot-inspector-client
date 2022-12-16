@@ -208,11 +208,17 @@ def _parse_single_flow(flow_key, flow_stats, post_data):
 def get_country(remote_ip):
     """Returns country for IP."""
 
+    country = None
     try:
-        return ip_country_parser.country(remote_ip).country.iso_code
+        country = ip_country_parser.country(remote_ip).country.iso_code
 
     except Exception:
-        return ''
+        pass
+
+    if country:
+        return country
+
+    return ''
 
 
 # Checks tables upon import
