@@ -109,14 +109,6 @@ def handle_device_dict(post_data, traffic_db, config_db):
                 VALUES (?, ?, ?, ?, ?)
             """, (device_id, device_ip, device_oui + '0' * 6, oui_parser.get_vendor(device_oui), ts))
 
-            config_db.execute("""
-                INSERT INTO device_info (
-                    device_id,
-                    is_inspected
-                )
-                VALUES(?, ?)
-            """, (device_id, 1))
-
 
 def handle_dns_dict(post_data, traffic_db, config_db, device_id_set):
     """

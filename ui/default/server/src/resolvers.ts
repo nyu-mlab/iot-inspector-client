@@ -33,6 +33,17 @@ const getDeviceInfoById = async (deviceId: string, context: Context) => {
     },
   })
 
+  if (deviceInfo) {
+    return deviceInfo
+  }
+
+  // If a device has never seen before, populate with default values for now.
+  deviceInfo = await context.ConfigsClient.device_info.create({
+    data: {
+      device_id: deviceId
+    }
+  })
+
   return deviceInfo
 }
 
