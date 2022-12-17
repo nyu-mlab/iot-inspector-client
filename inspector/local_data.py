@@ -49,11 +49,21 @@ def initialize_tables():
     """
     if not os.path.isfile(TRAFFIC_DB_PATH):
         with open('network_traffic.schema.sql') as fp:
-            sqlite3.connect(TRAFFIC_DB_PATH).executescript(fp.read())
+            with sqlite3.connect(TRAFFIC_DB_PATH) as traffic_db:
+                traffic_db.executescript(fp.read())
 
     if not os.path.isfile(CONFIG_DB_PATH):
         with open('configs.schema.sql') as fp:
-            sqlite3.connect(CONFIG_DB_PATH).executescript(fp.read())
+            with sqlite3.connect(CONFIG_DB_PATH) as config_db:
+                config_db.executescript(fp.read())
+
+                # Insert a single row in the user_configs table if it is not already there
+                if len(list(config_db.execute('SELECT * FROM user_configs LIMIT 1'))) == 0:
+                    insert_many(
+                        config_db,
+                        'user_configs',
+                        [{'id': 0}]
+                    )
 
 
 def handle_device_dict(post_data, traffic_db, config_db):
