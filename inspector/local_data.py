@@ -229,7 +229,3 @@ def get_country(remote_ip):
         return country
 
     return ''
-
-
-# Checks tables upon import
-initialize_tables()
