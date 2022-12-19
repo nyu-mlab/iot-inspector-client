@@ -9,8 +9,34 @@ import scapy.all as sc
 import server_config
 import utils
 
+import rumps
+import subprocess
+import Foundation
+from Foundation import NSSearchPathForDirectoriesInDomains
 
-def main():
+
+class AwesomeStatusBarApp(rumps.App):
+    def __init__(self):
+        app_support_path = NSSearchPathForDirectoriesInDomains(14, 1, 1).objectAtIndex_(0)
+        subprocess.call(['mkdir', '-p', app_support_path])
+        super(AwesomeStatusBarApp, self).__init__("Home Data Inspector", quit_button=None)
+        self.menu = ["Open dashboard", "Stop inspection and quit"]
+        self.host_state = initialize()
+
+    @rumps.clicked("Open dashboard")
+    def dashboard(self, _):
+        print('Opening dashboard...')
+        subprocess.Popen('open http://localhost:3000/', shell=True)
+
+    @rumps.clicked("Stop inspection and quit")
+    def quit(self, _):
+        clean_up(self.host_state)
+        rumps.quit_application()
+
+
+
+def initialize():
+
     sc.load_layer("http")
     # The whole process should be run as root.
     try:
@@ -25,7 +51,7 @@ def main():
     # Check for Windows
     if utils.get_os() == 'windows':
 
-        # Check Npcap installation 
+        # Check Npcap installation
         npcap_path = os.path.join(
             os.environ['WINDIR'], 'System32', 'Npcap'
         )
@@ -49,10 +75,14 @@ def main():
 
     utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
-    
+
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
     host_state = inspector.start()
+    return host_state
+
+
+def wait_for_termination(host_state):
 
     # Waiting for termination
     while True:
@@ -65,12 +95,15 @@ def main():
             print('')
             break
 
+
+def clean_up(host_state):
+
     utils.log('[Main] Restoring ARP...')
 
     with host_state.lock:
         host_state.spoof_arp = False
 
-    for t in range(10):
+    for t in range(3):
         print('Cleaning up ({})...'.format(10 - t))
         time.sleep(1)
 
@@ -135,4 +168,4 @@ def kill_existing_inspector():
 
 
 if __name__ == '__main__':
-    main()
+    AwesomeStatusBarApp().run()

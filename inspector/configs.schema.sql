@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS device_info (
     -- device. When the UI sets this value to 0, the Python driver will
     -- automatically stop inspecting. The driver monitors this table roughly
     -- every second.
-    is_inspected INTEGER DEFAULT 0 NOT NULL,
+    is_inspected INTEGER DEFAULT 1 NOT NULL,
     -- Boolean: whether the device is being blocked. Set to 1 and the Python driver will automatically block a device.
     is_blocked INTEGER DEFAULT 0 NOT NULL
 );

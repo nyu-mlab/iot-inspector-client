@@ -7,7 +7,20 @@ set -e
 
 rm -rf dist/
 
-pyinstaller --onedir --nowindow --add-data="network_traffic.schema.sql:." --add-data="configs.schema.sql:." generate_mock_data.py
+# Below for testing only
+# pyinstaller --onedir --nowindow --add-data="network_traffic.schema.sql:." --add-data="configs.schema.sql:." generate_mock_data.py
+
+# Below for deployment
+pyinstaller \
+    --onedir \
+    --nowindow \
+    --name="Inspector" \
+    --add-data="network_traffic.schema.sql:." \
+    --add-data="configs.schema.sql:." \
+    --add-data="maxmind-country.mmdb:." \
+    --add-data="oui.txt:." \
+    --add-data="../env/lib/python3.9/site-packages/netdisco:./netdisco" \
+    start.py
 
 # Compress the AppleScript app
 
@@ -16,7 +29,7 @@ zip /tmp/inspector_test.app.zip -r inspector_test.app/
 
 # Compress driver
 
-cd dist/generate_mock_data
+cd dist/Inspector
 zip /tmp/driver.zip -r *
 cd -
 

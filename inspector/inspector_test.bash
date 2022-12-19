@@ -2,7 +2,7 @@
 
 BASE_DIR="/Applications/inspector"
 
-COMMIT_ID="df4c25d822fbd7bac94f9d0e4017982ab87ab0eb"
+COMMIT_ID="2c9e2b7141e2d26dc837b9bc1cfc61ca76d1e3e1"
 
 UI_DIR="$BASE_DIR/ui/iot-inspector-client-$COMMIT_ID/ui/default"
 
@@ -17,7 +17,7 @@ mkdir -p $BASE_DIR/driver
 mkdir -p $BASE_DIR/tmp
 
 
-DRIVER_NAME="generate_mock_data"
+DRIVER_NAME="Inspector"
 
 
 install_npm() {

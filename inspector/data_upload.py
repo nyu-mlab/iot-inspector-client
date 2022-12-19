@@ -2,17 +2,11 @@
 Anonymizes and uploads DNS and flow data to cloud.
 
 """
-import datetime
 import json
-import requests
 import threading
 import time
-import traceback
-
 from host_state import HostState
-import server_config
 import utils
-
 import local_data
 
 
@@ -33,6 +27,8 @@ class DataUploader(object):
         self._thread.daemon = True
 
         self._last_upload_ts = time.time()
+
+        local_data.initialize_tables()
 
     def _upload_thread(self):
 
