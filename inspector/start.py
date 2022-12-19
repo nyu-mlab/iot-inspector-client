@@ -104,7 +104,10 @@ def clean_up(host_state):
         host_state.spoof_arp = False
 
     for t in range(3):
-        print('Cleaning up ({})...'.format(10 - t))
+        # Kills all the yarn process -- TODO kill by pid
+        print(subprocess.call(['pkill', '-9', '-f', 'inspector']))
+        remaining = 3 - t
+        print(f'Cleaning up ({remaining})...')
         time.sleep(1)
 
     inspector.disable_ip_forwarding()
