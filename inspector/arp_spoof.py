@@ -4,7 +4,7 @@ Based on ARP packets received, sends out spoofed ARP packets.
 """
 import scapy.all as sc
 import concurrent.futures
-import multiprocessing
+# import multiprocessing
 import threading
 import time
 
@@ -36,8 +36,8 @@ class ArpSpoof(object):
 
         self._lock = threading.Lock()
         self._active = True
-        #self._thread = threading.Thread(target=self._arp_spoof_loop)
-        self._thread = threading.Thread(target=self._arp_spoof_loop_async_wrapper)
+        self._thread = threading.Thread(target=self._arp_spoof_loop)
+        #self._thread = threading.Thread(target=self._arp_spoof_loop_async_wrapper)
         self._thread.daemon = True
 
     def start(self):
