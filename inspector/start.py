@@ -13,6 +13,7 @@ import rumps
 import subprocess
 import Foundation
 from Foundation import NSSearchPathForDirectoriesInDomains
+import threading
 
 
 class AwesomeStatusBarApp(rumps.App):
@@ -22,6 +23,7 @@ class AwesomeStatusBarApp(rumps.App):
         super(AwesomeStatusBarApp, self).__init__("Home Data Inspector", quit_button=None)
         self.menu = ["Open dashboard", "Stop inspection and quit"]
         self.host_state = initialize()
+        self.start_time = time.time()
 
     @rumps.clicked("Open dashboard")
     def dashboard(self, _):
@@ -31,6 +33,18 @@ class AwesomeStatusBarApp(rumps.App):
     @rumps.clicked("Stop inspection and quit")
     def quit(self, _):
         clean_up(self.host_state)
+        rumps.quit_application()
+
+    @rumps.timer(60)
+    def auto_quit(self, _):
+        """Automatically quits after ten minutes."""
+        if time.time() - self.start_time <= 60 * 10:
+            return
+        clean_up(self.host_state)
+        rumps.alert(
+            title='Inspector',
+            message='Inspector has automatically stopped after ten minutes. Click OK to completely close this app. If you wish to inspect your home traffic, please re-launch Inspector.'
+        )
         rumps.quit_application()
 
 
