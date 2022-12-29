@@ -20,7 +20,10 @@ class AwesomeStatusBarApp(rumps.App):
     def __init__(self):
         app_support_path = NSSearchPathForDirectoriesInDomains(14, 1, 1).objectAtIndex_(0)
         subprocess.call(['mkdir', '-p', app_support_path])
-        super(AwesomeStatusBarApp, self).__init__("Home Data Inspector", quit_button=None)
+        super(AwesomeStatusBarApp, self).__init__(
+            "Home Data Inspector",
+            icon="icon.png", title=None, quit_button=None
+        )
         self.menu = ["Open dashboard", "Stop inspection and quit"]
         self.host_state = initialize()
         self.start_time = time.time()
