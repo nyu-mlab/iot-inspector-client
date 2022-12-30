@@ -179,8 +179,8 @@ run_inspector() {
         echo $! > $pid_file
     fi
 
-    # block at most 10 seconds until the database is ready
-    for i in {1..10}
+    # block at most 15 seconds until the database is ready
+    for i in {1..15}
     do
         sleep 1
         echo "Checking if the database file is ready"
