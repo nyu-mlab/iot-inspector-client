@@ -221,3 +221,30 @@ def get_country(remote_ip):
         return country
 
     return ''
+
+
+def get_not_inspected_devices():
+    """
+    Returns a list of device IDs that are NOT being inspected
+
+    """
+    query = """
+    SELECT device_id
+    FROM device_info
+    WHERE is_inspected = 0;
+    """
+
+    try:
+        config_db = sqlite3.connect(CONFIG_DB_PATH, isolation_level=None)
+        config_db.execute('pragma journal_mode=wal;')
+        config_db.row_factory = sqlite3.Row
+
+        result_list = []
+        for result in config_db.execute(query):
+            result_list.append(result['device_id'])
+
+        return result_list
+
+    except Exception:
+        # The database may not have been initialized
+        return []
