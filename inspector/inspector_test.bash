@@ -154,8 +154,16 @@ download_inspector() {
     if [ ! -f $BASE_DIR/driver/$DRIVER_NAME ]; then
         echo "Downloading the Python driver binary"
         cd $BASE_DIR/driver
-        curl https://mlab.hdanny.org/tmp-share/inspector-test/driver.zip > driver.zip
-        unzip driver.zip
+        if [[ $(uname -p) == 'arm' ]]; then
+            echo "mac M1 chip"
+            curl https://mlab.hdanny.org/tmp-share/inspector-test/driver.zip > driver.zip
+            unzip driver.zip
+        else
+            echo "mac Intel chip"
+            curl https://mlab.hdanny.org/tmp-share/inspector-test/driver-intel.zip > driver-intel.zip
+            unzip driver-intel.zip
+        fi
+
     fi
 
     test -f $BASE_DIR/driver/$DRIVER_NAME
