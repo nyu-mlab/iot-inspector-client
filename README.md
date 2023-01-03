@@ -4,23 +4,24 @@ This branch is for the development of the new Inspector -- a collaboration
 between NYU, Consumer Reports, and Ocopop.
 
 
-## For internal testers
+## For Alpha Testers
 
-So far, we are still working on an easily deployable version. Until then, all testers would have to use the command line to test-drive the latest Inspector. The following instructions assume that a tester uses macOS Big Sur and/or above, and that they have a basic understanding of the macOS Terminal.
+Currently, you can test Inspector only on macOS. We've tested it on macOS Monterey (M1 and Intel) and Ventura (M1).
 
-1. Open your terminal.
-2. Copy and paste the following command and hit "Enter".
-3. macOS will prompt you to enter a password or scan your fingerprint; just comply, because Inspector needs administrator privilege to run.
+See the download link:
 
-```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nyu-mlab/iot-inspector-client/cr-dev/iot_app_runner.sh)" 
-```
+https://github.com/nyu-mlab/iot-inspector-client/releases/tag/v2.0.0-alpha
 
-Known issue: When you're done, you can't kill the processes with Control + C. You'd have to kill by doing `sudo pkill -9 -f yarn` and `sudo pkill -9 -f start.py`.
+If you're curious how this binary works, download the zip file, unzip it, and open the binary in macOS Script Editor. You'll see that the binary is just a fancy wrapper around the installation script (`inspector_test.bash`). Danny pushes updates using the `deploy_test.bash` script. Check out these scripts in the `cr-dev` branch!
 
-### For all developers
 
-On Linux and macOS, do the following to set up the environment and test Inspector.
+## For Developers
+
+### Run the Python Driver
+
+(The code does NOT work on Linux or Windows yet.)
+
+On macOS, do the following to set up the environment and test Inspector.
 
 Make sure you have Python 3. Do the following from the command line:
 
@@ -31,26 +32,31 @@ git checkout cr-dev
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
+sudo mkdir /Applications/inspector
 sudo python inspector/start.py
 ```
 
-If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, before doing `pip install -r requirements.txt`, you need to run `sudo apt-get install python3-dev`.
+(If you're on Ubuntu 20, you might encounter an error where `Python.h` is not found. In this case, before doing `pip install -r requirements.txt`, you need to run `sudo apt-get install python3-dev`.)
+
+
+
 
 Issues? Questions? Please create an Issue.
 
 
-### For UI/UX developers:
+### Run the UI Server
 
-[This section is subject to change, as the UI/UX developers will be using
-nodejs. The Python client and nodejs will communicate over a sqlite database.]
+Make sure that you're still on the `cr-dev` branch. Return to the `iot-inspector-client` directory.
 
-Edit the files within the `ui/default` directory. The HTML for the start page
-must be `ui/default/html/index.html`. Feel free to place any other files (e.g.,
-images, CSS, and JS) elsewhere in the `ui/default` directory. Make sure to
-commit your changes in the `cr-dev` branch.
+```
+cd ui/default
+yes | yarn install:all
+yes | yarn client:build
+yes | yarn prisma:generate
+sudo yarn dev
+```
 
-To test the UI, start Inspector and navigate to http://localhost:53721/, which
-automatically redirects to `/dashboard/html/index.html`.
+
 
 
 
