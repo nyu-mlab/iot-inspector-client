@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import { useState } from 'react'
 
-// const API_ENDPOINT = 'https://ocupop.github.io/iot-docs'
+
+// https://github.com/ocupop/home-data-inspector-content
 const API_ENDPOINT = 'https://adroit-parsnip.cloudvent.net/'
 
 const useCopy = (path) => {
