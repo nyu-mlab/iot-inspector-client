@@ -16,6 +16,8 @@ import asyncio
 import logging
 import os
 
+import local_data
+
 
 # Min seconds between successive spoofed packets
 MIN_ARP_SPOOF_INTERVAL = 0.01
@@ -90,15 +92,18 @@ class ArpSpoof(object):
 
             whitelist_ip_mac = []
 
+            # A list of device IDs being inspected, based on the user's select in the UI
+            not_inspected_device_id_list = local_data.get_not_inspected_devices()
+
             # Add gateway
             whitelist_ip_mac.append((gateway_ip, gateway_mac))
 
             # Build device-to-device whitelist
             for ip, mac in ip_mac_dict.items():
                 device_id = utils.get_device_id(mac, self._host_state)
-                # if device_id not in self._host_state.device_whitelist:
-                #     utils.log('[ARP Spoof] Ignore:', ip, mac)
-                #     continue
+                if device_id in not_inspected_device_id_list:
+                    utils.log('[ARP Spoof] Ignore:', ip, mac)
+                    continue
                 whitelist_ip_mac.append((ip, mac))
 
             # print('Spoof devices:', whitelist_ip_mac)

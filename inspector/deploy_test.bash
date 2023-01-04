@@ -19,6 +19,7 @@ pyinstaller \
     --add-data="configs.schema.sql:." \
     --add-data="maxmind-country.mmdb:." \
     --add-data="oui.txt:." \
+    --add-data="icon.png:." \
     --add-data="../env/lib/python3.9/site-packages/netdisco:./netdisco" \
     start.py
 
