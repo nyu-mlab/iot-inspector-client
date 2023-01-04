@@ -21,6 +21,7 @@ const DataToggle = () => {
       <div className="flex items-center gap-2 flex-nowrap">
       {/* <div className="inline"> */}
         <Switch
+          disabled={true} // TODO: When we want to enable, remove this
           checked={can_contribute_to_research ? true : false}
           onChange={handleSwitchChange}
           className="relative inline-flex items-center h-6 transition-colors rounded-full bg-light w-11 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"

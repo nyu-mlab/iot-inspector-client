@@ -27,7 +27,7 @@ const Consent = () => {
       canAutoInspectDevice: consentValue
     })
     // no consent given, redirect to the "Get Started" page.
-    if(!consentValue) navigate('/')
+    // if(!consentValue) navigate('/') TODO: Bring back when ready
   }
 
   return (
