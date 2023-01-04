@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../../../../inspector/configs.db"
+  url      = "file:/Applications/inspector/configs.db"
 }
 
 model device_info {
@@ -13,7 +13,7 @@ model device_info {
   device_name  String @default("")
   vendor_name  String @default("")
   tag_list     String @default("[]")
-  is_inspected Int    @default(0)
+  is_inspected Int    @default(1)
   is_blocked   Int    @default(0)
 }
 
