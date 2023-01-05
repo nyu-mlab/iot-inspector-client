@@ -107,7 +107,20 @@ def handle_device_dict(post_data, traffic_db, config_db):
                     last_updated_ts
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (device_id, device_ip, device_oui + '0' * 6, oui_parser.get_vendor(device_oui), ts))
+            """, (
+                device_id,
+                device_ip,
+                device_oui + '0' * 6,
+                get_auto_name(device_id, device_oui),
+                ts
+            ))
+
+
+def get_auto_name(device_id, device_oui):
+
+    oui = oui_parser.get_vendor(device_oui)
+
+    return 'Device ' + device_id[-3:] + ' ' + oui
 
 
 def handle_dns_dict(post_data, traffic_db, config_db, device_id_set):
