@@ -18,7 +18,7 @@ const { open } = useModalDrawer()
           })
         }}
         className="w-full btn btn-primary">
-          Scan Network
+          Exclusion List
       </button>
     </>
   )

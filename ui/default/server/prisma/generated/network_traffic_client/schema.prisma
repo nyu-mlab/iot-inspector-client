@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../../../../inspector/network_traffic.db"
+  url      = "file:/Applications/inspector/network_traffic.db"
 }
 
 model counterparties {
