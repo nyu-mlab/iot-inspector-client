@@ -162,7 +162,8 @@ const Header = () => {
                         </button>
                       )}
                     </Tab>
-                    <Tab as={Fragment}>
+                    {/* TODO: Bring back FAQs when ready */}
+                    {/* <Tab as={Fragment}>
                       {({ selected }) => (
                         <button
                           className={
@@ -174,7 +175,7 @@ const Header = () => {
                           FAQs
                         </button>
                       )}
-                    </Tab>
+                    </Tab> */}
                   </Tab.List>
                   <Tab.Panels className='px-8 py-6 md:py-8 md:px-12'>
                     <Tab.Panel>
