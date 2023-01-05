@@ -44,10 +44,13 @@ class AwesomeStatusBarApp(rumps.App):
         if time.time() - self.start_time <= 60 * 10:
             return
         clean_up(self.host_state)
-        rumps.alert(
-            title='Inspector',
-            message='Inspector has automatically stopped after ten minutes. Click OK to completely close this app. If you wish to inspect your home traffic, please re-launch Inspector.'
-        )
+
+        # Commented out the following because the dialog may not appear at the
+        # front of all the windows
+        # rumps.alert(
+        #     title='Inspector',
+        #     message='Inspector has automatically stopped after ten minutes. Click OK to completely close this app. If you wish to inspect your home traffic, please re-launch Inspector.'
+        # )
         rumps.quit_application()
 
 

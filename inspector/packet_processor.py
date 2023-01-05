@@ -15,6 +15,8 @@ import utils
 
 # pylint: disable=no-member
 
+sc.load_layer('tls')
+
 
 class PacketProcessor(object):
 
@@ -267,7 +269,7 @@ class PacketProcessor(object):
                 tcp_ack = tcp_layer.ack
         except Exception:
             pass
-       
+
         # Determine flow direction
         if src_mac == host_mac:
             direction = 'inbound'
@@ -363,7 +365,7 @@ class PacketProcessor(object):
                     syn_originator = 'local'
         except Exception:
             pass
-        
+
         if syn_originator and flow_stats['syn_originator'] is None:
             flow_stats['syn_originator'] = syn_originator
 
@@ -388,7 +390,7 @@ class PacketProcessor(object):
             ua = pkt[http.HTTPRequest].fields['User_Agent'].decode('utf-8')
         except Exception as e:
             return
-        
+
         with self._host_state.lock:
             self._host_state \
                 .pending_ua_dict \
@@ -403,7 +405,7 @@ class PacketProcessor(object):
             http_host = pkt[http.HTTPRequest].fields['Host'].decode('utf-8')
         except Exception as e:
             return
-        
+
         device_port = pkt[sc.TCP].sport
 
         with self._host_state.lock:
@@ -486,27 +488,27 @@ def get_tls_dict(pkt, host_state):
         except IndexError:
             break
 
-        if layer.name == 'TLS Client Hello':
+        if 'TLS' in layer.name and 'Client Hello' in layer.name:
             tls_dict['client_hello'] = get_client_hello(pkt, layer)
 
-        if layer.name == 'TLS Server Hello':
-            tls_dict['server_hello'] = get_server_hello(pkt, layer, host_state)
+        # if layer.name == 'TLS Server Hello':
+        #     tls_dict['server_hello'] = get_server_hello(pkt, layer, host_state)
 
-        if layer.name == 'TLS Certificate List':
-            if pkt[sc.IP].src in host_state.get_ip_mac_dict_copy():
-                tls_dict['client_cert'] = get_client_cert(pkt, layer)
+        # if layer.name == 'TLS Certificate List':
+        #     if pkt[sc.IP].src in host_state.get_ip_mac_dict_copy():
+        #         tls_dict['client_cert'] = get_client_cert(pkt, layer)
 
     return tls_dict
 
 
 def get_client_hello(pkt, layer):
 
-    extensions = getattr(layer, 'extensions', [])
+    extensions = getattr(layer, 'ext', [])
     extension_types = []
     sni = None
 
     # Remove GREASE values from cipher_suites
-    cipher_suites = getattr(layer, 'cipher_suites', [])
+    cipher_suites = getattr(layer, 'ciphers', [])
     length_before_removing_grease = len(cipher_suites)
     cipher_suites = [v for v in cipher_suites if not is_grease(v)]
     length_after_removing_grease = len(cipher_suites)
@@ -524,13 +526,13 @@ def get_client_hello(pkt, layer):
                 continue
             extension_types.append(ex.type)
             if ex.type == 0:
-                sni = str(ex.server_names[0].data)
+                sni = ex.servernames[0].servername.decode('utf-8')
         except Exception:
             pass
 
     version = getattr(layer, 'version', None)
 
-    return {
+    r = {
         'type': 'client_hello',
         'version': version,
         'cipher_suites': cipher_suites,
@@ -547,6 +549,10 @@ def get_client_hello(pkt, layer):
         'device_port': pkt[sc.TCP].sport,
         'client_ts': time.time()
     }
+
+    print('ClientHello:', r)
+
+    return r
 
 
 def get_server_hello(pkt, layer, host_state):

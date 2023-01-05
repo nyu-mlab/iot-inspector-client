@@ -1,5 +1,7 @@
 ui/default/server/prisma/generated/configs_client/index-browser.js
 
+*.spec
+
 *~
 play.py
 .*
