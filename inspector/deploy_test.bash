@@ -21,6 +21,7 @@ pyinstaller \
     --add-data="oui.txt:." \
     --add-data="icon.png:." \
     --add-data="../env/lib/python3.9/site-packages/netdisco:./netdisco" \
+    --add-data="../env/lib/python3.9/site-packages/dns:./dns" \
     start.py
 
 # Compress the AppleScript app
