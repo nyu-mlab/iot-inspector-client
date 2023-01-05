@@ -14,8 +14,6 @@ import time
 
 import utils
 
-BASE_BINARY_PATH = 'https://github.com/noise-lab/netdisco-python-wrapper/raw/master/release/device_identifier_{os}'  # noqa
-
 
 DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
@@ -26,7 +24,6 @@ class NetdiscoWrapper(object):
 
         self._host_state = host_state
         self._os = utils.get_os()
-        self._netdisco_path = self._get_netdisco_path()
 
     def start(self):
         th = threading.Thread(target=self._start_thread)
@@ -41,29 +38,23 @@ class NetdiscoWrapper(object):
             if len(self._host_state.get_ip_mac_dict_copy()) > 0:
                 utils.safe_run(self._run_netdisco, args=[netdis])
 
-    def _get_netdisco_path(self):
-
-        exe_name = 'iot-inspector-netdisco'
-
-        return os.path.join(
-            os.path.expanduser('~'),
-            'princeton-iot-inspector',
-            exe_name)
-
     def _run_netdisco(self, netdis):
         netdis.scan()
-        for device_type in netdis.discover():
+        print('netdisco started')
+        result = netdis.discover()
+        print('netdisco result:', result)
+        for device_type in result:
             # get_info() could return a list of devices
             for device_info in netdis.get_info(device_type):
                 device_ip = device_info['host']
-                device_info['device_type'] = device_type 
-                
+                device_info['device_type'] = device_type
+
                 # Find MAC based on IP
                 try:
                     with self._host_state.lock:
                         device_mac = self._host_state.ip_mac_dict[device_ip]
                 except KeyError:
-                    continue 
+                    continue
 
                 # Get device_id based on MAC
                 device_id = utils.get_device_id(device_mac, self._host_state)
@@ -72,6 +63,8 @@ class NetdiscoWrapper(object):
                 with self._host_state.lock:
                     self._host_state.pending_netdisco_dict \
                         .setdefault(device_id, []).append(device_info)
+
+                print('netdisco:', device_id, device_info)
 
         netdis.stop()
 
