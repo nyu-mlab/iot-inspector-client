@@ -24,13 +24,12 @@ const NetworkActivityDashboard = () => {
               <Link to="#inspecting-devices">View all devices</Link>
             </p>
           <BarChart />
-
           <div className="grid gap-2 py-4 md:grid-cols-2 lg:grid-cols-3">
             {highUseageDataLoading && <><div className="skeleton h-[114px]" /></>}
             {highUseageData &&
               highUseageData.slice(0, 3).map((device, i) => (
                 <DataCard key={i} bytes={device.outbound_byte_count}>
-                  <span className="text-xs">{device.auto_name}</span>
+                  <span className="text-xs">{device.device_info?.device_name || device.auto_name}</span>
                   <br />
                   <span className="text-xs">{device.ip}</span>
                 </DataCard>
