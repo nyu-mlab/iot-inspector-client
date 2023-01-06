@@ -5,6 +5,9 @@ const HIGH_USEAGE_QUERY = gql`
   query Query {
     devices {
       auto_name
+      device_info {
+        device_name
+      }
       ip
       outbound_byte_count
     }
@@ -23,7 +26,6 @@ const useHighUseage = () => {
       const sorted = data?.devices.slice().sort((a, b) => {
         return b.outbound_byte_count - a.outbound_byte_count
       })
-      
       setHighUseageData(sorted)
     }
   }, [data?.devices])
