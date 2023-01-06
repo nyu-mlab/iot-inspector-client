@@ -26,7 +26,6 @@ const useHighUseage = () => {
       const sorted = data?.devices.slice().sort((a, b) => {
         return b.outbound_byte_count - a.outbound_byte_count
       })
-      console.log("🐛 @DEBUG::01062023-111555A", sorted)
       setHighUseageData(sorted)
     }
   }, [data?.devices])
