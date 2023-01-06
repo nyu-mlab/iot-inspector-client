@@ -2,7 +2,7 @@
 
 BASE_DIR="/Applications/inspector"
 
-COMMIT_ID="5a312fae91a3794bcfc712b1f3c4d83086464d42"
+COMMIT_ID="4f13af1d4f99ea3a56873cc6490aba25967a1fdf"
 
 UI_DIR="$BASE_DIR/ui/iot-inspector-client-$COMMIT_ID/ui/default"
 
