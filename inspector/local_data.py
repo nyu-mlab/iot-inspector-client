@@ -4,6 +4,9 @@ from common_functions import insert_many, round_down
 import time
 import oui_parser
 import geoip2.database
+from host_state import HostState
+import functools
+from dns import reversename, resolver
 
 
 # How often to write to DB
@@ -18,7 +21,7 @@ ip_country_parser = geoip2.database.Reader('maxmind-country.mmdb')
 
 
 
-def write_data(post_data):
+def write_data(post_data, host_state: HostState):
 
     # Flows: read and write
     traffic_db = sqlite3.connect(TRAFFIC_DB_PATH, isolation_level=None)
@@ -30,16 +33,18 @@ def write_data(post_data):
     config_db.execute('pragma journal_mode=wal;')
     config_db.row_factory = sqlite3.Row
 
-    handle_device_dict(post_data, traffic_db, config_db)
+    handle_device_dict(post_data, traffic_db, host_state)
 
     # Get a list of existing devices
     device_id_set = set()
-    for row in traffic_db.execute('SELECT DISTINCT device_id FROM devices'):
-        device_id_set.add(row['device_id'])
+    for row in traffic_db.execute('SELECT DISTINCT device_id, ip FROM devices'):
+        if row['ip'] != host_state.gateway_ip:
+            device_id_set.add(row['device_id'])
 
     handle_dns_dict(post_data, traffic_db, config_db, device_id_set)
     handle_flow_dict(post_data, traffic_db, config_db, device_id_set)
 
+    fill_in_counterparties(traffic_db, device_id_set, host_state.gateway_ip)
 
 
 def initialize_tables():
@@ -66,7 +71,7 @@ def initialize_tables():
                     )
 
 
-def handle_device_dict(post_data, traffic_db, config_db):
+def handle_device_dict(post_data, traffic_db, host_state):
     """
     device_dict: device_id -> (device_ip, device_oui)
     """
@@ -107,7 +112,20 @@ def handle_device_dict(post_data, traffic_db, config_db):
                     last_updated_ts
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (device_id, device_ip, device_oui + '0' * 6, oui_parser.get_vendor(device_oui), ts))
+            """, (
+                device_id,
+                device_ip,
+                device_oui + '0' * 6,
+                get_auto_name(device_id, device_oui),
+                ts
+            ))
+
+
+def get_auto_name(device_id, device_oui):
+
+    oui = oui_parser.get_vendor(device_oui)
+
+    return 'Device ' + device_id[-3:] + ' ' + oui
 
 
 def handle_dns_dict(post_data, traffic_db, config_db, device_id_set):
@@ -127,13 +145,15 @@ def handle_dns_dict(post_data, traffic_db, config_db, device_id_set):
     for ((device_id, domain, data_source, _), ip_set) in dns_dict.items():
         for ip in ip_set:
             if device_id in device_id_set:
-                insert_list.append({
+                record = {
                     'remote_ip': ip,
                     'hostname': domain,
                     'device_id': device_id,
-                    'source': 'dns',
+                    'source': data_source,
                     'ts': ts
-                })
+                }
+                if record not in insert_list:
+                    insert_list.append(record)
 
     insert_many(traffic_db, 'counterparties', insert_list)
 
@@ -188,8 +208,8 @@ def _parse_single_flow(flow_key, flow_stats, post_data):
         'device_port': device_port,
         'counterparty_ip': remote_ip,
         'counterparty_port': remote_port,
-        'counterparty_hostname': remote_ip,
-        'counterparty_friendly_name': remote_ip,
+        'counterparty_hostname': '',
+        'counterparty_friendly_name': '',
         'counterparty_country': get_country(remote_ip),
         'transport_layer_protocol': protocol,
         'uses_weak_encryption': (1 if remote_port == 80 else 0),
@@ -248,3 +268,59 @@ def get_not_inspected_devices():
     except Exception:
         # The database may not have been initialized
         return []
+
+
+def fill_in_counterparties(traffic_db, device_id_set, gateway_ip):
+
+    # Build a mapping between IPs and domains
+
+    query = """
+    SELECT DISTINCT remote_ip, hostname
+    FROM counterparties;
+    """
+
+    ip_domain_dict = {}
+    for row in traffic_db.execute(query):
+        ip_domain_dict[row['remote_ip']] = row['hostname']
+
+    # Find all the IPs without a hostname
+
+    query = """
+    SELECT DISTINCT counterparty_ip
+    FROM flows
+    WHERE counterparty_hostname = "" OR counterparty_hostname LIKE '%?';
+    """
+
+    unknown_ip_set = set()
+    for row in traffic_db.execute(query):
+        if row['counterparty_ip'] != gateway_ip:
+            unknown_ip_set.add(row['counterparty_ip'])
+
+    # Fill int he hostnames
+
+    for unknown_ip in unknown_ip_set:
+
+        try:
+            hostname = ip_domain_dict[unknown_ip]
+        except KeyError:
+            hostname = get_ptr_record(unknown_ip)
+
+        query = """
+        UPDATE flows
+        SET counterparty_hostname = ?
+        WHERE counterparty_ip = ?
+        """
+
+        traffic_db.execute(query, (hostname, unknown_ip))
+
+
+@functools.lru_cache(maxsize=100000)
+def get_ptr_record(ip):
+
+    try:
+        rev_name = reversename.from_address(ip)
+        reversed_dns = str(resolver.resolve(rev_name, "PTR")[0])
+        if reversed_dns:
+            return reversed_dns[0:-1] + '?'
+    except Exception:
+        return ip + '?'

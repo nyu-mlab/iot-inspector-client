@@ -10,7 +10,7 @@ import utils
 import local_data
 
 
-UPLOAD_INTERVAL = 2
+UPLOAD_INTERVAL = 1
 
 
 class DataUploader(object):
@@ -196,7 +196,7 @@ class DataUploader(object):
         if window_duration < 1:
             return
 
-        local_data.write_data(post_data)
+        local_data.write_data(post_data, self._host_state)
 
     def _update_ui_status(self, value):
 
