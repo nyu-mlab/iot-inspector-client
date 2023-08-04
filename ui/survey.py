@@ -36,6 +36,11 @@ def show():
         with global_state.global_state_lock:
             time_threshold = 45 if global_state.DEBUG else 300
         if time.time() - donation_start_ts > time_threshold:
+            # Skip if we just opened the app; this trick is to avoid showing the
+            # survey when the user just opened the app
+            with global_state.global_state_lock:
+                if global_state.inspector_started_ts > 0 and time.time() - global_state.inspector_started_ts < time_threshold:
+                    return
             get_survey_ui('notice_and_choice_post_survey.md')
             st.stop()
 

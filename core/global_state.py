@@ -36,6 +36,7 @@ arp_cache = None
 
 # Make sure that only one single instance of Inspector core is running
 inspector_started = [False]
+inspector_started_ts = 0
 
 # A queue that holds packets to be processed
 packet_queue = queue.Queue()

@@ -21,6 +21,7 @@ def start_threads():
             core.common.log('Another instance of Inspector is already running. Aborted.')
             return
         global_state.inspector_started[0] = True
+        global_state.inspector_started_ts = time.time()
 
     core.common.log('Starting Inspector')
 
