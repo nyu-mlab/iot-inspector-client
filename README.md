@@ -14,7 +14,10 @@ The instructions below have been tested on macOS Ventura:
 First, download the source code.
 
 ```
+git clone https://github.com/nyu-mlab/iot-inspector-client.git
 cd iot-inspector-client
+git switch inspector2
+git pull origin inspector2
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
