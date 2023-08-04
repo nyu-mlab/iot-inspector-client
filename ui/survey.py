@@ -87,7 +87,7 @@ def get_survey_ui(survey_filename):
         st.divider()
 
     st.button(
-        label='I am done with the survey. Continue using IoT Inspector.',
+        label='I have answered the questions above. Continue using IoT Inspector.',
         on_click=exit_survey,
         args=(survey_name,),
         type='primary'
