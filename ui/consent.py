@@ -1,7 +1,6 @@
 import time
 import streamlit as st
 import core.config as config
-import core.global_state as global_state
 import os
 import sidebar
 
