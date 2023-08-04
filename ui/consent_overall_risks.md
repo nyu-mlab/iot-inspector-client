@@ -12,4 +12,4 @@ While IoT Inspector is running, avoid running latency-sensitive applications, su
 
 If your Internet connectivity is disrupted, quit IoT Inspector immediately. Your network should return to normal in about a minute. If the problem still persists, restart this computer (which runs IoT Inspector) and/or restart your home network.
 
-If you have any questions, please email Prof. Danny Y. Huang at iot-inspector-study@nyu.edu. You may also report the problem at our [Issue Tracker](https://github.com/nyu-mlab/iot-inspector-client/issues).
+If you have any questions, please email Prof. Danny Yuxing Huang at iot-inspector-study@nyu.edu. You may also report the problem at our [Issue Tracker](https://github.com/nyu-mlab/iot-inspector-client/issues).

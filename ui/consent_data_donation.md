@@ -12,7 +12,8 @@ If there is anything about the study or your participation that is unclear or th
 
 Principal Investigator: Professor Danny Yuxing Huang (dhuang@nyu.edu) <br />
 Tandon School of Engineering <br />
-370 Jay Street, Brooklyn, New York, US
+New York University <br />
+370 Jay Street, Brooklyn, New York, USA
 
 Prof. Danny Yuxing Huang, one of the PIs on this project, is the inventor and [lead developer](https://github.com/nyu-mlab/iot-inspector-client/graphs/contributors) of IoT Inspector. He led the first peer-reviewed paper on IoT Inspector, ["IoT Inspector: Crowdsourcing Labeled Network Traffic from Smart Home Devices at Scale"](https://dl.acm.org/doi/abs/10.1145/3397333), published at Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies, 2020. The source code for the project is publicly available on GitHub: https://github.com/nyu-mlab/iot-inspector-client.
 
