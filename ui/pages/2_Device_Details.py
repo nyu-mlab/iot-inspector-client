@@ -284,7 +284,7 @@ def show_data_usage_table(mac_addr, last_n_seconds=20, group_by_col='reg_domain'
         show_pending_job_count(pending_job_count)
         return
 
-    row_widths = [0.3, 0.3, 0.3, 0.1]
+    row_widths = [0.3, 0.25, 0.25, 0.2]
 
     # Row header
     cols = st.columns(row_widths)
@@ -293,19 +293,19 @@ def show_data_usage_table(mac_addr, last_n_seconds=20, group_by_col='reg_domain'
         st.checkbox('Sort by Upload', key='sort_by_upload', value=True)
 
     with cols[1]:
-        heading = '##### Data Uploaded'
+        heading = '##### Uploaded'
         if st.session_state['sort_by_upload']:
             heading += ' ▿'
         st.markdown(heading)
 
     with cols[2]:
-        heading = '##### Data Downloaded'
+        heading = '##### Downloaded'
         if not st.session_state['sort_by_upload']:
             heading += ' ▿'
         st.markdown(heading)
 
     with cols[3]:
-        st.markdown('##### Mark as suspicious')
+        st.markdown('##### Want to block?')
 
     upload_max = data_df['Data Uploaded (MB)'].max()
     download_max = data_df['Data Downloaded (MB)'].max()
@@ -329,7 +329,7 @@ def show_data_usage_table(mac_addr, last_n_seconds=20, group_by_col='reg_domain'
             entity = f'{row["Entity"]}'
             try:
                 if thumbs_down_dict[row['Entity']]:
-                    entity += ' 👎🏾'
+                    entity += ' 🚩'
             except KeyError:
                 pass
             st.markdown(entity)
@@ -352,7 +352,7 @@ def show_data_usage_table(mac_addr, last_n_seconds=20, group_by_col='reg_domain'
             icon = '　'
             try:
                 if thumbs_down_dict[row['Entity']]:
-                    icon = '👎🏻'
+                    icon = '⛔️'
             except KeyError:
                 pass
             if '(unknown)' in row['Entity']:
@@ -360,7 +360,7 @@ def show_data_usage_table(mac_addr, last_n_seconds=20, group_by_col='reg_domain'
             st.button(
                 icon,
                 key='thumbs_down_' + row['Entity'],
-                help='Click if you feel this entity is suspicious or if you do not feel comfortable with it. Your information will be shared with the NYU researchers (if enabled).',
+                help='Click if you feel this entity should be blocked, because it is suspicious. Your information will be shared with the NYU researchers (if enabled).',
                 on_click=thumbs_down_callback,
                 args=(config_key, thumbs_down_dict, row['Entity']),
             )
