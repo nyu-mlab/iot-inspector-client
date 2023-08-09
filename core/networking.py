@@ -125,25 +125,20 @@ def get_my_mac_set(iface_filter=None):
     """Returns a set of MAC addresses of the current host."""
 
     out_set = set()
-    if sys.platform.startswith("win"):
-        from scapy.arch.windows import NetworkInterface
-        if type(iface_filter) == NetworkInterface:
-            out_set.add(iface_filter.mac)
 
     for iface in sc.get_if_list():
-        if iface_filter is not None and iface != iface_filter:
-            continue
-        try:
-            mac = sc.get_if_hwaddr(iface)
-        except Exception as e:
-            continue
-        else:
-            out_set.add(mac)
+        if iface_filter is not None and len(iface) > 1 and iface in iface_filter:
+            try:
+                mac = sc.get_if_hwaddr(iface_filter)
+            except Exception as e:
+                continue
+            else:
+                out_set.add(mac)
 
     return out_set
 
 
-def get_network_ip_range() -> set[str]:
+def get_network_ip_range():
     """
     Gets network IP range for the default interface.
     Returns a set of IP addresses.
@@ -178,26 +173,6 @@ def get_network_ip_range() -> set[str]:
         ip_set.add(str(ip))
 
     return ip_set
-
-
-def get_net_and_mask():
-
-    iface = get_default_route()[1]
-    routes = _get_routes()
-    net = mask = None
-    for route in routes:
-        if route[3] == iface:
-            net = ipaddress.IPv4Address(route[0])
-            mask = ipaddress.IPv4Address(route[1])
-            break
-    return net, mask
-
-
-def check_pkt_in_network(ip, net, mask):
-    """Checks if the given IP address is in the given network."""
-
-    full_net = ipaddress.ip_network(f"{ip}/{mask}", strict=False)
-    return full_net.network_address == net
 
 
 
