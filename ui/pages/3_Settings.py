@@ -49,13 +49,12 @@ def reset_local_data():
 
     with model.write_lock:
 
-        # Path of the SQLite database
-        db_path = model.db_path
-
-        # Delete the entire database file plus any auxiliary files
-        for filename in [db_path, db_path + '-wal', db_path + '-shm']:
-            if os.path.exists(filename):
-                os.remove(filename)
+        model.Device.delete().execute()
+        model.Flow.delete().execute()
+        model.Hostname.delete().execute()
+        model.FriendlyIdentity.delete().execute()
+        model.Configuration.delete().execute()
+        model.AdTracker.delete().execute()
 
     sidebar.quit()
 
