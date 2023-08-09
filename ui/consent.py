@@ -21,7 +21,7 @@ def show():
 def show_overall_risks():
 
     # Show the consent
-    with open(os.path.join(get_current_file_directory(), 'consent_overall_risks.md'), 'r') as f:
+    with open(os.path.join(get_current_file_directory(), 'consent_overall_risks.md'), 'r', encoding='utf-8') as f:
         st.markdown(f.read(), unsafe_allow_html=True)
 
     st.divider()
@@ -42,7 +42,7 @@ def show_overall_risks():
 def show_data_donation_consent():
 
     # Show the consent
-    with open(os.path.join(get_current_file_directory(), 'consent_data_donation.md'), 'r') as f:
+    with open(os.path.join(get_current_file_directory(), 'consent_data_donation.md'), 'r', encoding='utf-8') as f:
         st.markdown(f.read(), unsafe_allow_html=True)
 
     st.divider()
