@@ -4,9 +4,27 @@ Captures and analyzes packets from the network.
 """
 import scapy.all as sc
 import core.global_state as global_state
+import core.common as common
+
+
+
+WINDOWS_TEXT = r'\n' * 10 + """
+==================================================
+            IoT Inspector is running
+==================================================
+
+To quit IoT Inspector, simply close this window.
+
+
+"""
+
 
 
 def start_packet_collector():
+
+    # Show the WINDOWS_TEXT if we are running on Windows
+    if common.get_os() == 'windows':
+        print(WINDOWS_TEXT)
 
     sc.load_layer('tls')
 
