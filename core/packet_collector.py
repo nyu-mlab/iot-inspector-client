@@ -8,7 +8,7 @@ import core.common as common
 
 
 
-WINDOWS_TEXT = r'\n' * 10 + """
+WINDOWS_TEXT = '\n' * 20 + """
 ==================================================
             IoT Inspector is running
 ==================================================
