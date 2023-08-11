@@ -48,7 +48,7 @@ def main():
     # Start Inspector in a separte browser window
     ui_dir = os.path.join(INSPECTOR_PATH, 'ui')
     sp.call(
-        f"""cd "{ui_dir}" && powershell Start-Process -FilePath "{PYTHON_PATH}" -Verb RunAs -ArgumentList '-m streamlit run Device_List.py --server.port 33761 --browser.gatherUsageStats false --server.headless true --server.baseUrlPath inspector_dashboard'""",
+        f"""cd "{ui_dir}" && powershell Start-Process -FilePath '{PYTHON_PATH}' -Verb RunAs -ArgumentList '-m streamlit run Device_List.py --server.port 33761 --browser.gatherUsageStats false --server.headless true --server.baseUrlPath inspector_dashboard'""",
         shell=True
     )
 
