@@ -42,7 +42,8 @@ def main():
     sp.call([
         PYTHON_PATH,
         '-m', 'pip', 'install', '-r',
-        os.path.join(INSPECTOR_PATH, 'requirements.txt')
+        os.path.join(INSPECTOR_PATH, 'requirements.txt'),
+        '--no-warn-script-location'
     ])
 
     # Start Inspector in a separte browser window
