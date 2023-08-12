@@ -1,3 +1,5 @@
+YesNo: I was able to see reports about my data going to different domains.
+
 YesNo: I intend to continue using my Smart Devices rather than discontinue its use.
 
 YesNo: Overall, most of my expectations regarding how my Smart Devices handle my personal data were confirmed.
