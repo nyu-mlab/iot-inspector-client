@@ -14,15 +14,11 @@ _log_lock = threading.Lock()
 
 
 def get_project_directory():
-    """Returns the project directory hosted under ~/.inspector/."""
+    """Returns the project directory hosted under ../user-data/."""
 
-    if global_state.DEBUG:
-        project_directory = os.path.join(
-            get_python_code_directory(), '..', 'inspector-test-dir'
-        )
-
-    else:
-        project_directory = os.path.join(os.path.expanduser('~'), '.inspector')
+    project_directory = os.path.join(
+        get_python_code_directory(), '..', 'user-data'
+    )
 
     # Create the directory if it doesn't exist
     if not os.path.exists(project_directory):
