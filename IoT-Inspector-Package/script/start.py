@@ -15,7 +15,7 @@ current_file_path = os.path.dirname(os.path.abspath(__file__))
 BUNDLE_PATH = os.path.join(
     current_file_path,
     '..',
-    '.bundle'
+    'bundled-software'
 )
 
 GIT_PATH = os.path.join(BUNDLE_PATH, 'git', 'bin', 'git.exe')
@@ -29,9 +29,18 @@ INSPECTOR_URL = 'http://localhost:33761/inspector_dashboard'
 
 def main():
 
+    # Quit if Inspector is already running
+    try:
+        urllib.request.urlopen(INSPECTOR_URL)
+    except Exception:
+        pass
+    else:
+        print('IoT Inspector is already running. Aborted.')
+        return
+
     # Init the git repo
     if not os.path.exists(INSPECTOR_PATH):
-        sp.call([GIT_PATH, 'clone', '--depth', '1', '--branch', 'inspector2', 'https://github.com/nyu-mlab/iot-inspector-client.git'])
+        sp.call([GIT_PATH, 'clone', '--depth', '1', 'https://github.com/nyu-mlab/iot-inspector-client.git'])
 
     # Update the git repo by pulling
     os.chdir(INSPECTOR_PATH)

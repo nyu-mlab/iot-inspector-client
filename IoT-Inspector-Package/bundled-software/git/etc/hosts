@@ -1,0 +1,137 @@
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
+#
+# Additionally, comments (such as these) may be inserted on individual
+# lines or following the machine name denoted by a '#' symbol.
+#
+# For example:
+#
+#      102.54.94.97     rhino.acme.com          # source server
+#       38.25.63.10     x.acme.com              # x client host
+
+# localhost name resolution is handled within DNS itself.
+#	127.0.0.1       localhost
+#	::1             localhost
+# TailscaleHostsSectionStart
+# This section contains MagicDNS entries for Tailscale.
+# Do not edit this section manually.
+
+100.113.138.79 10-23-6-114.nyu-mlab.org.github.beta.tailscale.net.
+100.113.138.79 10-23-6-114.tailcedbd.ts.net. 10-23-6-114
+100.68.57.86 aditya-dheer-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.68.57.86 aditya-dheer-vm.tailcedbd.ts.net. aditya-dheer-vm
+100.86.120.11 aditya.nyu-mlab.org.github.beta.tailscale.net.
+100.86.120.11 aditya.tailcedbd.ts.net. aditya
+100.122.55.44 aiterminal1.nyu-mlab.org.github.beta.tailscale.net.
+100.122.55.44 aiterminal1.tailcedbd.ts.net. aiterminal1
+100.95.10.22 brandon-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.95.10.22 brandon-vm.tailcedbd.ts.net. brandon-vm
+100.94.29.58 ceccio-latitude-5520.nyu-mlab.org.github.beta.tailscale.net.
+100.94.29.58 ceccio-latitude-5520.tailcedbd.ts.net. ceccio-latitude-5520
+100.89.10.4 cusp-dev-ts.nyu-mlab.org.github.beta.tailscale.net.
+100.89.10.4 cusp-dev-ts.tailcedbd.ts.net. cusp-dev-ts
+100.84.15.22 danny-home-black-raspberry-pi.nyu-mlab.org.github.beta.tailscale.net.
+100.84.15.22 danny-home-black-raspberry-pi.tailcedbd.ts.net. danny-home-black-raspberry-pi
+100.78.143.15 danny-mac12-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.78.143.15 danny-mac12-vm.tailcedbd.ts.net. danny-mac12-vm
+100.76.49.55 danny-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.76.49.55 danny-vm.tailcedbd.ts.net. danny-vm
+100.69.150.109 danny-win10-laptop.nyu-mlab.org.github.beta.tailscale.net.
+100.69.150.109 danny-win10-laptop.tailcedbd.ts.net. danny-win10-laptop
+100.77.38.100 dannys-macbook-air.nyu-mlab.org.github.beta.tailscale.net.
+100.77.38.100 dannys-macbook-air.tailcedbd.ts.net. dannys-macbook-air
+100.91.18.18 demilab.nyu-mlab.org.github.beta.tailscale.net.
+100.91.18.18 demilab.tailcedbd.ts.net. demilab
+100.81.25.126 desktop-o1p2sco.nyu-mlab.org.github.beta.tailscale.net.
+100.81.25.126 desktop-o1p2sco.tailcedbd.ts.net. desktop-o1p2sco
+100.122.218.116 euclid.nyu-mlab.org.github.beta.tailscale.net.
+100.122.218.116 euclid.tailcedbd.ts.net. euclid
+100.125.81.30 eugene-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.125.81.30 eugene-vm.tailcedbd.ts.net. eugene-vm
+100.99.175.52 eugenes-mbp.nyu-mlab.org.github.beta.tailscale.net.
+100.99.175.52 eugenes-mbp.tailcedbd.ts.net. eugenes-mbp
+100.123.87.128 eugenes.nyu-mlab.org.github.beta.tailscale.net.
+100.123.87.128 eugenes.tailcedbd.ts.net. eugenes
+100.70.0.91 haos-mbp.nyu-mlab.org.github.beta.tailscale.net.
+100.70.0.91 haos-mbp.tailcedbd.ts.net. haos-mbp
+100.88.247.52 hdanny-ts.nyu-mlab.org.github.beta.tailscale.net.
+100.88.247.52 hdanny-ts.tailcedbd.ts.net. hdanny-ts
+100.87.251.44 heweijiademacbook-pro.nyu-mlab.org.github.beta.tailscale.net.
+100.87.251.44 heweijiademacbook-pro.tailcedbd.ts.net. heweijiademacbook-pro
+100.77.73.76 inspector-vm-ts.nyu-mlab.org.github.beta.tailscale.net.
+100.77.73.76 inspector-vm-ts.tailcedbd.ts.net. inspector-vm-ts
+100.78.122.54 is-precision-t5600.nyu-mlab.org.github.beta.tailscale.net.
+100.78.122.54 is-precision-t5600.tailcedbd.ts.net. is-precision-t5600
+100.77.88.90 jacky-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.77.88.90 jacky-vm.tailcedbd.ts.net. jacky-vm
+100.78.227.52 k12.nyu-mlab.org.github.beta.tailscale.net.
+100.78.227.52 k12.tailcedbd.ts.net. k12
+100.122.193.15 kali-raspberry-pi.nyu-mlab.org.github.beta.tailscale.net.
+100.122.193.15 kali-raspberry-pi.tailcedbd.ts.net. kali-raspberry-pi
+100.123.250.1 kali.nyu-mlab.org.github.beta.tailscale.net.
+100.123.250.1 kali.tailcedbd.ts.net. kali
+100.101.176.91 kats-iphone.nyu-mlab.org.github.beta.tailscale.net.
+100.101.176.91 kats-iphone.tailcedbd.ts.net. kats-iphone
+100.101.187.108 katsamapol-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.101.187.108 katsamapol-vm.tailcedbd.ts.net. katsamapol-vm
+100.86.178.96 laptop.nyu-mlab.org.github.beta.tailscale.net.
+100.86.178.96 laptop.tailcedbd.ts.net. laptop
+100.78.246.93 mark-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.78.246.93 mark-vm.tailcedbd.ts.net. mark-vm
+100.66.38.87 minhaas-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.66.38.87 minhaas-vm.tailcedbd.ts.net. minhaas-vm
+100.75.21.104 mlab-proxy.nyu-mlab.org.github.beta.tailscale.net.
+100.75.21.104 mlab-proxy.tailcedbd.ts.net. mlab-proxy
+100.73.108.17 mlab.nyu-mlab.org.github.beta.tailscale.net.
+100.73.108.17 mlab.tailcedbd.ts.net. mlab
+100.103.157.115 mohammeds-air.nyu-mlab.org.github.beta.tailscale.net.
+100.103.157.115 mohammeds-air.tailcedbd.ts.net. mohammeds-air
+100.97.250.20 momo-hotspot.nyu-mlab.org.github.beta.tailscale.net.
+100.97.250.20 momo-hotspot.tailcedbd.ts.net. momo-hotspot
+100.119.212.33 msi.nyu-mlab.org.github.beta.tailscale.net.
+100.119.212.33 msi.tailcedbd.ts.net. msi
+100.106.251.131 msiubuntu-1.nyu-mlab.org.github.beta.tailscale.net.
+100.106.251.131 msiubuntu-1.tailcedbd.ts.net. msiubuntu-1
+100.88.33.68 msiubuntu-2.nyu-mlab.org.github.beta.tailscale.net.
+100.88.33.68 msiubuntu-2.tailcedbd.ts.net. msiubuntu-2
+100.91.192.132 msiubuntu.nyu-mlab.org.github.beta.tailscale.net.
+100.91.192.132 msiubuntu.tailcedbd.ts.net. msiubuntu
+100.80.244.10 null-by-0-1.nyu-mlab.org.github.beta.tailscale.net.
+100.80.244.10 null-by-0-1.tailcedbd.ts.net. null-by-0-1
+100.123.42.10 null-by-0.nyu-mlab.org.github.beta.tailscale.net.
+100.123.42.10 null-by-0.tailcedbd.ts.net. null-by-0
+100.119.60.105 nyu-media-pi.nyu-mlab.org.github.beta.tailscale.net.
+100.119.60.105 nyu-media-pi.tailcedbd.ts.net. nyu-media-pi
+100.114.5.80 pro-ipad-pro.nyu-mlab.org.github.beta.tailscale.net.
+100.114.5.80 pro-ipad-pro.tailcedbd.ts.net. pro-ipad-pro
+100.86.60.125 raspberrypi-1.nyu-mlab.org.github.beta.tailscale.net.
+100.86.60.125 raspberrypi-1.tailcedbd.ts.net. raspberrypi-1
+100.94.84.91 raspberrypi-2.nyu-mlab.org.github.beta.tailscale.net.
+100.94.84.91 raspberrypi-2.tailcedbd.ts.net. raspberrypi-2
+100.120.222.80 research-box.nyu-mlab.org.github.beta.tailscale.net.
+100.120.222.80 research-box.tailcedbd.ts.net. research-box
+100.70.166.57 seclab-gpu1.nyu-mlab.org.github.beta.tailscale.net.
+100.70.166.57 seclab-gpu1.tailcedbd.ts.net. seclab-gpu1
+100.106.4.44 skywalker-docker-desktop.nyu-mlab.org.github.beta.tailscale.net.
+100.106.4.44 skywalker-docker-desktop.tailcedbd.ts.net. skywalker-docker-desktop
+100.89.30.111 skywalker.nyu-mlab.org.github.beta.tailscale.net.
+100.89.30.111 skywalker.tailcedbd.ts.net. skywalker
+100.102.125.59 smarthomedata.nyu-mlab.org.github.beta.tailscale.net.
+100.102.125.59 smarthomedata.tailcedbd.ts.net. smarthomedata
+100.64.204.4 spriha-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.64.204.4 spriha-vm.tailcedbd.ts.net. spriha-vm
+100.81.148.107 tim-vm.nyu-mlab.org.github.beta.tailscale.net.
+100.81.148.107 tim-vm.tailcedbd.ts.net. tim-vm
+100.75.174.131 ubuntu-server-alice.nyu-mlab.org.github.beta.tailscale.net.
+100.75.174.131 ubuntu-server-alice.tailcedbd.ts.net. ubuntu-server-alice
+100.81.220.61 ubuntu-server-bob.nyu-mlab.org.github.beta.tailscale.net.
+100.81.220.61 ubuntu-server-bob.tailcedbd.ts.net. ubuntu-server-bob
+
+# TailscaleHostsSectionEnd
