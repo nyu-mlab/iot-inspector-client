@@ -1,0 +1,11 @@
+pandas
+peewee
+scapy
+requests
+geoip2
+netifaces
+netaddr
+streamlit
+plotly
+tldextract
+kaleido
