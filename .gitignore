@@ -1,6 +1,8 @@
 *~
 .*
 user-data
+bundled-software
+*.zip
 
 
 # Byte-compiled / optimized / DLL files

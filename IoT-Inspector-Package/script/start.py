@@ -18,7 +18,9 @@ BUNDLE_PATH = os.path.join(
     'bundled-software'
 )
 
-GIT_PATH = os.path.join(BUNDLE_PATH, 'git', 'bin', 'git.exe')
+GIT_BUNDLE_EXE_PATH = os.path.join(BUNDLE_PATH, 'PortableGit-2.41.0.3-64-bit.7z.exe')
+GIT_BASE_DIR = os.path.join(BUNDLE_PATH, 'git')
+GIT_EXE_PATH = os.path.join(GIT_BASE_DIR, 'bin', 'git.exe')
 PYTHON_DIR = os.path.join(BUNDLE_PATH, 'python')
 PYTHON_PATH = os.path.join(PYTHON_DIR, 'python.exe')
 INSPECTOR_PATH = os.path.join(current_file_path, 'iot-inspector-client')
@@ -38,15 +40,22 @@ def main():
         print('IoT Inspector is already running. Aborted.')
         return
 
+    # Check if git is installed
+    if not os.path.isfile(GIT_EXE_PATH):
+        print('Setting up portable Git...')
+        sp.call([GIT_BUNDLE_EXE_PATH, '-o', GIT_BASE_DIR, '-y'])
+
     # Init the git repo
     if not os.path.exists(INSPECTOR_PATH):
-        sp.call([GIT_PATH, 'clone', '--depth', '1', 'https://github.com/nyu-mlab/iot-inspector-client.git'])
+        print('Downloading the latest version of IoT Inspector...')
+        sp.call([GIT_EXE_PATH, 'clone', '--depth', '1', 'https://github.com/nyu-mlab/iot-inspector-client.git'])
 
     # Update the git repo by pulling
     os.chdir(INSPECTOR_PATH)
-    sp.call([GIT_PATH,  'pull'])
+    sp.call([GIT_EXE_PATH,  'pull'])
 
     # Install the dependencies
+    print('Installing dependences...')
     os.chdir(INSPECTOR_PATH)
     sp.call([
         PYTHON_PATH,
@@ -56,6 +65,7 @@ def main():
     ])
 
     # Start Inspector in a separte browser window
+    print('Starting IoT Inspector...')
     ui_dir = os.path.join(INSPECTOR_PATH, 'ui')
     sp.call(
         f"""cd "{ui_dir}" && powershell Start-Process -FilePath '{PYTHON_PATH}' -Verb RunAs -ArgumentList '-m streamlit run Device_List.py --server.port 33761 --browser.gatherUsageStats false --server.headless true --server.baseUrlPath inspector_dashboard'""",
