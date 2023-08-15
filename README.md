@@ -4,6 +4,8 @@ An open-source tool for capturing, analyzing, and visualizing the network activi
 
 IoT Inspector is a research project by researchers from New York University.
 
+See our [main website](https://inspector.engineering.nyu.edu/) for information about the project and media coverage.
+
 See our [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki).
 
 ## Getting started
