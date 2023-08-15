@@ -62,7 +62,6 @@ To run, do the following in an terminal with administrator's priviledge:
 env/Script/activate.bat
 cd ui
 streamlit.exe run Device_List.py --server.port 33761 --browser.gatherUsageStats false --server.headless true --server.baseUrlPath "inspector_dashboard"
-
 ```
 
 
