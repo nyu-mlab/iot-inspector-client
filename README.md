@@ -4,10 +4,11 @@ An open-source tool for capturing, analyzing, and visualizing the network activi
 
 IoT Inspector is a research project by researchers from New York University.
 
+See our [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki).
 
-## Running Inspector
+## Getting started
 
-### Running from precompiled binaries
+### Download and install
 
 See [this page](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install) if you want to run our precompiled binaries.
 
@@ -71,3 +72,5 @@ streamlit.exe run Device_List.py --server.port 33761 --browser.gatherUsageStats 
 To learn how Inspector scans the network and captures the traffic, look at the `core/start.py` file. The relevant modules include `arp_scanner.py`, `arp_spoofer.py`, and `packet_*.py`.
 
 To learn how Inspector constructs the user interface, follow the `ui/start.bash` command.
+
+For details, see our [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki).
