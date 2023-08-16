@@ -2,12 +2,16 @@
 
 **What is IoT Inspector?** An open-source tool for capturing, analyzing, and visualizing the network activities of your smart home devices. It does not require special hardware or changes to your network. Simply run IoT Inspector and you'll see the results instantly.
 
-IoT Inspector is a research project by researchers from New York University. See our [main website](https://inspector.engineering.nyu.edu/) and  [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki) for more information.
+IoT Inspector is a research project by researchers from New York University. See our [main website](https://inspector.engineering.nyu.edu/) and  [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki) for more information. Also see [screenshots](https://github.com/nyu-mlab/iot-inspector-client/wiki/Screenshots-(Windows)#running-iot-inspector).
 
 **Download**:
 * Windows 10 & 11: [Download the installer](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install).
 * macOS and Linux: [Run from source code](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install#macos); installer/binary coming soon
 * Sign up for [our mailing list](https://forms.gle/yrMXoX64hHtPQyNQ6) to receive updates about upcoming releases and research findings!
+
+![overall device activities](https://github.com/nyu-mlab/iot-inspector-client/assets/1479070/671fdea4-4c8d-405e-84d6-ad1b71f4356e)
+
+
 
 **What's new in Version 2**: We released Version 1 in 2019. Since then, we have had 7K+ users who have donated the network traffic from 65K+ devices. We recently launched Version 2 with the following changes:
 
