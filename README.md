@@ -18,6 +18,7 @@ IoT Inspector is a research project by researchers from New York University. See
 * Revamped UI/UX
 * Decoupled from cloud: You can run IoT Inspector without donating data to us (e.g., in sensitive enterprise environments)
 * Extensibility for developers (more details to come)
+* See [this article](https://www.usenix.org/publications/loginonline/three-years-crowdsourcing-smart-home-network-traffic) about our experience maintaining IoT Inspector in the last few years.
 
 
 **Media coverage**: See articles about IoT Inspector in the press (all paywalls removed):
