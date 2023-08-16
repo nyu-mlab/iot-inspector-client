@@ -58,7 +58,6 @@ To run, do the following
 source env/bin/activate
 cd ui
 ./start.bash
-
 ```
 
 #### Tested on Windows 10 & 11 with Python 3.8
