@@ -5,7 +5,7 @@
 IoT Inspector is a research project by researchers from New York University. See our [main website](https://inspector.engineering.nyu.edu/) and  [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki) for more information. Also see [screenshots](https://github.com/nyu-mlab/iot-inspector-client/wiki/Screenshots-(Windows)#running-iot-inspector).
 
 **Download**:
-* Windows 10 & 11: [Download the installer](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install).
+* Windows 10 & 11: [Download the installer](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install) (64-bit, Intel CPU only)
 * macOS and Linux: [Run from source code](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install#macos); installer/binary coming soon
 * Sign up for [our mailing list](https://forms.gle/yrMXoX64hHtPQyNQ6) to receive updates about upcoming releases and research findings!
 
