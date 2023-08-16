@@ -1,6 +1,13 @@
 # IoT Inspector 2
 
-**What is IoT Inspector?** An open-source tool for capturing, analyzing, and visualizing the network activities of your smart home devices. It does not require special hardware or changes to your network. Simply run IoT Inspector and you'll see the results instantly.
+**What is IoT Inspector?** An open-source tool for capturing, analyzing, and visualizing the network activities of your smart home devices. It does not require special hardware or changes to your network. Simply run IoT Inspector and you'll see the results instantly. 
+
+You can use IoT Inspector to 
+
+* learn what companies/countries your IoT devices communicate with
+* how much data your devices are sending and receiving
+* discover any unknown devices on the network
+* maybe more? (Tell us please?)
 
 IoT Inspector is a research project by researchers from New York University. See our [main website](https://inspector.engineering.nyu.edu/) and  [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki) for more information. Also see [screenshots](https://github.com/nyu-mlab/iot-inspector-client/wiki/Screenshots-(Windows)#running-iot-inspector).
 
