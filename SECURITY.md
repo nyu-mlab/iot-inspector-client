@@ -12,6 +12,6 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, file an Issue AND email the researchers at iot-inspector-study@nyu.edu.
+To report a vulnerability, email the researchers at iot-inspector-study@nyu.edu.
 
 If you do not hear a response from us within 48 hours, please follow up to make sure the research team sees your report. We will fix within 90 days after your report.
