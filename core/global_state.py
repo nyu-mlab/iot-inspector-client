@@ -53,7 +53,7 @@ hostname_dict = dict()
 # Where to upload donated data
 INSPECTOR_DATA_DONATION_SERVER = 'https://inspector.engineering.nyu.edu/backend_api'
 if DEBUG:
-    INSPECTOR_DATA_DONATION_SERVER = 'http://localhost:39402/backend_api'
+    INSPECTOR_DATA_DONATION_SERVER = 'http://dannys-macbook-air:39402/backend_api'
 
 DATA_DONATION_URL = INSPECTOR_DATA_DONATION_SERVER + '/donate_data'
 IP_INSIGHTS_URL = INSPECTOR_DATA_DONATION_SERVER + '/get_hostname_from_ip'
