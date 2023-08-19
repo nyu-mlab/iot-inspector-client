@@ -24,12 +24,6 @@ def start_threads():
         global_state.inspector_started[0] = True
         global_state.inspector_started_ts = time.time()
 
-    # If there is a file called "DEBUG.txt" in the ".." directory outside of the
-    # repo (i.e., same directory as the "3rd-party-software" directory), then
-    # turn on the DEBUG mode.
-    if os.path.isfile(os.path.join(core.common.get_python_code_directory(), '..', '..', 'DEBUG.txt')):
-        global_state.DEBUG = True
-
     core.common.log('Starting Inspector')
 
     # Initialize the database

@@ -4,9 +4,15 @@ Maintains the global state in a singleton design pattern.
 """
 import threading
 import queue
+import os
 
 
 DEBUG = False
+
+# If there is a file called "DEBUG.txt" in the ".." directory outside of the
+# repo, then turn on the DEBUG mode.
+if os.path.isfile(os.path.join(os.path.dirname(__file__), '..', '..', 'DEBUG.txt')):
+    DEBUG = True
 
 # Path to URL, i.e., http://localhost:33761{BASE_PATH}
 BASE_PATH = '/inspector_dashboard'
