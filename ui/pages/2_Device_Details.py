@@ -184,6 +184,15 @@ def show_device_details(mac_addr):
 
     st.caption(f'All entities contacted by this device over the {time_range_str.lower()}:')
 
+    # If no entities are marked as suspicious, nudge the user
+    config_key = f'device_details@{mac_addr}@{group_by_col}'
+    thumbs_down_dict = config.get(config_key, {})
+    if len(thumbs_down_dict) == 0:
+        st.info(
+            body='Help our research! If you think an entity is suspicious, please mark with "Want to Block". The NYU researchers will use this information to improve the anomaly detection system.',
+            icon="💡"
+        )
+
     show_data_usage_table(
         mac_addr,
         last_n_seconds=time_range,
