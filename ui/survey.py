@@ -27,14 +27,14 @@ def show():
     if last_completed_survey == '':
         # Show the pre survey if the user has not completed any surveys yet and that the user has never used inspector
         if not config.get('has_used_inspector', False):
-            get_survey_ui('notice_and_choice_pre_survey.md')
+            get_survey_ui('notice_and_choice_pre_survey.md', ask_for_country_info=True)
             st.stop()
 
     elif last_completed_survey == 'notice_and_choice_pre_survey':
         # Show the post survey only if the user has completed the pre-survey and
-        # the user has been collecting data for 5 minutes
+        # the user has been collecting data for 10 minutes
         with global_state.global_state_lock:
-            time_threshold = 45 if global_state.DEBUG else 300
+            time_threshold = 45 if global_state.DEBUG else 600
         if time.time() - donation_start_ts > time_threshold:
             # Skip if we just opened the app; this trick is to avoid showing the
             # survey when the user just opened the app
@@ -46,11 +46,33 @@ def show():
 
 
 
-def get_survey_ui(survey_filename):
+def get_survey_ui(survey_filename, ask_for_country_info=False):
 
     st.markdown('## User Survey')
 
     st.markdown('Please help us improve IoT Inspector by answering a few questions. Your responses will be used for research purposes only. Thank you!')
+
+    if ask_for_country_info:
+
+        st.divider()
+
+        # Load a list of countries
+        country_list = []
+        with open(os.path.join(os.path.dirname(__file__), 'country_list.txt'), 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    country_list.append(line)
+
+        # Show a dropbox box with a list of known countries
+        question_key = 'survey_question:demographics:country'
+        st.selectbox(
+            'Please select your country or region', country_list,
+            key=question_key,
+            on_change=save_survey_responses,
+            args=(question_key,)
+        )
+
 
     st.divider()
 
