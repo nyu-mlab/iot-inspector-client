@@ -15,7 +15,7 @@ current_file_path = os.path.dirname(os.path.abspath(__file__))
 BUNDLE_PATH = os.path.join(
     current_file_path,
     '..',
-    'bundled-software'
+    '3rd-party-software'
 )
 
 GIT_BUNDLE_EXE_PATH = os.path.join(BUNDLE_PATH, 'PortableGit-2.41.0.3-64-bit.7z.exe')
@@ -26,7 +26,9 @@ PYTHON_PATH = os.path.join(PYTHON_DIR, 'python.exe')
 INSPECTOR_PATH = os.path.join(current_file_path, 'iot-inspector-client')
 
 
+
 INSPECTOR_URL = 'http://localhost:33761/inspector_dashboard'
+GITHUB_REPO_URL = 'https://github.com/nyu-mlab/iot-inspector-client.git'
 
 
 def main():
@@ -48,7 +50,12 @@ def main():
     # Init the git repo
     if not os.path.exists(INSPECTOR_PATH):
         print('Downloading the latest version of IoT Inspector...')
-        sp.call([GIT_EXE_PATH, 'clone', '--depth', '1', 'https://github.com/nyu-mlab/iot-inspector-client.git'])
+        # Check if there is a file called DEBUG.txt in the current directory
+        # If so, use the test repo for debugging and testing
+        if os.path.isfile(os.path.join(current_file_path, 'DEBUG.txt')):
+            sp.call([GIT_EXE_PATH, 'clone', '--depth', '1', '--branch', 'inspector2-dev', GITHUB_REPO_URL])
+        else:
+            sp.call([GIT_EXE_PATH, 'clone', '--depth', '1', GITHUB_REPO_URL])
 
     # Update the git repo by pulling
     os.chdir(INSPECTOR_PATH)
