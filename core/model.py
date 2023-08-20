@@ -111,6 +111,39 @@ class AdTracker(BaseModel):
     hostname = TextField(index=True)
     tracker_company = TextField(default='')
 
+# Chenyang's New Data Model
+
+class SSDPInfoModel(BaseModel):
+
+    mac = TextField(default="")
+
+    scan_time = FloatField(default=0)
+    location = TextField(default="")
+    ip = TextField(default="")
+    port = TextField(default="")
+    outer_file_name = TextField(default="")
+
+    server_string = TextField(default="")
+    device_type = TextField(default="")
+    friendly_name = TextField(default="")
+    manufacturer = TextField(default="")
+    manufacturer_url = TextField(default="")
+    model_description = TextField(default="")
+    model_name = TextField(default="")
+    model_number = TextField(default="")
+
+    services_list = TextField(default="") # This attribute is list[dict]. We need to use eval() to restore the data structure
+
+
+class mDNSInfoModel(BaseModel):
+
+    mac = TextField(default="") 
+
+    scan_time = FloatField(default=0)
+    ip = TextField(default="")
+    status = TextField(default="")
+    services = TextField(default="") # This attribute is list[list]. We need to use eval() to restore the data structure
+
 
 def initialize_tables():
     """Creates the tables if they don't exist yet, and creates initial data."""
@@ -118,4 +151,5 @@ def initialize_tables():
     with db:
 
         # Create tables
-        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker])
+        # db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
