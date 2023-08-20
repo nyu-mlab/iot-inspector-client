@@ -21,6 +21,7 @@ BUNDLE_PATH = os.path.join(
 GIT_BUNDLE_EXE_PATH = os.path.join(BUNDLE_PATH, 'PortableGit-2.41.0.3-64-bit.7z.exe')
 GIT_BASE_DIR = os.path.join(BUNDLE_PATH, 'git')
 GIT_EXE_PATH = os.path.join(GIT_BASE_DIR, 'bin', 'git.exe')
+NPCAP_INSTALLER_PATH = os.path.join(BUNDLE_PATH, 'npcap-1.76.exe')
 PYTHON_DIR = os.path.join(BUNDLE_PATH, 'python')
 PYTHON_PATH = os.path.join(PYTHON_DIR, 'python.exe')
 INSPECTOR_PATH = os.path.join(current_file_path, 'iot-inspector-client')
@@ -46,6 +47,18 @@ def main():
     if not os.path.isfile(GIT_EXE_PATH):
         print('Setting up portable Git...')
         sp.call([GIT_BUNDLE_EXE_PATH, '-o', GIT_BASE_DIR, '-y'])
+
+    # Check if npcap is installed
+    npcap_path = os.path.join(os.environ['WINDIR'], 'System32', 'Npcap')
+    if not os.path.isdir(npcap_path):
+        print('Setting up Npcap...')
+        sp.call(
+            f"""powershell Start-Process -FilePath '{NPCAP_INSTALLER_PATH}' -Verb RunAs""",
+            shell=True
+        )
+        while not os.path.isdir(npcap_path):
+            time.sleep(5)
+            print('Waiting for Npcap to be installed...')
 
     # Init the git repo
     if not os.path.exists(INSPECTOR_PATH):
