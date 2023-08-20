@@ -42,14 +42,14 @@ class TCPScanner():
                         t2 = time.time()
                         if sock:
                             self.result_collect.append((ip, port))
-                            print(time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
+                            print("[TCP Scanning]", time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
                 else:
                     with timeout(self.timeout):
                         await asyncio.get_event_loop().sock_connect(sock, (ip, port))
                         t2 = time.time()
                         if sock:
                             self.result_collect.append((ip, port))
-                            print(time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
+                            print("[TCP Scanning]", time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
                 sock.close()
             # we have to deal with the exception, otherwise this task will stop
             except:
