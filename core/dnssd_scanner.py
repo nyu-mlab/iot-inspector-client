@@ -127,38 +127,46 @@ def run_dnssd_scan():
         for device in model.Device.select().where(criteria):
             inspected_device_list.append(device)
 
-    # run scanner
     DNSSDScannerInstance = DNSSDScanner()
 
     for device in inspected_device_list:  # imitate what's in arp sproof to get latest IPs
+
         # Make sure that the device is in the ARP cache; if not, skip
         try:
             global_state.arp_cache.get_ip_addr(device.mac_addr)
         except KeyError:
             continue
         
-        # save data to DB immediately after one scan is finished
+        # run the scan for each target
         DNSSDScannerInstance.scan([device.ip_addr])
+        
+        # save data to DB immediately after one scan is finished
         results = DNSSDScannerInstance.getResult()
-
         for result in results:
 
             with model.write_lock:
                 with model.db:
 
-                    model_instance = model.mDNSInfoModel.create(
+                    model_instance = model.mDNSInfoModel.get_or_none(mac=device.mac_addr)
 
-                        mac = device.mac_addr,
+                    if model_instance is None:
+                        model.mDNSInfoModel.create(
+                            mac = device.mac_addr,
+                            ip = result['ip'],
+                            scan_time = result['scan_time'],
+                            status = result['status'],
+                            services = result['services']
+                        )
 
-                        ip = result['ip'],
-                        scan_time = result['scan_time'],
-                        status = result['status'],
-                        services = result['services']
-                    )
-                    # model_instance.save()
+                    else: # risk: may wipe out useful infomation when a device become offline
+                        if eval(model_instance.services) != result['services']:
+                            model_instance.ip = result['ip']
+                            model_instance.scan_time = result['scan_time']
+                            model_instance.status = result['status']
+                            model_instance.services = result['services']
+                            model_instance.save()
 
         DNSSDScannerInstance.clearResult()
 
     # exit
     del DNSSDScannerInstance
-    print("save end mdns scan")

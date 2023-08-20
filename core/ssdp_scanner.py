@@ -350,7 +350,11 @@ def run_ssdp_scan():
 
             for SSDPInfoInst in current_results:
 
-                model_instance = model.SSDPInfoModel.create(
+                model_instance = model.SSDPInfoModel.get_or_none(ip=SSDPInfoInst.ip, port=SSDPInfoInst.port)
+
+                if model_instance is None:
+
+                    model.SSDPInfoModel.create(
 
                         mac = "unknown", # we will deal with it later
 
@@ -371,8 +375,25 @@ def run_ssdp_scan():
 
                         services_list = SSDPInfoInst.services_list
                     )
-            
-                # model_instance.save()
+                else:
+                    model_instance.scan_time = SSDPInfoInst.scan_time, 
+                    model_instance.location = SSDPInfoInst.location,
+                    model_instance.ip = SSDPInfoInst.ip,
+                    model_instance.port = SSDPInfoInst.port,
+                    model_instance.outer_file_name = SSDPInfoInst.outer_file_name,
+
+                    model_instance.server_string = SSDPInfoInst.server_string,
+                    model_instance.device_type = SSDPInfoInst.device_type,
+                    model_instance.friendly_name = SSDPInfoInst.friendly_name,
+                    model_instance.manufacturer = SSDPInfoInst.manufacturer,
+                    model_instance.manufacturer_url = SSDPInfoInst.manufacturer_url,
+                    model_instance.model_description = SSDPInfoInst.model_description,
+                    model_instance.model_name = SSDPInfoInst.model_name,
+                    model_instance.model_number = SSDPInfoInst.model_number,
+
+                    model_instance.services_list = SSDPInfoInst.services_list
+        
+                    model_instance.save()
 
             # using global_state.arp_cache to bind ip to mac. 
             # also update for those found in previous rounds except for those scanned in more than 5 mins ago
@@ -383,9 +404,9 @@ def run_ssdp_scan():
                     except:
                         mac_addr = "unknown"
                     model_instance.mac = mac_addr
+                    # potential problem here: 
+                    # once a device changes its IP, and a new SSDPInfoModel is created, we will have 2 SSDPInfoModel with same mac addr 
                     model_instance.save()
 
     # del scanner and free memory
     del SSDPScannerInstance
-
-    print("save end ssdp scan")
