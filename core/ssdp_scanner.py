@@ -344,42 +344,46 @@ def run_ssdp_scan():
 
     # save data to DB
     current_results = SSDPScannerInstance.getResult()
-    for SSDPInfoInst in current_results:
 
-        model_instance = model.SSDPInfoModel.create(
+    with model.write_lock:
+        with model.db:
 
-                mac = "unknown", # we will deal with it later
+            for SSDPInfoInst in current_results:
 
-                scan_time = SSDPInfoInst.scan_time, 
-                location = SSDPInfoInst.location,
-                ip = SSDPInfoInst.ip,
-                port = SSDPInfoInst.port,
-                outer_file_name = SSDPInfoInst.outer_file_name,
+                model_instance = model.SSDPInfoModel.create(
 
-                server_string = SSDPInfoInst.server_string,
-                device_type = SSDPInfoInst.device_type,
-                friendly_name = SSDPInfoInst.friendly_name,
-                manufacturer = SSDPInfoInst.manufacturer,
-                manufacturer_url = SSDPInfoInst.manufacturer_url,
-                model_description = SSDPInfoInst.model_description,
-                model_name = SSDPInfoInst.model_name,
-                model_number = SSDPInfoInst.model_number,
+                        mac = "unknown", # we will deal with it later
 
-                services_list = SSDPInfoInst.services_list
-            )
-        
-        # model_instance.save()
+                        scan_time = SSDPInfoInst.scan_time, 
+                        location = SSDPInfoInst.location,
+                        ip = SSDPInfoInst.ip,
+                        port = SSDPInfoInst.port,
+                        outer_file_name = SSDPInfoInst.outer_file_name,
 
-    # using global_state.arp_cache to bind ip to mac. 
-    # also update for those found in previous rounds except for those scanned in more than 5 mins ago
-    for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
-        if time.time() - model_instance.scan_time < 300:
-            try:
-                mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
-            except:
-                mac_addr = "unknown"
-            model_instance.mac = mac_addr
-            model_instance.save()
+                        server_string = SSDPInfoInst.server_string,
+                        device_type = SSDPInfoInst.device_type,
+                        friendly_name = SSDPInfoInst.friendly_name,
+                        manufacturer = SSDPInfoInst.manufacturer,
+                        manufacturer_url = SSDPInfoInst.manufacturer_url,
+                        model_description = SSDPInfoInst.model_description,
+                        model_name = SSDPInfoInst.model_name,
+                        model_number = SSDPInfoInst.model_number,
+
+                        services_list = SSDPInfoInst.services_list
+                    )
+            
+                # model_instance.save()
+
+            # using global_state.arp_cache to bind ip to mac. 
+            # also update for those found in previous rounds except for those scanned in more than 5 mins ago
+            for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
+                if time.time() - model_instance.scan_time < 300:
+                    try:
+                        mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
+                    except:
+                        mac_addr = "unknown"
+                    model_instance.mac = mac_addr
+                    model_instance.save()
 
     # del scanner and free memory
     del SSDPScannerInstance

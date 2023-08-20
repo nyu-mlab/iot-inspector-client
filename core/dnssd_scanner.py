@@ -142,16 +142,20 @@ def run_dnssd_scan():
         results = DNSSDScannerInstance.getResult()
 
         for result in results:
-            model_instance = model.mDNSInfoModel.create(
 
-                mac = device.mac_addr,
+            with model.write_lock:
+                with model.db:
 
-                ip = result['ip'],
-                scan_time = result['scan_time'],
-                status = result['status'],
-                services = result['services']
-            )
-            # model_instance.save()
+                    model_instance = model.mDNSInfoModel.create(
+
+                        mac = device.mac_addr,
+
+                        ip = result['ip'],
+                        scan_time = result['scan_time'],
+                        status = result['status'],
+                        services = result['services']
+                    )
+                    # model_instance.save()
 
         DNSSDScannerInstance.clearResult()
 
