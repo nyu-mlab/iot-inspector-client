@@ -48,7 +48,7 @@ def start_threads():
     # Chenyang's new things
     core.common.SafeLoopThread(core.ssdp_scanner.run_ssdp_scan, sleep_time=15)
     core.common.SafeLoopThread(core.dnssd_scanner.run_dnssd_scan, sleep_time=15)
-    core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, args=[['127.0.0.1']],sleep_time=15)
+    core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)
 
     core.common.log('Inspector started')
 

@@ -189,55 +189,65 @@ class TCPScanner():
         self.result_collect = []
 
 
-def run_tcp_scan(target_ip_list, scanAll = False):
+def run_tcp_scan(target_device_list = None, scanAll = False):
 
-    # run scan on target
-    TCPScannerInstance = TCPScanner()
-    TCPScannerInstance.scan(target_ip_list, scanAll)
+    # Define target to scan
+    if target_device_list == None:
 
-    # reorganize data
-    raw_results = TCPScannerInstance.getResult()
-    dict_result = {}
-    for ip, port in raw_results:
-        if ip in dict_result:
-            dict_result[ip].append(port)
-        else:
-            dict_result[ip] = [port] #port是int，会出问题吗
-
-    # save result to database
-    # 1. use arp_cache to map ip to mac 
-    # 2. use mac to find device
-    # 3. save port scan result to device
-    for key, value in dict_result.items():
-        ip = key
-        ports = value
-
-        try:
-            mac = global_state.arp_cache.get_mac_addr(ip)
-            # mac = "1:2:3:4" # debug
-        except:
-            print(f"[TCP Scan] Cannot find mac for ip:{ip}")
-            common.log(f"[TCP Scan] Cannot find mac for ip:{ip}")
-            continue
+        inspected_device_list = []
+        criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
 
         with model.write_lock:
             with model.db:
-                device = model.Device.get_or_none(mac_addr=mac)
-                if device is None:
-                    print(f"[TCP Scan] Cannot find device for mac:{mac}")
-                    common.log(f"[TCP Scan] Cannot find device for mac:{mac}")
-                else:
+
+                for device in model.Device.select().where(criteria):
+                    inspected_device_list.append(device)
+
+        target_device_list = inspected_device_list.copy()
+
+    # Create scanner
+    TCPScannerInstance = TCPScanner()
+
+    # Run it one by one
+    for device in target_device_list:
+
+        # Make sure that the device is in the ARP cache; if not, skip
+        try:
+            global_state.arp_cache.get_ip_addr(device.mac_addr)
+        except KeyError:
+            continue
+        
+        # run scan on target
+        TCPScannerInstance.scan([device.ip_addr], scanAll)
+
+        # Get scanner result
+        raw_result = TCPScannerInstance.getResult()
+        ip = device.ip_addr
+        ports = []
+        for entry in raw_result:
+            _, port = entry
+            ports.append(port)
+
+        # store result to DB
+        with model.write_lock:
+            with model.db:
+                
                     known_ports = eval(device.open_tcp_ports) # dont forget eval()
-                    merge_ports = list(set(known_ports + ports)) # add and remove repeating elements
-                    device.open_tcp_ports = merge_ports
-                    device.save()
-                    print(f"[TCP Scan] Get New ports {ports} for {mac}")
-                    common.log(f"[TCP Scan] Get New ports {ports} for {mac}")
+
+                    # 要比较一下旧和新是否有所不同，然后日志输出改的能看到旧和新
+                    if known_ports == ports:
+                        print(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
+                        common.log(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
+                    else:
+                        merge_ports = list(set(known_ports + ports)) # add and remove repeating elements
+                        device.open_tcp_ports = merge_ports
+                        device.save()
+                        print(f"[TCP Scan] {ip}: Already have {known_ports}, this round found {ports}")
+                        common.log(f"[TCP Scan] {ip}: Already have {known_ports}, this round found {ports}")
+
+        TCPScannerInstance.clearResult() # prepare for next one
 
     # free memory
     del TCPScannerInstance
 
     print("[TCP Scan] Exit")
-
-    
-    
