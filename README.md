@@ -11,7 +11,7 @@ You can use IoT Inspector to
 
 IoT Inspector is a research project by researchers from New York University. See our [main website](https://inspector.engineering.nyu.edu/) and  [documentation](https://github.com/nyu-mlab/iot-inspector-client/wiki) for more information. Also see [screenshots](https://github.com/nyu-mlab/iot-inspector-client/wiki/Screenshots-(Windows)#running-iot-inspector).
 
-**Download**:
+**⬇️ Download**:
 * Windows 10 & 11: [Download the installer](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install) (64-bit, Intel CPU only)
 * macOS and Linux: [Run from source code](https://github.com/nyu-mlab/iot-inspector-client/wiki/Download-&-Install#macos); installer/binary coming soon
 * Sign up for [our mailing list](https://forms.gle/yrMXoX64hHtPQyNQ6) to receive updates about upcoming releases and research findings!
@@ -20,7 +20,7 @@ IoT Inspector is a research project by researchers from New York University. See
 
 
 
-**What's new in Version 2**: We released Version 1 in 2019. Since then, we have had 7K+ users who have donated the network traffic from 65K+ devices. We recently launched Version 2 with the following changes:
+**🔥 What's new in Version 2**: We released Version 1 in 2019. Since then, we have had 7K+ users who have donated the network traffic from 65K+ devices. We recently launched Version 2 with the following changes:
 
 * Revamped UI/UX
 * Decoupled from cloud: You can run IoT Inspector without donating data to us (e.g., in sensitive enterprise environments)
@@ -28,7 +28,7 @@ IoT Inspector is a research project by researchers from New York University. See
 * See [this article](https://www.usenix.org/publications/loginonline/three-years-crowdsourcing-smart-home-network-traffic) about our experience maintaining IoT Inspector in the last few years.
 
 
-**Media coverage**: See articles about IoT Inspector in the press (all paywalls removed):
+**🗞️ Media coverage**: See articles about IoT Inspector in the press (all paywalls removed):
 
 * [New York Times](https://www.nytimes.com/2020/01/07/opinion/location-tracking-privacy.html?unlocked_article_code=bXAKhvWOVzlmXYTvb6YR5pJjOmRJaOeRArCoN_dhSv_6RyOPm7LPp1Zna-bMq9DnBbUkm-1qWXH_L7Nhm1_DlM5PZplmF-6O-igOboXPYqWYAs3MTP-Hc0GsZV-_jQYiDIKzD4fQJbZXXPIdy9v9FhKFDOVUyscGBqOKLwod3cramKE80pqApj6-m6du5TqSrPoIiV0gJrRO9tfNxj6PSWPUkhxY5sLIH34qYixu81JS-9LwMgBTr7brUWzIdJtt0wb4syRJoiYXYkXd4LsM1ThHjLr8bufaQ-b75w-3ZFHANpIEgH4NOkDsB0lQBKV3MO0yatl2-cuEpqh5XL8zoZa6bOU&smid=url-share): Why You Should Take a Close Look at What Tracks You. It might help you manage your privacy.
 
