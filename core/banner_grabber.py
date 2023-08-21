@@ -33,7 +33,6 @@ class BannerGrab:
         banner_collect = []
         ip, port = target
         if isinstance(port, str):
-            print(port)
             port = int(port)
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -54,14 +53,11 @@ class BannerGrab:
                         asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
                         timeout=3.0
                     )
-                    print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect success")
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
                 except:
-                    print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                     return {"ip":ip, "port":port, "serive":"null", "banner":[(-2, f"{type(e).__name__}")]}
             else:
-                print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                 common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                 return {"ip":ip, "port":port, "serive":"null", "banner":[(-2, f"{type(e).__name__}")]}
 
@@ -80,26 +76,22 @@ class BannerGrab:
                         asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
                         timeout=3.0
                     )
-                    print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect success")
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
                     banner_collect.append((-1, f"{type(e).__name__} reconnect success"))
                 except:
-                    print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect fail")
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect fail")
                     banner_collect.append((-1, f"{type(e).__name__} reconnect fail"))
             else:
-                print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                 common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                 banner_collect.append((-1, f"{type(e).__name__}"))
         else:
             if isinstance(data, bytes): # data[0]:result of asyncio.sleep(3)  data[1]:result of loop.sock_recv(sock, 1024)
                 initial_data = data
                 common.log(f"[Banner Grab] IP {ip}, Port {port}, Get Initial Data:\n {initial_data.decode('utf-8', errors='ignore') }")
-                print(f"[Banner Grab] IP {ip}, Port {port}, Get Initial Data:\n {initial_data.decode('utf-8', errors='ignore') }")
                 banner_collect.append((-1, initial_data.decode('utf-8', errors='ignore') ))
                 #return {"ip":ip, "port":port, "serive":"null", "banner":initial_data.decode('utf-8', errors='ignore') } # No need for take initiative to send data
             else:
-                print(f"[Banner Grab] IP {ip}, Port {port}, get wrong inital data = {data}")
+                common.log(f"[Banner Grab] IP {ip}, Port {port}, get wrong inital data = {data}")
                 banner_collect.append((-1, "Wrong Initial Data"))
 
 
@@ -114,7 +106,6 @@ class BannerGrab:
                 await asyncio.wait_for(asyncio.get_running_loop().sock_sendall(sock, grab_msg), timeout=5)  
                 banner = await asyncio.wait_for(asyncio.get_running_loop().sock_recv(sock, 1024), timeout=5) 
                 common.log(f"[Banner Grab] IP {ip}, Port {port}, Content:\n {banner.decode('utf-8', errors='ignore') }")
-                print(f"[Banner Grab] IP {ip}, Port {port}, Content:\n {banner.decode('utf-8', errors='ignore') }")
                 banner_collect.append((i, banner.decode('utf-8', errors='ignore') ))
             except Exception as e:
                 if isinstance(e, ConnectionResetError) or isinstance(e, BrokenPipeError):
@@ -124,15 +115,12 @@ class BannerGrab:
                             asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
                             timeout=3.0
                         )
-                        print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect success")
                         common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
                         banner_collect.append((i, f"{type(e).__name__} reconnect success"))
                     except:
-                        print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect fail")
                         common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect fail")
                         banner_collect.append((i, f"{type(e).__name__} reconnect fail"))
                 else:
-                    print(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                     banner_collect.append((i, f"{type(e).__name__}"))
             
@@ -163,7 +151,6 @@ class BannerGrab:
     def banner_grab(self, target_list): # potential risk: does not have concurrency control.
 
             if(len(target_list) == 0):
-                print("[Banner Grab] No target to grab")
                 common.log("[Banner Grab] No target to grab")
                 return 
 
@@ -171,11 +158,6 @@ class BannerGrab:
                 len(target_list), 
                 ', '.join(str(target) for target in target_list)
             ))
-            print('[Banner Grab] Start Banner Grab on {} target {}'.format(
-                len(target_list), 
-                ', '.join(str(target) for target in target_list)
-            ))
-
             if sys.version_info.major == 3 and sys.version_info.minor >= 7:
                 asyncio.run(self.async_banner_grab_tasks(target_list))
             else:
@@ -184,7 +166,6 @@ class BannerGrab:
                 asyncio.get_event_loop().run_until_complete(self.async_banner_grab_tasks(target_list))
                 loop.close()
 
-            print("[Banner Grab] Done")
             common.log("[Banner Grab] Done")
 
 
@@ -250,7 +231,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
 
                         if (device.mac_addr+"-"+str(port)) in scan_status_record:
                             if time.time() - scan_status_record[(device.mac_addr+"-"+str(port))] < BANNER_GRAB_INTERVAL:
-                                print("give up ", (device.mac_addr+"-"+str(port)))
+                                common.log(f"[Banner Grab] give up {device.mac_addr}-{str(port)}")
                                 continue
 
                         target_ip_port_list.append((ip, port))
@@ -286,7 +267,6 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
                 known_port_banners.update(this_results)
                 device.port_banners = known_port_banners
                 device.save()
-                print(f"[Banner Grab] IP:{device.ip_addr} Banners:{device.port_banners}")
                 common.log(f"[Banner Grab] IP:{device.ip_addr} Banners:{device.port_banners}")
 
         # Clear result of this device
@@ -295,5 +275,4 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     # free memory
     del BannerGrabInstance
 
-    print("[Banner Grab] Exit")
     common.log("[Banner Grab] Exit banner grab")

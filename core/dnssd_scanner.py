@@ -46,11 +46,9 @@ class DNSSDScanner():
                 rrname += (" " + str(resp.ar[i].port))
 
             if rrname.find("._device-info._tcp.local.") > 0:
-                print("[DNS-SD Scan]", " "*4, rrname, rdata)
-                common.log("[DNS-SD Scan]", " "*4, rrname, rdata)
+                common.log(f"[DNS-SD Scan]    {rrname} {rdata}")
             else:
-                print("[DNS-SD Scan]", " "*4, rrname)
-                common.log("[DNS-SD Scan]", " "*4, rrname)
+                common.log(f"[DNS-SD Scan]    {rrname}")
             services.append(rrname)
 
         return services
@@ -59,8 +57,6 @@ class DNSSDScanner():
     # no concurrent operations here
     def scan(self, target_ip_list): # we don't need to specify port here, because we know mDNS uses 5353
 
-        print('[DNS-SD Scan] Start')
-        print('[DNS-SD Scan] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
         common.log('[DNS-SD Scan] Start')
         common.log('[DNS-SD Scan] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
 
@@ -80,7 +76,6 @@ class DNSSDScanner():
                 resp = DNS(data)
                 #resp.show()
 
-                print("[DNS-SD Scan] No.%d %s ONLINE" % (i, target_ip))
                 common.log("[DNS-SD Scan] No.%d %s ONLINE" % (i, target_ip))
 
                 services = []
@@ -94,11 +89,9 @@ class DNSSDScanner():
             except KeyboardInterrupt:
                 exit(0)
             except:
-                print("[DNS-SD Scan] No.%d %s OFFLINE" % (i, target_ip))
                 common.log("[DNS-SD Scan] No.%d %s OFFLINE" % (i, target_ip))
                 self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"OFFLINE", "services":[]})
 
-        print('[DNS-SD Scan] Finish')
         common.log('[DNS-SD Scan] Finish')
 
     # end dnssd_scan()

@@ -52,7 +52,6 @@ class SSDPScanner():
     # @return the set of advertised upnp locations, and IPs
     ###
     def discover_pnp_locations(self):
-        print('[SSDP Scan] Discovering UPnP locations')
         common.log('[SSDP Scan] Discovering UPnP locations')
         locations = set() 
         ip_ports = set()
@@ -84,11 +83,8 @@ class SSDPScanner():
         except socket.error:
             sock.close() # Exit while loop with exception, so this line will always been executed
 
-        print('[SSDP Scan] Discovery complete')
-        print('[SSDP Scan] %d locations found:' % len(locations))
         common.log('[SSDP Scan] %d locations found:' % len(locations))
         for location in locations:
-            print('[SSDP Scan]\t%s' % location)
             common.log('[SSDP Scan]\t%s' % location)
         return list(locations), list(ip_ports)
 
@@ -101,7 +97,7 @@ class SSDPScanner():
     def print_attribute(self, xml, xml_name, print_name):
         try:
             temp = xml.find(xml_name).text
-            print('\t-> %s: %s' % (print_name, temp))
+            common.log('\t-> %s: %s' % (print_name, temp))
             return temp
         except AttributeError:
             return None
@@ -115,14 +111,12 @@ class SSDPScanner():
     ###
     def parse_locations(self, locations):
         if len(locations) < 1:
-            print('[SSDP Scan] No location to parse')
             common.log('[SSDP Scan] No location to parse')
             return
         if len(locations) > 0:
-            print('[SSDP Scan] Start parse %d locations:' % len(locations))
             common.log('[SSDP Scan] Start parse %d locations:' % len(locations))
             for location in locations:
-                print('[SSDP Scan] Loading %s...' % location)
+                common.log('[SSDP Scan] Loading %s...' % location)
                 ssdp_info = SSDPInfo()
                 try:
                     resp = requests.get(location, timeout=3)
@@ -137,18 +131,18 @@ class SSDPScanner():
 
                     if resp.headers.get('server'):
                         server_string = resp.headers.get('server')
-                        print('\t-> Server String: %s' % server_string)
+                        common.log('[SSDP Scan] \t-> Server String: %s' % server_string)
                         ssdp_info.server_string = server_string
                     else:
-                        print('\t-> No server string')
+                        common.log('[SSDP Scan] \t-> No server string')
 
                     parsed = urlparse(location)
 
-                    print('\t==== XML Attributes ===')
+                    common.log('[SSDP Scan]\t==== XML Attributes ===')
                     try:
                         xmlRoot = ET.fromstring(resp.text)
                     except:
-                        print('\t[SSDP Scan] Failed XML parsing of %s' % location)
+                        common.log('\t[SSDP Scan] Failed XML parsing of %s' % location)
                         continue
 
                     ssdp_info.device_type = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}deviceType", "Device Type")
@@ -159,15 +153,15 @@ class SSDPScanner():
                     ssdp_info.model_name = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelName", "Model Name")
                     ssdp_info.model_number = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelNumber", "Model Number")
 
-                    print('\t-> Services:')
+                    common.log('[SSDP Scan]\t-> Services:')
                     services = xmlRoot.findall(".//*{urn:schemas-upnp-org:device-1-0}serviceList/")
                     for service in services:
                         service_type = service.find('./{urn:schemas-upnp-org:device-1-0}serviceType').text
                         control = service.find('./{urn:schemas-upnp-org:device-1-0}controlURL').text
                         events = service.find('./{urn:schemas-upnp-org:device-1-0}eventSubURL').text
-                        print('\t\t=> Service Type: %s' % service_type)
-                        print('\t\t=> Control: %s' % control)
-                        print('\t\t=> Events: %s' % events)
+                        common.log('[SSDP Scan]\t\t=> Service Type: %s' % service_type)
+                        common.log('[SSDP Scan]\t\t=> Control: %s' % control)
+                        common.log('[SSDP Scan]\t\t=> Events: %s' % events)
 
                         this_service = {"service_url":"", "service_type":service_type, "control":control, "events":events, "actions":[]}
 
@@ -176,7 +170,7 @@ class SSDPScanner():
                         if scp[0] != '/':
                             scp = '/' + scp
                         serviceURL = parsed.scheme + "://" + parsed.netloc + scp
-                        print('\t\t=> API: %s' % serviceURL)
+                        common.log('[SSDP Scan]\t\t=> API: %s' % serviceURL)
 
                         this_service['service_url'] = serviceURL
 
@@ -185,36 +179,35 @@ class SSDPScanner():
                         try:
                             serviceXML = ET.fromstring(resp.text)
                         except:
-                            print('\t\t\t[!] Failed to parse the response XML')
+                            common.log('[SSDP Scan]\t\t\t[!] Failed to parse the response XML')
                             continue
 
                         actions = serviceXML.findall(".//*{urn:schemas-upnp-org:service-1-0}action")
                         for action in actions:
                             action_name = action.find('./{urn:schemas-upnp-org:service-1-0}name').text
-                            print('\t\t\t- ' + action_name)
+                            common.log(f'[SSDP Scan]\t\t\t- {action_name}')
                             this_service["actions"].append(action_name)
                         
                         ssdp_info.services_list.append(this_service)
 
                 except requests.exceptions.ConnectionError:
-                    print('[SSDP Scan] Could not load %s' % location)
+                    common.log('[SSDP Scan] Could not load %s' % location)
                 except requests.exceptions.ReadTimeout:
-                    print('[SSDP Scan] Timeout reading from %s' % location)
+                    common.log('[SSDP Scan] Timeout reading from %s' % location)
 
                 self.result_collect.append(ssdp_info) 
-            print("[SSDP Scan] Done Parsing")
             common.log("[SSDP Scan] Done Parsing")
         return
 
     def scan(self):
-        print("[SSDP Scan] Start.")
+        common.log("[SSDP Scan] Start.")
         locations, ip_ports = self.discover_pnp_locations()
         new_locations = []
         for location in locations:
             if self.alreadyKnownThisLocation(location) == False:
                 new_locations.append(location)
         self.parse_locations(new_locations)
-        print("[SSDP Scan] Finish.")
+        common.log("[SSDP Scan] Finish.")
 
     def get_serv_ua(self, resp):
         lines = resp.split("\r\n")
@@ -232,7 +225,7 @@ class SSDPScanner():
     # Don't use it for now.
     def sniff(self, sniff_time = 10): # Don't run it with scan() at the same time
 
-        print("[SSDP Scan] [sniffer mode] Max sniff time =", str(sniff_time))
+        common.log(f"[SSDP Scan] [sniffer mode] Max sniff time = {str(sniff_time)}")
         common.log("[SSDP Scan] [sniffer mode] start")
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -242,7 +235,6 @@ class SSDPScanner():
             # ! can not work on windows here
             sock.bind(("239.255.255.250", 1900)) 
         except:
-            print("[SSDP Scan] System does not support SSDP sniff")
             common.log("[SSDP Scan] System does not support SSDP sniff")
             sock.close()
             return
@@ -268,9 +260,7 @@ class SSDPScanner():
                 #print("\n")
                 #print("####RESP =", resp)
                 #print("####raddr =", raddr)
-                print("[SSDP Scan] [sniffer find]", raddr[0], resp)
-                print()
-                common.log("[SSDP Scan] [sniffer find]", raddr[0], resp)
+                common.log(f"[SSDP Scan] [sniffer find], {raddr[0]}, {resp}")
 
                 location_result = location_regex.search(resp.decode('ASCII'))
                 if location_result and (location_result.group(1) in locations) == False:
@@ -284,15 +274,15 @@ class SSDPScanner():
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time > sniff_time:
-                    print("[SSDP Scan] time is up")
+                    common.log("[SSDP Scan] time is up")
                     continue_listen = False
 
             except:
-                print("[SSDP Scan] no msg in 5s")
+                common.log("[SSDP Scan] no msg in 5s")
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time > sniff_time:
-                    print("[SSDP Scan] time is up")
+                    common.log("[SSDP Scan] time is up")
                     continue_listen = False
 
                         
@@ -305,17 +295,14 @@ class SSDPScanner():
             for location in locations:
 
                 if self.alreadyKnownThisLocation(location) == False:
-                    print('[SSDP Scan] Sniffer new location\t%s' % location)
                     common.log('[SSDP Scan] Sniffer new location\t%s' % location)
                     new_locations.append(location)
                 else:
-                    print('[SSDP Scan] Sniffer known location\t%s' % location)
                     common.log('[SSDP Scan] Sniffer known location\t%s' % location)
 
             if len(new_locations) > 0:
                 self.parse_locations(new_locations)
 
-        print("[SSDP Scan] [sniffer mode] exit")
         common.log("[SSDP Scan] [sniffer mode] exit")
 
     def getResult(self):

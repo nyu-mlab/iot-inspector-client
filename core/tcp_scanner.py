@@ -42,14 +42,14 @@ class TCPScanner():
                         t2 = time.time()
                         if sock:
                             self.result_collect.append((ip, port))
-                            print("[TCP Scan]", time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
+                            common.log(f"[TCP Scan] {time.strftime('%Y-%m-%d %H:%M:%S')}, {ip}, {port}, open, {round(t2 - t1, 2)}")
                 else:
                     with timeout(self.timeout):
                         await asyncio.get_event_loop().sock_connect(sock, (ip, port))
                         t2 = time.time()
                         if sock:
                             self.result_collect.append((ip, port))
-                            print("[TCP Scan]", time.strftime('%Y-%m-%d %H:%M:%S'), ip, port, 'open', round(t2 - t1, 2))
+                            common.log(f"[TCP Scan] {time.strftime('%Y-%m-%d %H:%M:%S')}, {ip}, {port}, open, {round(t2 - t1, 2)}")
                 sock.close()
             # we have to deal with the exception, otherwise this task will stop
             except:
@@ -133,24 +133,17 @@ class TCPScanner():
         
 
         if len(target_ip_list) == 0:
-            print("[TCP Scan] No target to scan")
             common.log("[TCP Scan] No target to scan")
             return
-        
-        print('[TCP Scan] Start scanning {} IPs: {}'.format(
-            len(target_ip_list),
-            ', '.join(target_ip_list)
-        ))
+
         common.log('[TCP Scan] Start scanning {} IPs: {}'.format(
             len(target_ip_list),
             ', '.join(target_ip_list)
         ))
 
         if scanAll == True:
-            print("[TCP Scan] Scan 65K ports")
             common.log("[TCP Scan] Scan 65K ports")
         else:
-            print("[TCP Scan] Scan popular ports")
             common.log("[TCP Scan] Scan popular ports")
 
         if scanAll == True:
@@ -160,7 +153,7 @@ class TCPScanner():
             split_port_list = [self.get_popular_port_list()]
 
         for ip in target_ip_list:
-            print("[TCP Scan] Start scan on ip =", ip)
+            common.log(f"[TCP Scan] Start scan on ip = {ip}")
             
             for batch_port_list in split_port_list:
 
@@ -174,8 +167,8 @@ class TCPScanner():
                 else:
                     asyncio.get_event_loop().run_until_complete(self.async_scan_tasks(ip, batch_port_list))
                 
-                print("[TCP Scan] Last one of this batch:", ip, str(last_one))
-                print(f'[TCP Scan] Time for this batch: {time.time() - start_time:.2f}')
+                common.log(f"[TCP Scan] Last one of this batch: {ip} {str(last_one)}")
+                common.log(f'[TCP Scan] Time for this batch: {time.time() - start_time:.2f}')
 
                 # If you dont like scan too fast
                 # time_used = time.time() - start_time
@@ -249,14 +242,12 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
                     diff = list(set(ports) - set(known_ports))
 
                     if len(diff) == 0:
-                        print(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
                         common.log(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
 
                     else:
                         merge_ports = list(set(known_ports + ports)) # add and remove repeating elements
                         device.open_tcp_ports = merge_ports
                         device.save()
-                        print(f"[TCP Scan] {ip}: Already have {known_ports}, this round found {ports}")
                         common.log(f"[TCP Scan] {ip}: Already have {known_ports}, this round found {ports}")
 
         TCPScannerInstance.clearResult() # prepare for next one
@@ -264,5 +255,4 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
     # free memory
     del TCPScannerInstance
 
-    print("[TCP Scan] Exit")
     common.log(f"[TCP Scan] Exit TCP scan")
