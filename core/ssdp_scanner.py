@@ -50,8 +50,8 @@ class SSDPScanner():
     # @return the set of advertised upnp locations, and IPs
     ###
     def discover_pnp_locations(self):
-        print('[SSDP Scanning] Discovering UPnP locations')
-        common.log('[SSDP Scanning] Discovering UPnP locations')
+        print('[SSDP Scan] Discovering UPnP locations')
+        common.log('[SSDP Scan] Discovering UPnP locations')
         locations = set() 
         ip_ports = set()
         location_regex = re.compile("location:[ ]*(.+)\r\n", re.IGNORECASE)
@@ -82,12 +82,12 @@ class SSDPScanner():
         except socket.error:
             sock.close() # Exit while loop with exception, so this line will always been executed
 
-        print('[SSDP Scanning] Discovery complete')
-        print('[SSDP Scanning] %d locations found:' % len(locations))
-        common.log('[SSDP Scanning] %d locations found:' % len(locations))
+        print('[SSDP Scan] Discovery complete')
+        print('[SSDP Scan] %d locations found:' % len(locations))
+        common.log('[SSDP Scan] %d locations found:' % len(locations))
         for location in locations:
-            print('[SSDP Scanning]\t%s' % location)
-            common.log('[SSDP Scanning]\t%s' % location)
+            print('[SSDP Scan]\t%s' % location)
+            common.log('[SSDP Scan]\t%s' % location)
         return list(locations), list(ip_ports)
 
     ##
@@ -113,14 +113,14 @@ class SSDPScanner():
     ###
     def parse_locations(self, locations):
         if len(locations) < 1:
-            print('[SSDP Scanning] No location to parse')
-            common.log('[SSDP Scanning] No location to parse')
+            print('[SSDP Scan] No location to parse')
+            common.log('[SSDP Scan] No location to parse')
             return
         if len(locations) > 0:
-            print('[SSDP Scanning] Start parse %d locations:' % len(locations))
-            common.log('[SSDP Scanning] Start parse %d locations:' % len(locations))
+            print('[SSDP Scan] Start parse %d locations:' % len(locations))
+            common.log('[SSDP Scan] Start parse %d locations:' % len(locations))
             for location in locations:
-                print('[SSDP Scanning] Loading %s...' % location)
+                print('[SSDP Scan] Loading %s...' % location)
                 ssdp_info = SSDPInfo()
                 try:
                     resp = requests.get(location, timeout=3)
@@ -146,7 +146,7 @@ class SSDPScanner():
                     try:
                         xmlRoot = ET.fromstring(resp.text)
                     except:
-                        print('\t[SSDP Scanning] Failed XML parsing of %s' % location)
+                        print('\t[SSDP Scan] Failed XML parsing of %s' % location)
                         continue
 
                     ssdp_info.device_type = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}deviceType", "Device Type")
@@ -195,24 +195,24 @@ class SSDPScanner():
                         ssdp_info.services_list.append(this_service)
 
                 except requests.exceptions.ConnectionError:
-                    print('[SSDP Scanning] Could not load %s' % location)
+                    print('[SSDP Scan] Could not load %s' % location)
                 except requests.exceptions.ReadTimeout:
-                    print('[SSDP Scanning] Timeout reading from %s' % location)
+                    print('[SSDP Scan] Timeout reading from %s' % location)
 
                 self.result_collect.append(ssdp_info) 
-            print("[SSDP Scanning] Done Parsing")
-            common.log("[SSDP Scanning] Done Parsing")
+            print("[SSDP Scan] Done Parsing")
+            common.log("[SSDP Scan] Done Parsing")
         return
 
     def scan(self):
-        print("[SSDP Scanning] Start.")
+        print("[SSDP Scan] Start.")
         locations, ip_ports = self.discover_pnp_locations()
         new_locations = []
         for location in locations:
             if self.alreadyKnownThisLocation(location) == False:
                 new_locations.append(location)
         self.parse_locations(new_locations)
-        print("[SSDP Scanning] Finish.")
+        print("[SSDP Scan] Finish.")
 
     def get_serv_ua(self, resp):
         lines = resp.split("\r\n")
@@ -230,8 +230,8 @@ class SSDPScanner():
     # Don't use it for now.
     def sniff(self, sniff_time = 10): # Don't run it with scan() at the same time
 
-        print("[SSDP Scanning] [sniffer mode] Max sniff time =", str(sniff_time))
-        common.log("[SSDP Scanning] [sniffer mode] start")
+        print("[SSDP Scan] [sniffer mode] Max sniff time =", str(sniff_time))
+        common.log("[SSDP Scan] [sniffer mode] start")
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(5)
@@ -240,8 +240,8 @@ class SSDPScanner():
             # ! can not work on windows here
             sock.bind(("239.255.255.250", 1900)) 
         except:
-            print("[SSDP Scanning] System does not support SSDP sniff")
-            common.log("[SSDP Scanning] System does not support SSDP sniff")
+            print("[SSDP Scan] System does not support SSDP sniff")
+            common.log("[SSDP Scan] System does not support SSDP sniff")
             sock.close()
             return
         
@@ -266,9 +266,9 @@ class SSDPScanner():
                 #print("\n")
                 #print("####RESP =", resp)
                 #print("####raddr =", raddr)
-                print("[SSDP Scanning] [sniffer find]", raddr[0], resp)
+                print("[SSDP Scan] [sniffer find]", raddr[0], resp)
                 print()
-                common.log("[SSDP Scanning] [sniffer find]", raddr[0], resp)
+                common.log("[SSDP Scan] [sniffer find]", raddr[0], resp)
 
                 location_result = location_regex.search(resp.decode('ASCII'))
                 if location_result and (location_result.group(1) in locations) == False:
@@ -282,15 +282,15 @@ class SSDPScanner():
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time > sniff_time:
-                    print("[SSDP Scanning] time is up")
+                    print("[SSDP Scan] time is up")
                     continue_listen = False
 
             except:
-                print("[SSDP Scanning] no msg in 5s")
+                print("[SSDP Scan] no msg in 5s")
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time > sniff_time:
-                    print("[SSDP Scanning] time is up")
+                    print("[SSDP Scan] time is up")
                     continue_listen = False
 
                         
@@ -303,18 +303,18 @@ class SSDPScanner():
             for location in locations:
 
                 if self.alreadyKnownThisLocation(location) == False:
-                    print('[SSDP Scanning] Sniffer new location\t%s' % location)
-                    common.log('[SSDP Scanning] Sniffer new location\t%s' % location)
+                    print('[SSDP Scan] Sniffer new location\t%s' % location)
+                    common.log('[SSDP Scan] Sniffer new location\t%s' % location)
                     new_locations.append(location)
                 else:
-                    print('[SSDP Scanning] Sniffer known location\t%s' % location)
-                    common.log('[SSDP Scanning] Sniffer known location\t%s' % location)
+                    print('[SSDP Scan] Sniffer known location\t%s' % location)
+                    common.log('[SSDP Scan] Sniffer known location\t%s' % location)
 
             if len(new_locations) > 0:
                 self.parse_locations(new_locations)
 
-        print("[SSDP Scanning] [sniffer mode] exit")
-        common.log("[SSDP Scanning] [sniffer mode] exit")
+        print("[SSDP Scan] [sniffer mode] exit")
+        common.log("[SSDP Scan] [sniffer mode] exit")
 
     def getResult(self):
         return self.result_collect

@@ -55,10 +55,10 @@ class DNSSDScanner():
     # no concurrent operations here
     def scan(self, target_ip_list): # we don't need to specify port here, because we know mDNS uses 5353
 
-        print('[DNS-SD Scanning] Start')
-        print('[DNS-SD Scanning] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
-        common.log('[DNS-SD Scanning] Start')
-        common.log('[DNS-SD Scanning] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
+        print('[DNS-SD Scan] Start')
+        print('[DNS-SD Scan] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
+        common.log('[DNS-SD Scan] Start')
+        common.log('[DNS-SD Scan] Scanning %d locations: %s' % (len(target_ip_list), target_ip_list))
 
         for i in range(0, len(target_ip_list)):
             target_ip = target_ip_list[i]
@@ -76,8 +76,8 @@ class DNSSDScanner():
                 resp = DNS(data)
                 #resp.show()
 
-                print("[DNS-SD Scanning] No.%d %s ONLINE" % (i, target_ip))
-                common.log("[DNS-SD Scanning] No.%d %s ONLINE" % (i, target_ip))
+                print("[DNS-SD Scan] No.%d %s ONLINE" % (i, target_ip))
+                common.log("[DNS-SD Scan] No.%d %s ONLINE" % (i, target_ip))
 
                 services = []
                 for i in range(0, resp.ancount):
@@ -90,12 +90,12 @@ class DNSSDScanner():
             except KeyboardInterrupt:
                 exit(0)
             except:
-                print("[DNS-SD Scanning] No.%d %s OFFLINE" % (i, target_ip))
-                common.log("[DNS-SD Scanning] No.%d %s OFFLINE" % (i, target_ip))
+                print("[DNS-SD Scan] No.%d %s OFFLINE" % (i, target_ip))
+                common.log("[DNS-SD Scan] No.%d %s OFFLINE" % (i, target_ip))
                 self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"OFFLINE", "services":[]})
 
-        print('[DNS-SD Scanning] Finish')
-        common.log('[DNS-SD Scanning] Finish')
+        print('[DNS-SD Scan] Finish')
+        common.log('[DNS-SD Scan] Finish')
 
     # end dnssd_scan()
 
