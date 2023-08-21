@@ -340,9 +340,13 @@ def run_ssdp_scan():
     if not config.get('has_consented_to_overall_risks', False):
         return
     
+    common.log("[SSDP Scan] Ready to start SSDP scan")
+
     # create scanner instance and run SSDP scan
     SSDPScannerInstance = SSDPScanner()
     SSDPScannerInstance.scan() # it will block until no more new device found in 5 seconds 
+
+    common.log("[SSDP Scan] Done SSDP scan, start restore data")
 
     # save data to DB
     current_results = SSDPScannerInstance.getResult()
@@ -377,6 +381,9 @@ def run_ssdp_scan():
 
                         services_list = SSDPInfoInst.services_list
                     )
+
+                    common.log(f"[SSDP Scan] Create new ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
+
                 else:
                     model_instance.scan_time = SSDPInfoInst.scan_time, 
                     model_instance.location = SSDPInfoInst.location,
@@ -397,6 +404,8 @@ def run_ssdp_scan():
         
                     model_instance.save()
 
+                    common.log(f"[SSDP Scan] Update ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
+
             # using global_state.arp_cache to bind ip to mac. 
             # also update for those found in previous rounds except for those scanned in more than 5 mins ago
             for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
@@ -410,5 +419,9 @@ def run_ssdp_scan():
                     # once a device changes its IP, and a new SSDPInfoModel is created, we will have 2 SSDPInfoModel with same mac addr 
                     model_instance.save()
 
+                    common.log(f"[SSDP Scan] Update MAC address {model_instance.mac} for {model_instance.ip}")
+
     # del scanner and free memory
     del SSDPScannerInstance
+
+    common.log("[SSDP Scan] Exit SSDP scan")

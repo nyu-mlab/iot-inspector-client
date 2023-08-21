@@ -223,6 +223,10 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     # Create scanner
     BannerGrabInstance = BannerGrab()
 
+    if len(target_device_list) == 0:
+        common.log("[Banner Grab] No valid target device to scan")
+        return 
+
     # Run it one by one
     for i in range(0, len(target_device_list)):
         device = target_device_list[i]
@@ -292,3 +296,4 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     del BannerGrabInstance
 
     print("[Banner Grab] Exit")
+    common.log("[Banner Grab] Exit banner grab")

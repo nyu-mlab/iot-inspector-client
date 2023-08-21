@@ -46,9 +46,11 @@ class DNSSDScanner():
                 rrname += (" " + str(resp.ar[i].port))
 
             if rrname.find("._device-info._tcp.local.") > 0:
-                print(" "*4, rrname, rdata)
+                print("[DNS-SD Scan]", " "*4, rrname, rdata)
+                common.log("[DNS-SD Scan]", " "*4, rrname, rdata)
             else:
-                print(" "*4, rrname)
+                print("[DNS-SD Scan]", " "*4, rrname)
+                common.log("[DNS-SD Scan]", " "*4, rrname)
             services.append(rrname)
 
         return services
@@ -135,6 +137,10 @@ def run_dnssd_scan():
                     continue
             inspected_device_list.append(device)
 
+    if len(inspected_device_list) == 0:
+        common.log("[DNS-SD Scan] No valid target device to scan")
+        return 
+
     DNSSDScannerInstance = DNSSDScanner()
 
     for device in inspected_device_list:  # imitate what's in arp sproof to get latest IPs
@@ -144,6 +150,8 @@ def run_dnssd_scan():
             global_state.arp_cache.get_ip_addr(device.mac_addr)
         except KeyError:
             continue
+
+        common.log(f"[DNS-SD Scan] Ready to scan {device.ip_addr}")
         
         # run the scan for each target
         DNSSDScannerInstance.scan([device.ip_addr])
@@ -166,6 +174,7 @@ def run_dnssd_scan():
                             status = result['status'],
                             services = result['services']
                         )
+                        common.log(f"[DNS-SD Scan] Create new mDNS info for {result['ip']}")
 
                     else: # risk: may wipe out useful infomation when a device become offline
                         if eval(model_instance.services) != result['services']:
@@ -174,8 +183,14 @@ def run_dnssd_scan():
                             model_instance.status = result['status']
                             model_instance.services = result['services']
                             model_instance.save()
+                            common.log(f"[DNS-SD Scan] Update info for {result['ip']}")
+
+                        else:
+                            common.log(f"[DNS-SD Scan] No update for {result['ip']}")
 
         DNSSDScannerInstance.clearResult()
 
     # exit
     del DNSSDScannerInstance
+
+    common.log(f"[DNS-SD Scan] Exit DNS-SD scan")

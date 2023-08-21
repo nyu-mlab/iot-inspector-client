@@ -211,6 +211,10 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
                             continue
                     target_device_list.append(device)
 
+    if len(target_device_list) == 0:
+        common.log("[TCP Scan] No valid target device to scan")
+        return 
+
     # Create scanner
     TCPScannerInstance = TCPScanner()
 
@@ -223,6 +227,8 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
         except KeyError:
             continue
         
+        common.log(f"[TCP Scan] Ready to scan for {device.ip_addr}")
+
         # run scan on target
         TCPScannerInstance.scan([device.ip_addr], scanAll)
         scan_status_record[device.mac_addr] = time.time()
@@ -259,3 +265,4 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
     del TCPScannerInstance
 
     print("[TCP Scan] Exit")
+    common.log(f"[TCP Scan] Exit TCP scan")
