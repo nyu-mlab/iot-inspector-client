@@ -184,6 +184,13 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     Banner grab on device's open tcp ports
 
     """
+    if not global_state.is_inspecting:
+        return
+
+    # Check the consent
+    if not config.get('has_consented_to_overall_risks', False):
+        return
+
     if target_port_list != None:
         if (target_device_list == None) or (len(target_device_list) != len(target_port_list)):
             common.log("[Banner Grab] Args not qualified!")
