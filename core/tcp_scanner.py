@@ -190,20 +190,21 @@ class TCPScanner():
 
 
 def run_tcp_scan(target_device_list = None, scanAll = False):
+    """
+    Scan open TCP ports
 
+    """
     # Define target to scan
     if target_device_list == None:
 
-        inspected_device_list = []
+        target_device_list = []
         criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
 
         with model.write_lock:
             with model.db:
 
                 for device in model.Device.select().where(criteria):
-                    inspected_device_list.append(device)
-
-        target_device_list = inspected_device_list.copy()
+                    target_device_list.append(device)
 
     # Create scanner
     TCPScannerInstance = TCPScanner()
@@ -234,10 +235,10 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
                 
                     known_ports = eval(device.open_tcp_ports) # dont forget eval()
 
-                    # 要比较一下旧和新是否有所不同，然后日志输出改的能看到旧和新
                     if known_ports == ports:
                         print(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
                         common.log(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
+
                     else:
                         merge_ports = list(set(known_ports + ports)) # add and remove repeating elements
                         device.open_tcp_ports = merge_ports

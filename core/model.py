@@ -58,8 +58,11 @@ class Device(BaseModel):
     is_blocked = IntegerField(default=0)
     favorite_time = FloatField(default=0)
 
-    # tcp scan results
+    # TCP scan results
     open_tcp_ports = TextField(default="[]")
+
+    # Banner grab results
+    port_banners = TextField(default="{}") # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]} 
 
 
 class Flow(BaseModel):
