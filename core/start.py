@@ -46,7 +46,6 @@ def start_threads():
     core.common.SafeLoopThread(core.friendly_organizer.start, sleep_time=3)
     core.common.SafeLoopThread(core.data_donation.start, sleep_time=15)
 
-    # Chenyang's new things
     core.common.SafeLoopThread(core.ssdp_scanner.run_ssdp_scan, sleep_time=15)
     core.common.SafeLoopThread(core.dnssd_scanner.run_dnssd_scan, sleep_time=15)
     core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)

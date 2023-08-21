@@ -1,3 +1,5 @@
+# some codes come from https://paper.seebug.org/1727/#0x02-dns-sd
+
 import socket
 import sys
 from scapy.all import raw, DNS, DNSQR
@@ -106,6 +108,9 @@ class DNSSDScanner():
         self.result_collect = []
 
 
+DNSSD_SCAN_INTERVAL = 60
+scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
+
 
 def run_dnssd_scan():
     """
@@ -125,6 +130,9 @@ def run_dnssd_scan():
     criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
     with model.db:
         for device in model.Device.select().where(criteria):
+            if device.mac_addr in scan_status_record:
+                if time.time() - scan_status_record[device.mac_addr] < DNSSD_SCAN_INTERVAL:
+                    continue
             inspected_device_list.append(device)
 
     DNSSDScannerInstance = DNSSDScanner()
@@ -139,6 +147,7 @@ def run_dnssd_scan():
         
         # run the scan for each target
         DNSSDScannerInstance.scan([device.ip_addr])
+        scan_status_record[device.mac_addr] = time.time()
         
         # save data to DB immediately after one scan is finished
         results = DNSSDScannerInstance.getResult()

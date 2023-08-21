@@ -188,6 +188,8 @@ class TCPScanner():
     def clearResult(self):
         self.result_collect = []
 
+TCP_SCAN_INTERVAL = 60
+scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
 
 def run_tcp_scan(target_device_list = None, scanAll = False):
     """
@@ -204,6 +206,9 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
             with model.db:
 
                 for device in model.Device.select().where(criteria):
+                    if device.mac_addr in scan_status_record:
+                        if time.time() - scan_status_record[device.mac_addr] < TCP_SCAN_INTERVAL:
+                            continue
                     target_device_list.append(device)
 
     # Create scanner
@@ -220,6 +225,7 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
         
         # run scan on target
         TCPScannerInstance.scan([device.ip_addr], scanAll)
+        scan_status_record[device.mac_addr] = time.time()
 
         # Get scanner result
         raw_result = TCPScannerInstance.getResult()

@@ -1,3 +1,5 @@
+# some codes come from https://github.com/tenable/upnp_info and https://paper.seebug.org/1727/#0x03-ssdp 
+
 import re
 import sys
 import time

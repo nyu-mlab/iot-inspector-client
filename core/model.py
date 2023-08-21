@@ -116,8 +116,7 @@ class AdTracker(BaseModel):
 
     hostname = TextField(index=True)
     tracker_company = TextField(default='')
-
-# Chenyang's New Data Model
+    
 
 class SSDPInfoModel(BaseModel):
 

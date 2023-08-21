@@ -194,6 +194,9 @@ class BannerGrab:
     def clearResult(self):
         self.result_collect = []
 
+BANNER_GRAB_INTERVAL = 60
+scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
+
 
 def run_banner_grab(target_device_list = None, target_port_list = None): # target_port_list is List[List], each list for each device
     """
@@ -215,6 +218,9 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
             with model.db:
 
                 for device in model.Device.select().where(criteria):
+                    if device.mac_addr in scan_status_record:
+                        if time.time() - scan_status_record[device.mac_addr] < BANNER_GRAB_INTERVAL:
+                            continue
                     target_device_list.append(device)
 
     # Create scanner
