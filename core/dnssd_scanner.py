@@ -108,7 +108,7 @@ class DNSSDScanner():
         self.result_collect = []
 
 
-DNSSD_SCAN_INTERVAL = 60
+DNSSD_SCAN_INTERVAL = 120
 scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
 
 

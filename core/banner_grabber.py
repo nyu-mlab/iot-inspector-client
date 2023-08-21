@@ -194,8 +194,8 @@ class BannerGrab:
     def clearResult(self):
         self.result_collect = []
 
-BANNER_GRAB_INTERVAL = 60
-scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
+BANNER_GRAB_INTERVAL = 120
+scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
 
 
 def run_banner_grab(target_device_list = None, target_port_list = None): # target_port_list is List[List], each list for each device
@@ -218,9 +218,6 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
             with model.db:
 
                 for device in model.Device.select().where(criteria):
-                    if device.mac_addr in scan_status_record:
-                        if time.time() - scan_status_record[device.mac_addr] < BANNER_GRAB_INTERVAL:
-                            continue
                     target_device_list.append(device)
 
     # Create scanner
@@ -246,7 +243,14 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
                     ip = device.ip_addr
                     ports = eval(device.open_tcp_ports)
                     for port in ports:
+
+                        if (device.mac_addr+"-"+str(port)) in scan_status_record:
+                            if time.time() - scan_status_record[(device.mac_addr+"-"+str(port))] < BANNER_GRAB_INTERVAL:
+                                print("give up ", (device.mac_addr+"-"+str(port)))
+                                continue
+
                         target_ip_port_list.append((ip, port))
+                        scan_status_record[(device.mac_addr+"-"+str(port))] = time.time()
         else:
 
             with model.write_lock:
@@ -255,6 +259,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
                     
             for port in target_port_list[i]:
                 target_ip_port_list.append((ip, port))
+                scan_status_record[(device.mac_addr+"-"+str(port))] = time.time()
         
         # Run the banner grab
         BannerGrabInstance.banner_grab(target_ip_port_list)
@@ -277,8 +282,8 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
                 known_port_banners.update(this_results)
                 device.port_banners = known_port_banners
                 device.save()
-                print(f"IP:{device.ip_addr} Banners:{device.port_banners}")
-                common.log(f"IP:{device.ip_addr} Banners:{device.port_banners}")
+                print(f"[Banner Grab] IP:{device.ip_addr} Banners:{device.port_banners}")
+                common.log(f"[Banner Grab] IP:{device.ip_addr} Banners:{device.port_banners}")
 
         # Clear result of this device
         BannerGrabInstance.clearResult()

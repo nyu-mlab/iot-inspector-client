@@ -188,7 +188,7 @@ class TCPScanner():
     def clearResult(self):
         self.result_collect = []
 
-TCP_SCAN_INTERVAL = 60
+TCP_SCAN_INTERVAL = 120
 scan_status_record = {} # {mac1:scan_time1, mac2:scan_time2}
 
 def run_tcp_scan(target_device_list = None, scanAll = False):
@@ -240,8 +240,9 @@ def run_tcp_scan(target_device_list = None, scanAll = False):
             with model.db:
                 
                     known_ports = eval(device.open_tcp_ports) # dont forget eval()
+                    diff = list(set(ports) - set(known_ports))
 
-                    if known_ports == ports:
+                    if len(diff) == 0:
                         print(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
                         common.log(f"[TCP Scan] {ip}: Already have {known_ports}, No new ports found")
 
