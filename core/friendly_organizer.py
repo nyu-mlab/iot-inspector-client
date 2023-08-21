@@ -8,6 +8,7 @@ import core.global_state as global_state
 import core.networking as networking
 import core.config as config
 import core.anonymization as anonymization
+from core.oui_parser import get_vendor
 from core.ttl_cache import ttl_cache
 import os
 import geoip2.database
@@ -34,14 +35,6 @@ tracker_json_list = [
 ]
 
 
-def start():
-
-    add_hostname_info_to_flows()
-    add_product_info_to_devices()
-
-    return
-
-
 
 def add_product_info_to_devices():
 
@@ -57,10 +50,16 @@ def add_product_info_to_devices():
     # For each MAC address, find the corresponding product name
     inferred_product_name_dict = dict()
     for mac_addr in mac_addr_list:
+        friendly_names = []
         product_name = infer_product_name(mac_addr)
-        if not product_name:
+        oui_vendor = get_vendor(mac_addr)
+        if product_name:
+            friendly_names.append(product_name.split('/')[-1])
+        if oui_vendor:
+            friendly_names.append(oui_vendor)
+        if not friendly_names:
             continue
-        inferred_product_name_dict[mac_addr] = product_name
+        inferred_product_name_dict[mac_addr] = ' / '.join(friendly_names)
 
     # Update the database with the inferred product names into the `friendly_product` field
     with model.write_lock:
