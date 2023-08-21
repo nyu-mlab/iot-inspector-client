@@ -156,6 +156,5 @@ def initialize_tables():
     with db:
 
         # Create tables
-        db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        # db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
         db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
-        Device.create(mac_addr = "1:2:3:4", ip_addr = "127.0.0.1") # debug
