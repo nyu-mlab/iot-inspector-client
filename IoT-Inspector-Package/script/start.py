@@ -22,8 +22,7 @@ GIT_BUNDLE_EXE_PATH = os.path.join(BUNDLE_PATH, 'PortableGit-2.41.0.3-64-bit.7z.
 GIT_BASE_DIR = os.path.join(BUNDLE_PATH, 'git')
 GIT_EXE_PATH = os.path.join(GIT_BASE_DIR, 'bin', 'git.exe')
 NPCAP_INSTALLER_PATH = os.path.join(BUNDLE_PATH, 'npcap-1.76.exe')
-PYTHON_DIR = os.path.join(BUNDLE_PATH, 'python')
-PYTHON_PATH = os.path.join(PYTHON_DIR, 'python.exe')
+PYTHON_PATH = os.path.join(BUNDLE_PATH, 'python', 'tools', 'python.exe')
 INSPECTOR_PATH = os.path.join(current_file_path, 'iot-inspector-client')
 
 
@@ -46,6 +45,8 @@ def main():
     # Check if git is installed
     if not os.path.isfile(GIT_EXE_PATH):
         print('Setting up portable Git...')
+        if not os.path.isdir(GIT_BASE_DIR):
+            os.mkdir(GIT_BASE_DIR)
         sp.call([GIT_BUNDLE_EXE_PATH, '-o', GIT_BASE_DIR, '-y'])
 
     # Check if npcap is installed
