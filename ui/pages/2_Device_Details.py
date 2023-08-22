@@ -89,10 +89,8 @@ def show_device_details(mac_addr):
 
     # Show possible device identity if the data is available and the user has not set the product name yet
     if device.friendly_product and device.product_name == '':
-        friendly_product = device.friendly_product
-        friendly_product = friendly_product.split('/')[-1]
         c1.caption(
-            f'Possible identity: {friendly_product}',
+            f'Possible identity: {device.friendly_product}',
             help='This is the product name that we inferred from the device\'s network traffic.'
         )
 
