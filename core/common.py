@@ -159,7 +159,11 @@ def http_request(method='get', field_to_extract='', args=[], kwargs={}) -> str:
         err_msg = ''
         if 'error' in response_dict:
             err_msg = response_dict['error']
-        log(f'[http_request] Error: request with args {args} did not succeed with error message: {err_msg}')
+        # Ignore the most common error (which is not an error because it takes
+        # time for the backend to analyze an IP address) so that we won't
+        # overwhelm the log with this message
+        if err_msg != 'No data for this ip_addr':
+            log(f'[http_request] Error: request with args {args} did not succeed with error message: {err_msg}')
         raise IOError
 
     # Return the field
