@@ -147,7 +147,7 @@ class mDNSInfoModel(BaseModel):
     scan_time = FloatField(default=0)
     ip = TextField(default="")
     status = TextField(default="")
-    services = TextField(default="") # This attribute is list[list]. We need to use eval() to restore the data structure
+    services = TextField(default="") # This attribute is list[dict{str:list}]. We need to use eval() to restore the data structure
 
 
 def initialize_tables():

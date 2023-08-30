@@ -82,7 +82,8 @@ class DNSSDScanner():
                 for i in range(0, resp.ancount):
                     service = (resp.an[i].rdata).decode()
                     this_services = self.get_service_info(sock, target_ip, service)
-                    services.append(this_services)
+                    #services.append(this_services)
+                    services.append({service : this_services})
                 self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"ONLINE", "services":services})
 
 
