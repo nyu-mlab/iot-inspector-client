@@ -32,9 +32,9 @@ def show():
 
     elif last_completed_survey == 'notice_and_choice_pre_survey':
         # Show the post survey only if the user has completed the pre-survey and
-        # the user has been collecting data for 10 minutes
+        # the user has been collecting data for 5 minutes
         with global_state.global_state_lock:
-            time_threshold = 45 if global_state.DEBUG else 600
+            time_threshold = 45 if global_state.DEBUG else 300
         if time.time() - donation_start_ts > time_threshold:
             # Skip if we just opened the app; this trick is to avoid showing the
             # survey when the user just opened the app
