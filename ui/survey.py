@@ -3,6 +3,8 @@ import time
 import streamlit as st
 import core.config as config
 import core.global_state as global_state
+import hashlib
+import uuid
 
 
 def show():
@@ -42,6 +44,10 @@ def show():
                 if global_state.inspector_started_ts > 0 and time.time() - global_state.inspector_started_ts < time_threshold:
                     return
             get_survey_ui('notice_and_choice_post_survey.md')
+
+            # Display the survey completion code to show the user has seen the post survey
+            st.markdown(f'Survey completion code: `{get_survey_completion_code()}`')
+
             st.stop()
 
 
@@ -84,15 +90,18 @@ def get_survey_ui(survey_filename, ask_for_country_info=False):
         question_type = question_dict['question_type']
         question_text = question_dict['question_text']
 
-        st.markdown(question_text)
-
         if question_type == 'YesNo':
             radio_options = ['Yes', 'No', 'N/A']
         elif question_type == '7PtLikert':
             radio_options = ['Strongly disagree', 'Disagree', 'Somewhat disagree', 'Neither agree nor disagree', 'Somewhat agree', 'Agree', 'Strongly agree', 'N/A']
+        elif question_type == 'MCQ':
+            question_text, choices = question_text.split('|', 1)
+            question_text = question_text.strip()
+            radio_options = [s.strip() for s in choices.split('*')]
         else:
             raise ValueError(f'Unknown question type: {question_type}')
 
+        st.markdown(question_text)
         question_key = f'survey_question:{survey_name}:{question_text}'
 
         st.radio(
@@ -114,6 +123,18 @@ def get_survey_ui(survey_filename, ask_for_country_info=False):
         args=(survey_name,),
         type='primary'
     )
+
+
+
+def get_survey_completion_code() -> str:
+
+    # Generate a random UUID string
+    random_code = str(uuid.uuid4()).replace('-', '')[0:12].upper()
+
+    # Hash the UUID string
+    hash_str = hashlib.sha256(random_code.encode('utf-8')).hexdigest()[0:4].upper()
+
+    return random_code + hash_str
 
 
 
