@@ -9,3 +9,5 @@ YesNo: I was able to see reports about my data going to different domains.
 7PtLikert: There would be high potential for loss in disclosing my personal information to my Smart Devices.
 
 7PtLikert: Overall, I feel that using my Smart Devices are beneficial.
+
+MCQ: How did you hear about IoT Inspector? | Prolific * News media * Social media * Direct email * Word-of-mouth * Others * N/A
