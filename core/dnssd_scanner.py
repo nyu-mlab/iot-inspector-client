@@ -34,6 +34,7 @@ class DNSSDScanner():
         # parse additional records
         repeat = {}
         services = []
+        services.append(data)
         for i in range(0, resp.arcount):
             rrname = (resp.ar[i].rrname).decode()
             rdata  = resp.ar[i].rdata
@@ -73,6 +74,8 @@ class DNSSDScanner():
                 sock.sendto(raw(req), (target_ip, 5353))
                 data, _ = sock.recvfrom(1024)
 
+                original_reply = data
+
                 resp = DNS(data)
                 #resp.show()
 
@@ -84,14 +87,14 @@ class DNSSDScanner():
                     this_services = self.get_service_info(sock, target_ip, service)
                     #services.append(this_services)
                     services.append({service : this_services})
-                self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"ONLINE", "services":services})
+                self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"ONLINE", "services":services, "original_reply": original_reply})
 
 
             except KeyboardInterrupt:
                 exit(0)
             except:
                 common.log("[DNS-SD Scan] No.%d %s OFFLINE" % (i, target_ip))
-                self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"OFFLINE", "services":[]})
+                self.result_collect.append({"ip":target_ip, "scan_time":time.time(), "status":"OFFLINE", "services":[], "original_reply": ""})
 
         common.log('[DNS-SD Scan] Finish')
 
@@ -166,7 +169,8 @@ def run_dnssd_scan():
                             ip = result['ip'],
                             scan_time = result['scan_time'],
                             status = result['status'],
-                            services = result['services']
+                            services = result['services'],
+                            original_reply = result['original_reply']
                         )
                         common.log(f"[DNS-SD Scan] Create new mDNS info for {result['ip']}")
 
@@ -176,6 +180,7 @@ def run_dnssd_scan():
                             model_instance.scan_time = result['scan_time']
                             model_instance.status = result['status']
                             model_instance.services = result['services']
+                            model_instance.original_reply = result['original_reply']
                             model_instance.save()
                             common.log(f"[DNS-SD Scan] Update info for {result['ip']}")
 

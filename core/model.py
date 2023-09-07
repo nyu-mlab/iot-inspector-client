@@ -127,7 +127,7 @@ class SSDPInfoModel(BaseModel):
     ip = TextField(default="")
     port = TextField(default="")
     outer_file_name = TextField(default="")
-    original_reply = TextField(default="")
+    original_reply = TextField(default="") # 第一次扫描的回复原文
 
     server_string = TextField(default="")
     device_type = TextField(default="")
@@ -150,6 +150,8 @@ class mDNSInfoModel(BaseModel):
     status = TextField(default="")
     services = TextField(default="") # This attribute is list[dict{str:list}]. We need to use eval() to restore the data structure
 
+    original_reply = TextField(default="") # 第一次扫描的回复原文；然后针对每个服务的扫描原文记录在services中各个value的第一个
+
 
 def initialize_tables():
     """Creates the tables if they don't exist yet, and creates initial data."""
@@ -157,5 +159,5 @@ def initialize_tables():
     with db:
 
         # Create tables
-        # db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
         db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
