@@ -127,6 +127,7 @@ class SSDPInfoModel(BaseModel):
     ip = TextField(default="")
     port = TextField(default="")
     outer_file_name = TextField(default="")
+    original_reply = TextField(default="")
 
     server_string = TextField(default="")
     device_type = TextField(default="")
