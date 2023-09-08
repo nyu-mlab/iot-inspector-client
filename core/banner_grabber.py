@@ -3,7 +3,7 @@ import socket
 import asyncio
 import random
 import string
-import sys
+import json
 
 import core.model as model
 import core.common as common
@@ -20,6 +20,7 @@ banner_grab_request_message = [
     b"HELP\r\n"
 ]
 
+# TCP connection state
 CONNECT_SUCCESS = 0
 RECONNECT_SUCCESS = 1
 RECONNECT_EXCEPTION = 2
@@ -28,44 +29,46 @@ OTHER_EXCEPTION = 3
 # Set minimal scan interval to avoid too frequent scan
 BANNER_GRAB_INTERVAL = 120
 # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
-scan_status_record = {} 
+scan_status_record = {}
+
 
 def generate_random_string(length):
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
     return ''.join(random.choice(letters) for _ in range(length)).encode()
 
-async def talk_to_target(ip, port, sock, timeout = 5.0, round = -3, req="", recv=False):
+
+async def talk_to_target(ip, port, sock, timeout = 5.0, step = "Unknown", req="", recv=False):
     try:
         # If request message is given, send request to targets
-        if req != "": 
-            await asyncio.wait_for(asyncio.get_running_loop().sock_sendall(sock, req), timeout=timeout)  
+        if req != "":
+            await asyncio.wait_for(asyncio.get_running_loop().sock_sendall(sock, req), timeout=timeout)
 
         # If recv == "True", receive banner from the target
         if recv == True:
-            resp = await asyncio.wait_for(asyncio.get_running_loop().sock_recv(sock, 1024), timeout=timeout) 
-            common.log(f"[Banner Grab] IP {ip}, Port {port}, Round {round}: Receivce banner as below:\n{resp.decode('utf-8', errors='ignore')}")
+            resp = await asyncio.wait_for(asyncio.get_running_loop().sock_recv(sock, 1024), timeout=timeout)
+            common.log(f"[Banner Grab] IP {ip}, Port {port}, Step {step}, Result = Receivce banner as below:\n{resp.decode('utf-8', errors='ignore')}")
             return CONNECT_SUCCESS, resp.decode('utf-8', errors='ignore')
         # If recv == "False", we just build TCP connection only
         else:
             await asyncio.wait_for(asyncio.get_running_loop().sock_connect(sock, (ip, port)), timeout=timeout)
-            common.log(f"[Banner Grab] IP {ip}, Port {port}, Round {round}: Build TCP connection success")
+            common.log(f"[Banner Grab] IP {ip}, Port {port}, Step {step}, Result = Build TCP connection success")
             return CONNECT_SUCCESS, "Build TCP connection success"
-    
+
     except Exception as e:
         # If Exception is ConnectionResetError or BrokenPipeError, we try to rebuild the TCP connection
         if isinstance(e, ConnectionResetError) or isinstance(e, BrokenPipeError):
             try:
                 await asyncio.sleep(timeout)
                 await asyncio.wait_for( asyncio.get_running_loop().sock_connect(sock, (ip, port)), timeout=timeout)
-                common.log(f"[Banner Grab] IP {ip}, Port {port}, Round {round}: {type(e).__name__}  reconnect success")
+                common.log(f"[Banner Grab] IP {ip}, Port {port}, Step {step}, Result = {type(e).__name__}  reconnect success")
                 return RECONNECT_SUCCESS, f"{type(e).__name__}"
             except:
                 pass
         # No need to reconnect or reconnect failure
-        common.log(f"[Banner Grab] IP {ip}, Port {port}, Round {round}: {type(e).__name__}-{str(e)}")
+        common.log(f"[Banner Grab] IP {ip}, Port {port}, Step {step}, Result = {type(e).__name__}-{str(e)}")
         return OTHER_EXCEPTION, f"{type(e).__name__}"
 
- 
+
 async def async_banner_grab_task(target, timeout=5.0):
 
     # Get ip and port
@@ -81,16 +84,18 @@ async def async_banner_grab_task(target, timeout=5.0):
     this_result = {"ip":ip, "port":port, "serive":"null", "banner":[]}
 
     # STEP 1 Build TCP Connection
-    state, resp = await talk_to_target(ip, port, sock, timeout=timeout, round=-2)
-    this_result['banner'].append((-2, resp))
+    step = "Building TCP Connetion"
+    state, resp = await talk_to_target(ip, port, sock, timeout=timeout, step=step)
+    this_result['banner'].append((step, resp))
 
     # If failed to build connection, return directly
     if state == RECONNECT_EXCEPTION or state == OTHER_EXCEPTION:
         return this_result
 
     # STEP 2  Wait for server to send banner
-    state, resp = await talk_to_target(ip, port, sock, timeout=timeout, round=-1, recv=True)
-    this_result['banner'].append((-1, resp))
+    step = "Receiving Server Banner"
+    state, resp = await talk_to_target(ip, port, sock, timeout=timeout, step=step, recv=True)
+    this_result['banner'].append((step, resp))
 
     # STEP 3  Send different bytes to server
     this_request_messages = [generate_random_string(2), generate_random_string(32), generate_random_string(128), generate_random_string(2048)] + banner_grab_request_message
@@ -98,13 +103,14 @@ async def async_banner_grab_task(target, timeout=5.0):
     for i in range(0, len(this_request_messages)):
         await asyncio.sleep(timeout/5)
 
-        state, resp = await talk_to_target(ip, port, sock, timeout=timeout, round=i, req=this_request_messages[i], recv=True)
+        step = f"Requesting Banner {i}"
+        state, resp = await talk_to_target(ip, port, sock, timeout=timeout, step=step, req=this_request_messages[i], recv=True)
         this_result['banner'].append((i, resp))
 
         if state == RECONNECT_EXCEPTION or state == OTHER_EXCEPTION:
             await asyncio.sleep(timeout/2)
 
-    # Exit 
+    # Exit
     sock.close()
     return this_result
 
@@ -123,7 +129,7 @@ async def async_banner_grab_tasks(target_list):
     return results
 
 
-def banner_grab(target_list): 
+def banner_grab(target_list):
     # potential risk: does not have concurrency level control.
 
     if(len(target_list) == 0):
@@ -195,10 +201,13 @@ def store_result_to_database(device, result):
     # Store to DB (simply use dict.update)
     with model.write_lock:
         with model.db:
-            
-            known_port_banners = eval(device.port_banners)
+
+            known_port_banners = json.loads(device.port_banners)
+            common.log(f"[Banner Grab] From database get IP:{device.ip_addr} Banners:{known_port_banners}")
+
             known_port_banners.update(this_result)
-            device.port_banners = known_port_banners
+            device.port_banners = json.dumps(known_port_banners)
+
             device.save()
             common.log(f"[Banner Grab] Store to database IP:{device.ip_addr} Banners:{device.port_banners}")
 
