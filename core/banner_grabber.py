@@ -147,7 +147,7 @@ async def async_banner_grab_tasks(target_list):
 def banner_grab(target_list): # potential risk: does not have concurrency control.
 
     if(len(target_list) == 0):
-        common.log("[Banner Grab] No target to grab")
+        common.log("[Banner Grab] No target port to grab")
         return []
 
     common.log('[Banner Grab] Start Banner Grab on {} target {}'.format(
@@ -226,7 +226,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
 
                         if (device.mac_addr+"-"+str(port)) in scan_status_record:
                             if time.time() - scan_status_record[(device.mac_addr+"-"+str(port))] < BANNER_GRAB_INTERVAL:
-                                common.log(f"[Banner Grab] give up {device.mac_addr}-{str(port)}")
+                                common.log(f"[Banner Grab] give up {device.mac_addr} {ip}:{str(port)}")
                                 continue
 
                         target_ip_port_list.append((ip, port))
@@ -243,6 +243,8 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
 
         # Run the banner grab
         results = banner_grab(target_ip_port_list)
+
+        # 
         if len(results) > 0:
 
             # Aggregate raw results into dict
@@ -254,7 +256,6 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
                 value = entry['banner']
                 this_results[key] = value
 
-            print(this_results)
 
             # Store to DB (simply use dict.update)
             with model.write_lock:
