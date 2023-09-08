@@ -113,7 +113,7 @@ async def async_banner_grab_task(target, timeout=5.0):
                 try:
                     await asyncio.sleep(3.0)
                     await asyncio.wait_for(
-                        asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
+                        asyncio.get_running_loop().sock_connect(sock, (ip, port)),
                         timeout=3.0
                     )
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
@@ -167,13 +167,16 @@ def banner_grab(target_list): # potential risk: does not have concurrency contro
 
 
 BANNER_GRAB_INTERVAL = 120
-scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
+
+# DH: Move the comment to above the variable; again, this is the Python convention
+scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2}
 
 def run_banner_grab(target_device_list = None, target_port_list = None): # target_port_list is List[List], each list for each device
     """
     Banner grab on device's open tcp ports
 
     """
+    # DH: This is a very looong method! Break it up please!
     if not global_state.is_inspecting:
         return
 
@@ -184,7 +187,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     if target_port_list != None:
         if (target_device_list == None) or (len(target_device_list) != len(target_port_list)):
             common.log("[Banner Grab] Args not qualified!")
-            return 
+            return
 
     # Define target to scan
     if target_device_list == None:
@@ -192,6 +195,8 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
         target_device_list = []
         criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
 
+        # DH: No need to use a write lockif you're only reading from the
+        # database; remove the line below
         with model.write_lock:
             with model.db:
 
@@ -201,7 +206,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
 
     if len(target_device_list) == 0:
         common.log("[Banner Grab] No valid target device to scan")
-        return 
+        return
 
     # Run it one by one
     for i in range(0, len(target_device_list)):
@@ -236,11 +241,11 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
             with model.write_lock:
                 with model.db:
                     ip = device.ip_addr
-                    
+
             for port in target_port_list[i]:
                 target_ip_port_list.append((ip, port))
                 scan_status_record[(device.mac_addr+"-"+str(port))] = time.time()
-        
+
         # Run the banner grab
         results = banner_grab(target_ip_port_list)
         if len(results) > 0:
