@@ -167,16 +167,13 @@ def banner_grab(target_list): # potential risk: does not have concurrency contro
 
 
 BANNER_GRAB_INTERVAL = 120
-
-# DH: Move the comment to above the variable; again, this is the Python convention
-scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2}
+scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
 
 def run_banner_grab(target_device_list = None, target_port_list = None): # target_port_list is List[List], each list for each device
     """
     Banner grab on device's open tcp ports
 
     """
-    # DH: This is a very looong method! Break it up please!
     if not global_state.is_inspecting:
         return
 
@@ -195,8 +192,6 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
         target_device_list = []
         criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
 
-        # DH: No need to use a write lockif you're only reading from the
-        # database; remove the line below
         with model.write_lock:
             with model.db:
 
