@@ -26,8 +26,6 @@ RECONNECT_SUCCESS = 1
 RECONNECT_EXCEPTION = 2
 OTHER_EXCEPTION = 3
 
-ASYNC_CONCURRENCY = 10
-
 # Set minimal scan interval to avoid too frequent scan
 BANNER_GRAB_INTERVAL = 120
 # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
