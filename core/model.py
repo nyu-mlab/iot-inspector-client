@@ -58,6 +58,12 @@ class Device(BaseModel):
     is_blocked = IntegerField(default=0)
     favorite_time = FloatField(default=0)
 
+    # TCP scan results
+    open_tcp_ports = TextField(default="[]")
+
+    # Banner grab results
+    port_banners = TextField(default="{}") # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]} 
+
 
 class Flow(BaseModel):
 
@@ -112,10 +118,46 @@ class AdTracker(BaseModel):
     tracker_company = TextField(default='')
 
 
+class SSDPInfoModel(BaseModel):
+
+    mac = TextField(default="")
+
+    scan_time = FloatField(default=0)
+    location = TextField(default="")
+    ip = TextField(default="")
+    port = TextField(default="")
+    outer_file_name = TextField(default="")
+    original_reply = TextField(default="") # 第一次扫描的回复原文
+
+    server_string = TextField(default="")
+    device_type = TextField(default="")
+    friendly_name = TextField(default="")
+    manufacturer = TextField(default="")
+    manufacturer_url = TextField(default="")
+    model_description = TextField(default="")
+    model_name = TextField(default="")
+    model_number = TextField(default="")
+
+    services_list = TextField(default="") # This attribute is list[dict]. We need to use eval() to restore the data structure
+
+
+class mDNSInfoModel(BaseModel):
+
+    mac = TextField(default="") 
+
+    scan_time = FloatField(default=0)
+    ip = TextField(default="")
+    status = TextField(default="")
+    services = TextField(default="") # This attribute is list[dict{str:list}]. We need to use eval() to restore the data structure
+
+    original_reply = TextField(default="") # 第一次扫描的回复原文；然后针对每个服务的扫描原文记录在services中各个value的第一个
+
+
 def initialize_tables():
     """Creates the tables if they don't exist yet, and creates initial data."""
 
     with db:
 
         # Create tables
-        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker])
+        db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
