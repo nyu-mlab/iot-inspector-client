@@ -1,4 +1,4 @@
-# some codes come from https://github.com/tenable/upnp_info and https://paper.seebug.org/1727/#0x03-ssdp 
+# some codes come from https://github.com/tenable/upnp_info and https://paper.seebug.org/1727/#0x03-ssdp
 
 import re
 import sys
@@ -78,7 +78,7 @@ class SSDPScanner():
                     locations.append(location_result.group(1))
                     match = re.search(ip_port_regex, location_result.group(1))
                     ip = match.group(1)
-                    port = match.group(2)       
+                    port = match.group(2)
                     ip_port = ip + "_" + port
                     ip_ports.append(ip_port)
                     original_replys.append(data.decode('ASCII'))
@@ -133,10 +133,12 @@ class SSDPScanner():
                 ssdp_info.original_reply = original_reply
                 ssdp_info.scan_time = time.time()
                 ssdp_info.location = location
+
+                # DH: If there's no match, match will be `None` and the subsequent lines will throw an error
                 match = re.search(r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)/(.*)", location)
                 ssdp_info.ip = match.group(1)
                 ssdp_info.port = match.group(2)
-                ssdp_info.outer_file_name = match.group(3) 
+                ssdp_info.outer_file_name = match.group(3)
 
                 try:
                     resp = requests.get(location, timeout=3)
@@ -200,7 +202,7 @@ class SSDPScanner():
                             action_name = action.find('./{urn:schemas-upnp-org:service-1-0}name').text
                             common.log(f'[SSDP Scan]\t\t\t- {action_name}')
                             this_service["actions"].append(action_name)
-                        
+
                         ssdp_info.services_list.append(this_service)
 
                 except requests.exceptions.ConnectionError:
@@ -208,7 +210,7 @@ class SSDPScanner():
                 except requests.exceptions.ReadTimeout:
                     common.log('[SSDP Scan] Timeout reading from %s' % location)
 
-                self.result_collect.append(ssdp_info) 
+                self.result_collect.append(ssdp_info)
             common.log("[SSDP Scan] Done Parsing")
         return
 
@@ -242,12 +244,12 @@ class SSDPScanner():
 
         try:
             # ! can not work on windows here
-            sock.bind(("239.255.255.250", 1900)) 
+            sock.bind(("239.255.255.250", 1900))
         except:
             common.log("[SSDP Scan] System does not support SSDP sniff")
             sock.close()
             return
-        
+
         # join the multicast group
         maddr = struct.pack("4sl", socket.inet_aton("239.255.255.250"), socket.INADDR_ANY)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, maddr)
@@ -277,7 +279,7 @@ class SSDPScanner():
                     locations.append(location_result.group(1))
                     match = re.search(ip_port_regex, location_result.group(1))
                     ip = match.group(1)
-                    port = match.group(2)       
+                    port = match.group(2)
                     ip_port = ip + "_" + port
                     ip_ports.append(ip_port)
                     original_replys.append(resp.decode('ASCII'))
@@ -296,7 +298,7 @@ class SSDPScanner():
                     common.log("[SSDP Scan] time is up")
                     continue_listen = False
 
-                        
+
         sock.close()
 
         if len(locations) > 0:
@@ -306,9 +308,9 @@ class SSDPScanner():
 
     def getResult(self):
         return self.result_collect
-    
+
     def clearResult(self):
-        self.result_collect = [] 
+        self.result_collect = []
 
 
 
@@ -325,12 +327,12 @@ def run_ssdp_scan():
     # Check the consent
     if not config.get('has_consented_to_overall_risks', False):
         return
-    
+
     common.log("[SSDP Scan] Ready to start SSDP scan")
 
     # create scanner instance and run SSDP scan
     SSDPScannerInstance = SSDPScanner()
-    SSDPScannerInstance.scan() # it will block until no more new device found in 5 seconds 
+    SSDPScannerInstance.scan() # it will block until no more new device found in 5 seconds
 
     common.log("[SSDP Scan] Done SSDP scan, start restore data")
 
@@ -350,7 +352,7 @@ def run_ssdp_scan():
 
                         mac = "unknown", # we will deal with it later
 
-                        scan_time = SSDPInfoInst.scan_time, 
+                        scan_time = SSDPInfoInst.scan_time,
                         location = SSDPInfoInst.location,
                         ip = SSDPInfoInst.ip,
                         port = SSDPInfoInst.port,
@@ -372,7 +374,7 @@ def run_ssdp_scan():
                     common.log(f"[SSDP Scan] Create new ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
                 else:
-                    model_instance.scan_time = SSDPInfoInst.scan_time, 
+                    model_instance.scan_time = SSDPInfoInst.scan_time,
                     model_instance.location = SSDPInfoInst.location,
                     model_instance.ip = SSDPInfoInst.ip,
                     model_instance.port = SSDPInfoInst.port,
@@ -389,12 +391,12 @@ def run_ssdp_scan():
                     model_instance.model_number = SSDPInfoInst.model_number,
 
                     model_instance.services_list = SSDPInfoInst.services_list
-        
+
                     model_instance.save()
 
                     common.log(f"[SSDP Scan] Update ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
-            # using global_state.arp_cache to bind ip to mac. 
+            # using global_state.arp_cache to bind ip to mac.
             # also update for those found in previous rounds except for those scanned in more than 5 mins ago
             for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
                 if time.time() - model_instance.scan_time < 300:
@@ -403,8 +405,8 @@ def run_ssdp_scan():
                     except:
                         mac_addr = "unknown"
                     model_instance.mac = mac_addr
-                    # potential problem here: 
-                    # once a device changes its IP, and a new SSDPInfoModel is created, we will have 2 SSDPInfoModel with same mac addr 
+                    # potential problem here:
+                    # once a device changes its IP, and a new SSDPInfoModel is created, we will have 2 SSDPInfoModel with same mac addr
                     model_instance.save()
 
                     common.log(f"[SSDP Scan] Update MAC address {model_instance.mac} for {model_instance.ip}")

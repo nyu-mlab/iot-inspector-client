@@ -1,4 +1,4 @@
-import threading
+import threading # DH: Remove unused imports (please use VS Code to identify all unused imports); I won't comment on every single instance of unused imports
 import time
 from datetime import datetime
 import socket
@@ -13,6 +13,11 @@ import core.common as common
 import core.global_state as global_state
 import core.config as config
 
+
+# DH: This doesn't need to be a class. If you're using the object oriented
+# design, my assumption is that you're holding certain state within an instance
+# -- which is not the case here. So, no need for object oriented design here.
+# None of the methods below needs to be associated with a class.
 class BannerGrab:
 
     def __init__(self):
@@ -27,6 +32,10 @@ class BannerGrab:
             b"HELP\r\n"
         ]
 
+        # DH: Make sure that your variable names are descriptive and follows
+        # meaningful English grammar. I'd rename this as `result_list`. It's a
+        # convention to indicate the type of the variable in the name; e.g.
+        # `result_list` instead of `result_collect`.
         self.result_collect = []
 
     async def async_banner_grab_task(self, target, timeout=5.0):
@@ -38,11 +47,13 @@ class BannerGrab:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
 
+        # DH: In general, avoid writing loooong methods. Can you break down the steps below into smaller methods? For example, you can rewrite step 1 into a function called `build_tcp_connection` (which returns a socket instance) and step 2 into a function called `wait_for_server_to_send_banner` (which returns a list of banners). This will make your code more readable and easier to maintain.
+
         # STEP 1  Build TCP Connection
         try:
             # Create a socket object and connect to an IP  and Port.
             await asyncio.wait_for(
-                asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
+                asyncio.get_running_loop().sock_connect(sock, (ip, port)),
                 timeout=3.0
             )
         except Exception as e:
@@ -50,7 +61,7 @@ class BannerGrab:
                 try:
                     await asyncio.sleep(3.0)
                     await asyncio.wait_for(
-                        asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
+                        asyncio.get_running_loop().sock_connect(sock, (ip, port)),
                         timeout=3.0
                     )
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
@@ -63,9 +74,9 @@ class BannerGrab:
 
 
         # STEP 2  Wait for server to send banner
-        try:     
+        try:
             data = await asyncio.wait_for(
-                asyncio.get_running_loop().sock_recv(sock, 1024), 
+                asyncio.get_running_loop().sock_recv(sock, 1024),
                 timeout=5.0
             )
         except Exception as e:
@@ -73,10 +84,15 @@ class BannerGrab:
                 try:
                     await asyncio.sleep(3.0)
                     await asyncio.wait_for(
-                        asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
+                        asyncio.get_running_loop().sock_connect(sock, (ip, port)),
                         timeout=3.0
                     )
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
+                    # DH: Rename banner_collect as something more meaningful,
+                    # e.g., banner_grab_response_status_list or something like that.
+                    # Also what do `-1` and `-2` mean? I'd use a string instead
+                    # of an integer to indicate the status for readability and
+                    # maintainability.
                     banner_collect.append((-1, f"{type(e).__name__} reconnect success"))
                 except:
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} reconnect fail")
@@ -103,8 +119,8 @@ class BannerGrab:
             await asyncio.sleep(1.0)
             try:
                 #await asyncio.wait_for(loop.sock_connect(sock, (ip, port)), timeout=5) bad idea
-                await asyncio.wait_for(asyncio.get_running_loop().sock_sendall(sock, grab_msg), timeout=5)  
-                banner = await asyncio.wait_for(asyncio.get_running_loop().sock_recv(sock, 1024), timeout=5) 
+                await asyncio.wait_for(asyncio.get_running_loop().sock_sendall(sock, grab_msg), timeout=5)
+                banner = await asyncio.wait_for(asyncio.get_running_loop().sock_recv(sock, 1024), timeout=5)
                 common.log(f"[Banner Grab] IP {ip}, Port {port}, Content:\n {banner.decode('utf-8', errors='ignore') }")
                 banner_collect.append((i, banner.decode('utf-8', errors='ignore') ))
             except Exception as e:
@@ -112,7 +128,7 @@ class BannerGrab:
                     try:
                         await asyncio.sleep(3.0)
                         await asyncio.wait_for(
-                            asyncio.get_running_loop().sock_connect(sock, (ip, port)), 
+                            asyncio.get_running_loop().sock_connect(sock, (ip, port)),
                             timeout=3.0
                         )
                         common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__}  reconnect success")
@@ -123,10 +139,10 @@ class BannerGrab:
                 else:
                     common.log(f"[Banner Grab] IP {ip}, Port {port}: {type(e).__name__} - {str(e)}")
                     banner_collect.append((i, f"{type(e).__name__}"))
-            
+
         sock.close()
         return {"ip":ip, "port":port, "serive":"null", "banner":banner_collect}
-    
+
 
     async def async_banner_grab_tasks(self, target_list):
 
@@ -152,12 +168,14 @@ class BannerGrab:
 
             if(len(target_list) == 0):
                 common.log("[Banner Grab] No target to grab")
-                return 
+                return
 
             common.log('[Banner Grab] Start Banner Grab on {} target {}'.format(
-                len(target_list), 
+                len(target_list),
                 ', '.join(str(target) for target in target_list)
             ))
+
+            # DH: No need to check for Python version; we will make sure that all users are using Python 3.8+
             if sys.version_info.major == 3 and sys.version_info.minor >= 7:
                 asyncio.run(self.async_banner_grab_tasks(target_list))
             else:
@@ -169,14 +187,17 @@ class BannerGrab:
             common.log("[Banner Grab] Done")
 
 
+    # DH: Rename all camelCase to snake_case; e.g. getResult() -> get_result() -- this is the Python convention
     def getResult(self):
         return self.result_collect
-            
+
     def clearResult(self):
         self.result_collect = []
 
 BANNER_GRAB_INTERVAL = 120
-scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
+
+# DH: Move the comment to above the variable; again, this is the Python convention
+scan_status_record = {} # {mac1-port1:scan_time1, mac1-port2:scan_time2}
 
 
 def run_banner_grab(target_device_list = None, target_port_list = None): # target_port_list is List[List], each list for each device
@@ -184,6 +205,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     Banner grab on device's open tcp ports
 
     """
+    # DH: This is a very looong method! Break it up please!
     if not global_state.is_inspecting:
         return
 
@@ -194,7 +216,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
     if target_port_list != None:
         if (target_device_list == None) or (len(target_device_list) != len(target_port_list)):
             common.log("[Banner Grab] Args not qualified!")
-            return 
+            return
 
     # Define target to scan
     if target_device_list == None:
@@ -202,6 +224,8 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
         target_device_list = []
         criteria = (model.Device.is_inspected == 1) & (model.Device.ip_addr != '')
 
+        # DH: No need to use a write lockif you're only reading from the
+        # database; remove the line below
         with model.write_lock:
             with model.db:
 
@@ -213,7 +237,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
 
     if len(target_device_list) == 0:
         common.log("[Banner Grab] No valid target device to scan")
-        return 
+        return
 
     # Run it one by one
     for i in range(0, len(target_device_list)):
@@ -248,11 +272,11 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
             with model.write_lock:
                 with model.db:
                     ip = device.ip_addr
-                    
+
             for port in target_port_list[i]:
                 target_ip_port_list.append((ip, port))
                 scan_status_record[(device.mac_addr+"-"+str(port))] = time.time()
-        
+
         # Run the banner grab
         BannerGrabInstance.banner_grab(target_ip_port_list)
 
@@ -269,7 +293,9 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
         # Store to DB (simply use dict.update)
         with model.write_lock:
             with model.db:
-                
+                # DH: Don't use eval() -- it's a security risk. Use JSON
+                # instead. The rest of the codebase uses json.dumps or
+                # json.loads.
                 known_port_banners = eval(device.port_banners)
                 known_port_banners.update(this_results)
                 device.port_banners = known_port_banners
@@ -280,6 +306,7 @@ def run_banner_grab(target_device_list = None, target_port_list = None): # targe
         BannerGrabInstance.clearResult()
 
     # free memory
+    # DH: You don't need to do this. Once this method returns, the garbage collector would free up the memory.
     del BannerGrabInstance
 
     common.log("[Banner Grab] Exit banner grab")

@@ -62,7 +62,8 @@ class Device(BaseModel):
     open_tcp_ports = TextField(default="[]")
 
     # Banner grab results
-    port_banners = TextField(default="{}") # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]} 
+    # DH: Move your comments below to above the field declaration
+    port_banners = TextField(default="{}") # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]}
 
 
 class Flow(BaseModel):
@@ -127,6 +128,7 @@ class SSDPInfoModel(BaseModel):
     ip = TextField(default="")
     port = TextField(default="")
     outer_file_name = TextField(default="")
+    # DH: Translate the following comments to English
     original_reply = TextField(default="") # 第一次扫描的回复原文
 
     server_string = TextField(default="")
@@ -143,7 +145,7 @@ class SSDPInfoModel(BaseModel):
 
 class mDNSInfoModel(BaseModel):
 
-    mac = TextField(default="") 
+    mac = TextField(default="")
 
     scan_time = FloatField(default=0)
     ip = TextField(default="")
