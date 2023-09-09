@@ -26,7 +26,7 @@ class SSDPInfo():
         self.port = ""
         self.outer_file_name = ""
 
-        self.original_reply = ""
+        self.original_reply = []
 
         self.server_string = ""
         self.device_type = ""
@@ -40,331 +40,271 @@ class SSDPInfo():
         self.services_list = []
 
 
-class SSDPScanner():
+###
+# Send a multicast message tell all the pnp services that we are looking
+# For them. Keep listening for responses until we hit a 10 second timeout (yes,
+# this could technically cause an infinite loop). Parse the URL out of the
+# 'location' field in the HTTP header and store for later analysis.
+#
+# @return the list of advertised upnp locations, IPs, and original_replys
+###
+def discover_pnp_locations():
+    common.log('[SSDP Scan] Discovering UPnP locations')
 
-    def __init__(self):
-        self.result_collect = []
+    # xml file locations extracted from SSDP response
+    locations = []
+    # {location:[reply1, reply2]}
+    original_replys = {}
 
-    ###
-    # Send a multicast message tell all the pnp services that we are looking
-    # For them. Keep listening for responses until we hit a 3 second timeout (yes,
-    # this could technically cause an infinite loop). Parse the URL out of the
-    # 'location' field in the HTTP header and store for later analysis.
-    #
-    # @return the list of advertised upnp locations, IPs, and original_replys
-    ###
-    def discover_pnp_locations(self):
-        common.log('[SSDP Scan] Discovering UPnP locations')
+    location_regex = re.compile("location:[ ]*(.+)\r\n", re.IGNORECASE)
+    ssdpDiscover = ('M-SEARCH * HTTP/1.1\r\n' +
+                    'HOST: 239.255.255.250:1900\r\n' +
+                    'MAN: "ssdp:discover"\r\n' +
+                    'MX: 1\r\n' +
+                    'ST: ssdp:all\r\n' +
+                    '\r\n')
 
-        locations = []
-        # {location:[reply1, reply2]}
-        original_replys = {}
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(ssdpDiscover.encode('ASCII'), ("239.255.255.250", 1900))
+    sock.settimeout(10)
 
-        location_regex = re.compile("location:[ ]*(.+)\r\n", re.IGNORECASE)
-        ssdpDiscover = ('M-SEARCH * HTTP/1.1\r\n' +
-                        'HOST: 239.255.255.250:1900\r\n' +
-                        'MAN: "ssdp:discover"\r\n' +
-                        'MX: 1\r\n' +
-                        'ST: ssdp:all\r\n' +
-                        '\r\n')
+    try:
+        while True:
+            data, addr = sock.recvfrom(1024)
+            location_result = location_regex.search(data.decode('utf-8'))
+            # new location, add to locations and create an entry in original_replys dict
+            if location_result and (location_result.group(1) in locations) == False:
+                locations.append(location_result.group(1))
+                original_replys[location_result.group(1)] = [data.decode('utf-8')]
+            # old location but another response, add to original_replys dict
+            elif location_result:
+                original_replys[location_result.group(1)].append(data.decode('utf-8'))
+            else:
+                common.log(f"[SSDP Scan] Unknown reply: {type(data.decode('utf-8'))}\n{data.decode('utf-8')}")
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #sock.setblocking(False)
-        sock.sendto(ssdpDiscover.encode('ASCII'), ("239.255.255.250", 1900))
-        sock.settimeout(10)
+    except socket.error:
+        sock.close() # Exit while loop with exception, so this line will always been executed
+
+    common.log('[SSDP Scan] %d locations found:' % len(locations))
+    for location in locations:
+        common.log('[SSDP Scan]\t%s' % location)
+
+    return locations, original_replys
+
+##
+# Tries to print an element extracted from the XML.
+# @param xml the xml tree we are working on
+# @param xml_name the name of the node we want to pull text from
+# @param print_name the name we want to appear in stdout
+##
+def print_attribute(xml, xml_name, print_name):
+    try:
+        temp = xml.find(xml_name).text
+        common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
+        return temp
+    except AttributeError:
+        return None
+        
+
+def create_basic_ssdp_info(location, original_replys):
+
+    ssdp_info = SSDPInfo()
+
+    # Set location, response content and scan time
+    ssdp_info.location = location
+    ssdp_info.original_reply = original_replys[location]
+    ssdp_info.scan_time = time.time()
+    
+    # Set ip, port and file name
+    match = re.search(r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)/(.*)", location)
+    if match:
+        ssdp_info.ip = match.group(1)
+        ssdp_info.port = match.group(2)
+        ssdp_info.outer_file_name = match.group(3)
+
+    return ssdp_info
+
+
+def parse_resp_server_string_to_ssdp_info(resp, ssdp_info):
+    if resp.headers.get('server'):
+        server_string = resp.headers.get('server')
+        common.log('[SSDP Scan] \t-> Server String: %s' % server_string)
+        ssdp_info.server_string = server_string
+    else:
+        common.log('[SSDP Scan] \t-> No server string')
+
+
+def parse_xml_device_info_to_ssdp_info(xml_root, ssdp_info):
+    ssdp_info.device_type = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}deviceType", "Device Type")
+    ssdp_info.friendly_name = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}friendlyName", "Friendly Name")
+    ssdp_info.manufacturer = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturer", "Manufacturer")
+    ssdp_info.manufacturer_url = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturerURL", "Manufacturer URL")
+    ssdp_info.model_description = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelDescription", "Model Description")
+    ssdp_info.model_name = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelName", "Model Name")
+    ssdp_info.model_number = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelNumber", "Model Number")
+
+
+def parse_single_service_info_to_ssdp_info(service, parsed):
+    service_type = service.find('./{urn:schemas-upnp-org:device-1-0}serviceType').text
+    control = service.find('./{urn:schemas-upnp-org:device-1-0}controlURL').text
+    events = service.find('./{urn:schemas-upnp-org:device-1-0}eventSubURL').text
+    common.log('[SSDP Scan]\t\t=> Service Type: %s' % service_type)
+    common.log('[SSDP Scan]\t\t=> Control: %s' % control)
+    common.log('[SSDP Scan]\t\t=> Events: %s' % events)
+
+    this_service = {"service_url":"", "service_type":service_type, "control":control, "events":events, "actions":[]}
+
+    # Add a lead in '/' if it doesn't exist
+    scp = service.find('./{urn:schemas-upnp-org:device-1-0}SCPDURL').text
+    if scp[0] != '/':
+        scp = '/' + scp
+    serviceURL = parsed.scheme + "://" + parsed.netloc + scp
+    common.log('[SSDP Scan]\t\t=> API: %s' % serviceURL)
+
+    this_service['service_url'] = serviceURL
+
+    # Read in the SCP XML
+    resp = requests.get(serviceURL, timeout=2)
+    try:
+        serviceXML = ET.fromstring(resp.text)
+        actions = serviceXML.findall(".//*{urn:schemas-upnp-org:service-1-0}action")
+        for action in actions:
+            action_name = action.find('./{urn:schemas-upnp-org:service-1-0}name').text
+            common.log(f'[SSDP Scan]\t\t\t- {action_name}')
+            this_service["actions"].append(action_name)
+    except:
+        common.log('[SSDP Scan]\t\t\t[!] Failed to parse the service response XML')
+        
+    return this_service
+
+
+
+
+def parse_location_xml_to_ssdp_info(location, ssdp_info):
+
+    # Step 1: fetch xml file 
+    resp = requests.get(location, timeout=5)
+
+    # Step 1.5: get server string info from the response
+    parse_resp_server_string_to_ssdp_info(resp, ssdp_info)
+
+    # Step 2: read xml file
+    parsed = urlparse(location)
+    common.log('[SSDP Scan]\t==== XML Attributes ===')
+    try:
+        xml_root = ET.fromstring(resp.text)
+    except:
+        common.log('[SSDP Scan]\t Failed XML parsing of %s' % location)
+        return
+    
+    # Step 3: parse infomation related to device
+    parse_xml_device_info_to_ssdp_info(xml_root, ssdp_info)
+
+    # Step 4: parse multiply services one by one
+    common.log('[SSDP Scan]\t-> Services:')
+    services = xml_root.findall(".//*{urn:schemas-upnp-org:device-1-0}serviceList/")
+    for service in services:
+        this_service = parse_single_service_info_to_ssdp_info(service, parsed)
+        ssdp_info.services_list.append(this_service)
+
+
+###
+# Loads the XML at each location and prints out the API along with some other
+# interesting data.
+#
+# @param locations a collection of URLs
+# @return igd_ctr (the control address) and igd_service (the service type)
+###
+def parse_locations(locations, original_replys):
+    if len(locations) < 1:
+        common.log('[SSDP Scan] No location to parse')
+        return []
+    
+    common.log('[SSDP Scan] Start parse %d locations:' % len(locations))
+    result_list = []
+
+    for i in range(0, len(locations)):
+        location = locations[i]
+        common.log('[SSDP Scan] Loading %s...' % location)
+
+        ssdp_info = create_basic_ssdp_info(location, original_replys)
 
         try:
-            while True:
-                data, addr = sock.recvfrom(1024)
-                location_result = location_regex.search(data.decode('utf-8'))
-                if location_result and (location_result.group(1) in locations) == False:
-                    locations.append(location_result.group(1))
-                    original_replys = [data.decode('utf-8')]
-                elif location_result:
-                    original_replys[locations].append(data.decode('utf-8'))
-                else:
-                    common.log(f"[SSDP Scan] Unknown reply: {type(data.decode('utf-8'))}\n{data.decode('utf-8')}")
+            # Fetch the xml file and parse it. Store parsed infomation to ssdp_info
+            parse_location_xml_to_ssdp_info(location, ssdp_info)
 
-        except socket.error:
-            sock.close() # Exit while loop with exception, so this line will always been executed
+        except requests.exceptions.ConnectionError:
+            common.log('[SSDP Scan] Could not load %s' % location)
+        except requests.exceptions.ReadTimeout:
+            common.log('[SSDP Scan] Timeout reading from %s' % location)
+        except Exception as e:
+            common.log(f'[SSDP Scan] parsing location {e}')
+
+        result_list.append(ssdp_info)
+
+    common.log("[SSDP Scan] Done Parsing")
+    return result_list
 
 
+def scan():
+    """ Launch SSDP scan """
+    common.log("[SSDP Scan] Start.")
+    locations, original_replys = discover_pnp_locations()
+    result_list = parse_locations(locations, original_replys)
+    common.log("[SSDP Scan] Finish.")
+    return result_list
 
 
-        common.log('[SSDP Scan] %d locations found:' % len(locations))
-        for location in locations:
-            common.log('[SSDP Scan]\t%s' % location)
-        return locations, original_replys
-
-    ##
-    # Tries to print an element extracted from the XML.
-    # @param xml the xml tree we are working on
-    # @param xml_name the name of the node we want to pull text from
-    # @param print_name the name we want to appear in stdout
-    ##
-    def print_attribute(self, xml, xml_name, print_name):
-        try:
-            temp = xml.find(xml_name).text
-            common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
-            return temp
-        except AttributeError:
-            return None
-
-    ###
-    # Loads the XML at each location and prints out the API along with some other
-    # interesting data.
-    #
-    # @param locations a collection of URLs
-    # @return igd_ctr (the control address) and igd_service (the service type)
-    ###
-    def parse_locations(self, locations, original_replys):
-        if len(locations) < 1:
-            common.log('[SSDP Scan] No location to parse')
-            return
-        if len(locations) > 0:
-            common.log('[SSDP Scan] Start parse %d locations:' % len(locations))
-
-            for i in range(0, len(locations)):
-                location = locations[i]
-                original_reply = original_replys[location]
-
-                if self.alreadyKnownThisLocation(location) == True:
-                    common.log('[SSDP Scan] Already known %s' % location)
-                    continue
-
-                common.log('[SSDP Scan] Loading %s...' % location)
-                ssdp_info = SSDPInfo()
-
-                ssdp_info.original_reply = original_reply
-                ssdp_info.scan_time = time.time()
-                ssdp_info.location = location
-
-                # DH: If there's no match, match will be `None` and the subsequent lines will throw an error
-                match = re.search(r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)/(.*)", location)
-                ssdp_info.ip = match.group(1)
-                ssdp_info.port = match.group(2)
-                ssdp_info.outer_file_name = match.group(3)
-
-                try:
-                    resp = requests.get(location, timeout=3)
-
-                    # if we can reach this place, we must have got some reply
-                    if resp.headers.get('server'):
-                        server_string = resp.headers.get('server')
-                        common.log('[SSDP Scan] \t-> Server String: %s' % server_string)
-                        ssdp_info.server_string = server_string
-                    else:
-                        common.log('[SSDP Scan] \t-> No server string')
-
-                    parsed = urlparse(location)
-
-                    common.log('[SSDP Scan]\t==== XML Attributes ===')
+def assign_mac_for_unknown():
+    """ 
+    Some SSDP entry in database have unknown MAC because SSDP scan may be faster than ARP to discover devices. 
+    Now we try to fix this gap. Every time SSDP scan is called, we do this function.
+    """
+    with model.write_lock:
+        with model.db:
+            # using global_state.arp_cache to bind ip to mac.
+            # also update for those found in previous rounds except for those scanned in more than 5 mins ago
+            for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
+                last_scan_time = model_instance.scan_time
+                if (time.time() - last_scan_time) < 300:
                     try:
-                        xmlRoot = ET.fromstring(resp.text)
+                        mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
+                        common.log(f"{model_instance.mac}")
+                        model_instance.mac = mac_addr
+                        common.log(f"{model_instance.mac}")
+                        model_instance.save()
+                        common.log(f"[SSDP Scan] Assign MAC address {model_instance.mac} for {model_instance.ip}")
                     except:
-                        common.log('[SSDP Scan]\t Failed XML parsing of %s' % location)
-                        continue
-
-                    ssdp_info.device_type = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}deviceType", "Device Type")
-                    ssdp_info.friendly_name = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}friendlyName", "Friendly Name")
-                    ssdp_info.manufacturer = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturer", "Manufacturer")
-                    ssdp_info.manufacturer_url = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturerURL", "Manufacturer URL")
-                    ssdp_info.model_description = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelDescription", "Model Description")
-                    ssdp_info.model_name = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelName", "Model Name")
-                    ssdp_info.model_number = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelNumber", "Model Number")
-
-                    common.log('[SSDP Scan]\t-> Services:')
-                    services = xmlRoot.findall(".//*{urn:schemas-upnp-org:device-1-0}serviceList/")
-                    for service in services:
-                        service_type = service.find('./{urn:schemas-upnp-org:device-1-0}serviceType').text
-                        control = service.find('./{urn:schemas-upnp-org:device-1-0}controlURL').text
-                        events = service.find('./{urn:schemas-upnp-org:device-1-0}eventSubURL').text
-                        common.log('[SSDP Scan]\t\t=> Service Type: %s' % service_type)
-                        common.log('[SSDP Scan]\t\t=> Control: %s' % control)
-                        common.log('[SSDP Scan]\t\t=> Events: %s' % events)
-
-                        this_service = {"service_url":"", "service_type":service_type, "control":control, "events":events, "actions":[]}
-
-                        # Add a lead in '/' if it doesn't exist
-                        scp = service.find('./{urn:schemas-upnp-org:device-1-0}SCPDURL').text
-                        if scp[0] != '/':
-                            scp = '/' + scp
-                        serviceURL = parsed.scheme + "://" + parsed.netloc + scp
-                        common.log('[SSDP Scan]\t\t=> API: %s' % serviceURL)
-
-                        this_service['service_url'] = serviceURL
-
-                        # read in the SCP XML
-                        resp = requests.get(serviceURL, timeout=2)
-                        try:
-                            serviceXML = ET.fromstring(resp.text)
-                        except:
-                            common.log('[SSDP Scan]\t\t\t[!] Failed to parse the response XML')
-                            continue
-
-                        actions = serviceXML.findall(".//*{urn:schemas-upnp-org:service-1-0}action")
-                        for action in actions:
-                            action_name = action.find('./{urn:schemas-upnp-org:service-1-0}name').text
-                            common.log(f'[SSDP Scan]\t\t\t- {action_name}')
-                            this_service["actions"].append(action_name)
-
-                        ssdp_info.services_list.append(this_service)
-
-                except requests.exceptions.ConnectionError:
-                    common.log('[SSDP Scan] Could not load %s' % location)
-                except requests.exceptions.ReadTimeout:
-                    common.log('[SSDP Scan] Timeout reading from %s' % location)
-
-                self.result_collect.append(ssdp_info)
-            common.log("[SSDP Scan] Done Parsing")
-        return
-
-    def scan(self):
-        common.log("[SSDP Scan] Start.")
-        locations, original_replys = self.discover_pnp_locations()
-        self.parse_locations(locations, original_replys)
-        common.log("[SSDP Scan] Finish.")
-
-    def get_serv_ua(self, resp):
-        lines = resp.split("\r\n")
-        for i in lines:
-            array = i.split(":")
-            if array[0].upper() == "SERVER" or array[0].upper() == "USER-AGENT":
-                return array[1]
-
-    def alreadyKnownThisLocation(self, location):
-        for known_location_info in self.result_collect:
-            if known_location_info.location == location:
-                return True
-        return False
-
-    # Don't use it for now.
-    def sniff(self, sniff_time = 10): # Don't run it with scan() at the same time
-
-        common.log(f"[SSDP Scan] [sniffer mode] Max sniff time = {str(sniff_time)}")
-        common.log("[SSDP Scan] [sniffer mode] start")
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(5)
-
-        try:
-            # ! can not work on windows here
-            sock.bind(("239.255.255.250", 1900))
-        except:
-            common.log("[SSDP Scan] System does not support SSDP sniff")
-            sock.close()
-            return
-
-        # join the multicast group
-        maddr = struct.pack("4sl", socket.inet_aton("239.255.255.250"), socket.INADDR_ANY)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, maddr)
-
-        # receive and print
-
-        location_regex = re.compile("location:[ ]*(.+)\r\n", re.IGNORECASE)
-        ip_port_regex = r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)"
-        locations = []
-        ip_ports = []
-        original_replys = []
-
-        start_time = time.time()
-
-        continue_listen = True
-        while continue_listen:
-            try:
-                resp, raddr = sock.recvfrom(1024)
-                #data = self.get_serv_ua(resp.decode())
-                #print("\n")
-                #print("####RESP =", resp)
-                #print("####raddr =", raddr)
-                common.log(f"[SSDP Scan] [sniffer find], {raddr[0]}, {resp}")
-
-                location_result = location_regex.search(resp.decode('utf-8'))
-                if location_result and (location_result.group(1) in locations) == False:
-                    locations.append(location_result.group(1))
-                    match = re.search(ip_port_regex, location_result.group(1))
-                    ip = match.group(1)
-                    port = match.group(2)
-                    ip_port = ip + "_" + port
-                    ip_ports.append(ip_port)
-                    original_replys.append(resp.decode('utf-8'))
-
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-                if elapsed_time > sniff_time:
-                    common.log("[SSDP Scan] time is up")
-                    continue_listen = False
-
-            except:
-                common.log("[SSDP Scan] no msg in 5s")
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-                if elapsed_time > sniff_time:
-                    common.log("[SSDP Scan] time is up")
-                    continue_listen = False
+                        common.log(f"[SSDP Scan] Unknown MAC for {model_instance.ip}, scan_time {last_scan_time}")
 
 
-        sock.close()
+def store_result_to_database(result_list):
 
-        if len(locations) > 0:
-            self.parse_locations(locations, original_replys)
-
-        common.log("[SSDP Scan] [sniffer mode] exit")
-
-    def getResult(self):
-        return self.result_collect
-
-    def clearResult(self):
-        self.result_collect = []
-
-
-
-
-def run_ssdp_scan():
-    """
-    Sends out SSDP requests to discover services
-
-    """
-
-    if not global_state.is_inspecting:
-        return
-
-    # Check the consent
-    if not config.get('has_consented_to_overall_risks', False):
-        return
-
-    common.log("[SSDP Scan] Ready to start SSDP scan")
-
-    # create scanner instance and run SSDP scan
-    SSDPScannerInstance = SSDPScanner()
-    SSDPScannerInstance.scan() # it will block until no more new device found in 5 seconds
-
-    common.log("[SSDP Scan] Done SSDP scan, start restore data")
-
-    # save data to DB
-    current_results = SSDPScannerInstance.getResult()
+    assign_mac_for_unknown()
 
     with model.write_lock:
         with model.db:
 
-            for SSDPInfoInst in current_results:
-                common.log(f"[SSDP Scan] original reply is {type(SSDPInfoInst.original_reply)}\n{SSDPInfoInst.original_reply}")
+            for SSDPInfoInst in result_list:
+                
+                try:
+                    mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
+                    model_instance = model.SSDPInfoModel.get_or_none(mac=mac_addr)
+                except:
+                    # We leave it for now and deal with it in next round assign_mac_for_unknown()
+                    mac_addr="unknown" 
+                    model_instance = model.SSDPInfoModel.get_or_none(ip=SSDPInfoInst.ip, port=SSDPInfoInst.port)
 
-                common.log(f"[SSDP Scan] SSDPInfoInst.scan_time {type(SSDPInfoInst.scan_time)} {SSDPInfoInst.scan_time}")
-                model_instance = model.SSDPInfoModel.get_or_none(ip=SSDPInfoInst.ip, port=SSDPInfoInst.port)
-
+                # Create a new entry in database
                 if model_instance is None:
-
                     model.SSDPInfoModel.create(
-
-                        mac = "unknown", # we will deal with it later
-
+                        mac = mac_addr, 
                         scan_time = SSDPInfoInst.scan_time,
                         location = SSDPInfoInst.location,
                         ip = SSDPInfoInst.ip,
                         port = SSDPInfoInst.port,
                         outer_file_name = SSDPInfoInst.outer_file_name,
-                        original_reply = SSDPInfoInst.original_reply,
+                        original_reply = json.dumps(SSDPInfoInst.original_reply),
 
                         server_string = SSDPInfoInst.server_string,
                         device_type = SSDPInfoInst.device_type,
@@ -374,56 +314,50 @@ def run_ssdp_scan():
                         model_description = SSDPInfoInst.model_description,
                         model_name = SSDPInfoInst.model_name,
                         model_number = SSDPInfoInst.model_number,
-
                         services_list = json.dumps(SSDPInfoInst.services_list)
                     )
+                    common.log(f"[SSDP Scan] Create new ssdp info for {mac_addr}:{SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
-                    common.log(f"[SSDP Scan] Create new ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
-
+                # Update existing entry in database
                 else:
-                    model_instance.scan_time = SSDPInfoInst.scan_time,
+                    model_instance.mac = mac_addr
+                    model_instance.scan_time = SSDPInfoInst.scan_time
+                    model_instance.location = SSDPInfoInst.location
+                    model_instance.ip = SSDPInfoInst.ip
+                    model_instance.port = SSDPInfoInst.port
+                    model_instance.outer_file_name = SSDPInfoInst.outer_file_name
+                    model_instance.original_reply = json.dumps(SSDPInfoInst.original_reply)
 
-                    common.log(f"[SSDP Scan] model_instance.scan_time {type(model_instance.scan_time)} {model_instance.scan_time}")
-
-                    model_instance.location = SSDPInfoInst.location,
-
-                    common.log(f"{model_instance.location}")
-                    model_instance.ip = SSDPInfoInst.ip,
-                    model_instance.port = SSDPInfoInst.port,
-                    model_instance.outer_file_name = SSDPInfoInst.outer_file_name,
-                    model_instance.original_reply = SSDPInfoInst.original_reply,
-
-                    model_instance.server_string = SSDPInfoInst.server_string,
-                    model_instance.device_type = SSDPInfoInst.device_type,
-                    model_instance.friendly_name = SSDPInfoInst.friendly_name,
-                    model_instance.manufacturer = SSDPInfoInst.manufacturer,
-                    model_instance.manufacturer_url = SSDPInfoInst.manufacturer_url,
-                    model_instance.model_description = SSDPInfoInst.model_description,
-                    model_instance.model_name = SSDPInfoInst.model_name,
-                    model_instance.model_number = SSDPInfoInst.model_number,
-
+                    model_instance.server_string = SSDPInfoInst.server_string
+                    model_instance.device_type = SSDPInfoInst.device_type
+                    model_instance.friendly_name = SSDPInfoInst.friendly_name
+                    model_instance.manufacturer = SSDPInfoInst.manufacturer
+                    model_instance.manufacturer_url = SSDPInfoInst.manufacturer_url
+                    model_instance.model_description = SSDPInfoInst.model_description
+                    model_instance.model_name = SSDPInfoInst.model_name
+                    model_instance.model_number = SSDPInfoInst.model_number
                     model_instance.services_list = json.dumps(SSDPInfoInst.services_list)
 
                     model_instance.save()
-
                     common.log(f"[SSDP Scan] Update ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
-            # using global_state.arp_cache to bind ip to mac.
-            # also update for those found in previous rounds except for those scanned in more than 5 mins ago
-            for model_instance in model.SSDPInfoModel.select().where(model.SSDPInfoModel.mac == "unknown"):
-                if time.time() - model_instance.scan_time < 300:
-                    try:
-                        mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
-                    except:
-                        mac_addr = "unknown"
-                    model_instance.mac = mac_addr
-                    # potential problem here:
-                    # once a device changes its IP, and a new SSDPInfoModel is created, we will have 2 SSDPInfoModel with same mac addr
-                    model_instance.save()
 
-                    common.log(f"[SSDP Scan] Update MAC address {model_instance.mac} for {model_instance.ip}")
+def run_ssdp_scan():
+    """ Main API for scan SSDP infos """
 
-    # del scanner and free memory
-    del SSDPScannerInstance
+    if not global_state.is_inspecting:
+        return
 
+    # Check the consent
+    if not config.get('has_consented_to_overall_risks', False):
+        return
+
+    # Run SSDP scan
+    # It will block until no more response show up within given time
+    result_list = scan() 
+
+    # save data to DB
+    store_result_to_database(result_list)
+
+    # Exit
     common.log("[SSDP Scan] Exit SSDP scan")

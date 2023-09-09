@@ -129,6 +129,7 @@ class SSDPInfoModel(BaseModel):
     outer_file_name = TextField(default="")
 
     # The response of ssdp:discover request (already decoded by utf-8)
+    # list[str]. May have multiply responses but the location is the same
     # Some unstructured information will be included here, such as server infomation and uuid
     original_reply = TextField(default="")
 
@@ -141,7 +142,7 @@ class SSDPInfoModel(BaseModel):
     model_description = TextField(default="")
     model_name = TextField(default="")
     model_number = TextField(default="")
-    
+
     # This attribute is list[dict]. We need to use json.loads() and json.dumps()
     services_list = TextField(default="")
 
@@ -164,5 +165,5 @@ def initialize_tables():
     with db:
 
         # Create tables
-        db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        #db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
         db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
