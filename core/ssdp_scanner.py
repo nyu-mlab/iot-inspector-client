@@ -2,7 +2,6 @@
 
 import re
 import time
-import struct
 import socket
 import requests
 import xml.etree.ElementTree as ET
@@ -104,7 +103,7 @@ def print_attribute(xml, xml_name, print_name):
         return temp
     except AttributeError:
         return None
-        
+
 
 def create_basic_ssdp_info(location, original_replys):
 
@@ -114,7 +113,7 @@ def create_basic_ssdp_info(location, original_replys):
     ssdp_info.location = location
     ssdp_info.original_reply = original_replys[location]
     ssdp_info.scan_time = time.time()
-    
+
     # Set ip, port and file name
     match = re.search(r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)/(.*)", location)
     if match:
@@ -174,15 +173,13 @@ def parse_single_service_info_to_ssdp_info(service, parsed):
             this_service["actions"].append(action_name)
     except:
         common.log('[SSDP Scan]\t\t\t[!] Failed to parse the service response XML')
-        
+
     return this_service
-
-
 
 
 def parse_location_xml_to_ssdp_info(location, ssdp_info):
 
-    # Step 1: fetch xml file 
+    # Step 1: fetch xml file
     resp = requests.get(location, timeout=5)
 
     # Step 1.5: get server string info from the response
@@ -196,7 +193,7 @@ def parse_location_xml_to_ssdp_info(location, ssdp_info):
     except:
         common.log('[SSDP Scan]\t Failed XML parsing of %s' % location)
         return
-    
+
     # Step 3: parse infomation related to device
     parse_xml_device_info_to_ssdp_info(xml_root, ssdp_info)
 
@@ -219,7 +216,7 @@ def parse_locations(locations, original_replys):
     if len(locations) < 1:
         common.log('[SSDP Scan] No location to parse')
         return []
-    
+
     common.log('[SSDP Scan] Start parse %d locations:' % len(locations))
     result_list = []
 
@@ -256,8 +253,8 @@ def scan():
 
 
 def assign_mac_for_unknown():
-    """ 
-    Some SSDP entry in database have unknown MAC because SSDP scan may be faster than ARP to discover devices. 
+    """
+    Some SSDP entry in database have unknown MAC because SSDP scan may be faster than ARP to discover devices.
     Now we try to fix this gap. Every time SSDP scan is called, we do this function.
     """
     with model.write_lock:
@@ -286,7 +283,7 @@ def store_result_to_database(result_list):
         with model.db:
 
             for SSDPInfoInst in result_list:
-                
+
                 try:
                     mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
                     model_instance = model.SSDPInfoModel.get_or_none(mac=mac_addr)
@@ -298,7 +295,7 @@ def store_result_to_database(result_list):
                 # Create a new entry in database
                 if model_instance is None:
                     model.SSDPInfoModel.create(
-                        mac = mac_addr, 
+                        mac = mac_addr,
                         scan_time = SSDPInfoInst.scan_time,
                         location = SSDPInfoInst.location,
                         ip = SSDPInfoInst.ip,
