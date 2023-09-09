@@ -181,7 +181,7 @@ def build_ip_port_list(device, target_port_list):
     if target_port_list == None:
 
         with model.db:
-            ports = eval(device.open_tcp_ports)
+            ports = json.loads(device.open_tcp_ports)
             for port in ports:
 
                 if (device.mac_addr+"-"+str(port)) in last_scan_time_record:

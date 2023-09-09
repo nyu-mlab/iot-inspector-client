@@ -1,9 +1,7 @@
 # some codes come from https://github.com/tenable/upnp_info and https://paper.seebug.org/1727/#0x03-ssdp
 
 import re
-import sys
 import time
-import base64
 import struct
 import socket
 import requests
@@ -14,6 +12,7 @@ import core.model as model
 import core.common as common
 import core.global_state as global_state
 import core.config as config
+
 
 class SSDPInfo():
 
@@ -73,7 +72,7 @@ class SSDPScanner():
         try:
             while True:
                 data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-                location_result = location_regex.search(data.decode('ASCII'))
+                location_result = location_regex.search(data.decode('utf-8'))
                 if location_result and (location_result.group(1) in locations) == False:
                     locations.append(location_result.group(1))
                     match = re.search(ip_port_regex, location_result.group(1))
@@ -81,7 +80,7 @@ class SSDPScanner():
                     port = match.group(2)
                     ip_port = ip + "_" + port
                     ip_ports.append(ip_port)
-                    original_replys.append(data.decode('ASCII'))
+                    original_replys.append(data.decode('utf-8'))
 
         except socket.error:
             sock.close() # Exit while loop with exception, so this line will always been executed
@@ -100,7 +99,7 @@ class SSDPScanner():
     def print_attribute(self, xml, xml_name, print_name):
         try:
             temp = xml.find(xml_name).text
-            common.log('\t-> %s: %s' % (print_name, temp))
+            common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
             return temp
         except AttributeError:
             return None
@@ -157,11 +156,11 @@ class SSDPScanner():
                     try:
                         xmlRoot = ET.fromstring(resp.text)
                     except:
-                        common.log('\t[SSDP Scan] Failed XML parsing of %s' % location)
+                        common.log('[SSDP Scan]\t Failed XML parsing of %s' % location)
                         continue
 
                     ssdp_info.device_type = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}deviceType", "Device Type")
-                    ssdp_info.device_type = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}friendlyName", "Friendly Name")
+                    ssdp_info.friendly_name = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}friendlyName", "Friendly Name")
                     ssdp_info.manufacturer = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturer", "Manufacturer")
                     ssdp_info.manufacturer_url = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}manufacturerURL", "Manufacturer URL")
                     ssdp_info.model_description = self.print_attribute(xmlRoot, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelDescription", "Model Description")
@@ -274,7 +273,7 @@ class SSDPScanner():
                 #print("####raddr =", raddr)
                 common.log(f"[SSDP Scan] [sniffer find], {raddr[0]}, {resp}")
 
-                location_result = location_regex.search(resp.decode('ASCII'))
+                location_result = location_regex.search(resp.decode('utf-8'))
                 if location_result and (location_result.group(1) in locations) == False:
                     locations.append(location_result.group(1))
                     match = re.search(ip_port_regex, location_result.group(1))
@@ -282,7 +281,7 @@ class SSDPScanner():
                     port = match.group(2)
                     ip_port = ip + "_" + port
                     ip_ports.append(ip_port)
-                    original_replys.append(resp.decode('ASCII'))
+                    original_replys.append(resp.decode('utf-8'))
 
                 current_time = time.time()
                 elapsed_time = current_time - start_time

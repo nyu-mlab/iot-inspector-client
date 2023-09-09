@@ -127,8 +127,12 @@ class SSDPInfoModel(BaseModel):
     ip = TextField(default="")
     port = TextField(default="")
     outer_file_name = TextField(default="")
-    original_reply = TextField(default="") # 第一次扫描的回复原文
 
+    # The response of ssdp:discover request (already decoded by utf-8)
+    # Some unstructured information will be included here, such as server infomation and uuid
+    original_reply = TextField(default="")
+
+    # For the location given by the first response, we request the file and parse it.
     server_string = TextField(default="")
     device_type = TextField(default="")
     friendly_name = TextField(default="")
@@ -137,8 +141,9 @@ class SSDPInfoModel(BaseModel):
     model_description = TextField(default="")
     model_name = TextField(default="")
     model_number = TextField(default="")
-
-    services_list = TextField(default="") # This attribute is list[dict]. We need to use eval() to restore the data structure
+    
+    # This attribute is list[dict]. We need to use json.loads() and json.dumps()
+    services_list = TextField(default="")
 
 
 class mDNSInfoModel(BaseModel):
