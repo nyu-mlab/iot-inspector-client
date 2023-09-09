@@ -48,8 +48,8 @@ def start_threads():
 
     core.common.SafeLoopThread(core.ssdp_scanner.run_ssdp_scan, sleep_time=15)
     core.common.SafeLoopThread(core.dnssd_scanner.run_dnssd_scan, sleep_time=15)
-    #core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)
-    #core.common.SafeLoopThread(core.banner_grabber.run_banner_grab, sleep_time=15)
+    core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)
+    core.common.SafeLoopThread(core.banner_grabber.run_banner_grab, sleep_time=15)
 
 
     core.common.log('Inspector started')

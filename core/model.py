@@ -154,9 +154,8 @@ class mDNSInfoModel(BaseModel):
     scan_time = FloatField(default=0)
     ip = TextField(default="")
     status = TextField(default="")
-    services = TextField(default="") # This attribute is list[dict{str:list}]. We need to use eval() to restore the data structure
-
-    original_reply = TextField(default="") # 第一次扫描的回复原文；然后针对每个服务的扫描原文记录在services中各个value的第一个
+    # This attribute is list[dict{str:str, str:list[dict]……}]
+    services = TextField(default="") 
 
 
 def initialize_tables():

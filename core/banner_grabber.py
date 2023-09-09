@@ -186,10 +186,11 @@ def build_ip_port_list(device, target_port_list):
 
                 if (device.mac_addr+"-"+str(port)) in last_scan_time_record:
                     if time.time() - last_scan_time_record[(device.mac_addr+"-"+str(port))] < BANNER_GRAB_INTERVAL:
-                        common.log(f"[Banner Grab] give up too frequent scan {device.mac_addr} {ip}:{str(port)}")
+                        common.log(f"[Banner Grab] Give up too frequent scan {device.mac_addr} {ip}:{str(port)}")
                         continue
 
                 target_ip_port_list.append((ip, port))
+                common.log(f"[Banner Grab] Set target port {device.mac_addr} {ip}:{str(port)}")
                 last_scan_time_record[(device.mac_addr+"-"+str(port))] = time.time()
     else:
         for port in target_port_list:
@@ -265,6 +266,10 @@ def run_banner_grab(target_device_list = None, target_ports_list = None):
             target_ip_port_list = build_ip_port_list(device, None)
         else:
             target_ip_port_list = build_ip_port_list(device, target_ports_list[i])
+
+        if len(target_ip_port_list) == 0:
+            common.log(f"No target ports to grab for {device.mac_addr} {device.ip_addr}")
+
 
         # Run the banner grab
         result = banner_grab(target_ip_port_list)

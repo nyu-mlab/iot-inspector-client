@@ -13,6 +13,8 @@ import core.common as common
 import core.global_state as global_state
 import core.config as config
 
+TIME_OUT = 5
+
 # The class used to store the data of SSDP information
 class SSDPInfo():
 
@@ -41,7 +43,7 @@ class SSDPInfo():
 
 ###
 # Send a multicast message tell all the pnp services that we are looking
-# For them. Keep listening for responses until we hit a 10 second timeout (yes,
+# For them. Keep listening for responses until we hit a TIME_OUT second timeout (yes,
 # this could technically cause an infinite loop). Parse the URL out of the
 # 'location' field in the HTTP header and store for later analysis.
 #
@@ -65,7 +67,7 @@ def discover_pnp_locations():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(ssdpDiscover.encode('ASCII'), ("239.255.255.250", 1900))
-    sock.settimeout(10)
+    sock.settimeout(TIME_OUT)
 
     try:
         while True:
@@ -163,7 +165,7 @@ def parse_single_service_info_to_ssdp_info(service, parsed):
     this_service['service_url'] = serviceURL
 
     # Read in the SCP XML
-    resp = requests.get(serviceURL, timeout=2)
+    resp = requests.get(serviceURL, timeout=TIME_OUT)
     try:
         serviceXML = ET.fromstring(resp.text)
         actions = serviceXML.findall(".//*{urn:schemas-upnp-org:service-1-0}action")
@@ -180,7 +182,7 @@ def parse_single_service_info_to_ssdp_info(service, parsed):
 def parse_location_xml_to_ssdp_info(location, ssdp_info):
 
     # Step 1: fetch xml file
-    resp = requests.get(location, timeout=5)
+    resp = requests.get(location, timeout=TIME_OUT)
 
     # Step 1.5: get server string info from the response
     parse_resp_server_string_to_ssdp_info(resp, ssdp_info)
@@ -266,9 +268,7 @@ def assign_mac_for_unknown():
                 if (time.time() - last_scan_time) < 300:
                     try:
                         mac_addr = global_state.arp_cache.get_mac_addr(model_instance.ip)
-                        common.log(f"{model_instance.mac}")
                         model_instance.mac = mac_addr
-                        common.log(f"{model_instance.mac}")
                         model_instance.save()
                         common.log(f"[SSDP Scan] Assign MAC address {model_instance.mac} for {model_instance.ip}")
                     except:
@@ -313,7 +313,7 @@ def store_result_to_database(result_list):
                         model_number = SSDPInfoInst.model_number,
                         services_list = json.dumps(SSDPInfoInst.services_list)
                     )
-                    common.log(f"[SSDP Scan] Create new ssdp info for {mac_addr}:{SSDPInfoInst.ip}:{SSDPInfoInst.port}")
+                    common.log(f"[SSDP Scan] Create new ssdp info for {mac_addr} {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
                 # Update existing entry in database
                 else:
