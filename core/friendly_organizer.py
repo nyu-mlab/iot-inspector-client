@@ -278,8 +278,8 @@ def initialize_ad_tracking_db():
         # in future versions
         for tracker_json_file in tracker_json_list:
             with open(tracker_json_file, 'r') as f:
-                pass
-                #block_list_dict.update(parse_tracking_json(json.load(f)))
+                # Will cause trouble when dealing with Chinese
+                block_list_dict.update(parse_tracking_json(json.load(f)))
 
         # Add trackers to database
         for hostname, tracker_company in block_list_dict.items():
