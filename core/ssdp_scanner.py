@@ -7,13 +7,14 @@ import socket
 import requests
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+import json
 
 import core.model as model
 import core.common as common
 import core.global_state as global_state
 import core.config as config
 
-
+# The class used to store the data of SSDP information
 class SSDPInfo():
 
     def __init__(self):
@@ -24,6 +25,7 @@ class SSDPInfo():
         self.ip = ""
         self.port = ""
         self.outer_file_name = ""
+
         self.original_reply = ""
 
         self.server_string = ""
@@ -49,15 +51,16 @@ class SSDPScanner():
     # this could technically cause an infinite loop). Parse the URL out of the
     # 'location' field in the HTTP header and store for later analysis.
     #
-    # @return the set of advertised upnp locations, and IPs
+    # @return the list of advertised upnp locations, IPs, and original_replys
     ###
     def discover_pnp_locations(self):
         common.log('[SSDP Scan] Discovering UPnP locations')
+
         locations = []
-        ip_ports = []
-        original_replys = []
+        # {location:[reply1, reply2]}
+        original_replys = {}
+
         location_regex = re.compile("location:[ ]*(.+)\r\n", re.IGNORECASE)
-        ip_port_regex = r"http://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)"
         ssdpDiscover = ('M-SEARCH * HTTP/1.1\r\n' +
                         'HOST: 239.255.255.250:1900\r\n' +
                         'MAN: "ssdp:discover"\r\n' +
@@ -66,29 +69,32 @@ class SSDPScanner():
                         '\r\n')
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #sock.setblocking(False) # we are not async here, so we don't make it nonblocking
+        #sock.setblocking(False)
         sock.sendto(ssdpDiscover.encode('ASCII'), ("239.255.255.250", 1900))
-        sock.settimeout(5)
+        sock.settimeout(10)
+
         try:
             while True:
-                data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+                data, addr = sock.recvfrom(1024)
                 location_result = location_regex.search(data.decode('utf-8'))
                 if location_result and (location_result.group(1) in locations) == False:
                     locations.append(location_result.group(1))
-                    match = re.search(ip_port_regex, location_result.group(1))
-                    ip = match.group(1)
-                    port = match.group(2)
-                    ip_port = ip + "_" + port
-                    ip_ports.append(ip_port)
-                    original_replys.append(data.decode('utf-8'))
+                    original_replys = [data.decode('utf-8')]
+                elif location_result:
+                    original_replys[locations].append(data.decode('utf-8'))
+                else:
+                    common.log(f"[SSDP Scan] Unknown reply: {type(data.decode('utf-8'))}\n{data.decode('utf-8')}")
 
         except socket.error:
             sock.close() # Exit while loop with exception, so this line will always been executed
 
+
+
+
         common.log('[SSDP Scan] %d locations found:' % len(locations))
         for location in locations:
             common.log('[SSDP Scan]\t%s' % location)
-        return locations, ip_ports, original_replys
+        return locations, original_replys
 
     ##
     # Tries to print an element extracted from the XML.
@@ -120,7 +126,7 @@ class SSDPScanner():
 
             for i in range(0, len(locations)):
                 location = locations[i]
-                original_reply = original_replys[i]
+                original_reply = original_replys[location]
 
                 if self.alreadyKnownThisLocation(location) == True:
                     common.log('[SSDP Scan] Already known %s' % location)
@@ -215,7 +221,7 @@ class SSDPScanner():
 
     def scan(self):
         common.log("[SSDP Scan] Start.")
-        locations, ip_ports, original_replys = self.discover_pnp_locations()
+        locations, original_replys = self.discover_pnp_locations()
         self.parse_locations(locations, original_replys)
         common.log("[SSDP Scan] Finish.")
 
@@ -342,7 +348,9 @@ def run_ssdp_scan():
         with model.db:
 
             for SSDPInfoInst in current_results:
+                common.log(f"[SSDP Scan] original reply is {type(SSDPInfoInst.original_reply)}\n{SSDPInfoInst.original_reply}")
 
+                common.log(f"[SSDP Scan] SSDPInfoInst.scan_time {type(SSDPInfoInst.scan_time)} {SSDPInfoInst.scan_time}")
                 model_instance = model.SSDPInfoModel.get_or_none(ip=SSDPInfoInst.ip, port=SSDPInfoInst.port)
 
                 if model_instance is None:
@@ -367,14 +375,19 @@ def run_ssdp_scan():
                         model_name = SSDPInfoInst.model_name,
                         model_number = SSDPInfoInst.model_number,
 
-                        services_list = SSDPInfoInst.services_list
+                        services_list = json.dumps(SSDPInfoInst.services_list)
                     )
 
                     common.log(f"[SSDP Scan] Create new ssdp info for {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
 
                 else:
                     model_instance.scan_time = SSDPInfoInst.scan_time,
+
+                    common.log(f"[SSDP Scan] model_instance.scan_time {type(model_instance.scan_time)} {model_instance.scan_time}")
+
                     model_instance.location = SSDPInfoInst.location,
+
+                    common.log(f"{model_instance.location}")
                     model_instance.ip = SSDPInfoInst.ip,
                     model_instance.port = SSDPInfoInst.port,
                     model_instance.outer_file_name = SSDPInfoInst.outer_file_name,
@@ -389,7 +402,7 @@ def run_ssdp_scan():
                     model_instance.model_name = SSDPInfoInst.model_name,
                     model_instance.model_number = SSDPInfoInst.model_number,
 
-                    model_instance.services_list = SSDPInfoInst.services_list
+                    model_instance.services_list = json.dumps(SSDPInfoInst.services_list)
 
                     model_instance.save()
 
