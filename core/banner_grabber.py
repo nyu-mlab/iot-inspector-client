@@ -26,8 +26,12 @@ RECONNECT_SUCCESS = 1
 RECONNECT_EXCEPTION = 2
 OTHER_EXCEPTION = 3
 
+# default timeout for socket
+TIME_OUT = 5.0
+
 # Set minimal scan interval to avoid too frequent scan
 BANNER_GRAB_INTERVAL = 120
+
 # {mac1-port1:scan_time1, mac1-port2:scan_time2} 
 last_scan_time_record = {}
 
@@ -71,7 +75,7 @@ async def talk_to_target(ip, port, sock, timeout = 5.0, step = "Unknown", req=""
         return OTHER_EXCEPTION, f"{type(e).__name__}"
 
 
-async def async_banner_grab_task(target_ip_port, timeout=5.0):
+async def async_banner_grab_task(target_ip_port, timeout=TIME_OUT):
     """ Banner grab on one ip:port """
 
     # Get ip and port
@@ -119,7 +123,7 @@ async def async_banner_grab_task(target_ip_port, timeout=5.0):
 
 
 async def async_banner_grab_tasks(target_ip_port_list):
-    """ Control different async banner tasks"""
+    """ Create different async banner tasks"""
 
     # Create a list of coroutines for banner grabbing from the given IP and Port lists
     coroutines = []
