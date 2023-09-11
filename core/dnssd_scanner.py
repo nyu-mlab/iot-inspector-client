@@ -41,9 +41,9 @@ def get_service_info(sock, target_ip, service):
     for i in range(0, resp.arcount):
         this_sub_service = {"rrname":"", "target":"", "rdata":""}
 
-        rrname = try_best_decode(resp.ar[i].rrname)
+        this_sub_service["rrname"] = try_best_decode(resp.ar[i].rrname)
         if hasattr(resp.ar[i], "port"):
-            rrname += (" " + str(resp.ar[i].port))
+            this_sub_service["rrname"] += (" " + str(resp.ar[i].port))
 
         if hasattr(resp.ar[i], "target"):
             this_sub_service["target"] = try_best_decode(resp.ar[i].target)
