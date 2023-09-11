@@ -38,21 +38,24 @@ def get_service_info(sock, target_ip, service):
     except:
         return sub_services
 
-    for i in range(0, resp.arcount):
-        this_sub_service = {"rrname":"", "target":"", "rdata":""}
+    try:
+        for i in range(0, resp.arcount):
+            this_sub_service = {"rrname":"", "target":"", "rdata":""}
 
-        this_sub_service["rrname"] = try_best_decode(resp.ar[i].rrname)
-        if hasattr(resp.ar[i], "port"):
-            this_sub_service["rrname"] += (" " + str(resp.ar[i].port))
+            this_sub_service["rrname"] = try_best_decode(resp.ar[i].rrname)
+            if hasattr(resp.ar[i], "port"):
+                this_sub_service["rrname"] += (" " + str(resp.ar[i].port))
 
-        if hasattr(resp.ar[i], "target"):
-            this_sub_service["target"] = try_best_decode(resp.ar[i].target)
+            if hasattr(resp.ar[i], "target"):
+                this_sub_service["target"] = try_best_decode(resp.ar[i].target)
 
-        if hasattr(resp.ar[i], "rdata"):
-            this_sub_service["rdata"] = try_best_decode(resp.ar[i].rdata)
+            if hasattr(resp.ar[i], "rdata"):
+                this_sub_service["rdata"] = try_best_decode(resp.ar[i].rdata)
 
-        sub_services.append(this_sub_service)
-        common.log(f"[DNS-SD Scan] service:{service} get sub services:{this_sub_service}")
+            sub_services.append(this_sub_service)
+            common.log(f"[DNS-SD Scan] service:{service} get sub services:{this_sub_service}")
+    except:
+        common.log(f"[DNS-SD Scan] Error Decoding")
 
     return sub_services
 
