@@ -278,7 +278,7 @@ def initialize_ad_tracking_db():
         # in future versions
         for tracker_json_file in tracker_json_list:
             with open(tracker_json_file, 'r') as f:
-                # Chinese character will lead to crash here
+                # Chinese characters will, with a very high probability, cause this line to crash
                 block_list_dict.update(parse_tracking_json(json.load(f)))
 
         # Add trackers to database

@@ -237,7 +237,7 @@ def parse_locations(locations, original_replys):
         except requests.exceptions.ReadTimeout:
             common.log('[SSDP Scan] Timeout reading from %s' % location)
         except Exception as e:
-            common.log(f'[SSDP Scan] parsing location {e}')
+            common.log(f'[SSDP Scan] Error parsing location {e}')
 
         result_list.append(ssdp_info)
 
