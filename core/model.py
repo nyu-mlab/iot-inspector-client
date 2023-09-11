@@ -165,5 +165,5 @@ def initialize_tables():
     with db:
 
         # Create tables
-        db.drop_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
-        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker, SSDPInfoModel, mDNSInfoModel])
+        db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker])
+        db.create_tables([SSDPInfoModel, mDNSInfoModel])
