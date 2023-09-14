@@ -143,6 +143,8 @@ class SSDPInfoModel(BaseModel):
     model_description = TextField(default="")
     model_name = TextField(default="")
     model_number = TextField(default="")
+    udn = TextField(default="")
+    serial_number = TextField(default="")
 
     # This attribute is list[dict]. We need to use json.loads() and json.dumps()
     services_list = TextField(default="")

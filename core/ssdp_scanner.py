@@ -37,6 +37,8 @@ class SSDPInfo():
         self.model_description = ""
         self.model_name = ""
         self.model_number = ""
+        self.udn = ""
+        self.serial_number = ""
 
         self.services_list = []
 
@@ -104,7 +106,7 @@ def print_attribute(xml, xml_name, print_name):
         common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
         return temp
     except AttributeError:
-        return None
+        return ""
 
 
 def create_basic_ssdp_info(location, original_replys):
@@ -143,6 +145,8 @@ def parse_xml_device_info_to_ssdp_info(xml_root, ssdp_info):
     ssdp_info.model_description = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelDescription", "Model Description")
     ssdp_info.model_name = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelName", "Model Name")
     ssdp_info.model_number = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}modelNumber", "Model Number")
+    ssdp_info.udn = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}UDN", "Model UDN")
+    ssdp_info.serial_number = print_attribute(xml_root, "./{urn:schemas-upnp-org:device-1-0}device/{urn:schemas-upnp-org:device-1-0}serialNumber", "Serial Number")
 
 
 def parse_single_service_info_to_ssdp_info(service, parsed):
@@ -311,6 +315,9 @@ def store_result_to_database(result_list):
                         model_description = SSDPInfoInst.model_description,
                         model_name = SSDPInfoInst.model_name,
                         model_number = SSDPInfoInst.model_number,
+                        udn = SSDPInfoInst.udn,
+                        serial_number = SSDPInfoInst.serial_number,
+
                         services_list = json.dumps(SSDPInfoInst.services_list)
                     )
                     common.log(f"[SSDP Scan] Create new ssdp info for {mac_addr} {SSDPInfoInst.ip}:{SSDPInfoInst.port}")
@@ -333,6 +340,9 @@ def store_result_to_database(result_list):
                     model_instance.model_description = SSDPInfoInst.model_description
                     model_instance.model_name = SSDPInfoInst.model_name
                     model_instance.model_number = SSDPInfoInst.model_number
+                    model_instance.udn = SSDPInfoInst.udn
+                    model_instance.serial_number = SSDPInfoInst.serial_number
+
                     model_instance.services_list = json.dumps(SSDPInfoInst.services_list)
 
                     model_instance.save()
