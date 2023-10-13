@@ -67,3 +67,4 @@ validators==0.20.0
 watchdog==3.0.0
 yarl==1.9.2
 zipp==3.16.2
+python-nmap==0.7.1

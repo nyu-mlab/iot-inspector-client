@@ -103,8 +103,11 @@ def discover_pnp_locations():
 def print_attribute(xml, xml_name, print_name):
     try:
         temp = xml.find(xml_name).text
-        common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
-        return temp
+        if temp is None:
+            return ""
+        else:
+            common.log('[SSDP Scan]\t-> %s: %s' % (print_name, temp))
+            return temp
     except AttributeError:
         return ""
 

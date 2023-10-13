@@ -65,6 +65,10 @@ class Device(BaseModel):
     # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]} 
     port_banners = TextField(default="{}") 
 
+    # Nmap scan results
+    # {port1:result1, port2:result2}  result is a Dict
+    port_nmap_results = TextField(default="{}") 
+
 
 class Flow(BaseModel):
 
@@ -167,5 +171,6 @@ def initialize_tables():
     with db:
 
         # Create tables
+        # Note that we need to update the Device table here.
         db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker])
         db.create_tables([SSDPInfoModel, mDNSInfoModel])

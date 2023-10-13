@@ -17,6 +17,7 @@ import core.ssdp_scanner
 import core.dnssd_scanner
 import core.tcp_scanner
 import core.banner_grabber
+import core.nmap_wrapper
 
 def start_threads():
 
@@ -50,6 +51,7 @@ def start_threads():
     core.common.SafeLoopThread(core.dnssd_scanner.run_dnssd_scan, sleep_time=15)
     core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)
     core.common.SafeLoopThread(core.banner_grabber.run_banner_grab, sleep_time=15)
+    core.common.SafeLoopThread(core.nmap_wrapper.run_nmap_scan, sleep_time=15)
 
 
     core.common.log('Inspector started')
