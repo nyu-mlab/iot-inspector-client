@@ -1,5 +1,3 @@
-# nmap/script
-
 import nmap
 import json
 import time
@@ -27,9 +25,9 @@ def scan(ip_port_list, arguments = "-sV --script vuln", timeout = 180):
             target_ports_by_ip[ip].append(port)
         else:
             target_ports_by_ip[ip] = [port]
-    
+
     target_ips = target_ports_by_ip.keys()
-    results_by_ip = {} 
+    results_by_ip = {}
 
     # Launch scan on each ip
     for ip in target_ips:
@@ -39,7 +37,7 @@ def scan(ip_port_list, arguments = "-sV --script vuln", timeout = 180):
         ports_str = ",".join(str(port) for port in target_ports_by_ip[ip])
         # It will block until finish
         scanner.scan(hosts = ip, ports = ports_str, arguments = arguments)
-        
+
         # Save result of this ip
         result_for_this_ip = {}
         # If this device is down
@@ -53,14 +51,14 @@ def scan(ip_port_list, arguments = "-sV --script vuln", timeout = 180):
                 common.log(f"[Nmap Scan] {ip}:{port} Results: {result_for_this_ip[port]}")
 
         results_by_ip[ip] = result_for_this_ip
-        
+
     # store results respect to the order in ip_port_list
     results = []
     for entry in ip_port_list:
         ip, port = entry
         results.append(results_by_ip[ip][port])
 
-    return results 
+    return results
 
 # The rests are similar to banner_grab
 
@@ -148,7 +146,7 @@ def run_nmap_scan(target_device_list = None, target_ports_list = None, arguments
     # Define target devices to scan
     if target_device_list == None:
         target_device_list = get_current_devices()
-    
+
     if len(target_device_list) == 0:
         common.log("[Nmap Scan] No valid target device to scan")
         return
@@ -182,14 +180,3 @@ def run_nmap_scan(target_device_list = None, target_ports_list = None, arguments
             store_result_to_database(device, target_ip_port_list, result)
 
     common.log("[Nmap Scan] Exit nmap scan")
-
-
-if __name__ == '__main__':
-
-    list = [("127.0.0.1", 135),("127.0.0.1", 445),("127.0.0.1", 902),("127.0.0.1", 912),("127.0.0.1", 135),("127.0.0.1", 69)]
-    #results= scan(list, arguments = "-sV --version-all --script vuln", timeout = 180)
-    results= scan(list, arguments = "-sV", timeout = 180)
-    print(results)
-    
-
-
