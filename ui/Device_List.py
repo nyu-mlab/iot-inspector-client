@@ -117,6 +117,7 @@ def make_chart(option, device_mac_addr):
             ]
     )
 
+    # Chinese characters will, with a very small probability, cause this line to crash
     return pio.to_image(fig, format='png', width=200, height=100)
 
 
