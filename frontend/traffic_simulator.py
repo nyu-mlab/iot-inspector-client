@@ -15,6 +15,13 @@ FAKE_VENDORS = [
 ]
 
 
+FAKE_DOMAIN_NAMES = [
+    'google.com', 'facebook.com', 'youtube.com', 'baidu.com', 'wikipedia.org', 'yahoo.com', 'reddit.com',
+    'qq.com', 'taobao.com', 'amazon.com', 'twitter.com', 'tmall.com', 'instagram.com', 'vk.com', 'live.com',
+    'sohu.com', 'sina.com.cn', 'jd.com', 'weibo.com', '360.cn', 'google.co.in', 'google.co.jp', 'google.co.uk',
+]
+
+
 def start_simulation():
 
     with core.global_state.global_state_lock:
@@ -45,9 +52,15 @@ def simulate_traffic():
     with core.global_state.global_state_lock:
         for device_alias in core.global_state.context_dict['simulated_device_list']:
             if random.random() < 0.1:
+
                 # Send traffic at 10% probability
                 device_dict = core.global_state.outgoing_byte_counter_dict.setdefault(device_alias, dict())
                 device_dict[current_ts] = random.randint(1, 1000000)
+
+                # Contacted some hosts
+                hostname_dict = core.global_state.recent_hostnames_dict.setdefault(device_alias, dict())
+                hostname = random.choice(FAKE_DOMAIN_NAMES)
+                hostname_dict[hostname] = current_ts
 
 
 def generate_devices(device_list, number_of_devices=30):

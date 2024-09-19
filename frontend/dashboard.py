@@ -69,10 +69,16 @@ byte_counter_df['ts'] = pd.to_datetime(byte_counter_df['ts'], unit='s')
 
 st.markdown('# Upload Traffic in the Last 2 Minutes')
 
-device_list = [
-    device for device in st.session_state['ordered_device_list']
-    if device in byte_counter_df.columns
-]
+device_list = []
+for device in st.session_state['ordered_device_list']:
+    if device not in byte_counter_df.columns:
+        continue
+    try:
+        if not st.session_state[f'{device}:visible']:
+            continue
+    except KeyError:
+        pass
+    device_list.append(device)
 
 
 def set_visibility(device_alias, visibility):
@@ -81,38 +87,30 @@ def set_visibility(device_alias, visibility):
 
 for (ix, device) in enumerate(device_list):
 
-    if device not in byte_counter_df.columns:
-        continue
-
     is_last_device = (ix == len(device_list) - 1)
 
     device_container = st.container(border=True)
     c1, c2 = device_container.columns([0.8, 0.2])
 
+    with core.global_state.global_state_lock:
+        recent_hostname_list = list(core.global_state.recent_hostnames_dict.get(device, dict()).items())
+
+    recent_hostnames = ''
+    if recent_hostname_list:
+        recent_hostname_list = sorted(recent_hostname_list, key=lambda x: x[1], reverse=True)[0:5]
+        recent_hostnames = 'Contacted ' + ', '.join([hostname for (hostname, ts) in recent_hostname_list])
+
     with c1:
         st.markdown(f'**{device}**')
+        st.caption(recent_hostnames)
     with c2:
-        if f'{device}:visible' not in st.session_state:
-            st.session_state[f'{device}:visible'] = True
-        if st.session_state[f'{device}:visible']:
-            st.button(
-                'Hide Details',
-                use_container_width=True,
-                key=f'{device}_hide',
-                args=(device, ),
-                on_click=lambda device: set_visibility(device, False)
-            )
-        else:
-            st.button(
-                'Show Details',
-                use_container_width=True,
-                key=f'{device}_show',
-                args=(device, ),
-                on_click=lambda device: set_visibility(device, True)
-            )
-
-    if not st.session_state[f'{device}:visible']:
-        continue
+        st.button(
+            'Hide Device',
+            use_container_width=True,
+            key=f'{device}_hide',
+            args=(device, ),
+            on_click=lambda device: set_visibility(device, False)
+        )
 
     device_df = byte_counter_df[['ts', device]]
     max_y = math.ceil(max(device_df[device].max(), 1))
