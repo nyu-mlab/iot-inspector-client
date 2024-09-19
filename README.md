@@ -4,6 +4,14 @@ This is an experimental version with just the core functionalities of device
 traffic capture and visualization. Meant to be easy to modify with additional
 functionalities to detect hidden devices.
 
+To start, prepare the environment by running the following command on Bash:
+
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 To test the core networking functionalities, run the following command on Bash:
 
 `sudo rm user-data/inspector.log; sudo python -m core.start`
