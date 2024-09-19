@@ -13,6 +13,21 @@ This will start the program and log the network traffic to
 what devices are ARP spoofed and what registered domain names each device is
 communicating with.
 
+For visualization, all network data is stored in memory in the following data
+structures:
+
+ * `core.global_state.outgoing_packet_counter_dict`, which counts the number of
+   packets sent by each device. This data structure maps device_mac_addr -> {ts
+   -> packet_count}
+
+ * `core.global_state.outgoing_byte_counter_dict`, which counts the number of
+   bytes sent by each device. This data structure maps device_mac_addr -> {ts
+    -> byte_count}
+
+ * `core.global_state.recent_hostnames_dict`, which stores the most recent
+   domain names each device has communicated with. This data structure maps
+   device_mac_addr -> {hostname -> ts}
+
 To visualize the network traffic, run the following command on Bash:
 
-`TODO`
+``sudo rm -f user-data/inspector.log; ./start.bash``

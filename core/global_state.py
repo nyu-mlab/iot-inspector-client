@@ -20,6 +20,9 @@ BASE_PATH = '/inspector_dashboard'
 # Should be held whenever accessing the global state's variables.
 global_state_lock = threading.Lock()
 
+# Holds temporary data
+context_dict = dict()
+
 # Network interface to sniff and send packets.
 active_network_interface = ''
 

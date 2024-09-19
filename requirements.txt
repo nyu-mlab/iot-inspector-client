@@ -12,6 +12,7 @@ idna==3.10
 Jinja2==3.1.4
 jsonschema==4.23.0
 jsonschema-specifications==2023.12.1
+kaleido==0.2.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
@@ -22,6 +23,7 @@ numpy==2.1.1
 packaging==24.1
 pandas==2.2.2
 pillow==10.4.0
+plotly==5.24.1
 protobuf==5.28.1
 pyarrow==17.0.0
 pydeck==0.9.1
