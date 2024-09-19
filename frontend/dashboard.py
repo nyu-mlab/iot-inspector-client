@@ -13,7 +13,7 @@ import math
 
 
 
-SIMULATE_TRAFFIC = False
+SIMULATE_TRAFFIC = True
 
 
 if SIMULATE_TRAFFIC:
@@ -28,7 +28,7 @@ with core.global_state.global_state_lock:
 
 
 # Stick the byte counter into a dataframe; show the last minute
-cut_off_ts = time.time() - 60
+cut_off_ts = time.time() - 120
 
 byte_counter_df = []
 for (device_mac_addr, ts_dict) in outgoing_byte_counter_dict.items():
@@ -59,7 +59,7 @@ byte_counter_df = pd.pivot_table(byte_counter_df, values='byte_count', index='ts
 
 # Make sure that the time is every second
 current_ts = int(time.time())
-time_range = range(current_ts - 60, current_ts + 1)
+time_range = range(current_ts - 120, current_ts + 1)
 time_range_df = pd.DataFrame(time_range, columns=['ts'])
 
 byte_counter_df = time_range_df.merge(byte_counter_df, on='ts', how='left').fillna(0)
@@ -67,12 +67,17 @@ byte_counter_df = time_range_df.merge(byte_counter_df, on='ts', how='left').fill
 # Convert the index into proper datetime
 byte_counter_df['ts'] = pd.to_datetime(byte_counter_df['ts'], unit='s')
 
-st.markdown('# Upload Traffic in the Last Minute')
+st.markdown('# Upload Traffic in the Last 2 Minutes')
 
 device_list = [
     device for device in st.session_state['ordered_device_list']
     if device in byte_counter_df.columns
 ]
+
+
+def set_visibility(device_alias, visibility):
+    st.session_state[f'{device_alias}:visible'] = visibility
+
 
 for (ix, device) in enumerate(device_list):
 
@@ -81,7 +86,33 @@ for (ix, device) in enumerate(device_list):
 
     is_last_device = (ix == len(device_list) - 1)
 
-    st.markdown(f'**{device}**')
+    device_container = st.container(border=True)
+    c1, c2 = device_container.columns([0.8, 0.2])
+
+    with c1:
+        st.markdown(f'**{device}**')
+    with c2:
+        if f'{device}:visible' not in st.session_state:
+            st.session_state[f'{device}:visible'] = True
+        if st.session_state[f'{device}:visible']:
+            st.button(
+                'Hide Details',
+                use_container_width=True,
+                key=f'{device}_hide',
+                args=(device, ),
+                on_click=lambda device: set_visibility(device, False)
+            )
+        else:
+            st.button(
+                'Show Details',
+                use_container_width=True,
+                key=f'{device}_show',
+                args=(device, ),
+                on_click=lambda device: set_visibility(device, True)
+            )
+
+    if not st.session_state[f'{device}:visible']:
+        continue
 
     device_df = byte_counter_df[['ts', device]]
     max_y = math.ceil(max(device_df[device].max(), 1))
@@ -106,11 +137,11 @@ for (ix, device) in enumerate(device_list):
         yaxis=dict(tickvals=[0, max_y]),
         xaxis_showticklabels=is_last_device,
         yaxis_showticklabels=True,
-        margin=dict(t=10, b=100 if is_last_device else 20)
+        margin=dict(t=10, b=100 if is_last_device else 10)
     )
 
     # Display the plot in Streamlit
-    st.plotly_chart(fig, config={'displayModeBar': False, 'staticPlot': True})
+    device_container.plotly_chart(fig, config={'displayModeBar': False, 'staticPlot': True})
 
 time.sleep(1)
 st.rerun()
