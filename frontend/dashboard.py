@@ -50,7 +50,7 @@ import math
 
 
 
-SIMULATE_TRAFFIC = False
+SIMULATE_TRAFFIC = True
 
 
 if SIMULATE_TRAFFIC:
@@ -134,8 +134,11 @@ for (ix, device) in enumerate(device_list):
     device_container = st.container(border=True)
     c1, c2 = device_container.columns([0.8, 0.2])
 
+    recent_hostname_list = []
     with core.global_state.global_state_lock:
         device_mac_addr = alias_mac_addr_dict.get(device, '')
+        if SIMULATE_TRAFFIC:
+            device_mac_addr = device
         if device_mac_addr:
             recent_hostname_list = list(core.global_state.recent_hostnames_dict.get(device_mac_addr, dict()).items())
 
@@ -146,7 +149,7 @@ for (ix, device) in enumerate(device_list):
 
     with c1:
         ip_addr = ''
-        if device_mac_addr:
+        if device_mac_addr and core.global_state.arp_cache:
             try:
                 ip_addr = core.global_state.arp_cache.get_ip_addr(device_mac_addr)
             except KeyError:
