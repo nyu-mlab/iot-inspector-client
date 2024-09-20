@@ -2,18 +2,55 @@ import sys
 sys.path.insert(0, '../')
 
 import streamlit as st
+
+st.set_page_config(layout="wide")
+
+hide_streamlit_style = """
+                <style>
+                div[data-testid="stToolbar"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stDecoration"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stStatusWidget"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                #MainMenu {
+                visibility: hidden;
+                height: 0%;
+                }
+                header {
+                visibility: hidden;
+                height: 0%;
+                }
+                footer {
+                visibility: hidden;
+                height: 0%;
+                }
+                </style>
+                """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 import pandas as pd
 import core.start
 import core.global_state
 from core.oui_parser import get_vendor
 import frontend.traffic_simulator
 import plotly.express as px
+import plotly.io as pio
 import time
 import math
 
 
 
-SIMULATE_TRAFFIC = True
+SIMULATE_TRAFFIC = False
 
 
 if SIMULATE_TRAFFIC:
@@ -30,6 +67,9 @@ with core.global_state.global_state_lock:
 # Stick the byte counter into a dataframe; show the last minute
 cut_off_ts = time.time() - 120
 
+
+alias_mac_addr_dict = dict()
+
 byte_counter_df = []
 for (device_mac_addr, ts_dict) in outgoing_byte_counter_dict.items():
     for (ts, byte_count) in ts_dict.items():
@@ -41,6 +81,8 @@ for (device_mac_addr, ts_dict) in outgoing_byte_counter_dict.items():
             mac_suffix = device_mac_addr[-2:].upper()
             vendor = get_vendor(device_mac_addr)
             device_alias = f'{vendor} Device {mac_suffix}'
+            alias_mac_addr_dict[device_alias] = device_mac_addr
+
         byte_counter_df.append({'device_alias': device_alias, 'ts': ts, 'byte_count': byte_count * 8 / 1000000})
         if 'ordered_device_list' not in st.session_state:
             st.session_state['ordered_device_list'] = []
@@ -93,7 +135,9 @@ for (ix, device) in enumerate(device_list):
     c1, c2 = device_container.columns([0.8, 0.2])
 
     with core.global_state.global_state_lock:
-        recent_hostname_list = list(core.global_state.recent_hostnames_dict.get(device, dict()).items())
+        device_mac_addr = alias_mac_addr_dict.get(device, '')
+        if device_mac_addr:
+            recent_hostname_list = list(core.global_state.recent_hostnames_dict.get(device_mac_addr, dict()).items())
 
     recent_hostnames = ''
     if recent_hostname_list:
@@ -101,7 +145,13 @@ for (ix, device) in enumerate(device_list):
         recent_hostnames = 'Contacted ' + ', '.join([hostname for (hostname, ts) in recent_hostname_list])
 
     with c1:
-        st.markdown(f'**{device}**')
+        ip_addr = ''
+        if device_mac_addr:
+            try:
+                ip_addr = core.global_state.arp_cache.get_ip_addr(device_mac_addr)
+            except KeyError:
+                pass
+        st.markdown(f'**{device.strip()}** ({ip_addr})')
         st.caption(recent_hostnames)
     with c2:
         st.button(
@@ -113,7 +163,7 @@ for (ix, device) in enumerate(device_list):
         )
 
     device_df = byte_counter_df[['ts', device]]
-    max_y = math.ceil(max(device_df[device].max(), 1))
+    max_y = round(max(device_df[device].max(), 0.5), 1)
 
     # Create the scatter plot with Plotly Express
     fig = px.bar(
@@ -125,21 +175,27 @@ for (ix, device) in enumerate(device_list):
     fig.update_traces(marker=dict(color='blue'), hoverinfo='skip')
 
     # Customize the layout
+    # fig_height = 60 + (100 if is_last_device else 0)
+    fig_height = 60
     fig.update_layout(
         showlegend=False,  # Removes the legend
         hovermode=False,  # Disables hover mode entirely
-        height=60 + (100 if is_last_device else 0),
+        height=fig_height,
         xaxis_title=None,
         yaxis_title='Mbps',
         yaxis_range=[0, max_y],
         yaxis=dict(tickvals=[0, max_y]),
-        xaxis_showticklabels=is_last_device,
         yaxis_showticklabels=True,
-        margin=dict(t=10, b=100 if is_last_device else 10)
+        # margin=dict(t=10, b=100 if is_last_device else 10),
+        # xaxis_showticklabels=is_last_device,
+        margin=dict(t=10, b=10),
+        xaxis_showticklabels=False
     )
 
     # Display the plot in Streamlit
-    device_container.plotly_chart(fig, config={'displayModeBar': False, 'staticPlot': True})
+    # device_container.plotly_chart(fig, config={'displayModeBar': False, 'staticPlot': True})
+    fig = pio.to_image(fig, format='png', width=500, height=fig_height * 1.8, scale=1)
+    device_container.image(fig, use_column_width=True)
 
 time.sleep(1)
 st.rerun()
