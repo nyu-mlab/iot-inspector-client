@@ -168,29 +168,19 @@ def donate_network_data(user_key):
 
 def donate_survey_data(user_key):
 
-    # Get the last ts of the survey response being updated
-    try:
-        survey_response_updated_ts = config.get('survey_response_updated_ts')
-    except KeyError:
+    # Get the qualtrics ID
+    qualtrics_id = config.get('qualtrics_id', '')
+    if not qualtrics_id:
         return
 
-    # Get the last ts of survey responses that we uploaded
-    last_survey_uploaded_ts = config.get('last_survey_uploaded_ts', 0)
-
-    # If this ts is the same as the last survey response updated ts, then we don't upload anything.
-    if survey_response_updated_ts == last_survey_uploaded_ts:
-        return
-
-    # We need to upload the survey responses given that there are updates
-    try:
-        survey_responses = config.get('survey_responses')
-    except KeyError:
+    # Exit if we have uploaded this ID already
+    has_uploaded_qualtrics_id = config.get('has_uploaded_qualtrics_id', False)
+    if has_uploaded_qualtrics_id:
         return
 
     # Upload the data to `DATA_DONATION_URL` via HTTP POST
     data = {
-        'survey_responses': survey_responses,
-        'survey_response_updated_ts': survey_response_updated_ts
+        'qualtrics_id': qualtrics_id
     }
     try:
         common.http_request(
@@ -202,6 +192,6 @@ def donate_survey_data(user_key):
     except IOError:
         return
 
-    config.set('last_survey_uploaded_ts', survey_response_updated_ts)
-
+    # Indicate that we have uploaded the qualtrics ID
+    config.set('has_uploaded_qualtrics_id', True)
     common.log(f'[Data Donation] Donated survey data.')

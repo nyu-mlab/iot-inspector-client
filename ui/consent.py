@@ -47,6 +47,27 @@ def show_data_donation_consent():
 
     st.divider()
 
+    def _save_qualtrics_id():
+        qualtrics_id = st.session_state.get('qualtrics_id', '')
+        if qualtrics_id:
+            config.set('qualtrics_id', qualtrics_id)
+
+    # Show a text box asking for the Qualtrics ID
+    st.text_input(
+        'Please enter your Qualtrics UID (if applicable):',
+        help='This is the ID that you received after completing the survey in Qualtrics. If you did not take the survey or have no idea what this value is, you can leave this field blank.',
+        key='qualtrics_id',
+        on_change=_save_qualtrics_id,
+        placeholder='Input your Qualtrics UID and press Enter'
+    )
+
+    # Show the Qualtrics ID if present
+    qualtrics_id = config.get('qualtrics_id', '')
+    if qualtrics_id:
+        st.caption(f'We have saved your Qualtrics UID: {qualtrics_id}')
+
+    st.divider()
+
     config.set('has_consented_to_data_donation', 'not_set')
 
     c1, c2, c3 = st.columns([0.7, 0.15, 0.15])

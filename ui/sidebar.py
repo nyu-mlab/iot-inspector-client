@@ -72,6 +72,10 @@ def show():
 
         st.divider()
 
+        qualtrics_id = config.get('qualtrics_id', '')
+        if qualtrics_id:
+            st.caption(f'Qualtrics UID: {qualtrics_id}')
+
         st.button(
             'Quit IoT Inspector',
             use_container_width=True,

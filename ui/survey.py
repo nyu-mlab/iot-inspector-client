@@ -24,32 +24,81 @@ def show():
     except KeyError:
         return
 
-    last_completed_survey = config.get('last_completed_survey', '')
+    # Make sure that the user has used Inspector
+    if not config.get('has_used_inspector', False):
+        return
 
-    if last_completed_survey == '':
-        # Show the pre survey if the user has not completed any surveys yet and that the user has never used inspector
-        if not config.get('has_used_inspector', False):
-            get_survey_ui('notice_and_choice_pre_survey.md', ask_for_country_info=True)
-            st.stop()
+    # Make sure that the Qualtrics ID has been set
+    qualtrics_id = config.get('qualtrics_id', '')
+    if not qualtrics_id:
+        return
 
-    elif last_completed_survey == 'notice_and_choice_pre_survey':
-        # Show the post survey only if the user has completed the pre-survey and
-        # the user has been collecting data for 5 minutes
-        with global_state.global_state_lock:
-            time_threshold = 45 if global_state.DEBUG else 300
-        if time.time() - donation_start_ts > time_threshold:
-            # Skip if we just opened the app; this trick is to avoid showing the
-            # survey when the user just opened the app
-            with global_state.global_state_lock:
-                if global_state.inspector_started_ts > 0 and time.time() - global_state.inspector_started_ts < time_threshold:
+    # Make sure that the user hasn't taken the qualtrics survey
+    has_completed_qualtrics_survey = config.get('has_completed_qualtrics_survey', False)
+    if has_completed_qualtrics_survey:
+        return
+
+    # Block the entire UI if the survey has shown but the user hasn't taken the survey
+    if config.get('survey_should_be_blocking_ui', False):
+        show_survey_text(qualtrics_id)
+
+    # Show the post survey only if the user has been collecting data for 8 minutes
+    with global_state.global_state_lock:
+        time_threshold = 15 if global_state.DEBUG else 8 * 60:
+    if time.time() - donation_start_ts < time_threshold:
+        return
+
+    # Skip if we just opened the app; this trick is to avoid showing the
+    # survey when the user just opened the app
+    with global_state.global_state_lock:
+        if global_state.inspector_started_ts > 0 and time.time() - global_state.inspector_started_ts < time_threshold:
+            return
+
+    show_survey_text(qualtrics_id)
+
+
+def show_survey_text(qualtrics_id):
+
+    # Show the post survey link
+    survey_url = f'https://nyu.qualtrics.com/jfe/form/SV_6rubUTxywdNeaGi?UID={qualtrics_id}'
+
+    with st.empty():
+        with st.container():
+
+            st.markdown('## IoT Inspector Survey')
+            st.markdown(f'Please take [this survey]({survey_url}) to help us understand how you use IoT Inspector. ')
+
+            config.set('survey_should_be_blocking_ui', True)
+            if config.get('survey_first_shown_ts', 0) == 0:
+                config.set('survey_first_shown_ts', time.time())
+
+            # Show the option to enter the completion code only after 2 minutes
+            if time.time() - config.get('survey_first_shown_ts') < 2 * 60:
+                for _ in range(100):
+                    st.markdown('')
+                time.sleep(5)
+                st.experimental_rerun()
+
+            for _ in range(10):
+                st.markdown('')
+            st.markdown('---')
+            st.markdown('Once you have completed the survey, the survey will provide you with a completion code on the last page. Please paste the code below to return to IoT Inspector. ')
+
+            def _exit_survey():
+                completion_code = st.session_state.get('survey_completion_code', '')
+                if len(completion_code) < 4:
+                    st.error('Invalid completion code. Please try again.')
                     return
-            get_survey_ui('notice_and_choice_post_survey.md')
+                config.set('has_completed_qualtrics_survey', True)
 
-            # Display the survey completion code to show the user has seen the post survey
-            st.markdown(f'Survey completion code: `{get_survey_completion_code()}`')
+            # Show a textbox to enter the completion code
+            st.text_input(
+                label='Enter the completion code here',
+                key='survey_completion_code',
+                on_change=_exit_survey
+            )
 
-            st.stop()
-
+    st.stop()
 
 
 def get_survey_ui(survey_filename, ask_for_country_info=False):
