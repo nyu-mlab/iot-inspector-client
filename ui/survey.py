@@ -44,7 +44,7 @@ def show():
 
     # Show the post survey only if the user has been collecting data for 8 minutes
     with global_state.global_state_lock:
-        time_threshold = 15 if global_state.DEBUG else 8 * 60:
+        time_threshold = 15 if global_state.DEBUG else 8 * 60
     if time.time() - donation_start_ts < time_threshold:
         return
 
