@@ -3,8 +3,12 @@ import time
 import streamlit as st
 import core.config as config
 import core.global_state as global_state
+import core.common as common
 import hashlib
 import uuid
+
+
+DEBUG_TIMING = False
 
 
 def show():
@@ -44,14 +48,18 @@ def show():
 
     # Show the post survey only if the user has been collecting data for 8 minutes
     with global_state.global_state_lock:
-        time_threshold = 15 if global_state.DEBUG else 8 * 60
+        time_threshold = 15 if global_state.DEBUG else (60 if DEBUG_TIMING else 8 * 60)
     if time.time() - donation_start_ts < time_threshold:
+        time_remaining = int(time_threshold - (time.time() - donation_start_ts))
+        common.log(f'[Survey] A: {time_remaining} seconds remaining before showing the survey')
         return
 
     # Skip if we just opened the app; this trick is to avoid showing the
     # survey when the user just opened the app
     with global_state.global_state_lock:
         if global_state.inspector_started_ts > 0 and time.time() - global_state.inspector_started_ts < time_threshold:
+            time_remaining = int(time_threshold - (time.time() - donation_start_ts))
+            common.log(f'[Survey] B: {time_remaining} seconds remaining before showing the survey')
             return
 
     show_survey_text(qualtrics_id)
@@ -73,7 +81,7 @@ def show_survey_text(qualtrics_id):
                 config.set('survey_first_shown_ts', time.time())
 
             # Show the option to enter the completion code only after 2 minutes
-            if time.time() - config.get('survey_first_shown_ts') < 2 * 60:
+            if time.time() - config.get('survey_first_shown_ts') < (10 if DEBUG_TIMING else 2 * 60):
                 for _ in range(100):
                     st.markdown('')
                 time.sleep(5)
