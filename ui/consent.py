@@ -54,12 +54,16 @@ def show_data_donation_consent():
 
     # Show a text box asking for the Qualtrics ID
     st.text_input(
-        'Please enter your Qualtrics UID (if applicable):',
-        help='This is the ID that you received after completing the survey in Qualtrics. If you did not take the survey or have no idea what this value is, you can leave this field blank.',
+        'Please enter your Qualtrics UID, or put "NA" if you do not have one:',
+        help='This is the ID that you received after completing the survey in Qualtrics. If you did not take the survey or have no idea what this value is, just put "NA" in the textbox.',
         key='qualtrics_id',
         on_change=_save_qualtrics_id,
         placeholder='Input your Qualtrics UID and press Enter'
     )
+
+    error_message = st.session_state.get('qualtrics_uid_error_message', '')
+    if error_message:
+        st.error(error_message)
 
     # Show the Qualtrics ID if present
     qualtrics_id = config.get('qualtrics_id', '')
@@ -89,6 +93,10 @@ def show_data_donation_consent():
 
 
 def yes_donate_with_survey_callback():
+
+    if not st.session_state.get('qualtrics_id', ''):
+        st.session_state['qualtrics_uid_error_message'] = 'Please enter your Qualtrics UID in the textbox above. If you do not have one, just put "NA" in the box.'
+        return
 
     config.set('has_consented_to_data_donation', 'donation_with_survey')
     yes_callback()
