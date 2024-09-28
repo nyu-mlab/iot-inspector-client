@@ -40,9 +40,7 @@ def start():
 
     if donation_option in ('donation_with_survey', 'donation_only'):
         donate_network_data(user_key)
-
-    if donation_option == 'donation_with_survey':
-        donate_survey_data(user_key)
+        donate_qualtrics_id(user_key)
 
 
 
@@ -166,7 +164,7 @@ def donate_network_data(user_key):
 
 
 
-def donate_survey_data(user_key):
+def donate_qualtrics_id(user_key):
 
     # Get the qualtrics ID
     qualtrics_id = config.get('qualtrics_id', '')
