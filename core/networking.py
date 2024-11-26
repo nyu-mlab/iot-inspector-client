@@ -77,7 +77,7 @@ def get_default_route():
         routes = _get_routes()
         default_route = None
         for route in routes:
-            if route[4] == iface_ip:
+            if route[4] == iface_ip and route[2] != '0.0.0.0':
                 # Reassign scapy's default interface to the one we selected
                 sc.conf.iface = route[3]
                 default_route = route[2:5]
