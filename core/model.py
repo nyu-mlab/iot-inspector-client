@@ -58,6 +58,17 @@ class Device(BaseModel):
     is_blocked = IntegerField(default=0)
     favorite_time = FloatField(default=0)
 
+    # TCP scan results
+    open_tcp_ports = TextField(default="[]")
+
+    # Banner grab results
+    # {port1:[banner1.1, banner1.2, banner1.3], port2:[banner2.1, banner2.2., banner2.3]} 
+    port_banners = TextField(default="{}") 
+
+    # Nmap scan results
+    # {port1:result1, port2:result2}  result is a Dict
+    port_nmap_results = TextField(default="{}") 
+
 
 class Flow(BaseModel):
 
@@ -112,10 +123,54 @@ class AdTracker(BaseModel):
     tracker_company = TextField(default='')
 
 
+class SSDPInfoModel(BaseModel):
+
+    mac = TextField(default="")
+
+    scan_time = FloatField(default=0)
+    location = TextField(default="")
+    ip = TextField(default="")
+    port = TextField(default="")
+    outer_file_name = TextField(default="")
+
+    # The response of ssdp:discover request (already decoded by utf-8)
+    # list[str]. May have multiply responses but the location is the same
+    # Some unstructured information will be included here, such as server infomation and uuid
+    original_reply = TextField(default="")
+
+    # For the location given by the first response, we request the file and parse it.
+    server_string = TextField(default="")
+    device_type = TextField(default="")
+    friendly_name = TextField(default="")
+    manufacturer = TextField(default="")
+    manufacturer_url = TextField(default="")
+    model_description = TextField(default="")
+    model_name = TextField(default="")
+    model_number = TextField(default="")
+    udn = TextField(default="")
+    serial_number = TextField(default="")
+
+    # This attribute is list[dict]. We need to use json.loads() and json.dumps()
+    services_list = TextField(default="")
+
+
+class mDNSInfoModel(BaseModel):
+
+    mac = TextField(default="") 
+
+    scan_time = FloatField(default=0)
+    ip = TextField(default="")
+    status = TextField(default="")
+    # This attribute is list[dict{str:str, str:list[dict]……}]
+    services = TextField(default="") 
+
+
 def initialize_tables():
     """Creates the tables if they don't exist yet, and creates initial data."""
 
     with db:
 
         # Create tables
+        # Note that we need to update the Device table here.
         db.create_tables([Device, Flow, Hostname, FriendlyIdentity, Configuration, AdTracker])
+        db.create_tables([SSDPInfoModel, mDNSInfoModel])
