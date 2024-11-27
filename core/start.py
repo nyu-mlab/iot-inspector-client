@@ -14,6 +14,10 @@ import core.friendly_organizer
 import core.data_donation
 import os
 
+import core.ssdp_scanner
+import core.dnssd_scanner
+import core.tcp_scanner
+import core.banner_grabber
 
 def start_threads():
 
@@ -43,6 +47,12 @@ def start_threads():
     core.common.SafeLoopThread(core.friendly_organizer.add_hostname_info_to_flows, sleep_time=5)
     core.common.SafeLoopThread(core.friendly_organizer.add_product_info_to_devices, sleep_time=5)
     core.common.SafeLoopThread(core.data_donation.start, sleep_time=15)
+
+    core.common.SafeLoopThread(core.ssdp_scanner.run_ssdp_scan, sleep_time=15)
+    core.common.SafeLoopThread(core.dnssd_scanner.run_dnssd_scan, sleep_time=15)
+    core.common.SafeLoopThread(core.tcp_scanner.run_tcp_scan, sleep_time=15)
+    core.common.SafeLoopThread(core.banner_grabber.run_banner_grab, sleep_time=15)
+
 
     core.common.log('Inspector started')
 
