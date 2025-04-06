@@ -365,6 +365,6 @@ main()
 # Auto-refresh
 if 'page_auto_refresh' in st.session_state and st.session_state['page_auto_refresh']:
     time.sleep(4)
-    st.experimental_rerun()
+    st.rerun()
 
 

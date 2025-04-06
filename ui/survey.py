@@ -85,7 +85,7 @@ def show_survey_text(qualtrics_id):
                 for _ in range(100):
                     st.markdown('')
                 time.sleep(5)
-                st.experimental_rerun()
+                st.rerun()
 
             for _ in range(10):
                 st.markdown('')

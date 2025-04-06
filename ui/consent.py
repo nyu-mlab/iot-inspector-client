@@ -30,7 +30,7 @@ def show_overall_risks():
     consent = st.button('I accept the risks.', type='primary')
     if consent:
         config.set('has_consented_to_overall_risks', True)
-        st.experimental_rerun()
+        st.rerun()
 
     # Show a secondary button to reject the consent and quit
     reject = st.button('I do not accept the risks. I would like to quit IoT Inspector.', type='secondary')

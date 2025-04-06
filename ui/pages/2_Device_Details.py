@@ -400,9 +400,8 @@ pre_selected_index = 0
 default_option = '(Select a device below)'
 device_list = [default_option] + get_device_list()
 
-query_params = st.experimental_get_query_params()
-if 'mac_addr' in query_params:
-    mac_addr = query_params['mac_addr'][0]
+if 'mac_addr' in st.query_params:
+    mac_addr = st.query_params['mac_addr'][0]
     for (ix, device_description) in enumerate(device_list):
         if mac_addr in device_description:
             pre_selected_index = ix
@@ -429,6 +428,6 @@ with st.empty():
 # Auto-refresh
 if 'page_auto_refresh' in st.session_state and st.session_state['page_auto_refresh']:
     time.sleep(4)
-    st.experimental_rerun()
+    st.rerun()
 
 
