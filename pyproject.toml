@@ -1,0 +1,13 @@
+[project]
+name = "inspector-3"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "libinspector",
+    "streamlit>=1.44.1",
+]
+
+[tool.uv.sources]
+libinspector = { git = "https://github.com/nyu-mlab/inspector-core-library.git" }
