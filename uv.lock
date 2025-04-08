@@ -196,7 +196,7 @@ wheels = [
 [[package]]
 name = "libinspector"
 version = "0.1.0"
-source = { git = "https://github.com/nyu-mlab/inspector-core-library.git#6e3223bcb4fe7823cfba0961e52acab989dc6c0b" }
+source = { git = "https://github.com/nyu-mlab/inspector-core-library.git#59475ca4bb085a39de238b27b2ba65db7cb8598e" }
 dependencies = [
     { name = "netaddr" },
     { name = "netifaces" },
