@@ -1,0 +1,10 @@
+[client]
+toolbarMode = "viewer"
+
+[server]
+port = 33721
+fileWatcherType = "auto"
+headless = true
+
+[browser]
+gatherUsageStats = false
