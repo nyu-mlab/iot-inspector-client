@@ -19,9 +19,7 @@ def main():
     sidebar.show()
     navbar.show()
 
-    # Dynamically load the module based on the value set in
-    # st.session_state.current_page
-    current_page_name = st.session_state.get("current_page", "device_list")
+    current_page_name = st.query_params.get("current_page", "device_list")
 
     try:
         # Dynamically import the module
@@ -49,7 +47,7 @@ def initial_configuration():
     # Set the page properties
     st.set_page_config(
         page_title="IoT Inspector",
-        page_icon="🔎",
+        page_icon=":material/troubleshoot:",
         layout="wide",  # Set the page layout to wide
         initial_sidebar_state="expanded",
         menu_items={}

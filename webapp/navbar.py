@@ -21,16 +21,15 @@ def show():
         options=nav_dict.keys(),
         format_func=lambda x: nav_dict[x],
         selection_mode='single',
-        default=st.session_state.get("current_page", "device_list"),
+        default=st.query_params.get("current_page", "device_list"),
         key='navbar',
         on_change=lambda:
-            st.session_state.update({
-                'current_page': st.session_state.navbar
+            st.query_params.update({
+                'current_page': st.session_state['navbar']
             })
     )
 
-    # Set the current page name in the session state
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = current_page_name
+    if st.query_params.get("current_page", None):
+        st.query_params['current_page'] = current_page_name
 
-    st.markdown(f"## {nav_dict[st.session_state.current_page]}")  # Display the current page name
+    st.markdown(f"## {nav_dict[current_page_name]}")  # Display the current page title

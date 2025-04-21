@@ -9,6 +9,6 @@ def show():
 
 def show_sidebar():
 
-    st.markdown('## 🔎 IoT Inspector')
+    st.markdown('## :material/troubleshoot: IoT Inspector')
 
     st.markdown('General statistics about the IoT device')
