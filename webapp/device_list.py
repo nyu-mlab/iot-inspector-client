@@ -30,15 +30,15 @@ def show():
     human_readable_time = common.get_human_readable_time()
     st.markdown(f'Updated: {human_readable_time}')
 
-    time.sleep(2)
+    time.sleep(5)
     st.rerun()
 
 
 def show_device_card(device_dict):
 
     # Check if the user has previously inspected this device
-    config_key = f'device_is_inspected_{device_dict["mac_address"]}'
-    is_inspected = common.config_get(config_key, False)
+    device_inspected_config_key = f'device_is_inspected_{device_dict["mac_address"]}'
+    is_inspected = common.config_get(device_inspected_config_key, False)
 
     # Update the inspected status in the database if it is different
     if is_inspected != (device_dict['is_inspected'] == 1):
@@ -54,7 +54,7 @@ def show_device_card(device_dict):
     # Extra information on the device's metadata, e.g., OUI
     metadata_dict = json.loads(device_dict['metadata_json'])
 
-    left_col, right_col = st.columns([0.8, 0.2])
+    left_col, right_col = st.columns([6, 4])
 
     with left_col:
 
@@ -62,17 +62,57 @@ def show_device_card(device_dict):
         st.caption(f'IP Address: `{device_dict["ip_address"]}` -- MAC Address: `{device_dict["mac_address"]}` -- OUI: {metadata_dict["oui_vendor"]}')
 
     with right_col:
-        if is_inspected:
-            toggle_text = 'Being monitored'
-        else:
-            toggle_text = 'Not being monitored'
+
         st.toggle(
-            label=toggle_text,
+            label='Monitored',
             value=is_inspected,
             key=f"device_inspected_toggle_{device_dict['mac_address']}",
             on_change=common.config_set,
-            args=(config_key, not is_inspected),
+            args=(device_inspected_config_key, not is_inspected),
         )
+
+        device_pinned_config_key = f'device_is_pinned_{device_dict["mac_address"]}'
+        device_is_pinned = common.config_get(device_pinned_config_key, False)
+        st.toggle(
+            label='Pinned to top',
+            value=device_is_pinned,
+            key=f"device_pinned_toggle_{device_dict['mac_address']}",
+            on_change=common.config_set,
+            args=(device_pinned_config_key, not device_is_pinned),
+        )
+
+        c1, c2 = st.columns(2)
+
+        def _device_acitivities_callback(_mac_address):
+            st.session_state['current_page'] = 'device_activities'
+            st.session_state['device_mac_address'] = _mac_address
+
+        # A button to show the device activities
+        c1.button(
+            label=':material/monitoring: Device Activities',
+            key=f"device_activities_button_{device_dict['mac_address']}",
+            on_click=_device_acitivities_callback,
+            args=(device_dict['mac_address'],),
+            use_container_width=True,
+            disabled=not is_inspected
+        )
+
+        def _rename_device_callback(_mac_address):
+            st.query_params['hello'] = _mac_address
+
+        # A button to rename the device
+        c2.button(
+            label=':material/edit: Rename Device',
+            key=f"device_rename_button_{device_dict['mac_address']}",
+            on_click=_rename_device_callback,
+            args=(device_dict['mac_address'],),
+            use_container_width=True
+        )
+
+
+
+
+
 
 
 @functools.lru_cache(maxsize=1)
