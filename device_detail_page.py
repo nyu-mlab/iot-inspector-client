@@ -7,18 +7,21 @@ import datetime
 
 def show():
 
-    show_device_list()
+    device_mac_address = show_device_list()
 
-    # Get the device MAC address from the query parameters
-    try:
-        device_mac_address = st.query_params['device_mac_address']
-    except KeyError:
-        pass
-    else:
-        show_device_details(device_mac_address)
+    activity_inference(device_mac_address)
+    show_device_details(device_mac_address)
+
+
+def activity_inference(mac_address):
 
 
 
+    return
+
+
+
+@st.fragment(run_every=1)
 def show_device_details(mac_address):
 
     st.markdown(f"### {mac_address}")
@@ -26,8 +29,8 @@ def show_device_details(mac_address):
     sql = """
         SELECT
             timestamp,
-            src_ip_address, src_hostname, src_mac_address,
-            dest_ip_address, dest_hostname, dest_mac_address,
+            src_ip_address, src_hostname,
+            dest_ip_address, dest_hostname,
             byte_count
         FROM network_flows
         WHERE src_mac_address = ? OR dest_mac_address = ?
@@ -49,9 +52,45 @@ def show_device_details(mac_address):
     df['timestamp'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
     df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
     df = df.reset_index(drop=True)  # Reset the index for better display
+
+    # Combine the src/dest IP and hostname into a single column for better readability
+    df['src_info'] = df.apply(lambda row: f"{row['src_hostname']}" if row['src_hostname'] else row['src_ip_address'], axis=1)
+    df['dest_info'] = df.apply(lambda row: f"{row['dest_hostname']}" if row['dest_hostname'] else row['dest_ip_address'], axis=1)
+    df = df[['timestamp', 'src_info', 'dest_info', 'byte_count']]
+
+    df['inferred_activity'] = None
+
+    # Prepare data for the bar chart (last 60 seconds)
+    # Ensure 'timestamp' is in datetime format for comparison
+    df_chart = df.copy()
+    df_chart['timestamp_dt'] = pd.to_datetime(df_chart['timestamp']) # Re-convert to datetime if it was stringified for display
+
+    # Get the most recent timestamp
+    if not df_chart.empty:
+        # Use the current time in the local timezone as the reference for "now"
+        now_local = pd.Timestamp.now(tz=local_timezone)
+        # Filter for the last 60 seconds from now_local
+        time_60_seconds_ago = now_local - pd.Timedelta(seconds=60)
+        # Ensure df_chart['timestamp_dt'] is also localized to the same timezone for comparison
+        df_chart['timestamp_dt'] = df_chart['timestamp_dt'].dt.tz_localize(local_timezone, ambiguous='infer', nonexistent='shift_forward')
+        df_last_60_seconds = df_chart[(df_chart['timestamp_dt'] >= time_60_seconds_ago) & (df_chart['timestamp_dt'] <= now_local)]
+
+        if not df_last_60_seconds.empty:
+            # Group by second and sum byte_count
+            traffic_by_second = df_last_60_seconds.groupby(pd.Grouper(key='timestamp_dt', freq='S'))['byte_count'].sum().reset_index()
+            traffic_by_second = traffic_by_second.rename(columns={'timestamp_dt': 'Time', 'byte_count': 'Bytes'})
+
+            st.markdown("#### Traffic Volume (Last 60 Seconds)")
+            st.bar_chart(traffic_by_second.set_index('Time')['Bytes'], use_container_width=True)
+        else:
+            st.caption("No traffic data in the last 60 seconds to display in chart.")
+    else:
+        st.caption("No traffic data to display in chart.")
+
     # Show the network flows in a table
     st.markdown("#### Network Flows")
-    st.dataframe(df, use_container_width=True)
+    df['confirmation'] = False # Add confirmation column with default False values
+    edited_df = st.data_editor(df, use_container_width=True)
 
 
 def show_device_list():
@@ -85,10 +124,11 @@ def show_device_list():
 
     if selected_device and selected_device != "(Select a device)":
         # Extract the MAC address from the selected option
-        mac_address = selected_device.split(" ")[0]
-        st.query_params['device_mac_address'] = mac_address
-    else:
-        st.info("Please select a device to view its details.")
-        st.stop()
+        device_mac_address = selected_device.split(" ")[0]
+        st.query_params['device_mac_address'] = device_mac_address
+        return device_mac_address
+
+    st.info("Please select a device to view its details.")
+    st.stop()
 
 
