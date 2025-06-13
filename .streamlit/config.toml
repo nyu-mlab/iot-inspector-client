@@ -5,6 +5,10 @@ toolbarMode = "viewer"
 port = 33721
 fileWatcherType = "auto"
 headless = true
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
+
+[theme]
+base="light"

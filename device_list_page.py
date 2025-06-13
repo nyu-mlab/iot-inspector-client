@@ -2,7 +2,6 @@ import streamlit as st
 import functools
 import time
 import json
-import libinspector.core
 import libinspector.global_state
 
 import common
@@ -10,13 +9,12 @@ import common
 
 def show():
 
-    start_inspector_once()
-
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
     # Get the list of devices from the database
     sql = """
         SELECT * FROM devices
+        WHERE is_gateway = 0
     """
     device_list = []
     with rwlock:
@@ -83,16 +81,10 @@ def show_device_card(device_dict):
 
         c1, c2 = st.columns(2)
 
-        def _device_acitivities_callback(_mac_address):
-            st.session_state['current_page'] = 'device_activities'
-            st.session_state['device_mac_address'] = _mac_address
-
         # A button to show the device activities
-        c1.button(
+        c1.link_button(
             label=':material/monitoring: Device Activities',
-            key=f"device_activities_button_{device_dict['mac_address']}",
-            on_click=_device_acitivities_callback,
-            args=(device_dict['mac_address'],),
+            url=f"/device_details?device_mac_address={device_dict['mac_address']}",
             use_container_width=True,
             disabled=not is_inspected
         )
@@ -113,11 +105,3 @@ def show_device_card(device_dict):
 
 
 
-
-
-@functools.lru_cache(maxsize=1)
-def start_inspector_once():
-    """Initialize the Inspector core only once."""
-
-    with st.spinner("Starting Inspector Core Library..."):
-        libinspector.core.start_threads()
