@@ -7,7 +7,11 @@ import libinspector.global_state
 import common
 
 
+@st.fragment(run_every=5)
 def show():
+
+    human_readable_time = common.get_human_readable_time()
+    st.markdown(f'Updated: {human_readable_time}')
 
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
@@ -25,11 +29,8 @@ def show():
         with st.container(border=True):
             show_device_card(device_dict)
 
-    human_readable_time = common.get_human_readable_time()
-    st.markdown(f'Updated: {human_readable_time}')
 
-    time.sleep(5)
-    st.rerun()
+
 
 
 def show_device_card(device_dict):
