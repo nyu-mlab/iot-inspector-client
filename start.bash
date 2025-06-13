@@ -12,4 +12,4 @@ if ! command -v uv &> /dev/null; then
     exit 1
 fi
 
-sudo uv run streamlit run main.py
+sudo $(uv run which python) -m streamlit run dashboard.py
