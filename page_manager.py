@@ -7,6 +7,9 @@ import device_list_page, device_detail_page, settings_page
 import functools
 import libinspector.core
 
+from libinspector import safe_loop
+from event_detection import packet_processor
+from event_detection import global_state
 
 
 def get_page(title, material_icon, show_page_func):
@@ -65,8 +68,13 @@ def initialize_page():
 def start_inspector_once():
     """Initialize the Inspector core only once."""
 
+    # Start the packet processing thread
+    safe_loop.SafeLoopThread(packet_processor.start)
+
     with st.spinner("Starting Inspector Core Library..."):
-        libinspector.core.start_threads()
+        libinspector.core.start_threads(
+            custom_packet_callback_func=lambda pkt: global_state.packet_queue.put(pkt)
+        )
 
 
 
