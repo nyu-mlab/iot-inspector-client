@@ -22,10 +22,9 @@ def start():
 # Note: This fiunction proess packet for activity detection
 # ==========================================================================================
 # Process packet to burst; Input: packet; Output: none
-# Technical debt: processing same packet twice: can be merged with process_packets, 
-# discuss with Danny with potential isuses
-# BUG: process re-transmission and duplicate packets, potential cause of misclassification
+# Technical debt: libinspector.core lib do some minimal packet processing, 
+# but we need to do more here.
 # ==========================================================================================
 
 def process_burst(pkt):
-    print(f"Processing burst {pkt.summary()}")
+    # print(f"Processing burst {pkt.summary()}")
