@@ -14,3 +14,6 @@ packet_queue = queue.Queue()
 
 # A queue that holds packets to be processed for burst creation
 flow_queue = queue.Queue()
+
+# A queue that holds burst that are pending to be processed
+pending_burst_queue = queue.Queue()

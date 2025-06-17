@@ -28,10 +28,10 @@ def process_packet_helper(pkt):
     # ====================
 
     if sc.ARP in pkt:
-        return None
+        return 
 
     if sc.DHCP in pkt:
-        return None
+        return 
     
     # Must have Ether frame and IP frame.
     if not (sc.Ether in pkt and sc.IP in pkt):
@@ -45,28 +45,24 @@ def process_packet_helper(pkt):
 
     # DNS
     if sc.DNS in pkt:
-        return None
+        return 
     
     # Ignore TCP retransmissions
     if sc.TCP in pkt :
         if process_retransmission(pkt):
             # logger.info(f'[Pkt Processor] Ignoring TCP retransmission packet: {pkt.summary()}')
-            return None
+            return 
     
     # Ignore duplicate UDP packets    
     if sc.UDP in pkt:
         if is_duplicate_udp(pkt):
             # logger.info(f'[Pkt Processor] Ignoring duplicate UDP packet: {pkt.summary()}')
-            return None
+            return 
 
     # print(f'[Pkt Processor] Processing packet: {pkt.summary()}')
     # Put the packet into the flow queue for further processing
     # the flow queue is processed by the burst processor thread
     global_state.flow_queue.put(pkt)
-
-
-
-
 
 
 # # Packet deduplication and retransmission detection
