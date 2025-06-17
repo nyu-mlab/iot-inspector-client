@@ -172,7 +172,7 @@ def process_burst(pkt):
     burst_dict_all_burst.setdefault((flow_key, burst_start_time), []).append([time_epoch, frame_len, _ws_protocol, hostname, ip_proto, src_ip_addr, src_port, dst_ip_addr, dst_port, dst_mac_addr])
 
     # clear all the burst if current time pass the threshold
-    for key in burst_dict_all_burst:
+    for key in list(burst_dict_all_burst):
         if (time_epoch - key[1]) > BURST_WRITE_INTERVAL:
             # clean temp dicts 
             pop_time = burst_dict_start_time.pop(key[0], 0)

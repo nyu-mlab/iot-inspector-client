@@ -8,7 +8,7 @@ import functools
 import libinspector.core
 
 from libinspector import safe_loop
-from event_detection import packet_processor, burst_processor
+from event_detection import packet_processor, burst_processor, feature_generation
 from event_detection import global_state
 
 
@@ -74,6 +74,9 @@ def start_inspector_once():
     
     # Start the burst processing thread
     safe_loop.SafeLoopThread(burst_processor.start)
+
+    # Start the feature processing thread
+    safe_loop.SafeLoopThread(feature_generation.start)
 
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads(
