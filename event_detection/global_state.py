@@ -9,11 +9,20 @@ import queue
 global_state_lock = threading.Lock()
 
 
-# A queue that holds packets to be processed
+# A queue that holds raw packets to be processed; stores raw packets;
+# page_manager.py uses this queue to get packets to packet_processor.py
 packet_queue = queue.Queue()
 
-# A queue that holds packets to be processed for burst creation
+# A queue that holds packets to be processed for burst creation; stores raw packets;
+# packet_processor.py uses this queue to get packets to burst_processor.py
 flow_queue = queue.Queue()
 
-# A queue that holds burst that are pending to be processed
+# A queue that holds burst that are pending to be processed; 
+# stores (flow_key, pop_time, pop_burst) 
+# burst_processor.py uses this queue to get bursts to feature_generation.py
 pending_burst_queue = queue.Queue()
+
+# A queue that holds processed bursts for further processing;
+# stores burst processed to features;
+# feature_generation.py uses this queue to get processed bursts to feature_standardization.py
+processed_burst = queue.Queue()

@@ -1,6 +1,6 @@
 Running flow
 ----------------
-packet_processor.py -> burst_processor.py -> feature_generation.py
+packet_processor.py -> burst_processor.py -> feature_generation.py -> feature_standardization.py
 
 packet_processor: 
 gets raw packets from libinspector.core via page_manager

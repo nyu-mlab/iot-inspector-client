@@ -186,9 +186,6 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
     store_burst_in_db(d)
     return
         
-    # todo: check datafrme before storing
-    # todo: store data to somewhere
-    # common.log(f'[Writing Feature]: {flow_key} \t {pop_time} \t {d}')
 
 # store processed burst features (data) into database
 # input: a data point
@@ -213,4 +210,5 @@ def store_burst_in_db(data):
     else:
         global_state.burst_queue.put(data)
     """
-    print(f'[Feature Generation] Writing Feature: {data[-6]} \t {data} \n')
+    
+    global_state.processed_burst.put(data)
