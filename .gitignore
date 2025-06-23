@@ -115,3 +115,4 @@ v2-src/.vscode/settings.json
 .vscode/settings.json
 config.json
 uv.lock
+models/

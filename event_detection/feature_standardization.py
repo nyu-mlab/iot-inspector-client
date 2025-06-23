@@ -1,8 +1,16 @@
-from . import global_state
 import logging
 import traceback
 import sys
+import os
 
+from . import global_state
+from .utils import get_product_name_by_mac
+from .ttl_cache import ttl_cache
+from .model_selection import find_best_match
+
+import pandas as pd
+import numpy as np
+import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +29,46 @@ def start():
     burst = global_state.processed_burst.get()
 
     try:
-        print(f'[Feature Standardization] Writing Feature: {burst[-6]} \t Memory size{sys.getsizeof(burst)} \n')
-        # standardize_burst_feature(burst)
+        standardize_burst_feature(burst)
     except Exception as e:
         logger.error('[Feature Standardization] Error processing burst: ' + str(e) + ' for burst: ' + str(burst) + '\n' + traceback.format_exc())
 
 
+# Fetches the ss and pca model from MAC address.
+# Args:
+#     mac_address (str): The MAC address of the device.
+# Returns:
+#     pickle model file 
+# todo: write a function to map the device name to model file name 
+# todo: update every 10 mins, or clean memory every 10 mis 
+# @ttl_lru_cache(ttl_seconds=300, maxsize=128)
+@ttl_cache(maxsize=128, ttl=300)
+def get_ss_pca_model(device_name):
+    if device_name == 'unknown':
+        return "unknown"
 
-'''
+    # Note: the model is choosen from the available pre-trained models 
+    # todo: update threashold for matching device name with model name
+    _, model_name = find_best_match(device_name)
+
+    if model_name == 'unknown':
+        logger.warning('[Feature Standardization] Model not found: ' + str(device_name))
+        return "unknown"
+
+    # Load ss and pca file
+    model_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), '..', 'models', 'SS_PCA', model_name + '.pkl'
+        )
+    
+
+    if os.path.exists(model_dir):
+        with open(model_dir, 'rb') as file:
+            return pickle.load(file)
+        return "unknown"
+        
+    return "unknown"
+
+
 
 # pre-process burst file with pre-trained SS and PCA model 
 # Note: we are using latest model of sk_learn, but the models are traied on 1.3.0 version 
@@ -36,10 +76,9 @@ def start():
 # todo: train ss/pca models with latest version of numpy, sklean 
 
 def standardize_burst_feature(burst):
-    print('[Burst Pre-Processor] Before processing burst: ' + str(burst))
-
     # get device name from MAC address
     device_name = get_product_name_by_mac(burst[-6])
+    logger.info('[Feature Standardization] Processing burst for device name: ' + device_name+ " mac: " + str(burst[-6]))
 
     # load data to a dataframe 
     X_feature = pd.DataFrame([burst], columns=cols_feat)
@@ -48,23 +87,22 @@ def standardize_burst_feature(burst):
 
     ss_pca_model = get_ss_pca_model(device_name)
 
-    if ss_pca_model == "Model Unknown":
-        common.event_log('[Burst Pre-Processor] Process unsuccessful: ' + str(device_name) + ' SS PCA not exist')
+    if ss_pca_model == "unknown":
+        logger.warning('[Feature Standardization] Process unsuccessful for device mac: ' + str(burst[-6]) + ' SS PCA not exist')
         return
     
     try:
         ss = ss_pca_model['ss']
         X_feature = ss.transform(X_feature)
     except Exception as e:
-        common.log('[Burst Pre-Processor] Process failed, device name: ' + str(device_name) + " " + str(e))
+        logger.warning('[Feature Standardization] Transformation failed, device name: ' + str(device_name) + " " + str(e))
 
     X_feature = np.append(X_feature, burst[-6:])
 
     # todo: send processed data to next step 
-    common.log('[Burst Pre-Processor] Burst stored for: ' + str(device_name) + ' ' + burst[-1] + ' ' + burst[-2])
-
-    store_processed_burst_in_db(X_feature)
+    
+    logger.info('[Feature Standardization] Burst stored for: ' + str(device_name) + ' ' + burst[-1] + ' ' + burst[-2])
+    # store_processed_burst_in_db(X_feature)
     
     return 
 
-'''

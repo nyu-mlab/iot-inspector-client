@@ -1,5 +1,6 @@
 Running flow
 ----------------
+plan: event-detection models will run locally
 packet_processor.py -> burst_processor.py -> feature_generation.py -> feature_standardization.py
 
 packet_processor: 

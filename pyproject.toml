@@ -9,6 +9,7 @@ dependencies = [
     "streamlit>=1.44.1",
     "scipy==1.14.1",
     "statsmodels==0.14.4",
+    "scikit-learn==1.4.0"
 ]
 
 [tool.uv.sources]

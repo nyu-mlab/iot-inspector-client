@@ -81,3 +81,50 @@ def get_hostname_from_ip_addr(ip_addr: str) -> str:
         logging.error(f"Error resolving hostname for {ip_addr}: {e}")
 
     return ''
+
+
+
+
+# """
+# Fetches the product name of a device using its MAC address.
+# updates the cache periodically, like 5 mins
+# Args:
+#     mac_address (str): The MAC address of the device.
+# Returns:
+#     str: The product name of the device or 'Unknown Device' if not found.
+# """
+
+# TODO: Ask libinspector team if they have plans to store the product names in the server
+# Note: Currently hard coded
+# TODO: Add 
+@ttl_cache(maxsize=8192, ttl=300)
+def get_product_name_by_mac(mac_address):
+    if mac_address == '20:fe:00:d0:c2:9b':
+        return 'amazon-plug'
+    if mac_address == 'b0:f7:c4:6f:30:7f':
+        return 'echoshow5'
+    if mac_address == '0c:dc:91:8f:55:4d':
+        return 'echoshow5'
+    if mac_address == '192.166.1.?':
+        return 'ring-camera' 
+    if mac_address == 'a8:6e:84:ed:84:bd':
+        return 'tplink-bulb'
+    if mac_address == '192.166.1.?':
+        return 'yi-camera'
+    if mac_address == '192.166.1.?':
+        return 'ring-camera'
+    if mac_address == '192.166.1.?':
+        return 'wyze-cam'
+    if mac_address == 'e0:9d:13:31:2c:6a':
+        return 'samsung-tv'
+    
+    return 'unknown'
+
+    """with model.db:
+        # Query the database for the device with the specified MAC address
+        device = model.Device.select(model.Device.product_name).where(
+            model.Device.mac_addr == mac_address
+        ).first()
+
+        # Return the product name if the device exists, otherwise return a default value
+        return device.product_name if device and device.product_name else 'Unknown Device'"""
