@@ -3,7 +3,7 @@ Constructs all the pages in a single module.
 
 """
 import streamlit as st
-import device_list_page, device_detail_page, settings_page
+import device_list_page, device_detail_page, settings_page, overview_page
 import functools
 import libinspector.core
 
@@ -70,21 +70,29 @@ def start_inspector_once():
 
 
 
-device_list_page_ref = get_page(
+device_list_page_obj = get_page(
     title='Device List',
     material_icon='list_alt',
     show_page_func=device_list_page.show
 )
 
 
-device_detail_page_ref = get_page(
+device_detail_page_obj = get_page(
     title='Device Details',
     material_icon='monitoring',
     show_page_func=device_detail_page.show
 )
 
 
-settings_page_ref = get_page(
+overview_page_obj = get_page(
+    title='Overall Statistics',
+    material_icon='dashboard',
+    show_page_func=overview_page.show
+)
+
+
+
+settings_page_obj = get_page(
     title='Settings',
     material_icon='settings',
     show_page_func=settings_page.show

@@ -2,12 +2,17 @@ import streamlit as st
 import libinspector.global_state
 import pandas as pd
 import datetime
+import common
 
 
 
 def show():
 
     device_mac_address = show_device_list()
+
+    if not device_mac_address:
+        st.warning("No device selected. Please select a device to view details.")
+        return
 
     activity_inference(device_mac_address)
     show_device_details(device_mac_address)
@@ -24,7 +29,23 @@ def activity_inference(mac_address):
 @st.fragment(run_every=1)
 def show_device_details(mac_address):
 
-    st.markdown(f"### {mac_address}")
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+
+    device_custom_name = common.get_device_custom_name(mac_address)
+
+    sql = """
+        SELECT * FROM devices
+        WHERE mac_address = ?
+    """
+    with rwlock:
+        device_dict = db_conn.execute(sql, (mac_address,)).fetchone()
+
+    if not device_dict:
+        st.error(f"No device found with MAC address: {mac_address}")
+        return
+
+    st.markdown(f"### {device_custom_name}")
+    st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
 
     sql = """
         SELECT
@@ -37,7 +58,7 @@ def show_device_details(mac_address):
         ORDER BY timestamp DESC
         LIMIT 100;
     """
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+
     with rwlock:
         df = pd.read_sql_query(sql, db_conn, params=(mac_address, mac_address))
 
@@ -100,7 +121,7 @@ def show_device_list():
     # Get the list of devices from the database
     sql = """
         SELECT * FROM devices
-        WHERE is_inspected = 1 AND is_gateway = 0
+        WHERE is_gateway = 0
     """
     device_list = []
     with rwlock:
@@ -112,23 +133,36 @@ def show_device_list():
         st.stop()
 
     # Show a dropdown to select a device; each option shows both the device's MAC address and IP address
-    device_options = [f"{device['mac_address']} ({device['ip_address']})" for device in device_list]
+    device_options = [f"{common.get_device_custom_name(device['mac_address'])} - {device['ip_address']} - {device['mac_address']}" for device in device_list]
     device_options.insert(0, "(Select a device)")  # Add a placeholder option
 
     device_mac_address = st.query_params.get('device_mac_address', None)
+    selected_index = 0
     if device_mac_address:
         # If a device MAC address is already selected, find its index in the options
-        selected_index = next((i for i, option in enumerate(device_options) if option.startswith(device_mac_address)), 0)
+        for i, option in enumerate(device_options):
+            if option.endswith(device_mac_address):
+                selected_index = i
+                break
 
-    selected_device = st.selectbox("Select a device to view details:", device_options, index=selected_index if device_mac_address else 0)
+    def _selected_device_changed_callback():
+        selected_device = st.session_state['selected_device']
+        if selected_device == "(Select a device)":
+            st.query_params['device_mac_address'] = None
+        else:
+            # Extract the MAC address from the selected option
+            device_mac_address = selected_device.split(" - ")[-1]
+            st.query_params['device_mac_address'] = device_mac_address
 
-    if selected_device and selected_device != "(Select a device)":
-        # Extract the MAC address from the selected option
-        device_mac_address = selected_device.split(" ")[0]
-        st.query_params['device_mac_address'] = device_mac_address
-        return device_mac_address
+    st.selectbox(
+        "Select a device to view details:",
+        device_options,
+        index=selected_index,
+        key='selected_device',
+        on_change=_selected_device_changed_callback
+    )
 
-    st.info("Please select a device to view its details.")
-    st.stop()
+    return device_mac_address
+
 
 
