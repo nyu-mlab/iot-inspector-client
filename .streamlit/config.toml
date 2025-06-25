@@ -3,7 +3,7 @@ toolbarMode = "viewer"
 
 [server]
 port = 33721
-fileWatcherType = "auto"
+fileWatcherType = "none"
 headless = true
 enableStaticServing = true
 

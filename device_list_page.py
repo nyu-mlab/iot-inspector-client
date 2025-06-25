@@ -7,8 +7,15 @@ import libinspector.global_state
 import common
 
 
-@st.fragment(run_every=5)
 def show():
+
+    toast_obj = st.toast('Discovering devices...')
+
+    show_list(toast_obj)
+
+
+@st.fragment(run_every=1)
+def show_list(toast_obj):
 
     human_readable_time = common.get_human_readable_time()
     st.markdown(f'Updated: {human_readable_time}')
@@ -31,6 +38,12 @@ def show():
     for device_dict in device_list:
             st.markdown('---')
             show_device_card(device_dict)
+
+    prev_device_count = st.session_state.get('prev_device_count', 0)
+    if len(device_list) > prev_device_count:
+        toast_obj.toast(f'Discovered {len(device_list) - prev_device_count} new device(s)!', icon=':material/add_circle:')
+        st.session_state['prev_device_count'] = len(device_list)
+        time.sleep(1.5)  # Give the user a moment to read the toast
 
 
 
