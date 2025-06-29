@@ -11,7 +11,8 @@ from libinspector import safe_loop
 from event_detection import (packet_processor, 
                              burst_processor, 
                              feature_generation,
-                             feature_standardization)
+                             feature_standardization,
+                             periodic_filter)
 from event_detection import global_state
 
 
@@ -83,6 +84,9 @@ def start_inspector_once():
 
      # Start the feature standardization thread
     safe_loop.SafeLoopThread(feature_standardization.start)
+
+    # Start the periodic filter thread
+    safe_loop.SafeLoopThread(periodic_filter.start)
 
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads(

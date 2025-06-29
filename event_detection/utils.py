@@ -28,6 +28,25 @@ def validate_ip_address(address):
         return False
 
 
+# Returns a list of all mac_address values from the devices table.
+
+@ttl_cache(ttl=30)
+def get_mac_address_list() -> list:
+    """
+    Returns a list of all mac_address values from the devices table.
+    Assumes the table 'devices' exists and conn is a valid DB connection.
+    """
+    try:
+        conn, rw_lock = libinspector_state.db_conn_and_lock
+        with rw_lock:
+            cursor = conn.execute("SELECT mac_address FROM devices")
+            macs = [row[0] for row in cursor.fetchall()]
+            return macs
+    except Exception:
+        logger.error("Error in get_hostname_from_ip_addr()")
+        return []
+
+
 @ttl_cache(maxsize=8192, ttl=15)
 def get_hostname_from_ip_addr(ip_addr: str) -> str:
     """
@@ -128,3 +147,42 @@ def get_product_name_by_mac(mac_address):
 
         # Return the product name if the device exists, otherwise return a default value
         return device.product_name if device and device.product_name else 'Unknown Device'"""
+    
+
+@ttl_cache(maxsize=128)
+def protocol_transform(test_protocols):
+    # for i in range(len(test_protocols)):
+    if 'TCP' in test_protocols:
+        test_protocols = 'TCP'
+    elif 'MQTT' in test_protocols:
+        test_protocols = 'TCP'
+    elif 'UDP' in test_protocols:
+        test_protocols = 'UDP'
+    elif 'TLS' in test_protocols:
+        test_protocols = 'TCP'
+    if ';' in test_protocols:
+        tmp = test_protocols.split(';')
+        test_protocols = ' & '.join(tmp)
+    return test_protocols
+
+
+# transform multiple hosts to single host
+@ttl_cache(maxsize=128)
+def host_transform(test_hosts):
+    # process host
+    if test_hosts == None:
+        return 'non'
+
+    if test_hosts!= '':
+        try:
+            tmp = test_hosts.split(';')
+        except:
+            return 'non'
+        test_hosts= tmp[0]
+    else:
+        return 'non'
+
+    test_hosts = test_hosts.lower()   
+    test_hosts = test_hosts.replace('?','')   
+
+    return test_hosts

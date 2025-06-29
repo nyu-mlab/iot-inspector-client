@@ -45,7 +45,7 @@ def start():
 @ttl_cache(maxsize=128, ttl=300)
 def get_ss_pca_model(device_name):
     if device_name == 'unknown':
-        return "unknown"
+        return ("unknown", "unknown")
 
     # Note: the model is choosen from the available pre-trained models 
     # todo: update threashold for matching device name with model name
@@ -53,7 +53,7 @@ def get_ss_pca_model(device_name):
 
     if model_name == 'unknown':
         logger.warning('[Feature Standardization] Model not found: ' + str(device_name))
-        return "unknown"
+        return ("unknown", "unknown")
 
     # Load ss and pca file
     model_dir = os.path.join(
@@ -63,10 +63,10 @@ def get_ss_pca_model(device_name):
 
     if os.path.exists(model_dir):
         with open(model_dir, 'rb') as file:
-            return pickle.load(file)
-        return "unknown"
+            return (pickle.load(file), model_name)
+        return ("unknown", "unknown")
         
-    return "unknown"
+    return ("unknown", "unknown")
 
 
 
@@ -85,7 +85,7 @@ def standardize_burst_feature(burst):
     X_feature = X_feature.drop(['device', 'state', 'event' ,'start_time', 'protocol', 'hosts'], axis=1).fillna(-1)
     X_feature = np.array(X_feature)
 
-    ss_pca_model = get_ss_pca_model(device_name)
+    ss_pca_model, model_name = get_ss_pca_model(device_name)
 
     if ss_pca_model == "unknown":
         logger.warning('[Feature Standardization] Process unsuccessful for device mac: ' + str(burst[-6]) + ' SS PCA not exist')
@@ -102,7 +102,20 @@ def standardize_burst_feature(burst):
     # todo: send processed data to next step 
     
     logger.info('[Feature Standardization] Burst stored for: ' + str(device_name) + ' ' + burst[-1] + ' ' + burst[-2])
-    # store_processed_burst_in_db(X_feature)
+    store_processed_burst_in_db(X_feature, device_name, model_name)
     
     return 
 
+
+# store standardized processed burst features (data) into database
+# input: a data point, output: None
+# TODO: incorporate idle device in the burst
+# idea: create a different queue for idle device, and process them separately
+def store_processed_burst_in_db(data, device_name, model_name):
+    # Note: for now storing in a queue, later store in database
+    # make to lock safe
+    """
+    Adds a data to the data queue.
+    """
+    global_state.ss_burst_queue.put((data, device_name, model_name))
+        

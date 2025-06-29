@@ -26,3 +26,11 @@ pending_burst_queue = queue.Queue()
 # stores burst processed to features;
 # feature_generation.py uses this queue to get processed bursts to feature_standardization.py
 processed_burst = queue.Queue()
+
+
+# A queue that holds standardized burst features;
+# need to discart periodic burst from all bursts;
+ss_burst_queue = queue.Queue()
+
+# A queue that holds standardized burst features that are filtered;
+filtered_burst_queue = queue.Queue()

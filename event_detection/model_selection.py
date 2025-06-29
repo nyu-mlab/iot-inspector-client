@@ -29,6 +29,7 @@ def is_close_match(str1, str2, threshold=0.75):
     match_score = SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
     return 1 if match_score > threshold else 0
 
+@lru_cache(maxsize=128)
 def find_best_match(device_name, model_names=None, threshold=0.75):
     best_match = None
     highest_score = 0
