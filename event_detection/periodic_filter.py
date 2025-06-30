@@ -17,8 +17,8 @@ def start():
     burst, device_name, model_name = global_state.ss_burst_queue.get()
 
     try:
-        periodic_filter_burst_helper(burst, device_name, model_name)
         # print('[Periodic Filter] Processing burst for device: ' + str(device_name) + ' model: ' + str(model_name))
+        periodic_filter_burst_helper(burst, device_name, model_name)
     except Exception as e:
         logger.error('[Periodic Filter] Error processing burst: ' + str(e) + ' for burst: ' + str(burst) + '\n' + traceback.format_exc())
 
@@ -31,15 +31,17 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
     Returns:
         None: The function processes the burst and does not return anything.
     """
-    # get device name from MAC address
-    # device_name = get_product_name_by_mac(burst[-6])
+    
+    
+    # # define the expected features of a burst 
+    # cols_feat = [ "meanBytes", "minBytes", "maxBytes", "medAbsDev",
+    #             "skewLength", "kurtosisLength", "meanTBP", "varTBP",
+    #             "medianTBP", "kurtosisTBP", "skewTBP", "network_total",
+    #             "network_in", "network_out", "network_external", "network_local",
+    #             "network_in_local", "network_out_local", "meanBytes_out_external", "meanBytes_in_external",
+    #             "meanBytes_out_local", "meanBytes_in_local",
+    #             "device", "state", "event", "start_time", "protocol", "hosts"]
 
-    # get moddel name from device name
-    # _, model_name = find_best_match(device_name)
-    # if model_name == 'unknown':
-    #     logger.warning('[Periodic Filter] device not found: ' + str(device_name))
-    #     return 
-    # print('[Periodic Filter] device: ' + str(device_name) + ' model: ' + str(model_name))
 
     # Get periods from fingerprinting files
     periodic_tuple, host_set = get_periods(model_name) 
@@ -72,7 +74,6 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
     local_mac_list = ['ff:ff:ff:ff:ff:ff', '192.168.1.1', '192.168.0.1']
     mac_dic = get_mac_address_list()
 
-    print('[Periodic Filter] mac_dic: ' + str(mac_dic))
 
     if test_hosts in mac_dic or test_hosts in local_mac_list or test_hosts=='multicast' or ':' in test_hosts:
         return
@@ -148,7 +149,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
             break
     
     if aperiodic_event:
-        store_processed_burst_in_db(burst)
+        store_processed_burst_in_db(burst, device_name, model_name)
         logger.info('[Periodic Filter] non-periodic event found ' + device_name + ' : ' + test_hosts + ' ' + test_protocols)
 
     return 
@@ -208,7 +209,7 @@ def dbscan_predict(dbscan_model, x_new, metric=sp.spatial.distance.euclidean):
 # store standardized processed burst features (data) into database
 # input: a data point
 # output: None
-def store_processed_burst_in_db(data):
+def store_processed_burst_in_db(data, device_name=None, model_name=None):
     # todo: for now storing in a queue, later store in database
     # make to lock safe
     """
@@ -218,5 +219,5 @@ def store_processed_burst_in_db(data):
     #     if not global_state.is_inspecting:
     #         return
 
-    global_state.filtered_burst_queue.put(data)
+    global_state.filtered_burst_queue.put((data, device_name, model_name))
 

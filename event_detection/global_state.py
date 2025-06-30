@@ -34,3 +34,6 @@ ss_burst_queue = queue.Queue()
 
 # A queue that holds standardized burst features that are filtered;
 filtered_burst_queue = queue.Queue()
+
+# A queue that holds events that are detected;
+filtered_event_queue = queue.Queue()
