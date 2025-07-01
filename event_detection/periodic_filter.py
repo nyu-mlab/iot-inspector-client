@@ -48,7 +48,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
 
     if periodic_tuple == 'unknown':
         logger.error(
-            '[Burst Periodic-filter] Failed loading periodic events: ' + ' for device: '\
+            '[Periodic-filter] Failed loading periodic events: ' + ' for device: '\
                 + str(device_name) + " " + str(burst))
         return
 

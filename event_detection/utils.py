@@ -121,9 +121,9 @@ def get_product_name_by_mac(mac_address):
     if mac_address == '20:fe:00:d0:c2:9b':
         return 'amazon-plug'
     if mac_address == 'b0:f7:c4:6f:30:7f':
-        return 'echoshow5'
+        return 'echospot'
     if mac_address == '0c:dc:91:8f:55:4d':
-        return 'echoshow5'
+        return 'echospot'
     if mac_address == '192.166.1.?':
         return 'ring-camera' 
     if mac_address == 'a8:6e:84:ed:84:bd':
