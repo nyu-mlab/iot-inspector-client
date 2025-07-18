@@ -2,6 +2,7 @@ import datetime
 import time
 import threading
 import json
+import functools
 
 
 config_file_name = 'config.json'
@@ -129,3 +130,18 @@ def get_device_custom_name(mac_address):
 
     return device_custom_name
 
+
+
+@functools.cache
+def get_sql_query(sql_file_name):
+    """
+    Get the SQL query from a file.
+
+    Args:
+        sql_file_name (str): The name of the SQL file.
+
+    Returns:
+        str: The SQL query as a string.
+    """
+    with open(sql_file_name, 'r') as f:
+        return f.read().strip()
