@@ -33,6 +33,7 @@ def start():
 #             "device", "state", "event", "start_time", "protocol", "hosts"]
 
 def predict_event_helper(burst, dname=None, model_name=None):
+    logger.info('[Predict-Event] Processing burst for device: ' + str(dname) + ' data: ' + str(burst[:-6]))
     X_test = burst[:-6]
 
     # # Note: removed hard coding 
