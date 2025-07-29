@@ -18,3 +18,17 @@ creates features from burst
 feature_standardization:
 standerdiuze feature 
 
+## Plan: Local LLM Agent
+
+### Install Dependentcy
+`sudo uv pip install mac-vendor-lookup`
+
+
+
+## Step-by-Step Plan: Lightweight LLM Agent
+
+### 🧱 Step 1: Install Dependencies
+
+`pip install transformers datasets accelerate peft trl bitsandbytes`
+
+✅ bitsandbytes enables quantized models (4-bit, 8-bit) to save memory.
