@@ -1,0 +1,20 @@
+Documentation:
+  - '**/*.md'
+
+Github-files:
+  - '.github/**'
+
+Tests:
+  - 'tests/**'
+
+Analysis:
+  - 'analysis/**'
+
+Core:
+  - 'core/**'
+
+Data:
+  - 'data/**'
+
+UI:
+  - 'ui/**'

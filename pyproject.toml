@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = [
+    "analysis",
+    "analysis.*",
+    "core",
+    "core.*",
+    "ui",
+    "ui.*",
+    "data",
+    "data.*",
+]
+
+[project]
+name = "iot-inspector"
+dynamic = ["version"]
+description = "IoT Inspector Client for analyzing IoT device firmware"
+readme = "README.md"
+authors = [
+    { name = "Danny Huang", email = "dhuang@nyu.edu" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "peewee",
+    "scapy",
+    "requests",
+    "geoip2",
+    "netifaces",
+    "netaddr",
+    "streamlit",
+    "plotly",
+    "tldextract",
+    "kaleido"
+]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+[project.urls]
+Homepage = "https://inspector.engineering.nyu.edu/"
+Source = "https://github.com/nyu-mlab/iot-inspector-client/"
+Tracker = "https://github.com/nyu-mlab/iot-inspector-client/issues"
