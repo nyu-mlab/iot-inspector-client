@@ -18,7 +18,7 @@ jobs:
         with:
           release_branch: master
           use_api: true
-          increment: minor
+          increment: major
 
   build:
     runs-on: ubuntu-latest
@@ -37,13 +37,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: iot-inspector
-        path: dist/iot-inspector*.whl
+        path: dist/*.whl
         if-no-files-found: error
 
   publish-to-pypi:
     name: Publish Python 🐍 distribution 📦 to PyPI
-    if: false
-    # if: github.repository == 'nyu-mlab/iot-inspector-client'
+    if: github.repository == 'nyu-mlab/iot-inspector-client'
     needs: [create_release, build]
     runs-on: ubuntu-latest
     environment:
@@ -72,4 +71,4 @@ jobs:
         with:
           tag_name: ${{ needs.create_release.outputs.v-version }}
           files: |
-            dist/iot-inspector*.whl
+            dist/*.whl
