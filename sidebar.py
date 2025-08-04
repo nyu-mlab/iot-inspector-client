@@ -1,7 +1,5 @@
 import streamlit as st
 import common
-import libinspector
-import time
 
 
 

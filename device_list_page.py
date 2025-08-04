@@ -1,5 +1,4 @@
 import streamlit as st
-import functools
 import time
 import json
 import libinspector.global_state

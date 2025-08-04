@@ -3,7 +3,10 @@ Constructs all the pages in a single module.
 
 """
 import streamlit as st
-import device_list_page, device_detail_page, settings_page, overview_page
+import device_list_page
+import device_detail_page
+import settings_page
+import overview_page
 import functools
 import libinspector.core
 

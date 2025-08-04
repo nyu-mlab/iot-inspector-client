@@ -159,7 +159,8 @@ def show_device_details(mac_address):
     # Show the network flows in a table; I assume we can capture the changes to confirm/labels here?
     st.markdown("#### Network Flows")
     df['confirmation'] = False # Add a confirmation column with default False values
-    edited_df = st.data_editor(df, use_container_width=True)
+    # you can get an edited_df as output.
+    st.data_editor(df, use_container_width=True)
 
 
 def show_device_list():

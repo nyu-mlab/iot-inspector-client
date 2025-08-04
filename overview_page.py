@@ -1,9 +1,10 @@
+import libinspector
 import streamlit as st
+import time
 
 
 def show():
     st.write("This is the overview page.")
-
 
 
 @st.fragment(run_every=2)
