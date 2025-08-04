@@ -1,3 +1,5 @@
+from typing import Any
+
 import streamlit as st
 import libinspector.global_state
 import pandas as pd
@@ -5,8 +7,19 @@ import datetime
 import common
 
 
-
 def show():
+    """
+    This function is the main entry point for the device details page.
+    http://localhost:33721/device_details?device_mac_address=<mac-address>
+
+    At the very top, it will show a list of devices to select from.
+
+    If no device is selected, it will show a warning message.
+
+    If a device is selected, the following is rendered:
+    - activity inference (currently a placeholder function)
+    - device details (A bar chart of traffic volume in the last 60 seconds, and a table of network flows)
+    """
 
     device_mac_address = show_device_list()
 
@@ -18,27 +31,60 @@ def show():
     show_device_details(device_mac_address)
 
 
-def activity_inference(mac_address):
+@st.cache_data(show_spinner=False)
+def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | None:
+    """
+    Fetches device info from the database with caching.
 
+    Args:
+        mac_address (str): The MAC address of the device to query. This is used
+                           as the primary cache key.
+        _db_conn: The database connection object. This is not used as part of
+                  the cache key because it is not hashable.
+        _rwlock: The read-write lock object. This is also not used as part of
+                 the cache key because it is not hashable.
 
-
-    return
-
-
-
-@st.fragment(run_every=1)
-def show_device_details(mac_address):
-
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
-
-    device_custom_name = common.get_device_custom_name(mac_address)
-
+    Returns:
+        dict: A dictionary containing the device's information, or None if not found.
+    """
     sql = """
         SELECT * FROM devices
         WHERE mac_address = ?
     """
-    with rwlock:
-        device_dict = db_conn.execute(sql, (mac_address,)).fetchone()
+    with _rwlock:
+        device_row = _db_conn.execute(sql, (mac_address,)).fetchone()
+    # Convert the sqlite3.Row object to a standard dictionary to make it serializable
+    if device_row:
+        return dict(device_row)
+    return None
+
+
+@st.fragment(run_every=1)
+def activity_inference(mac_address):
+    """
+
+    """
+    return
+
+
+@st.fragment(run_every=1)
+def show_device_details(mac_address):
+    """
+    This function has three things to show:
+    - At the very top, it shows the device's custom name, MAC address, and IP address.
+    - A bar chart of traffic volume in the last 60 seconds
+    - A table of network flows with the following columns:
+        - timestamp
+        - src_info (a column that shows the source hostname, or IP if no hostname is available)
+        - dest_info (a column that shows the destination hostname, or IP if no hostname is available)
+        - byte_count
+        - inferred_activity (a column that can be used for labeling)
+        - confirmation (a column that can be used for confirming the inferred activity)
+    """
+
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    device_custom_name = common.get_device_custom_name(mac_address)
+    device_dict = get_device_info(mac_address, db_conn, rwlock)
 
     if not device_dict:
         st.error(f"No device found with MAC address: {mac_address}")
@@ -77,8 +123,10 @@ def show_device_details(mac_address):
     # Combine the src/dest IP and hostname into a single column for better readability
     df['src_info'] = df.apply(lambda row: f"{row['src_hostname']}" if row['src_hostname'] else row['src_ip_address'], axis=1)
     df['dest_info'] = df.apply(lambda row: f"{row['dest_hostname']}" if row['dest_hostname'] else row['dest_ip_address'], axis=1)
+    # These are the columns in the Network Flow table
     df = df[['timestamp', 'src_info', 'dest_info', 'byte_count']]
 
+    # I think this is to be used for labeling?
     df['inferred_activity'] = None
 
     # Prepare data for the bar chart (last 60 seconds)
@@ -98,7 +146,7 @@ def show_device_details(mac_address):
 
         if not df_last_60_seconds.empty:
             # Group by second and sum byte_count
-            traffic_by_second = df_last_60_seconds.groupby(pd.Grouper(key='timestamp_dt', freq='S'))['byte_count'].sum().reset_index()
+            traffic_by_second = df_last_60_seconds.groupby(pd.Grouper(key='timestamp_dt', freq='s'))['byte_count'].sum().reset_index()
             traffic_by_second = traffic_by_second.rename(columns={'timestamp_dt': 'Time', 'byte_count': 'Bytes'})
 
             st.markdown("#### Traffic Volume (Last 60 Seconds)")
@@ -108,9 +156,9 @@ def show_device_details(mac_address):
     else:
         st.caption("No traffic data to display in chart.")
 
-    # Show the network flows in a table
+    # Show the network flows in a table; I assume we can capture the changes to confirm/labels here?
     st.markdown("#### Network Flows")
-    df['confirmation'] = False # Add confirmation column with default False values
+    df['confirmation'] = False # Add a confirmation column with default False values
     edited_df = st.data_editor(df, use_container_width=True)
 
 
