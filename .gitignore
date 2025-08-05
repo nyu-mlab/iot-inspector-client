@@ -116,3 +116,4 @@ v2-src/.vscode/settings.json
 config.json
 uv.lock
 models/
+logs/
