@@ -3,6 +3,8 @@ import functools
 import time
 import json
 import libinspector.global_state
+import privacy_agent.llm_prompts as llm_prompts
+import utils
 
 import common
 
@@ -59,7 +61,23 @@ def show_device_card(device_dict):
 
         st.markdown(f'#### Unnamed Device')
         st.caption(f'IP Address: `{device_dict["ip_address"]}` -- MAC Address: `{device_dict["mac_address"]}` -- OUI: {metadata_dict["oui_vendor"]}')
-
+        
+        # def generate_device_description_cached(mac, ip, hostname, vendor, oui):
+        host_information = utils.get_hostname(device_dict["ip_address"])
+        llm_description = llm_prompts.generate_device_description(
+            hostname=host_information["hostname"] if host_information else "unknown",
+            vendor=metadata_dict["oui_vendor"],
+            oui=device_dict["mac_address"][:8].upper(),
+            metadata=json.dumps(metadata_dict)
+        )
+        # Clean up the description to fit in table format (max ~1000 chars for readability)
+        description_short = llm_description.replace('\n', ' ').strip()
+        if len(description_short) > 1000:
+            description_short = description_short[:1000] + "..."
+            # Format each field to fit table columns
+        # st.markdown(f'**Metadata:** {json.dumps(metadata_dict, indent=2)}')
+        # st.markdown(f'**Host information:** {host_information}')
+        st.markdown(f'**LLM** {description_short}')
     with right_col:
 
         st.toggle(
