@@ -7,6 +7,8 @@ from .ttl_cache import ttl_cache
 
 import numpy as np
 import pickle
+import csv
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ def start():
 
     burst, device_name, model_name = global_state.filtered_burst_queue.get()
 
-    # print('[Predict-Event] Processing burst for device: ' + str(device_name) + ' model: ' + str(model_name))
+    print('[Predict-Event] Processing burst for device: ' + str(device_name) + ' model: ' + str(model_name))
 
     try:
         predict_event_helper(burst, device_name, model_name)
@@ -23,17 +25,16 @@ def start():
     except Exception as e:
         logger.warning('[Predict-Event] Error: ' + str(e) + ' for burst: ' + str(burst) + '\n' + traceback.format_exc())
 
-# define the expected features of a burst 
-# cols_feat = [ "meanBytes", "minBytes", "maxBytes", "medAbsDev",
-#              "skewLength", "kurtosisLength", "meanTBP", "varTBP",
-#              "medianTBP", "kurtosisTBP", "skewTBP", "network_total",
-#              "network_in", "network_out", "network_external", "network_local",
-#             "network_in_local", "network_out_local", "meanBytes_out_external", "meanBytes_in_external",
-#             "meanBytes_out_local", "meanBytes_in_local",
-#             "device", "state", "event", "start_time", "protocol", "hosts"]
+# define the expected features of a burst
+# cols_feat =  ''' meanBytes, minBytes, maxBytes, medAbsDev, skewLength, kurtosisLength, meanTBP, varTBP,
+#     medianTBP, kurtosisTBP, skewTBP, network_total,
+#     network_in, network_out, network_external, network_local,
+#     network_in_local, network_out_local, meanBytes_out_external, meanBytes_in_external,
+#     meanBytes_out_local, meanBytes_in_local,
+#     device, state, event, start_time, protocol, hosts'''
 
 def predict_event_helper(burst, dname=None, model_name=None):
-    logger.info('[Predict-Event] Processing burst for device: ' + str(dname) + ' data: ' + str(burst[:-6]))
+    logger.info('[Predict-Event] Processing burst for device: ' + str(dname) + ' data: ' + str(burst))
     X_test = burst[:-6]
 
     # # Note: removed hard coding 
@@ -64,15 +65,50 @@ def predict_event_helper(burst, dname=None, model_name=None):
 
 
     try: 
-        event = str(list(positive_label_set)[predictions.index(1)])
+        event = str(positive_label_set[predictions.index(1)])
         logger.info('[Predict-Event] Success: ' + ' for device : ' + str(dname) + ' event: ' + event )
         store_events_in_db(burst[-6], burst[-3], event)
-    except:
-        logger.warning('[Predict-Event] Success: ' + ' for device : ' + str(dname) + ' event: periodic/unexpected event')
+        # store feature and metadata for fine-tuning
+        store_event_data(burst=burst, device_name=dname, time=burst[-3], event=event)
+        return
+    except Exception as e:
+        logger.warning('[Predict-Event] Success: ' + ' for device : ' + str(dname) + ' event: periodic/unexpected event' + ' error: ' + str(e))
+        # store feature and metadata for fine-tuning
+        store_event_data(burst=burst, device_name=dname, time=burst[-3], event='unknown')
     return
 
 
+def store_event_data(burst, device_name, time, event):
+    """
+    Store event metadata and event feature in local storage for fine-tuning model.
+    """
+    base_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'data', device_name
+        )
+    
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    
+    # Store event metadata
+    metadata_file = os.path.join(base_dir, 'event_metadata.csv')
+    file_exists = os.path.isfile(metadata_file)
+    with open(metadata_file, 'a') as f:
+        if not file_exists:
+            f.write('readable_time, timestamp, event, is_correct, correct_event \n')
+        try:
+            readable_time = datetime.fromtimestamp(float(time)).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            readable_time = str(time)
+        f.write(f'{readable_time}, {time}, {event},,\n')
 
+    # Store event feature
+    feature_file = os.path.join(base_dir, 'event_features.csv')
+    with open(feature_file, 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(burst)
+
+    
 
 # Fetches the event models model from MAC address.
 # Args:
@@ -110,12 +146,13 @@ def get_list_of_models(device_name, model_name=None):
     
     for f1 in os.listdir(model_dir):
         # positive_label_set.append('_'.join(f1.split('_')[1:-1]))
-        positive_label_set.append('_'.join(f1.split('.')[0].split('_')[1:]))
+        # positive_label_set.append('_'.join(f1.split('.')[0].split('_')[1:]))
+        item = '_'.join(f1.split('.')[0].split('_')[1:])
+        if item not in positive_label_set:
+            positive_label_set.append(item)
 
         list_models.append(pickle.load(open(os.path.join(model_dir, f1), 'rb')))
-    
-    positive_label_set = set(positive_label_set)
-
+    # positive_label_set = set(positive_label_set)
     return (positive_label_set, list_models)
 
 def store_events_in_db(device, time, event):
@@ -124,5 +161,5 @@ def store_events_in_db(device, time, event):
     """
     Adds a data to the data queue.
     """
-    global_state.filtered_event_queue.setdefault(device, []).append((time, event))
+    # global_state.filtered_event_queue.setdefault(device, []).append((time, event))
 

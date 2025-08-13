@@ -123,7 +123,7 @@ def get_product_name_by_mac(mac_address):
     if mac_address == 'b0:f7:c4:6f:30:7f':
         return 'echospot'
     if mac_address == '0c:dc:91:8f:55:4d':
-        return 'echospot'
+        return 'echoshow5'
     if mac_address == '192.166.1.?':
         return 'ring-camera' 
     if mac_address == 'a8:6e:84:ed:84:bd':
@@ -136,6 +136,8 @@ def get_product_name_by_mac(mac_address):
         return 'wyze-cam'
     if mac_address == 'e0:9d:13:31:2c:6a':
         return 'samsung-tv'
+    if mac_address == 'b0:2a:43:3c:b3:e1':
+        return 'google-home-mini'
     
     return 'unknown'
 

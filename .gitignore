@@ -117,3 +117,4 @@ config.json
 uv.lock
 models/
 logs/
+data/
