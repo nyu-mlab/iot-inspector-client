@@ -1,10 +1,11 @@
 *~
 .*
-!.github/
+!.gitattributes
+!.github
 user-data*
 3rd-party-software
 *.zip
-
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

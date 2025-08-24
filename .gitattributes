@@ -1,0 +1,6 @@
+# Always checkout with LF
+*.sh            text eol=lf
+*.bash          text eol=lf
+
+# Always checkout with CRLF
+*.bat           text eol=crlf
