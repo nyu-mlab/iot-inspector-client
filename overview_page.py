@@ -4,11 +4,19 @@ import time
 
 
 def show():
+    """
+    A Banner that shows this is the IoT Inspector overview page
+    """
     st.write("This is the overview page.")
 
 
 @st.fragment(run_every=2)
 def show_high_level_stats():
+    """
+    This page shows the following high level stats:
+    - Number of inspected devices
+    - Number of bytes transferred over the past 10 seconds
+    """
 
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
@@ -28,7 +36,6 @@ def show_high_level_stats():
     ts_ten_seconds_ago = int(time.time() - 10)
     with rwlock:
         bytes_transferred = db_conn.execute(sql, (ts_ten_seconds_ago,)).fetchone()[0] or 0
-
 
     c1, c2 = st.columns([1, 1], gap='small')
     with c1:

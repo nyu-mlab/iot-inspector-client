@@ -6,6 +6,7 @@ import json
 import functools
 import requests
 import libinspector
+from typing import Any
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()
@@ -151,9 +152,7 @@ def config_get(key, default=None):
         The configuration value or the default value.
     """
     with config_lock:
-
         initialize_config_dict()
-
         if key in config_dict:
             return config_dict[key]
 
@@ -164,7 +163,7 @@ def config_get(key, default=None):
         raise KeyError(f"Key '{key}' not found in configuration.")
 
 
-def config_get_prefix(key_prefix):
+def config_get_prefix(key_prefix: str):
     """
     Get all configuration values that start with a given prefix.
 
@@ -175,9 +174,7 @@ def config_get_prefix(key_prefix):
         dict: A dictionary of configuration values that match the prefix.
     """
     with config_lock:
-
         initialize_config_dict()
-
         return {
             k: v
             for k, v in config_dict.items()
@@ -185,18 +182,16 @@ def config_get_prefix(key_prefix):
         }
 
 
-def config_set(key, value):
+def config_set(key: str, value: Any):
     """
     Set a configuration value.
 
     Args:
         key (str): The configuration key.
-        value: The value to set.
+        value (Any): The value to set, can be str, bool, etc.
     """
     with config_lock:
-
         initialize_config_dict()
-
         config_dict[key] = value
 
         # Write the updated config_dict to the file
@@ -204,7 +199,7 @@ def config_set(key, value):
             json.dump(config_dict, f, indent=2, sort_keys=True)
 
 
-def get_device_custom_name(mac_address):
+def get_device_custom_name(mac_address: str) -> str:
     """
     Get the custom name for a device based on its MAC address.
 
@@ -233,7 +228,7 @@ def get_sql_query(sql_file_name: str) -> str:
         sql_file_name (str): The name of the SQL file.
 
     Returns:
-        str: The SQL query as a string.
+        str: The SQL query as a string read from a file
     """
     with open(sql_file_name, 'r') as f:
         return f.read().strip()

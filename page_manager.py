@@ -11,9 +11,7 @@ import functools
 import libinspector.core
 
 
-
 def get_page(title, material_icon, show_page_func):
-
     icon = f":material/{material_icon}:"
     url_path = title.lower().replace(' ', '_')
 
@@ -59,18 +57,14 @@ def initialize_page():
             </style>
             """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
     start_inspector_once()
-
 
 
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
-
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
-
 
 
 device_list_page_obj = get_page(
@@ -79,21 +73,17 @@ device_list_page_obj = get_page(
     show_page_func=device_list_page.show
 )
 
-
 device_detail_page_obj = get_page(
     title='Device Details',
     material_icon='monitoring',
     show_page_func=device_detail_page.show
 )
 
-
 overview_page_obj = get_page(
     title='Overall Statistics',
     material_icon='dashboard',
     show_page_func=overview_page.show
 )
-
-
 
 settings_page_obj = get_page(
     title='Settings',

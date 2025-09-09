@@ -2,20 +2,22 @@ import streamlit as st
 import time
 import json
 import libinspector.global_state
-
 import common
 
 
 def show():
-
+    """
+    Creating a page that shows what devices have been discovered so far
+    """
     toast_obj = st.toast('Discovering devices...')
-
     show_list(toast_obj)
 
 
 @st.fragment(run_every=1)
-def show_list(toast_obj):
-
+def show_list(toast_obj: st.toast):
+    """
+    The main page that creates a "card" for each device that was found via IoT Inspector
+    """
     human_readable_time = common.get_human_readable_time()
     st.markdown(f'Updated: {human_readable_time}')
 
@@ -34,10 +36,12 @@ def show_list(toast_obj):
     if not device_list:
         st.warning('We are still scanning the network for devices. Please wait a moment. This page will refresh automatically.')
 
+    # Create a card entry for the discovered device
     for device_dict in device_list:
-            st.markdown('---')
-            show_device_card(device_dict)
+        st.markdown('---')
+        show_device_card(device_dict)
 
+    # Create a pop-up showing if any new devices were found
     prev_device_count = st.session_state.get('prev_device_count', 0)
     if len(device_list) > prev_device_count:
         toast_obj.toast(f'Discovered {len(device_list) - prev_device_count} new device(s)!', icon=':material/add_circle:')
@@ -45,8 +49,13 @@ def show_list(toast_obj):
         time.sleep(1.5)  # Give the user a moment to read the toast
 
 
+def show_device_card(device_dict: dict):
+    """
+    Process the data for a discovered device into a list of cards.
 
-def show_device_card(device_dict):
+    Args:
+        device_dict (dict): information about the device, from the 'devices' table
+    """
 
     # Check if the user has previously inspected this device
     device_inspected_config_key = f'device_is_inspected_{device_dict["mac_address"]}'
@@ -71,8 +80,8 @@ def show_device_card(device_dict):
 
     c1, c2 = st.columns([6, 4], gap='small')
 
+    # show high level information, IP, Mac, OUI
     with c1:
-
         device_detail_url = f"/device_details?device_mac_address={device_dict['mac_address']}"
         title_text = f'**[{device_custom_name}]({device_detail_url})**'
         st.markdown(title_text)
@@ -81,8 +90,8 @@ def show_device_card(device_dict):
             caption += f' | {metadata_dict["oui_vendor"]}'
         st.caption(caption, help='IP address, MAC address, and manufacturer OUI')
 
+    # Set whether a device is to be inspected, favorite, or blocked
     with c2:
-
         # Maps short options to long options for display
         option_dict = {
             'inspected': ':material/troubleshoot: Inspected',
@@ -132,4 +141,3 @@ def show_device_card(device_dict):
             key=f"device_options_{device_dict['mac_address']}",
             on_change=_device_options_changed_callback
         )
-
