@@ -1,10 +1,12 @@
 from typing import Any
 
+import pandas
 import streamlit as st
 import libinspector.global_state
 import pandas as pd
 import datetime
 import common
+import time
 
 
 def show():
@@ -27,7 +29,6 @@ def show():
         st.warning("No device selected. Please select a device to view details.")
         return
 
-    activity_inference(device_mac_address)
     show_device_details(device_mac_address)
 
 
@@ -59,16 +60,49 @@ def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | Non
     return None
 
 
-@st.fragment(run_every=1)
-def activity_inference(mac_address):
+def process_network_flows(df: pandas.DataFrame):
     """
+    Helper function used for both upload and download for 'show_device_details'.
 
+    Args:
+        df: The Dataframe with SQL results to process and display.
     """
-    return
+    if df.empty:
+        st.warning("No network flows found for this device.")
+        return
+
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
+    local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+    df['timestamp'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
+    df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    df = df.reset_index(drop=True)
+    df['inferred_activity'] = None
+    df['confirmation'] = False
+
+    st.markdown("#### Network Flows")
+    st.data_editor(df, use_container_width=True)
+
+
+def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
+    """
+    Plots the traffic volume over time.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
+        chart_title: The title to display above the chart.
+    """
+    if df.empty:
+        st.caption("No traffic data to display in chart.")
+    else:
+        st.markdown(f"#### {chart_title}")
+        now = int(time.time())
+        df['seconds_ago'] = now - df['Time'].astype(int)
+        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0)
+        st.bar_chart(df['Bits'], use_container_width=True)
 
 
 @st.fragment(run_every=1)
-def show_device_details(mac_address):
+def show_device_details(mac_address: str):
     """
     This function has three things to show:
     - At the very top, it shows the device's custom name, MAC address, and IP address.
@@ -80,6 +114,9 @@ def show_device_details(mac_address):
         - byte_count
         - inferred_activity (a column that can be used for labeling)
         - confirmation (a column that can be used for confirming the inferred activity)
+
+    Args:
+        mac_address (str): The MAC address of the device to show details for.
     """
 
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
@@ -93,74 +130,64 @@ def show_device_details(mac_address):
     st.markdown(f"### {device_custom_name}")
     st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
 
-    sql = """
-        SELECT
-            timestamp,
-            src_ip_address, src_hostname,
-            dest_ip_address, dest_hostname,
-            byte_count
-        FROM network_flows
-        WHERE src_mac_address = ? OR dest_mac_address = ?
-        ORDER BY timestamp DESC
-        LIMIT 100;
-    """
+    now = int(time.time())
+    sixty_seconds_ago = now - 60
+
+    # Upload traffic (sent by device)
+    sql_upload_chart = """
+                 SELECT timestamp AS Time, 
+                        SUM(byte_count) * 8 AS Bits
+                 FROM network_flows
+                 WHERE src_mac_address = ?
+                   AND timestamp >= ?
+                 GROUP BY timestamp
+                 ORDER BY timestamp DESC
+                 """
+
+    sql_upload_hosts =  """
+                 SELECT timestamp AS Time, 
+                        COALESCE(dest_hostname, dest_ip_address) AS dest_info,  
+                        SUM(byte_count) * 8 AS Bits
+                 FROM network_flows
+                 WHERE src_mac_address = ?
+                   AND timestamp >= ?
+                 GROUP BY timestamp, dest_info
+                 ORDER BY timestamp DESC
+                 """
+
+    # Download traffic (received by device)
+    sql_download_chart = """
+                 SELECT timestamp, 
+                        SUM(byte_count) * 8 AS bits
+                 FROM network_flows
+                 WHERE dest_mac_address = ?
+                   AND timestamp >= ?
+                 GROUP BY timestamp
+                 ORDER BY timestamp DESC
+                 """
+
+    sql_download_hosts =  """
+                 SELECT timestamp, 
+                        COALESCE(src_hostname, src_ip_address) AS src_info,  
+                        SUM(byte_count) * 8 AS Bits
+                 FROM network_flows
+                 WHERE dest_mac_address = ?
+                   AND timestamp >= ?
+                 GROUP BY timestamp, src_info
+                 ORDER BY timestamp DESC
+                 """
 
     with rwlock:
-        df = pd.read_sql_query(sql, db_conn, params=(mac_address, mac_address))
+        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn, params=(mac_address, sixty_seconds_ago))
+        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
+        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn, params=(mac_address, sixty_seconds_ago))
+        df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
 
-    if df.empty:
-        st.warning("No network flows found for this device.")
-        return
+    plot_traffic_volume(df_upload_bar_graph, "Upload Traffic (sent by device) in the last 60 seconds")
+    process_network_flows(df_upload_host_table)
 
-    # Convert the timestamp to a human-readable format
-    # Convert Unix timestamp to datetime in UTC, then convert to local time
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
-    local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    df['timestamp'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    df = df.reset_index(drop=True)  # Reset the index for better display
-
-    # Combine the src/dest IP and hostname into a single column for better readability
-    df['src_info'] = df.apply(lambda row: f"{row['src_hostname']}" if row['src_hostname'] else row['src_ip_address'], axis=1)
-    df['dest_info'] = df.apply(lambda row: f"{row['dest_hostname']}" if row['dest_hostname'] else row['dest_ip_address'], axis=1)
-    # These are the columns in the Network Flow table
-    df = df[['timestamp', 'src_info', 'dest_info', 'byte_count']]
-
-    # I think this is to be used for labeling?
-    df['inferred_activity'] = None
-
-    # Prepare data for the bar chart (last 60 seconds)
-    # Ensure 'timestamp' is in datetime format for comparison
-    df_chart = df.copy()
-    df_chart['timestamp_dt'] = pd.to_datetime(df_chart['timestamp']) # Re-convert to datetime if it was stringified for display
-
-    # Get the most recent timestamp
-    if not df_chart.empty:
-        # Use the current time in the local timezone as the reference for "now"
-        now_local = pd.Timestamp.now(tz=local_timezone)
-        # Filter for the last 60 seconds from now_local
-        time_60_seconds_ago = now_local - pd.Timedelta(seconds=60)
-        # Ensure df_chart['timestamp_dt'] is also localized to the same timezone for comparison
-        df_chart['timestamp_dt'] = df_chart['timestamp_dt'].dt.tz_localize(local_timezone, ambiguous='infer', nonexistent='shift_forward')
-        df_last_60_seconds = df_chart[(df_chart['timestamp_dt'] >= time_60_seconds_ago) & (df_chart['timestamp_dt'] <= now_local)]
-
-        if not df_last_60_seconds.empty:
-            # Group by second and sum byte_count
-            traffic_by_second = df_last_60_seconds.groupby(pd.Grouper(key='timestamp_dt', freq='s'))['byte_count'].sum().reset_index()
-            traffic_by_second = traffic_by_second.rename(columns={'timestamp_dt': 'Time', 'byte_count': 'Bytes'})
-
-            st.markdown("#### Traffic Volume (Last 60 Seconds)")
-            st.bar_chart(traffic_by_second.set_index('Time')['Bytes'], use_container_width=True)
-        else:
-            st.caption("No traffic data in the last 60 seconds to display in chart.")
-    else:
-        st.caption("No traffic data to display in chart.")
-
-    # Show the network flows in a table; I assume we can capture the changes to confirm/labels here?
-    st.markdown("#### Network Flows")
-    df['confirmation'] = False # Add a confirmation column with default False values
-    # you can get an edited_df as output.
-    st.data_editor(df, use_container_width=True)
+    plot_traffic_volume(df_download_bar_graph, "Download Traffic (received by device) in the last 60 seconds")
+    process_network_flows(df_download_host_table)
 
 
 def show_device_list():

@@ -9,7 +9,7 @@ description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "libinspector==1.0.6",
+    "libinspector==1.0.7",
     "streamlit>=1.44.1",
 ]
 authors = [
