@@ -1,5 +1,4 @@
 from typing import Any
-
 import pandas
 import streamlit as st
 import libinspector.global_state
@@ -83,24 +82,6 @@ def process_network_flows(df: pandas.DataFrame):
     st.data_editor(df, use_container_width=True)
 
 
-def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
-    """
-    Plots the traffic volume over time.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
-        chart_title: The title to display above the chart.
-    """
-    if df.empty:
-        st.caption("No traffic data to display in chart.")
-    else:
-        st.markdown(f"#### {chart_title}")
-        now = int(time.time())
-        df['seconds_ago'] = now - df['Time'].astype(int)
-        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0)
-        st.bar_chart(df['Bits'], use_container_width=True)
-
-
 @st.fragment(run_every=1)
 def show_device_details(mac_address: str):
     """
@@ -131,19 +112,10 @@ def show_device_details(mac_address: str):
     st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
 
     now = int(time.time())
+    df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(mac_address, now)
     sixty_seconds_ago = now - 60
 
     # Upload traffic (sent by device)
-    sql_upload_chart = """
-                 SELECT timestamp AS Time, 
-                        SUM(byte_count) * 8 AS Bits
-                 FROM network_flows
-                 WHERE src_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY timestamp
-                 ORDER BY timestamp DESC
-                 """
-
     sql_upload_hosts =  """
                  SELECT timestamp AS Time, 
                         COALESCE(dest_hostname, dest_ip_address) AS dest_info,  
@@ -156,16 +128,6 @@ def show_device_details(mac_address: str):
                  """
 
     # Download traffic (received by device)
-    sql_download_chart = """
-                 SELECT timestamp, 
-                        SUM(byte_count) * 8 AS bits
-                 FROM network_flows
-                 WHERE dest_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY timestamp
-                 ORDER BY timestamp DESC
-                 """
-
     sql_download_hosts =  """
                  SELECT timestamp, 
                         COALESCE(src_hostname, src_ip_address) AS src_info,  
@@ -178,15 +140,13 @@ def show_device_details(mac_address: str):
                  """
 
     with rwlock:
-        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn, params=(mac_address, sixty_seconds_ago))
         df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
-        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn, params=(mac_address, sixty_seconds_ago))
         df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
 
-    plot_traffic_volume(df_upload_bar_graph, "Upload Traffic (sent by device) in the last 60 seconds")
+    common.plot_traffic_volume(df_upload_bar_graph, now, "Upload Traffic (sent by device) in the last 60 seconds")
     process_network_flows(df_upload_host_table)
 
-    plot_traffic_volume(df_download_bar_graph, "Download Traffic (received by device) in the last 60 seconds")
+    common.plot_traffic_volume(df_download_bar_graph, now, "Download Traffic (received by device) in the last 60 seconds")
     process_network_flows(df_download_host_table)
 
 

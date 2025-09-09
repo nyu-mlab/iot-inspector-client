@@ -3,6 +3,7 @@ import time
 import json
 import libinspector.global_state
 import common
+import pandas as pd
 
 
 def show():
@@ -89,6 +90,12 @@ def show_device_card(device_dict: dict):
         if metadata_dict["oui_vendor"]:
             caption += f' | {metadata_dict["oui_vendor"]}'
         st.caption(caption, help='IP address, MAC address, and manufacturer OUI')
+
+        # --- Add bar charts for upload/download ---
+        now = int(time.time())
+        df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(device_dict['mac_address'], now)
+        common.plot_traffic_volume(df_upload_bar_graph, now, "Upload Traffic (sent by device) in the last 60 seconds")
+        common.plot_traffic_volume(df_download_bar_graph, now,"Download Traffic (received by device) in the last 60 seconds")
 
     # Set whether a device is to be inspected, favorite, or blocked
     with c2:

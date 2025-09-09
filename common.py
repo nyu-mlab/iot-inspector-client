@@ -6,11 +6,61 @@ import json
 import functools
 import requests
 import libinspector
+import pandas as pd
 from typing import Any
+import streamlit as st
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()
 config_dict = {}
+
+
+def bar_graph_data_frame(mac_address: str, now: int):
+    sixty_seconds_ago = now - 60
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+
+    sql_upload_chart = """
+                       SELECT timestamp, SUM (byte_count) * 8 AS Bits
+                       FROM network_flows
+                       WHERE src_mac_address = ?
+                         AND timestamp >= ?
+                       GROUP BY timestamp
+                       ORDER BY timestamp DESC
+                       """
+
+    sql_download_chart = """
+                         SELECT timestamp, SUM (byte_count) * 8 AS Bits
+                         FROM network_flows
+                         WHERE dest_mac_address = ?
+                           AND timestamp >= ?
+                         GROUP BY timestamp
+                         ORDER BY timestamp DESC
+                         """
+
+    with rwlock:
+        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn,
+                                                params=(mac_address, sixty_seconds_ago))
+        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn,
+                                                  params=(mac_address, sixty_seconds_ago))
+    return df_upload_bar_graph, df_download_bar_graph
+
+
+def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
+    """
+    Plots the traffic volume over time.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
+        now: The current epoch time from which the sql query was executed
+        chart_title: The title to display above the chart.
+    """
+    if df.empty:
+        st.caption("No traffic data to display in chart.")
+    else:
+        st.markdown(f"#### {chart_title}")
+        df['seconds_ago'] = now - df['timestamp'].astype(int)
+        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0)
+        st.bar_chart(df['Bits'], use_container_width=True)
 
 
 def call_predict_api(mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
