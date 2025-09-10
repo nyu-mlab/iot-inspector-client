@@ -59,8 +59,8 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
     else:
         st.markdown(f"#### {chart_title}")
         df['seconds_ago'] = now - df['timestamp'].astype(int)
-        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0)
-        st.bar_chart(df['Bits'], use_container_width=True)
+        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
+        st.bar_chart(df.set_index('seconds_ago')['Bits'], use_container_width=True)
 
 
 def call_predict_api(mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:

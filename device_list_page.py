@@ -3,7 +3,6 @@ import time
 import json
 import libinspector.global_state
 import common
-import pandas as pd
 
 
 def show():

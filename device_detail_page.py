@@ -70,13 +70,15 @@ def process_network_flows(df: pandas.DataFrame):
         st.warning("No network flows found for this device.")
         return
 
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
+    df['first_seen'] = pd.to_datetime(df['first_seen'], unit='s')
+    df['last_seen'] = pd.to_datetime(df['last_seen'], unit='s')
     local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    df['timestamp'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    df = df.reset_index(drop=True)
+    df['first_seen'] = df['first_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
+    df['last_seen'] = df['last_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
+
     df['inferred_activity'] = None
     df['confirmation'] = False
+    df = df.reset_index(drop=True)
 
     st.markdown("#### Network Flows")
     st.data_editor(df, use_container_width=True)
@@ -117,26 +119,28 @@ def show_device_details(mac_address: str):
 
     # Upload traffic (sent by device)
     sql_upload_hosts =  """
-                 SELECT timestamp AS Time, 
+                 SELECT MIN(timestamp) AS first_seen,
+                        MAX(timestamp) AS last_seen,
                         COALESCE(dest_hostname, dest_ip_address) AS dest_info,  
                         SUM(byte_count) * 8 AS Bits
                  FROM network_flows
                  WHERE src_mac_address = ?
                    AND timestamp >= ?
-                 GROUP BY timestamp, dest_info
-                 ORDER BY timestamp DESC
+                 GROUP BY dest_info
+                 ORDER BY last_seen DESC
                  """
 
     # Download traffic (received by device)
     sql_download_hosts =  """
-                 SELECT timestamp, 
+                 SELECT MIN(timestamp) AS first_seen,
+                        MAX(timestamp) AS last_seen,
                         COALESCE(src_hostname, src_ip_address) AS src_info,  
                         SUM(byte_count) * 8 AS Bits
                  FROM network_flows
                  WHERE dest_mac_address = ?
                    AND timestamp >= ?
-                 GROUP BY timestamp, src_info
-                 ORDER BY timestamp DESC
+                 GROUP BY src_info
+                 ORDER BY last_seen DESC
                  """
 
     with rwlock:
