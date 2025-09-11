@@ -28,7 +28,79 @@ def show():
         st.warning("No device selected. Please select a device to view details.")
         return
 
+    label_activity_workflow(device_mac_address)
     show_device_details(device_mac_address)
+
+
+# TODO: Maybe have an undo button?
+def label_activity_workflow(mac_address: str):
+    """
+    Workflow for labeling activity of the selected device.
+
+    Steps:
+    1. User clicks "Label" button (resets previous labeling state).
+    2. User selects an activity from a dropdown.
+    3. User clicks "Start" button.
+    4. A countdown from 5 to 1 is shown.
+    5. The start epoch time is recorded.
+    6. User performs the activity on the device.
+    7. User clicks "Labeling Complete" button.
+    8. The end epoch time is recorded.
+    9. The selected activity, start, and end epoch times are displayed.
+    10. User can click "Reset Labeling" to start a new labeling session.
+    11. The activity label, MAC address, start, and end times are saved to the config file.
+    """
+
+    # Helper to reset session state
+    def reset_labeling_state():
+        st.session_state['labeling'] = False
+        st.session_state['countdown'] = False
+        st.session_state['start_time'] = None
+        st.session_state['end_time'] = None
+        st.session_state['activity_label'] = None
+
+    # Initialize session state if not present
+    for key in ['labeling', 'countdown', 'start_time', 'end_time', 'activity_label']:
+        if key not in st.session_state:
+            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label'] else False
+
+    if st.button("Label"):
+        reset_labeling_state()
+        st.session_state['labeling'] = True
+
+    if st.session_state['labeling']:
+        activity = st.selectbox(
+            "What activity would you like to label?",
+            ["Ask Alexa for Weather", "Ask Alexa for Time"]
+        )
+        st.session_state['activity_label'] = activity
+        if st.button("Start"):
+            st.session_state['countdown'] = True
+            st.session_state['labeling'] = False
+
+    if st.session_state['countdown']:
+        countdown_placeholder = st.empty()
+        for i in range(5, 0, -1):
+            countdown_placeholder.write(f"Starting in {i} seconds...")
+            time.sleep(1)
+        st.session_state['start_time'] = int(time.time())
+        st.session_state['countdown'] = False
+
+    if st.session_state['start_time'] and not st.session_state['end_time']:
+        st.write("Labeling in progress...")
+        if st.button("Labeling Complete"):
+            st.session_state['end_time'] = int(time.time())
+            label_info = {
+                "mac_address": mac_address,
+                "activity_label": st.session_state['activity_label'],
+                "start_time": st.session_state['start_time'],
+                "end_time": st.session_state['end_time']
+            }
+            # After creating label_info
+            labels = common.config_get("labels", default=[])
+            labels.append(label_info)
+            common.config_set("labels", labels)
+            reset_labeling_state()
 
 
 @st.cache_data(show_spinner=False)
@@ -155,6 +227,10 @@ def show_device_details(mac_address: str):
 
 
 def show_device_list():
+    """
+    This is shown at the top of the Device details page.
+    This page allows you to change IoT device selection.
+    """
 
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
@@ -191,8 +267,8 @@ def show_device_list():
             st.query_params['device_mac_address'] = None
         else:
             # Extract the MAC address from the selected option
-            device_mac_address = selected_device.split(" - ")[-1]
-            st.query_params['device_mac_address'] = device_mac_address
+            selected_device_mac_address = selected_device.split(" - ")[-1]
+            st.query_params['device_mac_address'] = selected_device_mac_address
 
     st.selectbox(
         "Select a device to view details:",

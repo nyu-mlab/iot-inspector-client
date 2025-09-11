@@ -190,7 +190,7 @@ def initialize_config_dict():
     config_dict['app_start_time'] = time.time()
 
 
-def config_get(key, default=None):
+def config_get(key, default=None) -> Any:
     """
     Get a configuration value.
 

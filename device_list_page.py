@@ -86,7 +86,7 @@ def show_device_card(device_dict: dict):
         title_text = f'**[{device_custom_name}]({device_detail_url})**'
         st.markdown(title_text)
         caption = f'{device_dict["ip_address"]} | {device_dict["mac_address"]}'
-        if metadata_dict["oui_vendor"]:
+        if "oui_vendor" in metadata_dict:
             caption += f' | {metadata_dict["oui_vendor"]}'
         st.caption(caption, help='IP address, MAC address, and manufacturer OUI')
 
