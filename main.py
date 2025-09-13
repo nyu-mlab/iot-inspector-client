@@ -7,9 +7,21 @@ import importlib
 import webapp.sidebar as sidebar
 import webapp.navbar as navbar
 
-logger = logging.getLogger(__name__)
+LOG_FILE = os.path.join('iot-inspector-client.log')
+client_logger = logging.getLogger("client")
+client_logger.setLevel(logging.DEBUG)
 
+# Remove existing handlers for clean setup
+client_logger.handlers.clear()
 
+file_handler = logging.FileHandler(LOG_FILE)
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+client_logger.addHandler(file_handler)
+
+# Use client_logger for your own logging
+client_logger.info("Client logger initialized.")
 
 
 def main():
@@ -61,9 +73,6 @@ def initial_configuration():
             </style>
             """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-
-
 
 
 if __name__ == "__main__":

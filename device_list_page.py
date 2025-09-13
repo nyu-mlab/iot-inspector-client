@@ -88,7 +88,20 @@ def show_device_card(device_dict: dict):
         caption = f'{device_dict["ip_address"]} | {device_dict["mac_address"]}'
         if "oui_vendor" in metadata_dict:
             caption += f' | {metadata_dict["oui_vendor"]}'
-        st.caption(caption, help='IP address, MAC address, and manufacturer OUI')
+
+        try:
+            dhcp_hostname, oui_vendor = common.get_device_metadata(device_dict['mac_address'])
+            remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
+            api_output = common.call_predict_api(dhcp_hostname, oui_vendor, remote_hostnames, device_dict['mac_address'])
+            vendor = api_output.get("Vendor", "")
+            explanation = api_output.get("Explanation", "")
+            if vendor or explanation:
+                caption += f"| Vendor: {vendor} | Explanation: {explanation}"
+        # Use run-time error to avoid caching if API call failed
+        except RuntimeError as e:
+            st.error(f"Device ID API failed: {e}")
+
+        st.caption(caption, help='IP address, MAC address, manufacturer OUI, and Device Identification API output')
 
         # --- Add bar charts for upload/download ---
         now = int(time.time())

@@ -5,14 +5,17 @@ import threading
 import json
 import functools
 import requests
-import libinspector
+import libinspector.global_state
 import pandas as pd
 from typing import Any
 import streamlit as st
+import logging
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()
 config_dict = {}
+
+logger = logging.getLogger("client")
 
 
 def bar_graph_data_frame(mac_address: str, now: int):
@@ -63,29 +66,17 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
         st.bar_chart(df.set_index('seconds_ago')['Bits'], use_container_width=True)
 
 
-def call_predict_api(mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
+def get_device_metadata(mac_address: str):
     """
-    Call the predicting API with the given fields.
-    This takes the MAC Address of an inspected device
-    and checks the `devices` table, where iot inspector core collected meta-data
-    based on SSDP discovery.
-
-    Please see Page 11 Table A.1. We explain how to get the data from IoT Inspector:
-    1. oui_friendly: we use the OUI database from IoT Inspector Core
-    2. dhcp_hostname: this is extracted from the 'devices' table, check meta-data and look for 'dhcp_hostname' key.
-    3. remote_hostnames: IoT Inspector collects this information the DHCP hostname via either DNS or SNI
+    Retrieve the DHCP hostname and OUI vendor for a device from the database.
 
     Args:
-        mac_address (str): The MAC address of the device we want to use AI to get more info about
-        url (str): The API endpoint.
+        mac_address (str): The MAC address of the device.
 
     Returns:
-        dict: The response text from the API.
+        tuple: (dhcp_hostname, oui_vendor) as strings. Returns empty strings if not found.
     """
-
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
-
-    # Get the DHCP Hostname if found
     sql = """
         SELECT metadata_json FROM devices
         WHERE mac_address = ?
@@ -94,34 +85,64 @@ def call_predict_api(mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/pr
         row = db_conn.execute(sql, (mac_address,)).fetchone()
         if row:
             metadata = json.loads(row['metadata_json'])
-            if 'dhcp_hostname' in metadata:
-                dhcp_hostname = metadata['dhcp_hostname']
-            else:
-                dhcp_hostname = ""
-            if 'oui_vendor' in metadata:
-                oui_vendor = metadata['oui_vendor']
-            else:
-                oui_vendor = ""
+            dhcp_hostname = metadata.get('dhcp_hostname', "")
+            oui_vendor = metadata.get('oui_vendor', "")
         else:
             dhcp_hostname = ""
             oui_vendor = ""
+    return dhcp_hostname, oui_vendor
 
-    # Get the remote hostname
+
+def get_remote_hostnames(mac_address: str):
+    """
+    Retrieve all distinct remote hostnames associated with a device's MAC address from network flows.
+
+    Args:
+        mac_address (str): The MAC address of the device.
+
+    Returns:
+        str: A '+'-joined string of hostnames, or an empty string if none are found.
+    """
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     sql = """
         SELECT DISTINCT hostname
         FROM (
             SELECT src_hostname AS hostname FROM network_flows
-            WHERE src_mac_address = ? AND src_hostname IS NOT NULL
+            WHERE src_mac_address = ?
             UNION
             SELECT dest_hostname AS hostname FROM network_flows
-            WHERE dest_mac_address = ? AND dest_hostname IS NOT NULL
+            WHERE src_mac_address = ?
         ) AS combined
+        WHERE hostname IS NOT NULL
     """
     with rwlock:
         rows = db_conn.execute(sql, (mac_address, mac_address)).fetchall()
         hostnames = [row['hostname'] for row in rows if row['hostname']]
         remote_hostnames = '+'.join(hostnames) if hostnames else ""
+    return remote_hostnames
 
+
+@st.cache_data(show_spinner=False)
+def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
+                     mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
+    """
+    Call the predicting API with the given fields.
+    This takes the MAC Address of an inspected device
+    and checks the `devices` table, where iot inspector core collected meta-data
+    based on SSDP discovery.
+    Please see Page 11 Table A.1. We explain how to get the data from IoT Inspector:
+    1. oui_friendly: we use the OUI database from IoT Inspector Core
+    2. dhcp_hostname: this is extracted from the 'devices' table, check meta-data and look for 'dhcp_hostname' key.
+    3. remote_hostnames: IoT Inspector collects this information the DHCP hostname via either DNS or SNI
+    Args:
+        dhcp_hostname (str): The DHCP hostname of the device we want to use AI to get more info about
+        oui_vendor (str): The OUI vendor of the device we want to use AI to get more info about
+        remote_hostnames (str): The remote hostnames the device has contacted
+        mac_address (str): The MAC address of the device we want to use AI to get more info about
+        url (str): The API endpoint.
+    Returns:
+        dict: The response text from the API.
+    """
     api_key = os.environ.get("API_KEY", "momo")
     headers = {
         "Content-Type": "application/json",
@@ -132,30 +153,37 @@ def call_predict_api(mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/pr
             "oui_friendly": oui_vendor,
             "dhcp_hostname": dhcp_hostname,
             "remote_hostnames": remote_hostnames,
-            "user_agent_info" : "",
-            "netdisco_info" : "",
-            "user_labels" : "",
-            "talks_to_ads" : False
+            "user_agent_info": "",
+            "netdisco_info": "",
+            "user_labels": "",
+            "talks_to_ads": False
         }
     }
+    non_empty_field_values = [
+        field_value
+        for field_name, field_value in data["fields"].items()
+        if field_name != "talks_to_ads" and bool(field_value)
+    ]
+    # TODO: We should make this 2 fields eventually...
+    if len(non_empty_field_values) < 1:
+        logger.warning(
+            "[Device ID API] Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
+        raise RuntimeError(
+            "Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
+
+    logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
+
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)
-        response.raise_for_status()  # Raises HTTPError for bad responses
-        result = response.json()  # May raise ValueError if not valid JSON
-    except requests.exceptions.RequestException as e:
-        # Handle network errors, timeouts, or HTTP errors
-        print(f"API request failed: {e}")
-        return {}
-    except ValueError as e:
-        # Handle JSON decoding errors
-        print(f"Failed to decode JSON response: {e}")
-        return {}
+        response.raise_for_status()
+        result = response.json()
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logger.error(f"[Device ID API] API request failed: {e}")
+        raise RuntimeError("API request failed, not caching this result.")
 
-    # Store the results in the config.json output
-    # The key is MAC Address, and the output is directly written
-    print("API query successful!")
+    logger.info("[Device ID API] API query successful!")
     config_set(f'device_details@{mac_address}', result)
-    return response.json()
+    return result
 
 
 def get_human_readable_time(timestamp=None):
