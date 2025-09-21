@@ -31,6 +31,6 @@ if (-not $pythonPath) {
     exit 1
 }
 
-uv run -- $pythonPath -m streamlit run dashboard.py
+uv run -- $pythonPath -m streamlit run src/libinspector/dashboard.py
 
 Read-Host "Press Enter to exit"

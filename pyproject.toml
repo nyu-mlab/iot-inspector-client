@@ -3,13 +3,13 @@ requires = ["setuptools>=64", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "inspector-3"
+name = "iot-inspector"
 dynamic = ["version"]
 description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "libinspector==1.0.7",
+    "libinspector==1.0.8",
     "streamlit>=1.44.1",
 ]
 authors = [
@@ -22,11 +22,20 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-# TODO: We need to move python files to a package
 [tool.setuptools.packages.find]
+where = ["src"]
 include = [
-    "*.py",
+    "libinspector",
+    "libinspector.*"
 ]
+
+[tool.setuptools.package-data]
+libinspector = [
+    "static/images/*.png",
+]
+
+[tool.setuptools]
+include-package-data = true
 
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"

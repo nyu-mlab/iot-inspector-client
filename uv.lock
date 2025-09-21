@@ -252,7 +252,7 @@ wheels = [
 ]
 
 [[package]]
-name = "inspector-3"
+name = "iot-inspector"
 source = { editable = "." }
 dependencies = [
     { name = "libinspector" },
@@ -261,7 +261,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "libinspector", specifier = "==1.0.7" },
+    { name = "libinspector", specifier = "==1.0.8" },
     { name = "streamlit", specifier = ">=1.44.1" },
 ]
 
@@ -306,7 +306,7 @@ wheels = [
 
 [[package]]
 name = "libinspector"
-version = "1.0.7"
+version = "1.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "geoip2" },
@@ -318,7 +318,7 @@ dependencies = [
     { name = "zeroconf" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/bc/ea9d5d6f712c768db56d7bb63592f01baf0c65d93e9b2cb8319e60fd781b/libinspector-1.0.7-py3-none-any.whl", hash = "sha256:6e5f3ebc639a342b7b2dcb1aa4a62cd78fe12d7ebf86113bda6c6db4314dcc71", size = 6692441, upload-time = "2025-09-03T15:45:53.651Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/c7/ac2930b0e9c1745f6f8c70f048cf729c21ef41656c2ba8dae4910d83e97e/libinspector-1.0.8-py3-none-any.whl", hash = "sha256:3e4f4116cdb3676b0d521007e000ac136b2d7b618144b424a0f6454cf3583ed9", size = 6692451, upload-time = "2025-09-09T14:12:01.477Z" },
 ]
 
 [[package]]

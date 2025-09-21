@@ -13,4 +13,4 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # shellcheck disable=SC2046
-sudo $(uv run which python) -m streamlit run dashboard.py
+sudo $(uv run which python) -m streamlit run src/libinspector/dashboard.py
