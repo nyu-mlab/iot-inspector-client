@@ -11,6 +11,8 @@ user-data*
 __pycache__/
 *.py[cod]
 *$py.class
+*.exe
+IoT_Inspector_Installer
 
 # C extensions
 *.so
