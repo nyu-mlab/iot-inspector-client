@@ -20,7 +20,3 @@ pg.run()
 
 with st.sidebar:
     sidebar.show()
-
-
-
-

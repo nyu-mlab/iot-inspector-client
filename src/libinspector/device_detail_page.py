@@ -6,6 +6,15 @@ import pandas as pd
 import datetime
 import common
 import time
+from queue import Queue
+import requests
+import base64
+import scapy.all as sc
+import json
+import os
+
+
+_labeled_activity_packet_queue = Queue()
 
 
 def show():
@@ -38,18 +47,36 @@ def label_activity_workflow(mac_address: str):
     Workflow for labeling activity of the selected device.
 
     Steps:
-    1. User clicks "Label" button (resets previous labeling state).
-    2. User selects an activity from a dropdown.
-    3. User clicks "Start" button.
-    4. A countdown from 5 to 1 is shown.
-    5. The start epoch time is recorded.
-    6. User performs the activity on the device.
-    7. User clicks "Labeling Complete" button.
-    8. The end epoch time is recorded.
-    9. The selected activity, start, and end epoch times are displayed.
-    10. User can click "Reset Labeling" to start a new labeling session.
-    11. The activity label, MAC address, start, and end times are saved to the config file.
+    1. User must grant explicit permission to send data externally (shown once per session).
+    2. Only one labeling session can be active at a time.
+    3. User clicks "Label" button (resets previous labeling state).
+    4. User selects an activity from a dropdown.
+    5. User clicks "Start" button.
+    6. A countdown from 5 to 1 is shown.
+    7. The start epoch time is recorded.
+    8. User performs the activity on the device.
+    9. User clicks "Labeling Complete" button.
+    10. The end epoch time is recorded.
+    11. The selected activity, start, and end epoch times are displayed.
+    12. User can click "Reset Labeling" to start a new labeling session.
+    13. The activity label, MAC address, start, and end times are saved to the config file.
     """
+    # Permission check (only once per session)
+    if not st.session_state.get('external_data_permission_granted', False):
+        st.warning(
+            "As part of this research project, only the network activity of the device you select will be shared with NYU mLab, and only while you are labeling an activity. "
+            "By entering your Prolific ID and continuing, you agree to share this data for research and compensation. "
+            "**Please enter your correct Prolific ID to ensure you receive payment for your participation.**"
+        )
+        prolific_id = st.text_input("Enter your Prolific ID to continue:", key="prolific_id_input")
+        if st.button("Continue"):
+            if prolific_id.strip():
+                st.session_state['external_data_permission_granted'] = True
+                st.session_state['prolific_id'] = prolific_id.strip()
+                st.rerun()
+            else:
+                st.warning("Prolific ID is required to proceed.")
+        return
 
     # Helper to reset session state
     def reset_labeling_state():
@@ -58,22 +85,42 @@ def label_activity_workflow(mac_address: str):
         st.session_state['start_time'] = None
         st.session_state['end_time'] = None
         st.session_state['activity_label'] = None
+        st.session_state['labeling_in_progress'] = False
+        st.session_state['device_mac'] = None
 
     # Initialize session state if not present
-    for key in ['labeling', 'countdown', 'start_time', 'end_time', 'activity_label']:
+    for key in ['labeling', 'countdown', 'start_time', 'end_time', 'activity_label', 'labeling_in_progress',
+                'device_mac']:
         if key not in st.session_state:
-            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label'] else False
+            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label', 'device_mac'] else False
 
     if st.button("Label"):
-        reset_labeling_state()
-        st.session_state['labeling'] = True
+        if st.session_state['labeling_in_progress']:
+            st.warning("A labeling session is already in progress. Please complete or reset it before starting a new one.")
+        else:
+            reset_labeling_state()
+            st.session_state['labeling'] = True
+            st.session_state['labeling_in_progress'] = True
 
     if st.session_state['labeling']:
-        activity = st.selectbox(
-            "What activity would you like to label?",
-            ["Ask Alexa for Weather", "Ask Alexa for Time"]
-        )
-        st.session_state['activity_label'] = activity
+        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
+        with open(activity_json, 'r') as f:
+            activity_data = json.load(f)
+
+        # Category selection
+        categories = list(activity_data.keys())
+        selected_category = st.selectbox("Select device category", categories)
+
+        # Device selection
+        devices = list(activity_data[selected_category].keys())
+        selected_device = st.selectbox("Select device", devices)
+
+        # Activity label selection
+        activity_labels = activity_data[selected_category][selected_device]
+        selected_label = st.selectbox("Select activity label", activity_labels)
+
+        st.session_state['device_label'] = selected_device
+        st.session_state['activity_label'] = selected_label
         if st.button("Start"):
             st.session_state['countdown'] = True
             st.session_state['labeling'] = False
@@ -83,24 +130,84 @@ def label_activity_workflow(mac_address: str):
         for i in range(5, 0, -1):
             countdown_placeholder.write(f"Starting in {i} seconds...")
             time.sleep(1)
+        countdown_placeholder.empty()
         st.session_state['start_time'] = int(time.time())
         st.session_state['countdown'] = False
+        # Start saving packets for this activity into an internal queue
+        with libinspector.global_state.global_state_lock:
+            libinspector.global_state.custom_packet_callback_func = save_labeled_activity_packets
+            libinspector.global_state.labeling_target_mac = mac_address
 
     if st.session_state['start_time'] and not st.session_state['end_time']:
         st.write("Labeling in progress...")
         if st.button("Labeling Complete"):
+            # Stop saving packets for this activity
+            with libinspector.global_state.global_state_lock:
+                libinspector.global_state.custom_packet_callback_func = None
+
+            pending_packet_list = []
+            while not _labeled_activity_packet_queue.empty():
+                pending_packet_list.append(_labeled_activity_packet_queue.get())
+
+            st.write(f"Total packets captured for labeling: {len(pending_packet_list)}")
             st.session_state['end_time'] = int(time.time())
+            try:
+                if len(pending_packet_list) > 0:
+                    remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
+                    remote_port = common.config_get("packet_collect_port", '443')
+                    api_path = "/iot_inspector_data_capture/label_packets"
+                    api_url = f"https://{remote_host}:{remote_port}{api_path}"
+                    st.write(f"Sending labeled packets to API endpoint: {api_url}")
+                    response = requests.post(
+                        api_url,
+                        json={
+                            "packets": [
+                                base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
+                            ],
+                            "prolific_id": st.session_state['prolific_id'],
+                            "mac_address": mac_address,
+                            "device_name": st.session_state['device_label'],
+                            "activity_label": st.session_state['activity_label'],
+                            "start_time": st.session_state['start_time'],
+                            "end_time": st.session_state['end_time']
+                        },
+                        timeout=10
+                    )
+                    if response.status_code == 200:
+                        st.success("Labeled packets successfully sent to the server.")
+                        pending_packet_list.clear()
+                    else:
+                        st.error(f"Failed to send labeled packets. Server responded with status code {response.status_code}.")
+                else:
+                    st.error("No packets were captured for labeling.")
+            except requests.RequestException as e:
+                st.error(f"An error occurred while sending labeled packets: {e}")
             label_info = {
                 "mac_address": mac_address,
                 "activity_label": st.session_state['activity_label'],
                 "start_time": st.session_state['start_time'],
                 "end_time": st.session_state['end_time']
             }
-            # After creating label_info
             labels = common.config_get("labels", default=[])
             labels.append(label_info)
             common.config_set("labels", labels)
             reset_labeling_state()
+
+
+def save_labeled_activity_packets(pkt):
+    """
+    Save the packet into a queue if it matches the device's MAC address we want to label activity for.
+
+    Args:
+        pkt: The network packet (scapy packet) to process.
+    """
+    mac_address = None
+    with libinspector.global_state.global_state_lock:
+        mac_address = libinspector.global_state.labeling_target_mac
+
+    if mac_address and (pkt[sc.Ether].src == mac_address or pkt[sc.Ether].dst == mac_address):
+        # We check both source and destination MAC to capture all relevant traffic
+        _labeled_activity_packet_queue.put(pkt.original)
 
 
 @st.cache_data(show_spinner=False)
@@ -193,7 +300,7 @@ def show_device_details(mac_address: str):
     sql_upload_hosts =  """
                  SELECT MIN(timestamp) AS first_seen,
                         MAX(timestamp) AS last_seen,
-                        COALESCE(dest_hostname, dest_ip_address) AS dest_info,  
+                        COALESCE(dest_hostname, dest_ip_address) AS dest_info,
                         SUM(byte_count) * 8 AS Bits
                  FROM network_flows
                  WHERE src_mac_address = ?
@@ -206,7 +313,7 @@ def show_device_details(mac_address: str):
     sql_download_hosts =  """
                  SELECT MIN(timestamp) AS first_seen,
                         MAX(timestamp) AS last_seen,
-                        COALESCE(src_hostname, src_ip_address) AS src_info,  
+                        COALESCE(src_hostname, src_ip_address) AS src_info,
                         SUM(byte_count) * 8 AS Bits
                  FROM network_flows
                  WHERE dest_mac_address = ?

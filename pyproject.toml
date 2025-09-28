@@ -9,7 +9,7 @@ description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "libinspector==1.0.8",
+    "libinspector==1.0.9",
     "streamlit>=1.44.1",
 ]
 authors = [
@@ -32,6 +32,8 @@ include = [
 [tool.setuptools.package-data]
 libinspector = [
     "static/images/*.png",
+    "data/*.json",
+    "data/*.toml",
 ]
 
 [tool.setuptools]
