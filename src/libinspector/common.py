@@ -16,7 +16,34 @@ config_lock = threading.Lock()
 config_dict = {}
 
 logger = logging.getLogger("client")
+warning_text = (
+    "⚠️ **IoT Inspector Warning**\n\n"
+    "This tool monitors network traffic using techniques such as ARP spoofing. "
+    "Such activity may be detected as a network attack. By proceeding, you confirm "
+    "that you own the network or have permission from your IT administrator to run this tool.\n\n"
+    "**Please note:**\n"
+    "- Your network may be slowed or disrupted — if this happens, simply close IoT Inspector.\n"
+    "- Metadata of your network traffic (e.g., which IPs/domains your devices communicate with) is shared anonymously with NYU researchers during the labeling stage."
+)
 
+def show_warning():
+    """
+    Displays a warning message to the user about network monitoring and ARP spoofing.
+    Uses Streamlit to show the warning and manages acceptance state via query parameters.
+
+    @return: bool
+        True if the warning is still being shown (user has not accepted).
+        False if the user has accepted the warning and can proceed.
+    """
+
+    if config_get("suppress_warning", False):
+        return False
+
+    st.markdown(warning_text)
+    if st.button("OK, I understand and wish to proceed"):
+        config_set("suppress_warning", True)
+        st.rerun()
+    return True
 
 def bar_graph_data_frame(mac_address: str, now: int):
     sixty_seconds_ago = now - 60
@@ -63,7 +90,7 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
         st.markdown(f"#### {chart_title}")
         df['seconds_ago'] = now - df['timestamp'].astype(int)
         df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
-        st.bar_chart(df.set_index('seconds_ago')['Bits'], use_container_width=True)
+        st.bar_chart(df.set_index('seconds_ago')['Bits'], width='content')
 
 
 def get_device_metadata(mac_address: str):

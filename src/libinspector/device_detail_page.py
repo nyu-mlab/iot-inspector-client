@@ -30,7 +30,6 @@ def show():
     - activity inference (currently a placeholder function)
     - device details (A bar chart of traffic volume in the last 60 seconds, and a table of network flows)
     """
-
     device_mac_address = show_device_list()
 
     if not device_mac_address:
@@ -260,7 +259,7 @@ def process_network_flows(df: pandas.DataFrame):
     df = df.reset_index(drop=True)
 
     st.markdown("#### Network Flows")
-    st.data_editor(df, use_container_width=True)
+    st.data_editor(df, width='content')
 
 
 @st.fragment(run_every=1)

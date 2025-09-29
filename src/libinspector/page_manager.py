@@ -8,6 +8,7 @@ import device_detail_page
 import settings_page
 import overview_page
 import functools
+import common
 import libinspector.core
 
 
@@ -48,6 +49,9 @@ def initialize_page():
         initial_sidebar_state="auto",
         menu_items={}
     )
+
+    if common.show_warning():
+        st.stop()
 
     # Hide the default Streamlit menu and footer
     hide_streamlit_style = """

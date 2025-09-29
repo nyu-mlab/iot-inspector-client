@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "libinspector==1.0.9",
-    "streamlit>=1.44.1",
+    "streamlit>=1.50.0",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },

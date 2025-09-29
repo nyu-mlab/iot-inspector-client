@@ -1,4 +1,4 @@
-import libinspector
+import libinspector.global_state
 import streamlit as st
 import time
 
@@ -8,6 +8,7 @@ def show():
     A Banner that shows this is the IoT Inspector overview page
     """
     st.write("This is the overview page.")
+    show_high_level_stats()
 
 
 @st.fragment(run_every=2)
