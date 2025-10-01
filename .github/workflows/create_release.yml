@@ -21,23 +21,50 @@ jobs:
           increment: major
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [create_release]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, ubuntu-latest, windows-latest ]
+
     steps:
     - name: Checkout project sources
       uses: actions/checkout@v4
 
     - name: Create wheel file
+      if: runner.os == 'Linux'
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install setuptools wheel build setuptools_scm
         PRETEND_VERSION=${{ needs.create_release.outputs.v-version }} python3 -m build --wheel .
 
     - name: Store the IoT Inspector Python wheel
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: iot-inspector
         path: dist/*.whl
+        if-no-files-found: error
+
+    - name: Install NSIS
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        choco install nsis --no-progress
+
+    - name: Create Windows IoT Inspector launcher
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        .\nsis.ps1
+
+    - name: Store the IoT Inspector executable
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: iot-exe
+        path: ./*.exe
         if-no-files-found: error
 
   publish-to-pypi:
@@ -53,7 +80,7 @@ jobs:
       contents: write  # Required for creating releases
 
     steps:
-      - name: Download all the wheel file
+      - name: Download the wheel file
         uses: actions/download-artifact@v4
         with:
           name: iot-inspector
@@ -64,6 +91,12 @@ jobs:
         with:
           verbose: true
 
+      - name: Download all the IoT Inspector executable
+        uses: actions/download-artifact@v4
+        with:
+          name: iot-exe
+          path: dist/
+
       - name: Upload wheel and debian packages to release
         uses: softprops/action-gh-release@v2
         env:
@@ -71,4 +104,5 @@ jobs:
         with:
           tag_name: ${{ needs.create_release.outputs.v-version }}
           files: |
+            dist/*.exe
             dist/*.whl

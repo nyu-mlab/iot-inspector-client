@@ -1,0 +1,3 @@
+recursive-include src/libinspector/static *
+recursive-include .streamlit *
+global-exclude *.py[cod] __pycache__ *.sw* .git*
