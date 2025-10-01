@@ -49,15 +49,13 @@ jobs:
 
     - name: Install NSIS
       if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        choco install nsis --no-progress
+      uses: negrutiu/nsis-install@v2
 
     - name: Create Windows IoT Inspector launcher
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        .\nsis.ps1
+        makensis iot-inspector.nsi
 
     - name: Store the IoT Inspector executable
       if: runner.os == 'Windows'
