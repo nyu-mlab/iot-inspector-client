@@ -18,7 +18,7 @@ jobs:
         with:
           release_branch: master
           use_api: true
-          increment: major
+          increment: patch
 
   build:
     runs-on: ${{ matrix.os }}
