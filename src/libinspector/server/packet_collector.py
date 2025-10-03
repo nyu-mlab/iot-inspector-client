@@ -4,6 +4,7 @@ import base64
 import time
 import sys
 import datetime
+import common
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from scapy.all import wrpcap, Ether, IP
@@ -86,12 +87,15 @@ def label_packets():
         print(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
         return jsonify({"error": "Packet decoding failed"}), 400
 
+    if not common.is_prolific_id_valid(data["prolific_id"]):
+        return jsonify({"error": "Prolific ID is invalid"}), 500
     folder_path: str = os.path.join(str(data["prolific_id"]), str(data["device_name"]), str(data["activity_label"]))
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
     if not fullpath.startswith(packet_root_dir):
         return jsonify({"error": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
 
     prolific_user_packets_collected = db[data["prolific_id"]]
+
     doc = {
         "mac_address": data["mac_address"],
         "device_name": data["device_name"],

@@ -65,13 +65,13 @@ def label_activity_workflow(mac_address: str):
         st.warning(
             "As part of this research project, only the network activity of the device you select will be shared with NYU mLab, and only while you are labeling an activity. "
             "By entering your Prolific ID and continuing, you agree to share this data for research and compensation. "
-            "**Please enter your correct Prolific ID to ensure you receive payment for your participation.**"
+            "**Please confirm your Prolific ID is correct to ensure you receive payment for your participation.**"
         )
-        prolific_id = st.text_input("Enter your Prolific ID to continue:", key="prolific_id_input")
+        prolific_id = common.config_get("prolific_id", "")
         if st.button("Continue"):
             if prolific_id.strip():
                 st.session_state['external_data_permission_granted'] = True
-                st.session_state['prolific_id'] = prolific_id.strip()
+                st.session_state['prolific_id'] = prolific_id
                 st.rerun()
             else:
                 st.warning("Prolific ID is required to proceed.")
