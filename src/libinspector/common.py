@@ -6,6 +6,7 @@ import json
 import functools
 import requests
 import libinspector.global_state
+from libinspector.privacy import is_ad_tracked
 import pandas as pd
 from typing import Any
 import streamlit as st
@@ -209,8 +210,10 @@ def get_remote_hostnames(mac_address: str):
     """
     with rwlock:
         rows = db_conn.execute(sql, (mac_address, mac_address)).fetchall()
-        hostnames = [row['hostname'] for row in rows if row['hostname']]
-        remote_hostnames = '+'.join(hostnames) if hostnames else ""
+    hostnames = [row['hostname'] for row in rows if row['hostname']]
+    is_tracked = any(is_ad_tracked(hostname) for hostname in hostnames)
+    config_set(f'tracked@{mac_address}', is_tracked)
+    remote_hostnames = '+'.join(hostnames) if hostnames else ""
     return remote_hostnames
 
 
@@ -236,6 +239,8 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
         dict: The response text from the API.
     """
     api_key = os.environ.get("API_KEY", "momo")
+    device_tracked_key = f'tracked@{mac_address}'
+
     headers = {
         "Content-Type": "application/json",
         "x-api-key": api_key
@@ -250,7 +255,7 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
             "user_agent_info": "",
             "netdisco_info": "",
             "user_labels": "",
-            "talks_to_ads": False
+            "talks_to_ads": config_get(device_tracked_key, False)
         }
     }
     non_empty_field_values = [

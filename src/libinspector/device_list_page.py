@@ -88,7 +88,6 @@ def show_device_card(device_dict: dict):
         caption = f'{device_dict["ip_address"]} | {device_dict["mac_address"]}'
         if "oui_vendor" in metadata_dict:
             caption += f' | {metadata_dict["oui_vendor"]}'
-
         try:
             dhcp_hostname, oui_vendor = common.get_device_metadata(device_dict['mac_address'])
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
