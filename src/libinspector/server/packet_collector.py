@@ -4,7 +4,7 @@ import base64
 import time
 import sys
 import datetime
-import common
+import re
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from scapy.all import wrpcap, Ether, IP
@@ -51,6 +51,31 @@ except Exception as e:
     # If running with 'python app.py', this will stop the application.
 
 
+def is_prolific_id_valid(prolific_id: str) -> bool:
+    """
+    Performs sanity checks on the Prolific ID:
+    1. Not empty.
+    2. Length between 1 and 50 characters (inclusive).
+    3. Contains only alphanumeric characters (A-Z, a-z, 0-9).
+    Args:
+        prolific_id (str): The Prolific ID to validate.
+
+    Returns:
+        bool: True if the ID is non-empty, 1-50 characters long, and alphanumeric; False otherwise.
+    """
+    if not prolific_id or not isinstance(prolific_id, str):
+        return False
+
+    # 2. Length check
+    if not 1 <= len(prolific_id) <= 50:
+        return False
+
+    # 3. Alphanumeric check using regex (ensures no special characters)
+    if not re.fullmatch(r'^[a-zA-Z0-9]+$', prolific_id):
+        return False
+
+    return True
+
 @app.route('/label_packets', methods=['GET'])
 def check_status():
     """
@@ -87,7 +112,7 @@ def label_packets():
         print(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
         return jsonify({"error": "Packet decoding failed"}), 400
 
-    if not common.is_prolific_id_valid(data["prolific_id"]):
+    if not is_prolific_id_valid(data["prolific_id"]):
         return jsonify({"error": "Prolific ID is invalid"}), 500
     folder_path: str = os.path.join(str(data["prolific_id"]), str(data["device_name"]), str(data["activity_label"]))
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
@@ -100,8 +125,8 @@ def label_packets():
         "mac_address": data["mac_address"],
         "device_name": data["device_name"],
         "activity_label": data["activity_label"],
-        "start_time": data["start_time"],
-        "end_time": data["end_time"],
+        "start_time": int(data["start_time"]),
+        "end_time": int(data["end_time"]),
         "raw_packets": raw_packets
     }
     try:
@@ -110,10 +135,19 @@ def label_packets():
         print(f"MongoDB Insert FAILED for collection '{data['prolific_id']}': {e}")
         return jsonify({"error": "Database insert failed"}), 500
 
-    os.makedirs(fullpath, exist_ok=True)
-    pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
-    pcap_name: str = os.path.join(fullpath, pcap_file_name)
-    save_packets_to_pcap(raw_packets, pcap_name)
+    try:
+        os.makedirs(fullpath, exist_ok=True)
+        pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
+        pcap_name: str = os.path.join(fullpath, pcap_file_name)
+        save_packets_to_pcap(raw_packets, pcap_name)
+    except Exception as e:
+        # If file saving fails, return a 500 but note that the DB save succeeded
+        print(f"PCAP File Save FAILED for ID: {e}")
+        return jsonify({
+            "status": "partial_success",
+            "inserted": 1,
+            "warning": "PCAP file creation failed. Data successfully saved to MongoDB.",
+        }), 200
     return jsonify({"status": "success", "inserted": 1}), 200
 
 
