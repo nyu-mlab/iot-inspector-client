@@ -6,10 +6,12 @@ import json
 import functools
 import requests
 import libinspector.global_state
+from libinspector.privacy import is_ad_tracked
 import pandas as pd
 from typing import Any
 import streamlit as st
 import logging
+import re
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()
@@ -35,15 +37,79 @@ def show_warning():
         True if the warning is still being shown (user has not accepted).
         False if the user has accepted the warning and can proceed.
     """
+    current_id = config_get("prolific_id", "")
 
-    if config_get("suppress_warning", False):
+    # --- GATE 1: PROLIFIC ID CHECK (Must be valid to proceed to confirmation) ---
+    if is_prolific_id_valid(current_id):
+        # --- SHOW CONFIRMATION UI (Only reached if ID is valid but warning is unaccepted) ---
+        st.subheader("1. Prolific ID Confirmation")
+        st.info(f"Your currently stored ID is: `{current_id}`")
+
+        # Allows the user to change the ID, which forces them back through GATE 1
+        if st.button("Change Prolific ID"):
+            config_set("prolific_id", "")  # Clear the stored ID
+            st.rerun()
+
+        if not config_get("suppress_warning", False):
+            st.markdown("---")
+            st.subheader("2. Network Monitoring Warning")
+            st.markdown(warning_text)
+
+            if st.button("OK, I understand and wish to proceed"):
+                config_set("suppress_warning", True)
+                st.rerun()
+
+        return not is_prolific_id_valid(config_get("prolific_id", ""))
+    else:
+        # ID is missing or invalid -> BLOCK and show input form
+        st.subheader("Prolific ID Required")
+        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling.")
+
+        with st.form("prolific_id_form"):
+            input_id = st.text_input(
+                "Enter your Prolific ID (1-50 Alphanumeric Characters):",
+                value="",
+                key="prolific_id_input"
+            ).strip()
+
+            submitted = st.form_submit_button("Submit ID")
+
+            if submitted:
+                if is_prolific_id_valid(input_id):
+                    config_set("prolific_id", input_id)
+                    st.success("Prolific ID accepted. Please review the details below.")
+                    st.rerun()  # Rerun to jump to the confirmation step (GATE 2)
+                else:
+                    st.error("Invalid Prolific ID. Must be 1-50 alphanumeric characters.")
+
+        return True  # BLOCK: ID check still needs resolution.
+
+
+def is_prolific_id_valid(prolific_id: str) -> bool:
+    """
+    Performs sanity checks on the Prolific ID:
+    1. Not empty.
+    2. Length between 1 and 50 characters (inclusive).
+    3. Contains only alphanumeric characters (A-Z, a-z, 0-9).
+    Args:
+        prolific_id (str): The Prolific ID to validate.
+
+    Returns:
+        bool: True if the ID is non-empty, 1-50 characters long, and alphanumeric; False otherwise.
+    """
+    if not prolific_id or not isinstance(prolific_id, str):
         return False
 
-    st.markdown(warning_text)
-    if st.button("OK, I understand and wish to proceed"):
-        config_set("suppress_warning", True)
-        st.rerun()
+    # 2. Length check
+    if not 1 <= len(prolific_id) <= 50:
+        return False
+
+    # 3. Alphanumeric check using regex (ensures no special characters)
+    if not re.fullmatch(r'^[a-zA-Z0-9]+$', prolific_id):
+        return False
+
     return True
+
 
 def bar_graph_data_frame(mac_address: str, now: int):
     sixty_seconds_ago = now - 60
@@ -144,8 +210,10 @@ def get_remote_hostnames(mac_address: str):
     """
     with rwlock:
         rows = db_conn.execute(sql, (mac_address, mac_address)).fetchall()
-        hostnames = [row['hostname'] for row in rows if row['hostname']]
-        remote_hostnames = '+'.join(hostnames) if hostnames else ""
+    hostnames = [row['hostname'] for row in rows if row['hostname']]
+    is_tracked = any(is_ad_tracked(hostname) for hostname in hostnames)
+    config_set(f'tracked@{mac_address}', is_tracked)
+    remote_hostnames = '+'.join(hostnames) if hostnames else ""
     return remote_hostnames
 
 
@@ -171,11 +239,15 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
         dict: The response text from the API.
     """
     api_key = os.environ.get("API_KEY", "momo")
+    device_tracked_key = f'tracked@{mac_address}'
+
     headers = {
         "Content-Type": "application/json",
         "x-api-key": api_key
     }
     data = {
+        "prolific_id": config_get("prolific_id", ""),
+        "mac_address": mac_address,
         "fields": {
             "oui_friendly": oui_vendor,
             "dhcp_hostname": dhcp_hostname,
@@ -183,7 +255,7 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
             "user_agent_info": "",
             "netdisco_info": "",
             "user_labels": "",
-            "talks_to_ads": False
+            "talks_to_ads": config_get(device_tracked_key, False)
         }
     }
     non_empty_field_values = [

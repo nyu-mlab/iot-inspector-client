@@ -50,6 +50,7 @@ def initialize_page():
         menu_items={}
     )
 
+    # If true, block further execution
     if common.show_warning():
         st.stop()
 
