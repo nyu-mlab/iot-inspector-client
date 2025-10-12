@@ -46,7 +46,7 @@ def show_warning():
         st.info(f"Your currently stored ID is: `{current_id}`")
 
         # Allows the user to change the ID, which forces them back through GATE 1
-        if st.button("Change Prolific ID"):
+        if st.button("Change Prolific ID", help="Clicking this will clear your stored ID and return you to the ID entry form."):
             config_set("prolific_id", "")  # Clear the stored ID
             st.rerun()
 
@@ -55,7 +55,7 @@ def show_warning():
             st.subheader("2. Network Monitoring Warning")
             st.markdown(warning_text)
 
-            if st.button("OK, I understand and wish to proceed"):
+            if st.button("OK, I understand and wish to proceed", help="Clicking this confirms that you understand the warning and wish to proceed."):
                 config_set("suppress_warning", True)
                 st.rerun()
 

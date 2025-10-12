@@ -3,7 +3,9 @@ import time
 import json
 import libinspector.global_state
 import common
+import logging
 
+logger = logging.getLogger("client")
 
 def show():
     """
@@ -98,7 +100,7 @@ def show_device_card(device_dict: dict):
                 caption += f"| Vendor: {vendor} | Explanation: {explanation}"
         # Use run-time error to avoid caching if API call failed
         except RuntimeError as e:
-            st.error(f"Device ID API failed: {e}")
+            logger.info(f"Device ID API failed: {e}")
 
         st.caption(caption, help='IP address, MAC address, manufacturer OUI, and Device Identification API output')
 

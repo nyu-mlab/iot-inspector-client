@@ -12,10 +12,10 @@ import base64
 import scapy.all as sc
 import json
 import os
-
+import logging
 
 _labeled_activity_packet_queue = Queue()
-
+logger = logging.getLogger("client")
 
 def show():
     """
@@ -40,35 +40,128 @@ def show():
     show_device_details(device_mac_address)
 
 
-# TODO: Maybe have an undo button?
+def reset_labeling_state():
+    """Resets all state variables related to a labeling session."""
+    common.config_set('labeling_in_progress', False)
+    st.session_state['countdown'] = False
+    st.session_state['start_time'] = None
+    st.session_state['end_time'] = None
+    # We keep activity_label and device_label until the end, so only reset these:
+    # st.session_state['activity_label'] = None
+    # st.session_state['device_label'] = None
+    st.session_state['show_labeling_setup'] = False
+    st.session_state['api_message'] = None
+
+
+def _collect_packets_callback():
+    """
+    Executed when 'Start' is clicked. Sets the flag to trigger the countdown
+    and packet start logic in the main function.
+    """
+    logger.info("[Packets] Start button clicked, initiating countdown...")
+    st.session_state['countdown'] = True
+    # st.rerun() will be triggered by Streamlit after the callback completes
+
+
+def _send_packets_callback(mac_address: str):
+    """
+    Executed when the 'Labeling Complete' button is clicked.
+    Handles stopping packet collection and sending data to the server.
+    Args:
+        mac_address (str): The MAC address of the device being labeled.
+    """
+    if not common.config_get('labeling_in_progress', default=False):
+        st.session_state['api_message'] = "warning|No labeling session in progress. Please start a labeling session first."
+        return
+
+    logger.info("[Packets] Starting to send labeled packets...")
+
+    # 1. Stop packet collection
+    with libinspector.global_state.global_state_lock:
+        libinspector.global_state.custom_packet_callback_func = None
+        libinspector.global_state.labeling_target_mac = None
+
+    # 2. Process and empty the queue
+    pending_packet_list = []
+    while not _labeled_activity_packet_queue.empty():
+        pending_packet_list.append(_labeled_activity_packet_queue.get())
+
+    st.session_state['end_time'] = int(time.time())
+
+    # 3. API Sending Logic - results are saved to api_message for display
+    try:
+        if len(pending_packet_list) > 0:
+            remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
+            remote_port = common.config_get("packet_collect_port", '443')
+            api_path = "/iot_inspector_data_capture/label_packets"
+            api_url = f"https://{remote_host}:{remote_port}{api_path}"
+
+            # NOTE: We avoid st.write here, save the info to session_state instead
+
+            response = requests.post(
+                api_url,
+                json={
+                    "packets": [
+                        base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
+                    ],
+                    "prolific_id": st.session_state.get('prolific_id', 'unknown'),
+                    "mac_address": mac_address,
+                    "device_name": st.session_state.get('device_label'),
+                    "activity_label": st.session_state.get('activity_label'),
+                    "start_time": st.session_state.get('start_time'),
+                    "end_time": st.session_state['end_time']
+                },
+                timeout=10
+            )
+            if response.status_code == 200:
+                st.session_state['api_message'] = f"success| {len(pending_packet_list)} Labeled packets successfully sent to the server."
+            else:
+                st.session_state[
+                    'api_message'] = f"error|Failed to send labeled packets. Server status: {response.status_code}."
+        else:
+            st.session_state['api_message'] = "error|No packets were captured for labeling."
+
+    except requests.RequestException as e:
+        st.session_state['api_message'] = f"error|An error occurred during API transmission: {e}"
+    # st.rerun() will occur after this, showing the results.
+
+
 def label_activity_workflow(mac_address: str):
     """
-    Workflow for labeling activity of the selected device.
+    Manages the interactive, state-driven workflow for labeling network activity in Streamlit.
+    This function orchestrates the entire user labeling process, enforcing a strict sequential order
+    (Label -> Start -> Complete) using Streamlit's session state and dynamic button disabling.
+    It handles user consent, activity selection persistence, the 5-second countdown to start
+    packet capture, and uses an in-place placeholder to display real-time status messages
+    (success, error, warning) from the API submission.
 
-    Steps:
-    1. User must grant explicit permission to send data externally (shown once per session).
-    2. Only one labeling session can be active at a time.
-    3. User clicks "Label" button (resets previous labeling state).
-    4. User selects an activity from a dropdown.
-    5. User clicks "Start" button.
-    6. A countdown from 5 to 1 is shown.
-    7. The start epoch time is recorded.
-    8. User performs the activity on the device.
-    9. User clicks "Labeling Complete" button.
-    10. The end epoch time is recorded.
-    11. The selected activity, start, and end epoch times are displayed.
-    12. User can click "Reset Labeling" to start a new labeling session.
-    13. The activity label, MAC address, start, and end times are saved to the config file.
+    This is passed to the start and send callbacks for packet filtering and API submission.
+
+    Steps of the Workflow:
+    1. Permission Check: Ensures explicit user consent for external data sharing via a Prolific ID entry.
+    2. State Initialization: Initializes all necessary session state variables (e.g., 'start_time', 'activity_label').
+    3. Start/Reset: Displays the 'Label' button, which resets any previous session and activates the activity selection UI.
+    4. Activity Selection: Allows the user to select the device category, device, and specific activity label. This UI remains visible and persistent throughout the collection phase for user reference.
+    5. Control Buttons: Displays 'Start' and 'Labeling Complete' buttons with dynamic 'disabled' states to enforce the correct sequence.
+    6. Countdown: Executes a 5-second blocking countdown in the main thread after 'Start' is clicked and before packet collection begins.
+    7. Packet Collection: Starts packet capture by setting a global callback function (save_labeled_activity_packets) for the specified mac_address.
+    8. Status Display: Uses an st.empty() placeholder and the api_message state variable to display feedback immediately beneath the control buttons for superior UX.
+    9. Final Summary: Upon session completion, displays the recorded activity label, device name, and duration.
+
+    Args:
+        mac_address (str): The MAC address of the device targeted for the activity labeling.
     """
-    # Permission check (only once per session)
+    # --- 1. Permission Check ---
     if not st.session_state.get('external_data_permission_granted', False):
+        # ... (Permission Check UI remains here) ...
+        # [Content truncated for clarity, assuming original code is here]
         st.warning(
             "As part of this research project, only the network activity of the device you select will be shared with NYU mLab, and only while you are labeling an activity. "
             "By entering your Prolific ID and continuing, you agree to share this data for research and compensation. "
             "**Please confirm your Prolific ID is correct to ensure you receive payment for your participation.**"
         )
         prolific_id = common.config_get("prolific_id", "")
-        if st.button("Continue"):
+        if st.button("Continue", help="Click to confirm you have read and agree to the above statement."):
             if prolific_id.strip():
                 st.session_state['external_data_permission_granted'] = True
                 st.session_state['prolific_id'] = prolific_id
@@ -77,120 +170,129 @@ def label_activity_workflow(mac_address: str):
                 st.warning("Prolific ID is required to proceed.")
         return
 
-    # Helper to reset session state
-    def reset_labeling_state():
-        st.session_state['labeling'] = False
-        st.session_state['countdown'] = False
-        st.session_state['start_time'] = None
-        st.session_state['end_time'] = None
-        st.session_state['activity_label'] = None
-        st.session_state['labeling_in_progress'] = False
-        st.session_state['device_mac'] = None
-
-    # Initialize session state if not present
-    for key in ['labeling', 'countdown', 'start_time', 'end_time', 'activity_label', 'labeling_in_progress',
-                'device_mac']:
+    # --- 2. Initialize State ---
+    for key in ['start_time', 'end_time', 'activity_label', 'device_label', 'countdown',
+                'api_message', 'show_labeling_setup']:
         if key not in st.session_state:
-            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label', 'device_mac'] else False
+            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label', 'device_label',
+                                                    'api_message'] else False
 
-    if st.button("Label"):
-        if st.session_state['labeling_in_progress']:
-            st.warning("A labeling session is already in progress. Please complete or reset it before starting a new one.")
-        else:
-            reset_labeling_state()
-            st.session_state['labeling'] = True
-            st.session_state['labeling_in_progress'] = True
+    # --- 3. Initial "Label" Button / State Check ---
+    session_active = common.config_get('labeling_in_progress', default=False)
 
-    if st.session_state['labeling']:
+    if st.button(
+            "Label",
+            disabled=session_active or st.session_state['end_time'] is not None,
+            help="Click to start labeling an activity for this device. This will reset any previous labeling state."
+    ):
+        reset_labeling_state()
+        # Keep labeling_in_progress=True until the very end, controlled by config_get/set
+        common.config_set('labeling_in_progress', True)
+        st.session_state['show_labeling_setup'] = True
+        st.rerun()  # Rerun to show setup menu
+
+    # --- 4. Label Setup UI (Persists through collection) ---
+    if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
+        st.subheader("1. Select Activity")
         activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
-        with open(activity_json, 'r') as f:
-            activity_data = json.load(f)
 
-        # Category selection
+        try:
+            with open(activity_json, 'r') as f:
+                activity_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            st.error("Error loading activity definitions. Check 'data/activity.json'.")
+            return
+
+        # Use the status of the session (running or done) to control if the select boxes are disabled
+        is_running = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
+
         categories = list(activity_data.keys())
-        selected_category = st.selectbox("Select device category", categories)
+        selected_category = st.selectbox("Select device category",
+                                         categories,
+                                         key="category_select",
+                                         disabled=is_running)
 
-        # Device selection
         devices = list(activity_data[selected_category].keys())
-        selected_device = st.selectbox("Select device", devices)
+        selected_device = st.selectbox("Select device", devices,
+                                       key="device_select",
+                                       disabled=is_running)
 
-        # Activity label selection
         activity_labels = activity_data[selected_category][selected_device]
-        selected_label = st.selectbox("Select activity label", activity_labels)
+        selected_label = st.selectbox("Select activity label",
+                                      activity_labels,
+                                      key="label_select",
+                                      disabled=is_running)
 
-        st.session_state['device_label'] = selected_device
-        st.session_state['activity_label'] = selected_label
-        if st.button("Start"):
-            st.session_state['countdown'] = True
-            st.session_state['labeling'] = False
+        # Update state on selection changes, unless running
+        if not is_running:
+            st.session_state['device_label'] = selected_device
+            st.session_state['activity_label'] = selected_label
+        else:
+            st.info(
+                f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_label']}**.")
 
+        st.subheader("2. Control Collection")
+        col1, col2 = st.columns(2)
+        with col1:
+            # "Start" button is enabled only when setup is complete and not yet started.
+            st.button(
+                "Start",
+                on_click=_collect_packets_callback,
+                disabled=is_running or st.session_state['countdown'],  # Disable if running or counting down
+                help="Click to start collecting packets for labeling. You will have 5 seconds to prepare before packet collection starts."
+            )
+
+        with col2:
+            # "Labeling Complete" button is enabled only when collection is active.
+            st.button(
+                "Labeling Complete",
+                on_click=_send_packets_callback,
+                args=(mac_address,),
+                disabled=not is_running,  # Enable only when actively labeling (start_time is set, end_time is not)
+                help="Click to stop collecting packets and send the labeled packets to NYU mLab."
+            )
+
+        # --- MESSAGE PLACEMENT FIX (Issue 1) ---
+        # Define the placeholder right below the buttons
+        status_placeholder = st.empty()
+
+        # Check and display API message on rerun
+        if st.session_state.get('api_message'):
+            msg_type, msg = st.session_state['api_message'].split('|', 1)
+            if msg_type == 'success':
+                status_placeholder.success(f"✅ {msg}")
+            elif msg_type == 'error':
+                status_placeholder.error(f"❌ {msg}")
+            elif msg_type == 'warning':
+                status_placeholder.warning(f"⚠️ {msg}")
+
+    # --- 5. Countdown Logic (Blocking, happens between Start and Collection) ---
     if st.session_state['countdown']:
         countdown_placeholder = st.empty()
         for i in range(5, 0, -1):
-            countdown_placeholder.write(f"Starting in {i} seconds...")
+            countdown_placeholder.write(f"**Starting packet capture in {i} seconds...**")
             time.sleep(1)
         countdown_placeholder.empty()
+
+        # Start packet capture after countdown
         st.session_state['start_time'] = int(time.time())
         st.session_state['countdown'] = False
-        # Start saving packets for this activity into an internal queue
         with libinspector.global_state.global_state_lock:
             libinspector.global_state.custom_packet_callback_func = save_labeled_activity_packets
             libinspector.global_state.labeling_target_mac = mac_address
+        st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
+        st.rerun()  # Rerun to update button state and message
 
-    if st.session_state['start_time'] and not st.session_state['end_time']:
-        st.write("Labeling in progress...")
-        if st.button("Labeling Complete"):
-            # Stop saving packets for this activity
-            with libinspector.global_state.global_state_lock:
-                libinspector.global_state.custom_packet_callback_func = None
-
-            pending_packet_list = []
-            while not _labeled_activity_packet_queue.empty():
-                pending_packet_list.append(_labeled_activity_packet_queue.get())
-
-            st.write(f"Total packets captured for labeling: {len(pending_packet_list)}")
-            st.session_state['end_time'] = int(time.time())
-            try:
-                if len(pending_packet_list) > 0:
-                    remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-                    remote_port = common.config_get("packet_collect_port", '443')
-                    api_path = "/iot_inspector_data_capture/label_packets"
-                    api_url = f"https://{remote_host}:{remote_port}{api_path}"
-                    st.write(f"Sending labeled packets to API endpoint: {api_url}")
-                    response = requests.post(
-                        api_url,
-                        json={
-                            "packets": [
-                                base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
-                            ],
-                            "prolific_id": st.session_state['prolific_id'],
-                            "mac_address": mac_address,
-                            "device_name": st.session_state['device_label'],
-                            "activity_label": st.session_state['activity_label'],
-                            "start_time": st.session_state['start_time'],
-                            "end_time": st.session_state['end_time']
-                        },
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        st.success("Labeled packets successfully sent to the server.")
-                        pending_packet_list.clear()
-                    else:
-                        st.error(f"Failed to send labeled packets. Server responded with status code {response.status_code}.")
-                else:
-                    st.error("No packets were captured for labeling.")
-            except requests.RequestException as e:
-                st.error(f"An error occurred while sending labeled packets: {e}")
-            label_info = {
-                "mac_address": mac_address,
-                "activity_label": st.session_state['activity_label'],
-                "start_time": st.session_state['start_time'],
-                "end_time": st.session_state['end_time']
-            }
-            labels = common.config_get("labels", default=[])
-            labels.append(label_info)
-            common.config_set("labels", labels)
-            reset_labeling_state()
+    # --- 6. Final Results and Display ---
+    if st.session_state['end_time']:
+        st.header("Labeling Session Complete")
+        st.markdown(f"**Device:** `{st.session_state.get('device_label')}`")
+        st.markdown(f"**Activity:** `{st.session_state.get('activity_label')}`")
+        duration = st.session_state['end_time'] - (st.session_state['start_time'] or st.session_state['end_time'])
+        st.markdown(f"**Duration:** {duration} seconds")
+        st.button("Reset Labeling",
+                  on_click=reset_labeling_state,
+                  help="Click to reset the labeling session and start over.")
 
 
 def save_labeled_activity_packets(pkt):
@@ -207,6 +309,7 @@ def save_labeled_activity_packets(pkt):
     if mac_address and (pkt[sc.Ether].src == mac_address or pkt[sc.Ether].dst == mac_address):
         # We check both source and destination MAC to capture all relevant traffic
         _labeled_activity_packet_queue.put(pkt.original)
+        logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Labeled packets in queue: {_labeled_activity_packet_queue.qsize()}")
 
 
 @st.cache_data(show_spinner=False)
