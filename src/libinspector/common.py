@@ -1,10 +1,8 @@
 import datetime
-import os
 import time
 import threading
 import json
 import functools
-import requests
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
 import pandas as pd
@@ -46,7 +44,7 @@ def show_warning():
         st.info(f"Your currently stored ID is: `{current_id}`")
 
         # Allows the user to change the ID, which forces them back through GATE 1
-        if st.button("Change Prolific ID"):
+        if st.button("Change Prolific ID", help="Clicking this will clear your stored ID and return you to the ID entry form."):
             config_set("prolific_id", "")  # Clear the stored ID
             st.rerun()
 
@@ -55,7 +53,7 @@ def show_warning():
             st.subheader("2. Network Monitoring Warning")
             st.markdown(warning_text)
 
-            if st.button("OK, I understand and wish to proceed"):
+            if st.button("OK, I understand and wish to proceed", help="Clicking this confirms that you understand the warning and wish to proceed."):
                 config_set("suppress_warning", True)
                 st.rerun()
 
@@ -215,74 +213,6 @@ def get_remote_hostnames(mac_address: str):
     config_set(f'tracked@{mac_address}', is_tracked)
     remote_hostnames = '+'.join(hostnames) if hostnames else ""
     return remote_hostnames
-
-
-@st.cache_data(show_spinner=False)
-def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
-                     mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
-    """
-    Call the predicting API with the given fields.
-    This takes the MAC Address of an inspected device
-    and checks the `devices` table, where iot inspector core collected meta-data
-    based on SSDP discovery.
-    Please see Page 11 Table A.1. We explain how to get the data from IoT Inspector:
-    1. oui_friendly: we use the OUI database from IoT Inspector Core
-    2. dhcp_hostname: this is extracted from the 'devices' table, check meta-data and look for 'dhcp_hostname' key.
-    3. remote_hostnames: IoT Inspector collects this information the DHCP hostname via either DNS or SNI
-    Args:
-        dhcp_hostname (str): The DHCP hostname of the device we want to use AI to get more info about
-        oui_vendor (str): The OUI vendor of the device we want to use AI to get more info about
-        remote_hostnames (str): The remote hostnames the device has contacted
-        mac_address (str): The MAC address of the device we want to use AI to get more info about
-        url (str): The API endpoint.
-    Returns:
-        dict: The response text from the API.
-    """
-    api_key = os.environ.get("API_KEY", "momo")
-    device_tracked_key = f'tracked@{mac_address}'
-
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": api_key
-    }
-    data = {
-        "prolific_id": config_get("prolific_id", ""),
-        "mac_address": mac_address,
-        "fields": {
-            "oui_friendly": oui_vendor,
-            "dhcp_hostname": dhcp_hostname,
-            "remote_hostnames": remote_hostnames,
-            "user_agent_info": "",
-            "netdisco_info": "",
-            "user_labels": "",
-            "talks_to_ads": config_get(device_tracked_key, False)
-        }
-    }
-    non_empty_field_values = [
-        field_value
-        for field_name, field_value in data["fields"].items()
-        if field_name != "talks_to_ads" and bool(field_value)
-    ]
-    # TODO: We should make this 2 fields eventually...
-    if len(non_empty_field_values) < 1:
-        logger.warning(
-            "[Device ID API] Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
-        raise RuntimeError(
-            "Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
-
-    logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
-
-    try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
-        response.raise_for_status()
-        result = response.json()
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(f"[Device ID API] API request failed: {e}")
-        raise RuntimeError("API request failed, not caching this result.")
-
-    logger.info("[Device ID API] API query successful!")
-    config_set(f'device_details@{mac_address}', result)
-    return result
 
 
 def get_human_readable_time(timestamp=None):

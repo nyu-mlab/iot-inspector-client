@@ -41,8 +41,6 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 $DependencyScript = "install.ps1"
 $CurrentDir = $PSScriptRoot
 
-Write-Host "Checking for application dependencies (uv, Npcap)..."
-
 # Check if uv is available. If it's not, we assume the initial setup needs to run.
 $NpcapFound = Test-NpcapInstalled
 if (-not (Get-Command uv -ErrorAction SilentlyContinue) -or -not $NpcapFound) {
@@ -76,8 +74,6 @@ if (-not (Test-Path "$PSScriptRoot\.venv")) {
         Write-Error "Failed to set up virtual environment. $($_.Exception.Message)"
         exit 1
     }
-} else {
-    Write-Host "Virtual environment already exists. Skipping setup."
 }
 
 # --- 4. Find and Launch Application ---
@@ -92,7 +88,7 @@ $streamlitAppPath = "$PSScriptRoot\src\libinspector\dashboard.py"
 # The entire argument list is passed to uv.
 $StreamlitArgs = @("run", "streamlit", "run", "`"$streamlitAppPath`"")
 
-$streamlitProcess = Start-Process -FilePath "uv" `
+Start-Process -FilePath "uv" `
     -ArgumentList $StreamlitArgs `
     -PassThru `
     -NoNewWindow
@@ -104,13 +100,3 @@ Start-Process -FilePath "http://localhost:33721/"
 
 # Wait for the Streamlit process to finish or for the user to close this window
 Write-Host "IoT Inspector is running. Close this window to stop the application."
-Read-Host "Press Enter to exit"
-
-# Stop the Streamlit process. We rely on the PID returned by Start-Process on 'uv'.
-if ($streamlitProcess -and $streamlitProcess.HasExited -eq $False) {
-    # Streamlit often spawns a child process and exits. We may need to kill the parent PID.
-    Stop-Process -Id $streamlitProcess.Id -Force -ErrorAction SilentlyContinue
-} else {
-    Write-Warning "Streamlit server process was not found or already exited. Manual cleanup may be required."
-}
-exit

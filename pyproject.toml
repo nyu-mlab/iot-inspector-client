@@ -16,7 +16,7 @@ authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },
     { name = "Andrew Quijano", email = "andrew.quijano@nyu.edu" }
 ]
-license = "MIT"
+license = "Apache-2.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
