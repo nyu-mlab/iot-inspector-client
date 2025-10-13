@@ -1,0 +1,14 @@
+[client]
+toolbarMode = "viewer"
+
+[server]
+port = 33721
+fileWatcherType = "none"
+headless = true
+enableStaticServing = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base="light"

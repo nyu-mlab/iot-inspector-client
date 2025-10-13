@@ -2,6 +2,7 @@
 .*
 !.gitattributes
 !.github
+!.src/libinspector/.streamlit
 user-data*
 3rd-party-software
 *.zip
