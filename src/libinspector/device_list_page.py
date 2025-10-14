@@ -5,12 +5,11 @@ import libinspector.global_state
 import common
 import logging
 import functools
-import threading
 import os
 import requests
 
-
 logger = logging.getLogger("client")
+
 
 def show():
     """
@@ -19,20 +18,12 @@ def show():
     toast_obj = st.toast('Discovering devices...')
     show_list(toast_obj)
 
-@functools.lru_cache(maxsize=1)
-def start_inspector_once():
-    """Initialize the Inspector core only once."""
-    with st.spinner("Starting API Thread..."):
-        threading.Thread(
-            target=worker_thread,
-            daemon=True,
-        )
-
 
 def worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
+    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
     while True:
         time.sleep(15)
         db_conn, rwlock = libinspector.global_state.db_conn_and_lock
@@ -46,6 +37,7 @@ def worker_thread():
         with rwlock:
             for device_dict in db_conn.execute(sql):
                 device_list.append(dict(device_dict))
+        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
 
         # Getting inputs and calling API
         for device_dict in device_list:
