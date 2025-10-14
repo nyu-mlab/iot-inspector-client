@@ -1,15 +1,17 @@
 # IoT Inspector 3
 
-Simply run `./start.bash`. It will take care of all the dependencies.
+Simply run `./start.bash` for Linux/Mac and `start.bat` for Windows. It will take care of all the dependencies.
 
-If the underlying Inspector core library is updated, please run the following first:
+If the underlying dependencies is updated, please run the following first:
 
 ```bash
 uv cache clean
-uv lock --upgrade-package libinspector
+uv lock
 uv sync
 ```
 
+# User guide
+Please review the [User Guide](https://github.com/nyu-mlab/iot-inspector-client/wiki) for instructions how to run IoT Inspector. 
 
 # Developer Guide
 
@@ -17,12 +19,13 @@ If you are developing IoT Inspector, please read this section.
 
 ## Database Schema
 
-When presenting network stats, IoT Inspector reads from an internal SQLite database.
+When presenting network stats, IoT Inspector reads from an internal SQLite database. 
+To see how the packet collector and database is implemented, look at the [IoT Inspector Core package](https://github.com/nyu-mlab/inspector-core-library).
 
 You should always read from the database using the following approach:
 
 ```python
-import libinspector
+import libinspector.global_state
 db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 with rwlock:
     db_conn.execute("SELECT * FROM devices")
@@ -38,7 +41,7 @@ CREATE TABLE devices (
     is_gateway INTEGER DEFAULT 0,
     updated_ts INTEGER DEFAULT 0,
     metadata_json TEXT DEFAULT '{}'
-)
+);
 
 CREATE TABLE hostnames (
     ip_address TEXT PRIMARY KEY,
@@ -46,7 +49,7 @@ CREATE TABLE hostnames (
     updated_ts INTEGER DEFAULT 0,
     data_source TEXT NOT NULL,
     metadata_json TEXT DEFAULT '{}'
-)
+);
 
 CREATE TABLE network_flows (
     timestamp INTEGER,
@@ -69,5 +72,5 @@ CREATE TABLE network_flows (
             src_port, dest_port,
             protocol
         )
-)
+);
 ```

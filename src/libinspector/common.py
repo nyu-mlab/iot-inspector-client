@@ -3,13 +3,13 @@ import time
 import threading
 import json
 import functools
-import libinspector.global_state
-from libinspector.privacy import is_ad_tracked
 import pandas as pd
 from typing import Any
 import streamlit as st
 import logging
 import re
+import libinspector.global_state
+from libinspector.privacy import is_ad_tracked
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()

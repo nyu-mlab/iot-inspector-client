@@ -5,12 +5,11 @@ import libinspector.global_state
 import common
 import logging
 import functools
-import threading
 import os
 import requests
 
-
 logger = logging.getLogger("client")
+
 
 def show():
     """
@@ -19,20 +18,12 @@ def show():
     toast_obj = st.toast('Discovering devices...')
     show_list(toast_obj)
 
-@functools.lru_cache(maxsize=1)
-def start_inspector_once():
-    """Initialize the Inspector core only once."""
-    with st.spinner("Starting API Thread..."):
-        threading.Thread(
-            target=worker_thread,
-            daemon=True,
-        )
-
 
 def worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
+    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
     while True:
         time.sleep(15)
         db_conn, rwlock = libinspector.global_state.db_conn_and_lock
@@ -46,6 +37,7 @@ def worker_thread():
         with rwlock:
             for device_dict in db_conn.execute(sql):
                 device_list.append(dict(device_dict))
+        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
 
         # Getting inputs and calling API
         for device_dict in device_list:
@@ -54,6 +46,12 @@ def worker_thread():
             try:
                 api_output = call_predict_api(dhcp_hostname, oui_vendor, remote_hostnames, device_dict['mac_address'])
                 common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
+                if "Vendor" in api_output:
+                    # Update name based on API
+                    custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
+                    custom_name = api_output["Vendor"]
+                    if api_output["Vendor"] != "":
+                        common.config_set(custom_name_key, custom_name)
             except RuntimeError:
                 continue
 
@@ -111,8 +109,8 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
         raise RuntimeError(
             "Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
 
-    # TODO: Used for debugging, risk is minimal since this is client-facing code. Should have some flag for production.
-    logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
+    if common.config_get("debug", default=False):
+        logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
 
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)

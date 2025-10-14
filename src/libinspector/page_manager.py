@@ -10,6 +10,7 @@ import overview_page
 import functools
 import common
 import libinspector.core
+import threading
 
 
 def get_page(title, material_icon, show_page_func):
@@ -69,7 +70,17 @@ def initialize_page():
 def start_inspector_once():
     """Initialize the Inspector core only once."""
     with st.spinner("Starting Inspector Core Library..."):
+        # Just in case someone closes labeling window without finishing
+        # Same with the general warning
+        common.config_set("suppress_warning", False)
+        common.config_set("labeling_in_progress", False)
         libinspector.core.start_threads()
+        api_thread = threading.Thread(
+            name="Device API Thread",
+            target=device_list_page.worker_thread,
+            daemon=True,
+        )
+        api_thread.start()
 
 
 device_list_page_obj = get_page(

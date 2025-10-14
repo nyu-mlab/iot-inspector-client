@@ -97,7 +97,6 @@ def _send_packets_callback(mac_address: str):
             api_url = f"https://{remote_host}:{remote_port}{api_path}"
 
             # NOTE: We avoid st.write here, save the info to session_state instead
-
             response = requests.post(
                 api_url,
                 json={
@@ -117,13 +116,33 @@ def _send_packets_callback(mac_address: str):
                 st.session_state['api_message'] = f"success| {len(pending_packet_list)} Labeled packets successfully sent to the server."
             else:
                 st.session_state[
-                    'api_message'] = f"error|Failed to send labeled packets. Server status: {response.status_code}."
+                    'api_message'] = (f"error|Failed to send labeled packets. Server status: {response.status_code}. "
+                                      f"{len(pending_packet_list)} Packets were not sent.")
         else:
             st.session_state['api_message'] = "error|No packets were captured for labeling."
-
     except requests.RequestException as e:
         st.session_state['api_message'] = f"error|An error occurred during API transmission: {e}"
+    finally:
+        pending_packet_list.clear()
     # st.rerun() will occur after this, showing the results.
+
+
+def update_device_inspected_status(mac_address: str):
+    """
+    Manually update to inspected status so that all the packets can be collected for the MAC Address.
+    Args:
+        mac_address (str): The MAC address of the device to update.
+    """
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    with rwlock:
+        sql = """
+            UPDATE devices
+            SET is_inspected = ?
+            WHERE mac_address = ?
+        """
+        db_conn.execute(sql, (1, mac_address))
+    device_inspected_config_key = f'device_is_inspected_{mac_address}'
+    common.config_set(device_inspected_config_key, True)
 
 
 def label_activity_workflow(mac_address: str):
@@ -145,7 +164,7 @@ def label_activity_workflow(mac_address: str):
     5. Control Buttons: Displays 'Start' and 'Labeling Complete' buttons with dynamic 'disabled' states to enforce the correct sequence.
     6. Countdown: Executes a 5-second blocking countdown in the main thread after 'Start' is clicked and before packet collection begins.
     7. Packet Collection: Starts packet capture by setting a global callback function (save_labeled_activity_packets) for the specified mac_address.
-    8. Status Display: Uses an st.empty() placeholder and the api_message state variable to display feedback immediately beneath the control buttons for superior UX.
+    8. Status Display: Uses a st.empty() placeholder and the api_message state variable to display feedback immediately beneath the control buttons for superior UX.
     9. Final Summary: Upon session completion, displays the recorded activity label, device name, and duration.
 
     Args:
@@ -185,6 +204,7 @@ def label_activity_workflow(mac_address: str):
             disabled=session_active or st.session_state['end_time'] is not None,
             help="Click to start labeling an activity for this device. This will reset any previous labeling state."
     ):
+        update_device_inspected_status(mac_address)
         reset_labeling_state()
         # Keep labeling_in_progress=True until the very end, controlled by config_get/set
         common.config_set('labeling_in_progress', True)
