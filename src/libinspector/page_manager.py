@@ -69,6 +69,10 @@ def initialize_page():
 def start_inspector_once():
     """Initialize the Inspector core only once."""
     with st.spinner("Starting Inspector Core Library..."):
+        # Just in case someone closes labeling window without finishing
+        # Same with the general warning
+        common.config_set("suppress_warning", False)
+        common.config_set("labeling_in_progress", False)
         libinspector.core.start_threads()
 
 
