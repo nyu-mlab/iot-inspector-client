@@ -4,7 +4,7 @@ import threading
 import json
 import functools
 import pandas as pd
-from typing import Any
+import typing
 import streamlit as st
 import logging
 import re
@@ -157,15 +157,14 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
         st.bar_chart(df.set_index('seconds_ago')['Bits'], width='content')
 
 
-def get_device_metadata(mac_address: str):
+def get_device_metadata(mac_address: str) -> dict:
     """
     Retrieve the DHCP hostname and OUI vendor for a device from the database.
 
     Args:
         mac_address (str): The MAC address of the device.
-
     Returns:
-        tuple: (dhcp_hostname, oui_vendor) as strings. Returns empty strings if not found.
+        dict: A dictionary containing the device's metadata, or an empty dictionary if not found.
     """
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     sql = """
@@ -175,13 +174,11 @@ def get_device_metadata(mac_address: str):
     with rwlock:
         row = db_conn.execute(sql, (mac_address,)).fetchone()
         if row:
-            metadata = json.loads(row['metadata_json'])
-            dhcp_hostname = metadata.get('dhcp_hostname', "")
-            oui_vendor = metadata.get('oui_vendor', "")
+            meta_data = json.loads(row['metadata_json'])
+            logger.info(f"Parsed Metadata: {json.dumps(meta_data, indent=4)}")  # Check the parsed dictionary
+            return meta_data
         else:
-            dhcp_hostname = ""
-            oui_vendor = ""
-    return dhcp_hostname, oui_vendor
+            return dict()
 
 
 def get_remote_hostnames(mac_address: str):
@@ -247,7 +244,7 @@ def initialize_config_dict():
     config_dict['app_start_time'] = time.time()
 
 
-def config_get(key, default=None) -> Any:
+def config_get(key, default=None) -> typing.Any:
     """
     Get a configuration value.
 
@@ -289,7 +286,7 @@ def config_get_prefix(key_prefix: str):
         }
 
 
-def config_set(key: str, value: Any):
+def config_set(key: str, value: typing.Any):
     """
     Set a configuration value.
 

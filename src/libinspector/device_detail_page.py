@@ -91,6 +91,8 @@ def _send_packets_callback(mac_address: str):
     # 3. API Sending Logic - results are saved to api_message for display
     try:
         if len(pending_packet_list) > 0:
+            logger.info(
+                f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
             remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
             remote_port = common.config_get("packet_collect_port", '443')
             api_path = "/iot_inspector_data_capture/label_packets"
@@ -103,7 +105,7 @@ def _send_packets_callback(mac_address: str):
                     "packets": [
                         base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
                     ],
-                    "prolific_id": st.session_state.get('prolific_id', 'unknown'),
+                    "prolific_id": st.session_state.get('prolific_id', ''),
                     "mac_address": mac_address,
                     "device_name": st.session_state.get('device_label'),
                     "activity_label": st.session_state.get('activity_label'),
@@ -113,14 +115,18 @@ def _send_packets_callback(mac_address: str):
                 timeout=10
             )
             if response.status_code == 200:
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully.")
                 st.session_state['api_message'] = f"success| {len(pending_packet_list)} Labeled packets successfully sent to the server."
             else:
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!.")
                 st.session_state[
                     'api_message'] = (f"error|Failed to send labeled packets. Server status: {response.status_code}. "
                                       f"{len(pending_packet_list)} Packets were not sent.")
         else:
+            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
             st.session_state['api_message'] = "error|No packets were captured for labeling."
     except requests.RequestException as e:
+        logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
         st.session_state['api_message'] = f"error|An error occurred during API transmission: {e}"
     finally:
         pending_packet_list.clear()
