@@ -78,7 +78,6 @@ def _send_packets_callback(mac_address: str):
 
     # 1. Stop packet collection
     with libinspector.global_state.global_state_lock:
-        libinspector.global_state.custom_packet_callback_func = None
         libinspector.global_state.labeling_target_mac = None
 
     # 2. Process and empty the queue
@@ -93,17 +92,23 @@ def _send_packets_callback(mac_address: str):
         if len(pending_packet_list) > 0:
             logger.info(
                 f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
+
             remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
             remote_port = common.config_get("packet_collect_port", '443')
             api_path = "/iot_inspector_data_capture/label_packets"
             api_url = f"https://{remote_host}:{remote_port}{api_path}"
+
+            for packet in pending_packet_list:
+                timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(packet.time))
+                # Log message now uses the packet's actual capture time
+                logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
 
             # NOTE: We avoid st.write here, save the info to session_state instead
             response = requests.post(
                 api_url,
                 json={
                     "packets": [
-                        base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
+                        base64.b64encode(pkt.original).decode('utf-8') for pkt in pending_packet_list
                     ],
                     "prolific_id": st.session_state.get('prolific_id', ''),
                     "mac_address": mac_address,
@@ -306,6 +311,7 @@ def label_activity_workflow(mac_address: str):
         with libinspector.global_state.global_state_lock:
             libinspector.global_state.custom_packet_callback_func = save_labeled_activity_packets
             libinspector.global_state.labeling_target_mac = mac_address
+            libinspector.global_state.labeling_session_start_ts = st.session_state['start_time']
         st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
         st.rerun()  # Rerun to update button state and message
 
@@ -329,13 +335,21 @@ def save_labeled_activity_packets(pkt):
         pkt: The network packet (scapy packet) to process.
     """
     mac_address = None
+    start_time = None
+    end_time = None
     with libinspector.global_state.global_state_lock:
         mac_address = libinspector.global_state.labeling_target_mac
+        start_time = libinspector.global_state.labeling_session_start_ts
+        end_time = libinspector.global_state.labeling_session_end_ts
 
+    if start_time is None or end_time is None:
+        return
+
+    # We check both source and destination MAC to capture all relevant traffic
     if mac_address and (pkt[sc.Ether].src == mac_address or pkt[sc.Ether].dst == mac_address):
-        # We check both source and destination MAC to capture all relevant traffic
-        _labeled_activity_packet_queue.put(pkt.original)
-        logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Labeled packets in queue: {_labeled_activity_packet_queue.qsize()}")
+        # We also check if the timestamp is correct
+        if start_time <= pkt.time <= end_time:
+            _labeled_activity_packet_queue.put(pkt)
 
 
 @st.cache_data(show_spinner=False)
