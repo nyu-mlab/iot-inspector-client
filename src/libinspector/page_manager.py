@@ -11,6 +11,7 @@ import functools
 import common
 import libinspector.core
 import threading
+import libinspector.global_state
 
 
 def get_page(title, material_icon, show_page_func):
@@ -81,6 +82,14 @@ def start_inspector_once():
             daemon=True,
         )
         api_thread.start()
+        label_thread = threading.Thread(
+            name="Device Label Thread",
+            target=device_detail_page.label_thread,
+            daemon=True
+        )
+        label_thread.start()
+        with libinspector.global_state.global_state_lock:
+            libinspector.global_state.custom_packet_callback_func = device_detail_page.save_labeled_activity_packets
 
 
 device_list_page_obj = get_page(
