@@ -101,21 +101,36 @@ def label_packets():
         400: Error if required fields are missing or packet decoding fails.
         500: Error if database insertion fails.
     """
+    raw_packets = []
+    capture_times = []
+    capture_lengths = []
+
     data = request.get_json()
     app.logger.info("Received POST data:", json.dumps(data, indent=4))
     required_keys = ["packets", "prolific_id", "mac_address", "device_name", "activity_label", "start_time", "end_time"]
     if not data or not all(key in data for key in required_keys):
         app.logger.warning("Missing required fields in POST data")
         return jsonify({"error": "Missing required fields"}), 400
-    try:
-        raw_packets = [base64.b64decode(pkt) for pkt in data["packets"]]
-    except Exception as e:
-        app.logger.warning(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
-        return jsonify({"error": "Packet decoding failed"}), 400
 
     if not is_prolific_id_valid(data["prolific_id"]):
         app.logger.warning("Invalid Prolific ID received")
         return jsonify({"error": "Prolific ID is invalid"}), 500
+
+    try:
+        for pkt_metadata in data["packets"]:
+            # Validate essential keys are present
+            if not isinstance(pkt_metadata, dict) or 'time' not in pkt_metadata or 'raw_data' not in pkt_metadata:
+                app.logger.error("Packet object missing 'time' or 'raw_data' key.")
+                return jsonify({"error": "Packet metadata structure is invalid"}), 400
+
+            raw_data_bytes = base64.b64decode(pkt_metadata["raw_data"])
+            raw_packets.append(raw_data_bytes)
+            capture_times.append(float(pkt_metadata["time"]))
+            capture_lengths.append(len(raw_data_bytes))
+    except Exception as e:
+        app.logger.warning(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
+        return jsonify({"error": "Packet decoding failed"}), 400
+
     folder_path: str = os.path.join(str(data["prolific_id"]), str(data["device_name"]), str(data["activity_label"]))
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
     if not fullpath.startswith(packet_root_dir):
@@ -130,7 +145,9 @@ def label_packets():
         "activity_label": data["activity_label"],
         "start_time": int(data["start_time"]),
         "end_time": int(data["end_time"]),
-        "raw_packets": raw_packets
+        "raw_packets": raw_packets,
+        "capture_times": capture_times,
+        "capture_lengths": capture_lengths
     }
     try:
         prolific_user_packets_collected.insert_one(doc)
@@ -142,7 +159,7 @@ def label_packets():
         os.makedirs(fullpath, exist_ok=True)
         pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
         pcap_name: str = os.path.join(fullpath, pcap_file_name)
-        save_packets_to_pcap(raw_packets, pcap_name)
+        save_packets_to_pcap(raw_packets, capture_times, pcap_name)
     except Exception as e:
         # If file saving fails, return a 500 but note that the DB save succeeded
         app.logger.warning(f"PCAP File Save FAILED for ID: {e}")
@@ -173,22 +190,27 @@ def make_pcap_filename(start_time: int, end_time: int) -> str:
     return filename
 
 
-def save_packets_to_pcap(raw_packets: list, filename="output.pcap"):
+def save_packets_to_pcap(raw_packets: list, capture_times: list, filename="output.pcap"):
     """
     Saves a list of raw packet bytes to a pcap file.
 
     Args:
         raw_packets (list): List of bytes objects representing raw packets.
+        capture_times (list): The epoch time of each packet when it was captured by IoT Inspector.
         filename (str): Output pcap file name.
     """
     scapy_packets = []
-    for pkt_bytes in raw_packets:
+    for i, pkt_bytes in enumerate(raw_packets):
         try:
             pkt = Ether(pkt_bytes)
             if pkt.__class__.__name__ == "Raw":
                 pkt = IP(pkt_bytes)
         except Exception:
             pkt = IP(pkt_bytes)
+
+        # CRITICAL STEP: Assign the supplied original capture time
+        # This is guaranteed to be correct for ALL packets.
+        pkt.time = capture_times[i]
         scapy_packets.append(pkt)
     wrpcap(filename, scapy_packets)
 

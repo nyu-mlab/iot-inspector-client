@@ -126,7 +126,11 @@ def label_thread():
             dt_object = datetime.datetime.fromtimestamp(packet.time)
             timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
             logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
-            pending_packet_list.append(base64.b64encode(packet.original).decode('utf-8'))
+            packet_metadata = {
+                "time": packet.time,
+                "raw_data": base64.b64encode(packet.original).decode('utf-8')
+            }
+            pending_packet_list.append(packet_metadata)
 
         payload = _labeling_event_deque.popleft()
         payload['packets'] = pending_packet_list
