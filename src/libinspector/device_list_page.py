@@ -41,10 +41,12 @@ def worker_thread():
 
         # Getting inputs and calling API
         for device_dict in device_list:
-            dhcp_hostname, oui_vendor = common.get_device_metadata(device_dict['mac_address'])
+            meta_data = common.get_device_metadata(device_dict['mac_address'])
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
             try:
-                api_output = call_predict_api(dhcp_hostname, oui_vendor, remote_hostnames, device_dict['mac_address'])
+                # Note I am passing the metadata as a string because functions with cache cannot take dicts
+                # as a dict is mutable, and the cache would not work as expected.
+                api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
                 common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
                 if "Vendor" in api_output:
                     # Update name based on API
@@ -52,12 +54,13 @@ def worker_thread():
                     custom_name = api_output["Vendor"]
                     if api_output["Vendor"] != "":
                         common.config_set(custom_name_key, custom_name)
-            except RuntimeError:
+            except Exception as e:
+                logger.info("[Device ID API] Exception when calling API: %s", str(e))
                 continue
 
 
 @functools.cache
-def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
+def call_predict_api(meta_data_string: str, remote_hostnames: str,
                      mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
     """
     Call the predicting API with the given fields.
@@ -69,8 +72,7 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
     2. dhcp_hostname: this is extracted from the 'devices' table, check meta-data and look for 'dhcp_hostname' key.
     3. remote_hostnames: IoT Inspector collects this information the DHCP hostname via either DNS or SNI
     Args:
-        dhcp_hostname (str): The DHCP hostname of the device we want to use AI to get more info about
-        oui_vendor (str): The OUI vendor of the device we want to use AI to get more info about
+        meta_data_string (str): Device Metadata, User Agent info, OUI info, DHCP hostname, etc. in string format
         remote_hostnames (str): The remote hostnames the device has contacted
         mac_address (str): The MAC address of the device we want to use AI to get more info about
         url (str): The API endpoint.
@@ -79,6 +81,7 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
     """
     api_key = os.environ.get("API_KEY", "momo")
     device_tracked_key = f'tracked@{mac_address}'
+    meta_data = json.loads(meta_data_string)
 
     headers = {
         "Content-Type": "application/json",
@@ -88,11 +91,12 @@ def call_predict_api(dhcp_hostname: str, oui_vendor: str, remote_hostnames: str,
         "prolific_id": common.config_get("prolific_id", ""),
         "mac_address": mac_address,
         "fields": {
-            "oui_friendly": oui_vendor,
-            "dhcp_hostname": dhcp_hostname,
+            "oui_friendly": meta_data.get("oui_vendor", ""),
+            "dhcp_hostname": meta_data.get("dhcp_hostname", ""),
             "remote_hostnames": remote_hostnames,
-            "user_agent_info": "",
-            "netdisco_info": "",
+            "user_agent_info": meta_data.get("user_agent_info", ""),
+            "mdns_info": meta_data.get("mdns_json", ""),
+            "ssdp_info": meta_data.get("ssdp_json", ""),
             "user_labels": "",
             "talks_to_ads": common.config_get(device_tracked_key, False)
         }

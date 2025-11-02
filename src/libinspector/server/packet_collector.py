@@ -32,20 +32,20 @@ db = mongo_client["iot_inspector"]
 # and prevent the Flask server from starting with a bad configuration.
 try:
     # Attempt a simple database operation (list collection names) to force connection/auth check
-    print("Attempting connection and write test to MongoDB...")
+    app.logger.info("Attempting connection and write test to MongoDB...")
     # 1. Attempt to insert a test document
     db.test_connection.insert_one({"status": "startup_check", "timestamp": int(time.time())})
     # 2. Attempt to delete the test document
     db.test_connection.delete_one({"status": "startup_check"})
     # 3. Final check to ensure we can list collections
     db.list_collection_names()
-    print("Successfully connected and confirmed write access to MongoDB.")
+    app.logger.info("Successfully connected and confirmed write access to MongoDB.")
 except Exception as e:
-    print("=" * 50)
-    print("FATAL ERROR: Could not connect to MongoDB or authentication failed.")
-    print(f"Connection URI: {mongo_uri}")
-    print(f"Exception: {e}")
-    print("=" * 50)
+    app.logger.info("=" * 50)
+    app.logger.info("FATAL ERROR: Could not connect to MongoDB or authentication failed.")
+    app.logger.info(f"Connection URI: {mongo_uri}")
+    app.logger.info(f"Exception: {e}")
+    app.logger.info("=" * 50)
     sys.exit(1)
     # If using gunicorn/uwsgi, this exit won't stop the workers, but will prevent the app from running correctly.
     # If running with 'python app.py', this will stop the application.
@@ -101,22 +101,40 @@ def label_packets():
         400: Error if required fields are missing or packet decoding fails.
         500: Error if database insertion fails.
     """
+    raw_packets = []
+    capture_times = []
+    capture_lengths = []
+
     data = request.get_json()
-    print("Received POST data:", json.dumps(data, indent=4))
+    app.logger.info("Received POST data:", json.dumps(data, indent=4))
     required_keys = ["packets", "prolific_id", "mac_address", "device_name", "activity_label", "start_time", "end_time"]
     if not data or not all(key in data for key in required_keys):
+        app.logger.warning("Missing required fields in POST data")
         return jsonify({"error": "Missing required fields"}), 400
-    try:
-        raw_packets = [base64.b64decode(pkt) for pkt in data["packets"]]
-    except Exception as e:
-        print(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
-        return jsonify({"error": "Packet decoding failed"}), 400
 
     if not is_prolific_id_valid(data["prolific_id"]):
+        app.logger.warning("Invalid Prolific ID received")
         return jsonify({"error": "Prolific ID is invalid"}), 500
+
+    try:
+        for pkt_metadata in data["packets"]:
+            # Validate essential keys are present
+            if not isinstance(pkt_metadata, dict) or 'time' not in pkt_metadata or 'raw_data' not in pkt_metadata:
+                app.logger.error("Packet object missing 'time' or 'raw_data' key.")
+                return jsonify({"error": "Packet metadata structure is invalid"}), 400
+
+            raw_data_bytes = base64.b64decode(pkt_metadata["raw_data"])
+            raw_packets.append(raw_data_bytes)
+            capture_times.append(float(pkt_metadata["time"]))
+            capture_lengths.append(len(raw_data_bytes))
+    except Exception as e:
+        app.logger.warning(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
+        return jsonify({"error": "Packet decoding failed"}), 400
+
     folder_path: str = os.path.join(str(data["prolific_id"]), str(data["device_name"]), str(data["activity_label"]))
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
     if not fullpath.startswith(packet_root_dir):
+        app.logger.warning("Invalid characters detected in path components")
         return jsonify({"error": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
 
     prolific_user_packets_collected = db[data["prolific_id"]]
@@ -127,22 +145,24 @@ def label_packets():
         "activity_label": data["activity_label"],
         "start_time": int(data["start_time"]),
         "end_time": int(data["end_time"]),
-        "raw_packets": raw_packets
+        "raw_packets": raw_packets,
+        "capture_times": capture_times,
+        "capture_lengths": capture_lengths
     }
     try:
         prolific_user_packets_collected.insert_one(doc)
     except Exception as e:
-        print(f"MongoDB Insert FAILED for collection '{data['prolific_id']}': {e}")
+        app.logger.warning(f"MongoDB Insert FAILED for collection '{data['prolific_id']}': {e}")
         return jsonify({"error": "Database insert failed"}), 500
 
     try:
         os.makedirs(fullpath, exist_ok=True)
         pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
         pcap_name: str = os.path.join(fullpath, pcap_file_name)
-        save_packets_to_pcap(raw_packets, pcap_name)
+        save_packets_to_pcap(raw_packets, capture_times, pcap_name)
     except Exception as e:
         # If file saving fails, return a 500 but note that the DB save succeeded
-        print(f"PCAP File Save FAILED for ID: {e}")
+        app.logger.warning(f"PCAP File Save FAILED for ID: {e}")
         return jsonify({
             "status": "partial_success",
             "inserted": 1,
@@ -170,22 +190,27 @@ def make_pcap_filename(start_time: int, end_time: int) -> str:
     return filename
 
 
-def save_packets_to_pcap(raw_packets: list, filename="output.pcap"):
+def save_packets_to_pcap(raw_packets: list, capture_times: list, filename="output.pcap"):
     """
     Saves a list of raw packet bytes to a pcap file.
 
     Args:
         raw_packets (list): List of bytes objects representing raw packets.
+        capture_times (list): The epoch time of each packet when it was captured by IoT Inspector.
         filename (str): Output pcap file name.
     """
     scapy_packets = []
-    for pkt_bytes in raw_packets:
+    for i, pkt_bytes in enumerate(raw_packets):
         try:
             pkt = Ether(pkt_bytes)
             if pkt.__class__.__name__ == "Raw":
                 pkt = IP(pkt_bytes)
         except Exception:
             pkt = IP(pkt_bytes)
+
+        # CRITICAL STEP: Assign the supplied original capture time
+        # This is guaranteed to be correct for ALL packets.
+        pkt.time = capture_times[i]
         scapy_packets.append(pkt)
     wrpcap(filename, scapy_packets)
 

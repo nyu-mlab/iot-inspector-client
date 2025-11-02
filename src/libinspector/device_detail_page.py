@@ -13,7 +13,9 @@ import scapy.all as sc
 import json
 import os
 import logging
+from collections import deque
 
+_labeling_event_deque = deque()
 _labeled_activity_packet_queue = Queue()
 logger = logging.getLogger("client")
 
@@ -46,11 +48,7 @@ def reset_labeling_state():
     st.session_state['countdown'] = False
     st.session_state['start_time'] = None
     st.session_state['end_time'] = None
-    # We keep activity_label and device_label until the end, so only reset these:
-    # st.session_state['activity_label'] = None
-    # st.session_state['device_label'] = None
     st.session_state['show_labeling_setup'] = False
-    st.session_state['api_message'] = None
 
 
 def _collect_packets_callback():
@@ -58,73 +56,114 @@ def _collect_packets_callback():
     Executed when 'Start' is clicked. Sets the flag to trigger the countdown
     and packet start logic in the main function.
     """
-    logger.info("[Packets] Start button clicked, initiating countdown...")
+    logger.info("[Packets] Start button clicked, initiating countdown and add to Label Deque...")
     st.session_state['countdown'] = True
+
+    labeling_event = {
+        "prolific_id": common.config_get('prolific_id', ''),
+        "device_name": st.session_state['device_name'],
+        "activity_label": st.session_state['activity_label'],
+        "mac_address": st.session_state['mac_address'],
+    }
+    _labeling_event_deque.append(labeling_event)
     # st.rerun() will be triggered by Streamlit after the callback completes
 
 
-def _send_packets_callback(mac_address: str):
+def _send_packets_callback():
     """
     Executed when the 'Labeling Complete' button is clicked.
     Handles stopping packet collection and sending data to the server.
-    Args:
-        mac_address (str): The MAC address of the device being labeled.
     """
     if not common.config_get('labeling_in_progress', default=False):
-        st.session_state['api_message'] = "warning|No labeling session in progress. Please start a labeling session first."
+        common.config_set('api_message', "warning|No labeling session in progress. Please start a labeling session first.")
         return
 
-    logger.info("[Packets] Starting to send labeled packets...")
+    logger.info("[Packets] Collect the end time and prep for packet collection.")
+    if len(_labeling_event_deque) == 0:
+        logger.warning("[Packets] No labeling event found in the queue when trying to set end time.")
+    else:
+        _labeling_event_deque[-1]['end_time'] = int(time.time())
+        st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
 
-    # 1. Stop packet collection
-    with libinspector.global_state.global_state_lock:
-        libinspector.global_state.custom_packet_callback_func = None
-        libinspector.global_state.labeling_target_mac = None
-
-    # 2. Process and empty the queue
-    pending_packet_list = []
-    while not _labeled_activity_packet_queue.empty():
-        pending_packet_list.append(_labeled_activity_packet_queue.get())
-
-    st.session_state['end_time'] = int(time.time())
-
-    # 3. API Sending Logic - results are saved to api_message for display
-    try:
-        if len(pending_packet_list) > 0:
-            remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-            remote_port = common.config_get("packet_collect_port", '443')
-            api_path = "/iot_inspector_data_capture/label_packets"
-            api_url = f"https://{remote_host}:{remote_port}{api_path}"
-
-            # NOTE: We avoid st.write here, save the info to session_state instead
-            response = requests.post(
-                api_url,
-                json={
-                    "packets": [
-                        base64.b64encode(pkt).decode('utf-8') for pkt in pending_packet_list
-                    ],
-                    "prolific_id": st.session_state.get('prolific_id', 'unknown'),
-                    "mac_address": mac_address,
-                    "device_name": st.session_state.get('device_label'),
-                    "activity_label": st.session_state.get('activity_label'),
-                    "start_time": st.session_state.get('start_time'),
-                    "end_time": st.session_state['end_time']
-                },
-                timeout=10
-            )
-            if response.status_code == 200:
-                st.session_state['api_message'] = f"success| {len(pending_packet_list)} Labeled packets successfully sent to the server."
-            else:
-                st.session_state[
-                    'api_message'] = (f"error|Failed to send labeled packets. Server status: {response.status_code}. "
-                                      f"{len(pending_packet_list)} Packets were not sent.")
-        else:
-            st.session_state['api_message'] = "error|No packets were captured for labeling."
-    except requests.RequestException as e:
-        st.session_state['api_message'] = f"error|An error occurred during API transmission: {e}"
-    finally:
-        pending_packet_list.clear()
     # st.rerun() will occur after this, showing the results.
+
+
+def label_thread():
+    """
+    This thread continuously checks for labeled packets to send to the server.
+    It runs every 15 seconds, and if the labeling session has ended, it processes
+    and sends the packets in the queue to the remote API endpoint.
+    """
+    pending_packet_list = []
+    logger.info("[Packets] Labeling Packets Thread started.")
+    while True:
+        time.sleep(15)
+        logger.info("[Packets] Will check if there are labeled packets to send...")
+        # 1. Check if labeling session has ended
+        if len(_labeling_event_deque) == 0:
+            common.config_set('api_message', "warning| There is no labeling event ready. No packets sent.")
+            logger.info("[Packets] There is no labeling event ready. Not sending packets.")
+            continue
+        else:
+            logger.info(f"[Packets] Found labeling event, the queue is of size {len(_labeling_event_deque)}")
+
+        # Make sure end time is NOT a none
+        end_time = _labeling_event_deque[0].get('end_time', None)
+        if end_time is None:
+            common.config_set('api_message', "warning| The most recent labeling session doesn't have an end time set yet. Not sending packets yet.")
+            logger.info("[Packets] End time hasn't been set yet, The labeling session is still ongoing. Not sending packets yet.")
+            continue
+
+        # If the labeling session is still ongoing, skip sending
+        if time.time() <= end_time:
+            logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
+            common.config_set('api_message', "warning| The labeling session is still ongoing as the end time is in the future. Not sending packets yet.")
+            continue
+
+        # 2. Process and empty the queue
+        while not _labeled_activity_packet_queue.empty():
+            packet = _labeled_activity_packet_queue.get()
+            dt_object = datetime.datetime.fromtimestamp(packet.time)
+            timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
+            packet_metadata = {
+                "time": packet.time,
+                "raw_data": base64.b64encode(packet.original).decode('utf-8')
+            }
+            pending_packet_list.append(packet_metadata)
+
+        payload = _labeling_event_deque.popleft()
+        payload['packets'] = pending_packet_list
+        # 3. API Sending Logic - results are saved to api_message for display
+        try:
+            if len(pending_packet_list) > 0:
+                logger.info(
+                f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
+                remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
+                remote_port = common.config_get("packet_collect_port", '443')
+                api_path = "/iot_inspector_data_capture/label_packets"
+                api_url = f"https://{remote_host}:{remote_port}{api_path}"
+
+                # NOTE: We avoid st.write here, save the info to session_state instead
+                response = requests.post(
+                    api_url,
+                    json=payload,
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully.")
+                    common.config_set('api_message', f"success| {len(pending_packet_list)} Labeled packets successfully sent to the server.")
+                else:
+                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!.")
+                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code}. {len(pending_packet_list)} Packets were not sent.")
+            else:
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
+                common.config_set('api_message', "error|No packets were captured for labeling.")
+        except requests.RequestException as e:
+            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
+            common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
+        finally:
+            pending_packet_list.clear()
 
 
 def update_device_inspected_status(mac_address: str):
@@ -143,6 +182,28 @@ def update_device_inspected_status(mac_address: str):
         db_conn.execute(sql, (1, mac_address))
     device_inspected_config_key = f'device_is_inspected_{mac_address}'
     common.config_set(device_inspected_config_key, True)
+
+
+@st.fragment(run_every=10)
+def display_api_status():
+    """
+    Continuously checks the global 'api_message' configuration variable
+    and displays the corresponding Streamlit notification (success, error, or warning).
+    This fragment runs every 10 seconds, ensuring the user sees updates from the
+    background thread (label_thread) in real-time.
+    """
+    # Use st.empty() to ensure the message appears in the same place and is cleared on next run
+    status_placeholder = st.empty()
+    api_message = common.config_get('api_message', default='')
+
+    if len(api_message) != 0:
+        msg_type, msg = api_message.split('|', 1)
+        if msg_type == 'success':
+            status_placeholder.success(f"✅ {msg}")
+        elif msg_type == 'error':
+            status_placeholder.error(f"❌ {msg}")
+        elif msg_type == 'warning':
+            status_placeholder.warning(f"⚠️ {msg}")
 
 
 def label_activity_workflow(mac_address: str):
@@ -183,18 +244,15 @@ def label_activity_workflow(mac_address: str):
         if st.button("Continue", help="Click to confirm you have read and agree to the above statement."):
             if prolific_id.strip():
                 st.session_state['external_data_permission_granted'] = True
-                st.session_state['prolific_id'] = prolific_id
                 st.rerun()
             else:
                 st.warning("Prolific ID is required to proceed.")
         return
 
     # --- 2. Initialize State ---
-    for key in ['start_time', 'end_time', 'activity_label', 'device_label', 'countdown',
-                'api_message', 'show_labeling_setup']:
+    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label']:
         if key not in st.session_state:
-            st.session_state[key] = None if key in ['start_time', 'end_time', 'activity_label', 'device_label',
-                                                    'api_message'] else False
+            st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
 
     # --- 3. Initial "Label" Button / State Check ---
     session_active = common.config_get('labeling_in_progress', default=False)
@@ -204,6 +262,9 @@ def label_activity_workflow(mac_address: str):
             disabled=session_active or st.session_state['end_time'] is not None,
             help="Click to start labeling an activity for this device. This will reset any previous labeling state."
     ):
+        if len(_labeling_event_deque) > 0:
+            st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session should have been sent.")
+            return
         update_device_inspected_status(mac_address)
         reset_labeling_state()
         # Keep labeling_in_progress=True until the very end, controlled by config_get/set
@@ -224,32 +285,32 @@ def label_activity_workflow(mac_address: str):
             return
 
         # Use the status of the session (running or done) to control if the select boxes are disabled
-        is_running = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
-
+        is_currently_labeling = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
         categories = list(activity_data.keys())
         selected_category = st.selectbox("Select device category",
                                          categories,
                                          key="category_select",
-                                         disabled=is_running)
+                                         disabled=is_currently_labeling)
 
         devices = list(activity_data[selected_category].keys())
         selected_device = st.selectbox("Select device", devices,
                                        key="device_select",
-                                       disabled=is_running)
+                                       disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
         selected_label = st.selectbox("Select activity label",
                                       activity_labels,
                                       key="label_select",
-                                      disabled=is_running)
+                                      disabled=is_currently_labeling)
 
         # Update state on selection changes, unless running
-        if not is_running:
-            st.session_state['device_label'] = selected_device
+        if not is_currently_labeling:
+            st.session_state['device_name'] = selected_device
             st.session_state['activity_label'] = selected_label
+            st.session_state['mac_address'] = mac_address
         else:
             st.info(
-                f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_label']}**.")
+                f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
 
         st.subheader("2. Control Collection")
         col1, col2 = st.columns(2)
@@ -258,7 +319,7 @@ def label_activity_workflow(mac_address: str):
             st.button(
                 "Start",
                 on_click=_collect_packets_callback,
-                disabled=is_running or st.session_state['countdown'],  # Disable if running or counting down
+                disabled=is_currently_labeling or st.session_state['countdown'],  # Disable if running or counting down
                 help="Click to start collecting packets for labeling. You will have 5 seconds to prepare before packet collection starts."
             )
 
@@ -267,24 +328,12 @@ def label_activity_workflow(mac_address: str):
             st.button(
                 "Labeling Complete",
                 on_click=_send_packets_callback,
-                args=(mac_address,),
-                disabled=not is_running,  # Enable only when actively labeling (start_time is set, end_time is not)
+                disabled=not is_currently_labeling,  # Enable only when actively labeling (start_time is set, end_time is not)
                 help="Click to stop collecting packets and send the labeled packets to NYU mLab."
             )
 
-        # --- MESSAGE PLACEMENT FIX (Issue 1) ---
-        # Define the placeholder right below the buttons
-        status_placeholder = st.empty()
-
-        # Check and display API message on rerun
-        if st.session_state.get('api_message'):
-            msg_type, msg = st.session_state['api_message'].split('|', 1)
-            if msg_type == 'success':
-                status_placeholder.success(f"✅ {msg}")
-            elif msg_type == 'error':
-                status_placeholder.error(f"❌ {msg}")
-            elif msg_type == 'warning':
-                status_placeholder.warning(f"⚠️ {msg}")
+        # The logic for displaying the API message has been moved into this fragment,
+        display_api_status()
 
     # --- 5. Countdown Logic (Blocking, happens between Start and Collection) ---
     if st.session_state['countdown']:
@@ -295,18 +344,17 @@ def label_activity_workflow(mac_address: str):
         countdown_placeholder.empty()
 
         # Start packet capture after countdown
-        st.session_state['start_time'] = int(time.time())
+        _labeling_event_deque[-1]['start_time'] = int(time.time())
+        st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         st.session_state['countdown'] = False
-        with libinspector.global_state.global_state_lock:
-            libinspector.global_state.custom_packet_callback_func = save_labeled_activity_packets
-            libinspector.global_state.labeling_target_mac = mac_address
+        logger.info("[Packets] The start time is set, packet collection is now ACTIVE.")
         st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
         st.rerun()  # Rerun to update button state and message
 
     # --- 6. Final Results and Display ---
     if st.session_state['end_time']:
         st.header("Labeling Session Complete")
-        st.markdown(f"**Device:** `{st.session_state.get('device_label')}`")
+        st.markdown(f"**Device:** `{st.session_state.get('device_name')}`")
         st.markdown(f"**Activity:** `{st.session_state.get('activity_label')}`")
         duration = st.session_state['end_time'] - (st.session_state['start_time'] or st.session_state['end_time'])
         st.markdown(f"**Duration:** {duration} seconds")
@@ -322,14 +370,34 @@ def save_labeled_activity_packets(pkt):
     Args:
         pkt: The network packet (scapy packet) to process.
     """
-    mac_address = None
-    with libinspector.global_state.global_state_lock:
-        mac_address = libinspector.global_state.labeling_target_mac
+    if len(_labeling_event_deque) == 0:
+        return
 
+    # TODO: Think with Danny, but say the first label in the queue is done,
+    # TODO: how do I know if it isn't label event 1, 2, 3, or ..., n that actually needs this packet?
+    # TODO: maybe have config store a point to element in the deque that is being labeled?
+    # TODO: For now, I am sticking to one element in the deque at a time.
+    mac_address = _labeling_event_deque[0].get('mac_address', None)
+    start_time = _labeling_event_deque[0].get('start_time', None)
+    end_time = _labeling_event_deque[0].get('end_time', None)
+
+    # start_time must be set and not after the packet time
+    if start_time is None:
+        return
+
+    # Confirm if packet is not before start_time
+    if pkt.time < start_time:
+        return
+
+    # if end_time is set, ensure packet is not after end_time
+    if end_time is not None:
+        if pkt.time > end_time:
+            return
+
+    # We check both source and destination MAC to capture all relevant traffic
     if mac_address and (pkt[sc.Ether].src == mac_address or pkt[sc.Ether].dst == mac_address):
-        # We check both source and destination MAC to capture all relevant traffic
-        _labeled_activity_packet_queue.put(pkt.original)
-        logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Labeled packets in queue: {_labeled_activity_packet_queue.qsize()}")
+        # We also check if the timestamp is correct
+        _labeled_activity_packet_queue.put(pkt)
 
 
 @st.cache_data(show_spinner=False)
@@ -460,7 +528,6 @@ def show_device_list():
     This is shown at the top of the Device details page.
     This page allows you to change IoT device selection.
     """
-
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
     # Get the list of devices from the database
@@ -508,6 +575,4 @@ def show_device_list():
     )
 
     return device_mac_address
-
-
 

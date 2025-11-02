@@ -149,7 +149,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "libinspector", specifier = "==1.0.10" },
+    { name = "libinspector", specifier = "==1.0.12" },
     { name = "streamlit", specifier = ">=1.50.0" },
 ]
 
@@ -194,7 +194,7 @@ wheels = [
 
 [[package]]
 name = "libinspector"
-version = "1.0.10"
+version = "1.0.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "netaddr" },
@@ -205,7 +205,7 @@ dependencies = [
     { name = "zeroconf" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/0d/3648cc7f0c99db9af8acaeac627d7dbb55aae46e0270cabfcd7e1b931ce6/libinspector-1.0.10-py3-none-any.whl", hash = "sha256:c417a2fc829e6a81a37f31e21f2ed7e624340183d33184032b05738273033376", size = 6696688, upload-time = "2025-10-13T20:30:15.702Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/1f/71dfe42da4ac0c74e700a0d417fc72ae10f2e76a7199b7829fd9068d9c95/libinspector-1.0.12-py3-none-any.whl", hash = "sha256:7592ad4f1bec60175fa45e2744845b9a439d2d4ffd026b116109ab32de9cb9a8", size = 6696784, upload-time = "2025-10-22T21:55:30.094Z" },
 ]
 
 [[package]]
