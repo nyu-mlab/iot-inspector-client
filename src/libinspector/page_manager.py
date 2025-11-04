@@ -75,6 +75,7 @@ def start_inspector_once():
         # Same with the general warning
         common.config_set("suppress_warning", False)
         common.config_set("labeling_in_progress", False)
+        common.config_set("api_message", "")
         libinspector.core.start_threads()
         api_thread = threading.Thread(
             name="Device API Thread",
