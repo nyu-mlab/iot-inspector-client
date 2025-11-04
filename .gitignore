@@ -1,3 +1,7 @@
+# Ignore packet dumps
+*.pcap
+*.pcapng
+
 *~
 .*
 !.gitattributes

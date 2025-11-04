@@ -61,17 +61,16 @@ def show_warning():
     else:
         # ID is missing or invalid -> BLOCK and show input form
         st.subheader("Prolific ID Required")
-        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling.")
+        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling and your payment.")
 
         with st.form("prolific_id_form"):
             input_id = st.text_input(
-                "Enter your Prolific ID (1-50 Alphanumeric Characters):",
+                "Enter your Prolific ID:",
                 value="",
                 key="prolific_id_input"
             ).strip()
 
             submitted = st.form_submit_button("Submit ID")
-
             if submitted:
                 if is_prolific_id_valid(input_id):
                     config_set("prolific_id", input_id)
