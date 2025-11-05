@@ -28,7 +28,8 @@ warning_text = (
 
 def remove_warning():
     """
-    Remove the warning acceptance state, forcing the user to see the warning again.
+    Remove the warning screen by setting the suppress_warning flag in the config.
+    This lasts for the duration of this IoT Inspector session.
     """
     config_set("suppress_warning", True)
 
@@ -38,17 +39,6 @@ def reset_prolific_id():
     Clear the stored Prolific ID, forcing the user to re-enter it.
     """
     config_set("prolific_id", "")
-
-
-def set_prolific_id(prolific_id: str):
-    """
-    Store the provided Prolific ID in the configuration.
-
-    Args:
-        prolific_id (str): The Prolific ID to store.
-    """
-    if is_prolific_id_valid(prolific_id):
-        config_set("prolific_id", prolific_id)
 
 
 def show_warning():
@@ -62,10 +52,11 @@ def show_warning():
     """
     current_id = config_get("prolific_id", "")
     st.subheader("1. Prolific ID Confirmation")
-    st.info(f"Your currently stored ID is: `{current_id}`")
-    st.button("Change Prolific ID",
-              on_click=reset_prolific_id,
-              help="Clicking this will clear your stored ID and return you to the ID entry form.")
+    if current_id != "":
+        st.info(f"Your currently stored ID is: `{current_id}`")
+        st.button("Change Prolific ID",
+                  on_click=reset_prolific_id,
+                  help="Clicking this will clear your stored ID and return you to the ID entry form.")
 
     # --- GATE 1: PROLIFIC ID CHECK (Must be valid to proceed to confirmation) ---
     if is_prolific_id_valid(current_id):
@@ -96,10 +87,19 @@ def show_warning():
                 value="",
                 key="prolific_id_input"
             ).strip()
-            st.form_submit_button("Submit ID",
-                                  on_click=set_prolific_id,
-                                  args=(input_id,),
-                                  help="Submit your Prolific ID to proceed.")
+            submitted = st.form_submit_button("Submit ID", help="Submit your Prolific ID to proceed.")
+
+            if submitted:
+                if is_prolific_id_valid(input_id):
+                    # 1. Set the valid ID
+                    config_set("prolific_id", input_id)
+                    st.success("Prolific ID accepted. Please review the details below.")
+
+                    # 2. Rerun the script. In the next run, is_prolific_id_valid(current_id)
+                    #    will be True, and the user jumps to the warning acceptance (Gate 2).
+                    st.rerun()
+                else:
+                    st.error("Invalid Prolific ID. Must be 1-50 alphanumeric characters.")
 
         return True  # BLOCK: ID check still needs resolution.
 

@@ -271,8 +271,8 @@ def label_activity_workflow(mac_address: str):
     # --- 3. Label Setup UI (Persists through collection) ---
     if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
         st.subheader("1. Select Activity")
-        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
 
+        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
         try:
             with open(activity_json, 'r') as f:
                 activity_data = json.load(f)
@@ -305,9 +305,6 @@ def label_activity_workflow(mac_address: str):
             st.session_state['device_name'] = selected_device
             st.session_state['activity_label'] = selected_label
             st.session_state['mac_address'] = mac_address
-        else:
-            st.info(
-                f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
 
         st.subheader("2. Control Collection")
         col1, col2 = st.columns(2)
@@ -331,6 +328,8 @@ def label_activity_workflow(mac_address: str):
 
     # --- 4. Countdown Logic (Blocking, happens between Start and Collection) ---
     if st.session_state['countdown']:
+        _labeling_event_deque[-1]['start_time'] = int(time.time())
+        st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         countdown_placeholder = st.empty()
         for i in range(5, 0, -1):
             countdown_placeholder.write(f"**Starting packet capture in {i} seconds...**")
@@ -338,11 +337,11 @@ def label_activity_workflow(mac_address: str):
         countdown_placeholder.empty()
 
         # Start packet capture after countdown
-        _labeling_event_deque[-1]['start_time'] = int(time.time())
-        st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         st.session_state['countdown'] = False
         logger.info("[Packets] The start time is set, packet collection is now ACTIVE.")
         st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
+        st.info(
+            f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
         st.rerun()  # Rerun to update button state and message
 
 
@@ -430,7 +429,6 @@ def process_network_flows(df: pandas.DataFrame):
     local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     df['first_seen'] = df['first_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
     df['last_seen'] = df['last_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df = df.reset_index(drop=True)
 
     st.markdown("#### Network Flows")
     st.data_editor(df, width='content')
