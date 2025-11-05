@@ -88,15 +88,40 @@ $streamlitAppPath = "$PSScriptRoot\src\libinspector\dashboard.py"
 # The entire argument list is passed to uv.
 $StreamlitArgs = @("run", "streamlit", "run", "`"$streamlitAppPath`"")
 
-Start-Process -FilePath "uv" `
+$streamlitProcess = Start-Process -FilePath "uv" `
     -ArgumentList $StreamlitArgs `
     -PassThru `
     -NoNewWindow
-# Wait for a few seconds to let the server start
-Start-Sleep -Seconds 3
 
+
+$isReady = $false
+$pollingDelaySeconds = 3
+$appUrl = "http://localhost:33721/"
+# Loop indefinitely until $isReady becomes $true
+while (-not $isReady) {
+    try {
+        # Use Invoke-WebRequest to check for a successful connection (Status Code 200).
+        # We set a short TimeoutSec on the request itself to prevent hanging.
+        $request = Invoke-WebRequest -Uri $appUrl -TimeoutSec 5 -ErrorAction Stop
+        if ($request.StatusCode -eq 200) {
+            $isReady = $true
+            Write-Host "✅ Server is ready. Launching browser."
+        }
+    } catch {
+        # Server is not ready yet, or connection failed. Ignore the error.
+        Write-Host "Still waiting for Streamlit server..."
+    }
+
+    if (-not $isReady) {
+        Start-Sleep -Seconds $pollingDelaySeconds
+    }
+}
 # Open the browser to the application URL
-Start-Process -FilePath "http://localhost:33721/"
+Start-Process -FilePath $appUrl
 
 # Wait for the Streamlit process to finish or for the user to close this window
 Write-Host "IoT Inspector is running. Close this window to stop the application."
+if ($streamlitProcess) {
+    $streamlitProcess.WaitForExit()
+}
+Write-Host "IoT Inspector has been closed. Exiting setup script."

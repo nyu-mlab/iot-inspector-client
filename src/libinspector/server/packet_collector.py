@@ -173,20 +173,26 @@ def label_packets():
 
 def make_pcap_filename(start_time: int, end_time: int) -> str:
     """
-    Generates a pcap filename using the start and end epoch timestamps.
+    Generates a pcap filename that is both human-readable and informative.
+    The format is: 'Mon-DD-YYYY_HHMMSSAM/PM_DurationSeconds.pcap'
+
+    Example: 'Oct-31-2025_11:31:00AM_6s.pcap'
 
     Args:
         start_time (int): Start time in seconds since the epoch.
         end_time (int): End time in seconds since the epoch.
 
     Returns:
-        str: Filename in the format 'YYYYMMDD_HHMMSS-YYYYMMDD_HHMMSS.pcap'.
+        str: Human-readable filename.
     """
     start_dt = datetime.datetime.fromtimestamp(start_time)
-    end_dt = datetime.datetime.fromtimestamp(end_time)
-    safe_start = start_dt.strftime("%Y%m%d_%H%M%S")
-    safe_end = end_dt.strftime("%Y%m%d_%H%M%S")
-    filename = f"{safe_start}-{safe_end}.pcap"
+    duration_seconds = end_time - start_time
+
+    # Format the start time: e.g., 'Oct-31-2025_113100AM'
+    safe_start = start_dt.strftime("%b-%d-%Y_%I:%M:%S%p")
+
+    # Generate the filename with duration
+    filename = f"{safe_start}_{duration_seconds}s.pcap"
     return filename
 
 

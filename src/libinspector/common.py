@@ -61,17 +61,16 @@ def show_warning():
     else:
         # ID is missing or invalid -> BLOCK and show input form
         st.subheader("Prolific ID Required")
-        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling.")
+        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling and your payment.")
 
         with st.form("prolific_id_form"):
             input_id = st.text_input(
-                "Enter your Prolific ID (1-50 Alphanumeric Characters):",
+                "Enter your Prolific ID:",
                 value="",
                 key="prolific_id_input"
             ).strip()
 
             submitted = st.form_submit_button("Submit ID")
-
             if submitted:
                 if is_prolific_id_valid(input_id):
                     config_set("prolific_id", input_id)
@@ -141,7 +140,8 @@ def bar_graph_data_frame(mac_address: str, now: int):
 
 def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
     """
-    Plots the traffic volume over time.
+    Plots the traffic volume over time. The bar goes from right to left,
+    like Task Manager in Windows.
 
     Args:
         df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
@@ -153,9 +153,9 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
     else:
         st.markdown(f"#### {chart_title}")
         df['seconds_ago'] = now - df['timestamp'].astype(int)
-        df = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
-        st.bar_chart(df.set_index('seconds_ago')['Bits'], width='content')
-
+        df_reindexed = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
+        df_reindexed = df_reindexed.sort_values(by='seconds_ago', ascending=False)
+        st.bar_chart(df_reindexed.set_index('seconds_ago')['Bits'], width='content')
 
 def get_device_metadata(mac_address: str) -> dict:
     """
