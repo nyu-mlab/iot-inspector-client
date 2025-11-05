@@ -7,9 +7,15 @@ on:
   schedule:
     - cron: '0 0 */30 * *'
 
+# Set no permissions by default. This is the most secure practice.
+# We will grant specific permissions to each job that needs them.
+permissions: {}
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
