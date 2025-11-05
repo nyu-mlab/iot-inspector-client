@@ -185,14 +185,17 @@ def make_pcap_filename(start_time: int, end_time: int) -> str:
     Returns:
         str: Human-readable filename.
     """
-    start_dt = datetime.datetime.fromtimestamp(start_time)
-    duration_seconds = end_time - start_time
+    # Determine the local timezone object of the machine running the script.
+    local_tz = datetime.datetime.now().astimezone().tzinfo
 
-    # Format the start time: e.g., 'Oct-31-2025_113100AM'
-    safe_start = start_dt.strftime("%b-%d-%Y_%I:%M:%S%p")
+    # We explicitly tell fromtimestamp() that the input is UTC.
+    start_dt_utc = datetime.datetime.fromtimestamp(start_time, tz=datetime.timezone.utc)
+    start_dt_localized = start_dt_utc.astimezone(local_tz)
+    duration_seconds = end_time - start_time
+    safe_start = start_dt_localized.strftime("%b-%d-%Y_%I:%M:%S%p")
 
     # Generate the filename with duration
-    filename = f"{safe_start}_{duration_seconds}s.pcap"
+    filename = f"{safe_start}_{duration_seconds:.2f}s.pcap"
     return filename
 
 

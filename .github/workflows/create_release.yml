@@ -6,9 +6,15 @@ on:
     branches:
       - master
 
+# Set no permissions by default. This is the most secure practice.
+# We will grant specific permissions to each job that needs them.
+permissions: {}
+
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       v-version: ${{ steps.version.outputs.v-version }}
     steps:
@@ -22,6 +28,8 @@ jobs:
 
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     needs: [create_release]
     strategy:
       fail-fast: false
@@ -101,6 +109,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.create_release.outputs.v-version }}
+          draft: false
+          generate_release_notes: true
+          prerelease: false
           files: |
             dist/*.exe
             dist/*.whl

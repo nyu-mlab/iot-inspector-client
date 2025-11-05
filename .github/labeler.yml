@@ -5,16 +5,22 @@ Github-files:
   - '.github/**'
 
 Tests:
-  - 'tests/**'
-
-Analysis:
-  - 'analysis/**'
+  - 'src/tests/**'
 
 Core:
-  - 'core/**'
+  - 'src/libinspector/**.py'
+  - 'pyproject.toml'
+  - 'setup.py'
+  - 'uv.lock'
+
+Scripts:
+  - '**/*.sh'
+  - '**/*.ps1'
+  - '**/*.bat'
 
 Data:
-  - 'data/**'
+  - 'src/libinspector/data/**'
 
-UI:
-  - 'ui/**'
+Streamlit:
+  - 'src/libinspector/.streamlit/**'
+  - '.streamlit/**'

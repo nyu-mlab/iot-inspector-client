@@ -26,6 +26,31 @@ warning_text = (
     "- Metadata of your network traffic (e.g., which IPs/domains your devices communicate with) is shared anonymously with NYU researchers during the labeling stage."
 )
 
+def remove_warning():
+    """
+    Remove the warning acceptance state, forcing the user to see the warning again.
+    """
+    config_set("suppress_warning", True)
+
+
+def reset_prolific_id():
+    """
+    Clear the stored Prolific ID, forcing the user to re-enter it.
+    """
+    config_set("prolific_id", "")
+
+
+def set_prolific_id(prolific_id: str):
+    """
+    Store the provided Prolific ID in the configuration.
+
+    Args:
+        prolific_id (str): The Prolific ID to store.
+    """
+    if is_prolific_id_valid(prolific_id):
+        config_set("prolific_id", prolific_id)
+
+
 def show_warning():
     """
     Displays a warning message to the user about network monitoring and ARP spoofing.
@@ -36,28 +61,30 @@ def show_warning():
         False if the user has accepted the warning and can proceed.
     """
     current_id = config_get("prolific_id", "")
+    st.subheader("1. Prolific ID Confirmation")
+    st.info(f"Your currently stored ID is: `{current_id}`")
+    st.button("Change Prolific ID",
+              on_click=reset_prolific_id,
+              help="Clicking this will clear your stored ID and return you to the ID entry form.")
 
     # --- GATE 1: PROLIFIC ID CHECK (Must be valid to proceed to confirmation) ---
     if is_prolific_id_valid(current_id):
-        # --- SHOW CONFIRMATION UI (Only reached if ID is valid but warning is unaccepted) ---
-        st.subheader("1. Prolific ID Confirmation")
-        st.info(f"Your currently stored ID is: `{current_id}`")
-
-        # Allows the user to change the ID, which forces them back through GATE 1
-        if st.button("Change Prolific ID", help="Clicking this will clear your stored ID and return you to the ID entry form."):
-            config_set("prolific_id", "")  # Clear the stored ID
-            st.rerun()
-
+        # Check if the warning is NOT suppressed. If it's not suppressed, we show the UI
+        # and MUST return True (Block execution) until the user clicks the button.
         if not config_get("suppress_warning", False):
             st.markdown("---")
             st.subheader("2. Network Monitoring Warning")
             st.markdown(warning_text)
 
-            if st.button("OK, I understand and wish to proceed", help="Clicking this confirms that you understand the warning and wish to proceed."):
-                config_set("suppress_warning", True)
-                st.rerun()
+            st.button("OK, I understand and wish to proceed",
+                      on_click=remove_warning,
+                      help="Clicking this confirms that you understand the warning and wish to proceed.")
 
-        return not is_prolific_id_valid(config_get("prolific_id", ""))
+            # Since the warning is displayed and unaccepted, we must block.
+            return True
+
+        # If we reach here, ID is valid AND suppress_warning is True.
+        return False
     else:
         # ID is missing or invalid -> BLOCK and show input form
         st.subheader("Prolific ID Required")
@@ -69,15 +96,10 @@ def show_warning():
                 value="",
                 key="prolific_id_input"
             ).strip()
-
-            submitted = st.form_submit_button("Submit ID")
-            if submitted:
-                if is_prolific_id_valid(input_id):
-                    config_set("prolific_id", input_id)
-                    st.success("Prolific ID accepted. Please review the details below.")
-                    st.rerun()  # Rerun to jump to the confirmation step (GATE 2)
-                else:
-                    st.error("Invalid Prolific ID. Must be 1-50 alphanumeric characters.")
+            st.form_submit_button("Submit ID",
+                                  on_click=set_prolific_id,
+                                  args=(input_id,),
+                                  help="Submit your Prolific ID to proceed.")
 
         return True  # BLOCK: ID check still needs resolution.
 
@@ -156,6 +178,7 @@ def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
         df_reindexed = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
         df_reindexed = df_reindexed.sort_values(by='seconds_ago', ascending=False)
         st.bar_chart(df_reindexed.set_index('seconds_ago')['Bits'], width='content')
+
 
 def get_device_metadata(mac_address: str) -> dict:
     """
