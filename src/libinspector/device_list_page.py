@@ -43,25 +43,24 @@ def worker_thread():
         for device_dict in device_list:
             meta_data = common.get_device_metadata(device_dict['mac_address'])
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
+            custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
             try:
                 # Note I am passing the metadata as a string because functions with cache cannot take dicts
                 # as a dict is mutable, and the cache would not work as expected.
                 api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
                 common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
                 if "Vendor" in api_output:
-                    # Update name based on API
-                    custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
                     custom_name = api_output["Vendor"]
                     if api_output["Vendor"] != "":
                         common.config_set(custom_name_key, custom_name)
-                    else:
-                        # If API is down, just try using OUI vendor
-                        common.config_set(custom_name_key, meta_data.get('oui_vendor', 'Unknown Device, likely a Mobile Phone'))
             except Exception as e:
                 logger.info("[Device ID API] Exception when calling API: %s", str(e))
-                continue
-
-
+            finally:
+                # If API is down, just try using OUI vendor if no custom name is set in config.json
+                if common.config_get(custom_name_key, default='') == '':
+                    common.config_set(custom_name_key,
+                                      meta_data.get('oui_vendor', 'Unknown Device, likely a Mobile Phone'))
+                
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
                      mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:

@@ -28,9 +28,7 @@ def get_page(title, material_icon, show_page_func):
             st.query_params['pid'] = pid
 
         initialize_page()
-
         st.markdown(f"## {icon} {title}")
-
         show_page_func()
 
     return st.Page(
@@ -52,7 +50,7 @@ def initialize_page():
         menu_items={}
     )
 
-    # If true, block further execution
+    initialize_config()
     if common.show_warning():
         st.stop()
 
@@ -68,14 +66,17 @@ def initialize_page():
 
 
 @functools.lru_cache(maxsize=1)
+def initialize_config():
+    """Initialize certain Config variables when starting IoT Inspector."""
+    common.config_set("suppress_warning", False)
+    common.config_set("labeling_in_progress", False)
+    common.config_set("api_message", "")
+
+
+@functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
     with st.spinner("Starting Inspector Core Library..."):
-        # Just in case someone closes labeling window without finishing
-        # Same with the general warning
-        common.config_set("suppress_warning", False)
-        common.config_set("labeling_in_progress", False)
-        common.config_set("api_message", "")
         libinspector.core.start_threads()
         api_thread = threading.Thread(
             name="Device API Thread",
