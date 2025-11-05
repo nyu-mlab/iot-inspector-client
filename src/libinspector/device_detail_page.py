@@ -430,9 +430,6 @@ def process_network_flows(df: pandas.DataFrame):
     local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     df['first_seen'] = df['first_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
     df['last_seen'] = df['last_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-
-    df['inferred_activity'] = None
-    df['confirmation'] = False
     df = df.reset_index(drop=True)
 
     st.markdown("#### Network Flows")
@@ -477,7 +474,7 @@ def show_device_details(mac_address: str):
                  SELECT MIN(timestamp) AS first_seen,
                         MAX(timestamp) AS last_seen,
                         COALESCE(dest_hostname, dest_ip_address) AS dest_info,
-                        SUM(byte_count) * 8 AS Bits
+                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
                  FROM network_flows
                  WHERE src_mac_address = ?
                    AND timestamp >= ?
@@ -490,7 +487,7 @@ def show_device_details(mac_address: str):
                  SELECT MIN(timestamp) AS first_seen,
                         MAX(timestamp) AS last_seen,
                         COALESCE(src_hostname, src_ip_address) AS src_info,
-                        SUM(byte_count) * 8 AS Bits
+                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
                  FROM network_flows
                  WHERE dest_mac_address = ?
                    AND timestamp >= ?
