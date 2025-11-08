@@ -68,6 +68,7 @@ def initialize_page():
 @functools.lru_cache(maxsize=1)
 def initialize_config():
     """Initialize certain Config variables when starting IoT Inspector."""
+    common.config_get("packet_count", 0)
     common.config_set("suppress_warning", False)
     common.config_set("labeling_in_progress", False)
     common.config_set("api_message", "")

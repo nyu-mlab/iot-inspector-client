@@ -8,6 +8,7 @@ import functools
 import os
 import requests
 
+
 logger = logging.getLogger("client")
 
 
@@ -60,7 +61,8 @@ def worker_thread():
                 if common.config_get(custom_name_key, default='') == '':
                     common.config_set(custom_name_key,
                                       meta_data.get('oui_vendor', 'Unknown Device, likely a Mobile Phone'))
-                
+
+
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
                      mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
@@ -219,11 +221,10 @@ def show_device_card(device_dict: dict):
         chart_col_upload, chart_col_download = st.columns(2)
         with chart_col_upload:
             common.plot_traffic_volume(df_upload_bar_graph, now,
-                                       "Upload Traffic (sent by device) in the last 60 seconds")
+                                                    "Upload Traffic (sent by device) in the last 60 seconds")
         with chart_col_download:
-            common.plot_traffic_volume(df_download_bar_graph, now,
-                                       "Download Traffic (received by device) in the last 60 seconds")
-
+            common.plot_traffic_volume(df_upload_bar_graph, now,
+                                                    "Download Traffic (sent by device) in the last 60 seconds")
     # Set whether a device is to be inspected, favorite, or blocked
     with c2:
         # Maps short options to long options for display

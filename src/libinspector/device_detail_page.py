@@ -19,6 +19,7 @@ _labeling_event_deque = deque()
 _labeled_activity_packet_queue = Queue()
 logger = logging.getLogger("client")
 
+
 def show():
     """
     This function is the main entry point for the device details page.
@@ -423,15 +424,50 @@ def process_network_flows(df: pandas.DataFrame):
     if df.empty:
         st.warning("No network flows found for this device.")
         return
-
-    df['first_seen'] = pd.to_datetime(df['first_seen'], unit='s')
-    df['last_seen'] = pd.to_datetime(df['last_seen'], unit='s')
-    local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    df['first_seen'] = df['first_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df['last_seen'] = df['last_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-
     st.markdown("#### Network Flows")
     st.data_editor(df, width='content')
+
+
+
+@st.cache_data(ttl=5, show_spinner=False)
+def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int, _db_conn, _rwlock):
+    """
+    The flow table is cached for 5 seconds (TTL). This drastically reduces the
+    database calls for the heaviest part of the UI, improving performance and stability.
+
+    This function fetches the upload/download host table data, cached for 5 seconds.
+    """
+    # Upload traffic (sent by device)
+    sql_upload_hosts = """
+                       SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
+                              DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
+                              COALESCE(dest_hostname, dest_ip_address)           AS dest_info,
+                              ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
+                       FROM network_flows
+                       WHERE src_mac_address = ?
+                         AND timestamp >= ?
+                       GROUP BY dest_info
+                       ORDER BY last_seen DESC \
+                       """
+
+    # Download traffic (received by device)
+    sql_download_hosts = """
+                         SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
+                                DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
+                                COALESCE(src_hostname, src_ip_address)             AS src_info,
+                                ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
+                         FROM network_flows
+                         WHERE dest_mac_address = ?
+                           AND timestamp >= ?
+                         GROUP BY src_info
+                         ORDER BY last_seen DESC \
+                         """
+
+    with _rwlock:
+        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, _db_conn, params=(mac_address, sixty_seconds_ago))
+        df_download_host_table = pd.read_sql_query(sql_download_hosts, _db_conn, params=(mac_address, sixty_seconds_ago))
+
+    return df_upload_host_table, df_download_host_table
 
 
 @st.fragment(run_every=1)
@@ -466,36 +502,7 @@ def show_device_details(mac_address: str):
     now = int(time.time())
     df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(mac_address, now)
     sixty_seconds_ago = now - 60
-
-    # Upload traffic (sent by device)
-    sql_upload_hosts =  """
-                 SELECT MIN(timestamp) AS first_seen,
-                        MAX(timestamp) AS last_seen,
-                        COALESCE(dest_hostname, dest_ip_address) AS dest_info,
-                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
-                 FROM network_flows
-                 WHERE src_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY dest_info
-                 ORDER BY last_seen DESC
-                 """
-
-    # Download traffic (received by device)
-    sql_download_hosts =  """
-                 SELECT MIN(timestamp) AS first_seen,
-                        MAX(timestamp) AS last_seen,
-                        COALESCE(src_hostname, src_ip_address) AS src_info,
-                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
-                 FROM network_flows
-                 WHERE dest_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY src_info
-                 ORDER BY last_seen DESC
-                 """
-
-    with rwlock:
-        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
-        df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
+    df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago, db_conn, rwlock)
 
     common.plot_traffic_volume(df_upload_bar_graph, now, "Upload Traffic (sent by device) in the last 60 seconds")
     process_network_flows(df_upload_host_table)

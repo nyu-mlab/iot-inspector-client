@@ -11,6 +11,7 @@ import re
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
 
+
 config_file_name = 'config.json'
 config_lock = threading.Lock()
 config_dict = {}
@@ -130,6 +131,7 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
     return True
 
 
+@st.cache_data(ttl=1, show_spinner=False)
 def bar_graph_data_frame(mac_address: str, now: int):
     sixty_seconds_ago = now - 60
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
@@ -160,6 +162,7 @@ def bar_graph_data_frame(mac_address: str, now: int):
     return df_upload_bar_graph, df_download_bar_graph
 
 
+@st.cache_data(ttl=1, show_spinner=False)
 def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
     """
     Plots the traffic volume over time. The bar goes from right to left,
