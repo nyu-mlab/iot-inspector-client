@@ -132,72 +132,90 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
 
 
 @st.cache_data(ttl=1, show_spinner=False)
-def bar_graph_data_frame(mac_address: str, now: int):
+def bar_graph_data_frame(now: int):
     """
-    Retrieves and processes network flow data for the last 60 seconds,
-    performing zero-filling directly in the SQL query using Recursive CTEs.
-    The result is indexed by 'seconds_ago' (0 = most recent, 59 = oldest).
+    Retrieves and processes network flow data for ALL non-gateway devices
+    for the last 60 seconds, performing zero-filling directly in the SQL query.
 
     Args:
-        mac_address (str): The MAC address of the device.
         now (int): The current epoch timestamp.
     Returns:
         (pd.DataFrame, pd.DataFrame): DataFrames for upload and download traffic,
-                                      containing the zero-filled 'seconds_ago' and 'Bits' columns.
+                                      containing 'mac_address', 'seconds_ago', and 'Bits'.
     """
     sixty_seconds_ago = now - 60
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    # Parameters array: [?1/now, ?2/sixty_seconds_ago]
+    params = [now, sixty_seconds_ago]
 
-    # Parameters array: [?1/now, ?2/mac_address, ?3/sixty_seconds_ago]
-    # We no longer need the fourth 'now' parameter since we are returning seconds_ago directly.
-    params = [now, mac_address, sixty_seconds_ago]
-
-    # --- SQL for Upload Chart: Zero-Filled Bits aggregated by 'seconds_ago' ---
+    # --- SQL for Upload Chart: Includes mac_address and Zero-Filling for all devices ---
     sql_upload_chart = """
     WITH RECURSIVE seq(s) AS (
+      -- Generate 60 time slots (0 to 59 seconds ago)
       SELECT 0
       UNION ALL
       SELECT s + 1 FROM seq WHERE s < 59
     ),
+    device_macs AS (
+        -- Select all non-gateway MAC addresses to include in the template
+        SELECT mac_address FROM devices WHERE is_gateway = 0
+    ),
+    zero_fill_template AS (
+        -- Create a template of (MAC, seconds_ago) for every device (60 * N rows)
+        SELECT T1.mac_address, T2.s AS seconds_ago
+        FROM device_macs T1, seq T2
+    ),
     agg AS (
-      -- Aggregate traffic and calculate seconds_ago
-      SELECT CAST((? - timestamp) AS INTEGER) AS seconds_ago,
+      -- Aggregate ACTUAL traffic, grouped by source MAC and seconds_ago
+      SELECT src_mac_address AS mac_address,
+             CAST((?1 - timestamp) AS INTEGER) AS seconds_ago,
              SUM(byte_count) * 8 AS Bits
       FROM network_flows
-      WHERE src_mac_address = ?
-        AND timestamp >= ?
-      GROUP BY seconds_ago
+      WHERE timestamp >= ?2
+      GROUP BY src_mac_address, seconds_ago
     )
-    -- Select seq.s directly as seconds_ago, removing the timestamp calculation
-    SELECT seq.s AS seconds_ago,
-           COALESCE(agg.Bits, 0) AS Bits
-    FROM seq
-    LEFT JOIN agg ON seq.s = agg.seconds_ago
-    ORDER BY seq.s DESC
+    -- Join the template (ensuring zero fill) with the aggregated data
+    SELECT z.mac_address,
+           z.seconds_ago,
+           COALESCE(a.Bits, 0) AS Bits
+    FROM zero_fill_template z
+    LEFT JOIN agg a
+      ON z.mac_address = a.mac_address AND z.seconds_ago = a.seconds_ago
+    ORDER BY z.mac_address, z.seconds_ago DESC
     """
 
-    # --- SQL for Download Chart: Zero-Filled Bits aggregated by 'seconds_ago' ---
+    # --- SQL for Download Chart: Includes mac_address and Zero-Filling for all devices ---
     sql_download_chart = """
     WITH RECURSIVE seq(s) AS (
       SELECT 0
       UNION ALL
       SELECT s + 1 FROM seq WHERE s < 59
     ),
+    device_macs AS (
+        SELECT mac_address FROM devices WHERE is_gateway = 0
+    ),
+    zero_fill_template AS (
+        SELECT T1.mac_address, T2.s AS seconds_ago
+        FROM device_macs T1, seq T2
+    ),
     agg AS (
-      SELECT CAST((? - timestamp) AS INTEGER) AS seconds_ago,
+      -- Aggregate ACTUAL traffic, grouped by destination MAC and seconds_ago
+      SELECT dest_mac_address AS mac_address,
+             CAST((?1 - timestamp) AS INTEGER) AS seconds_ago,
              SUM(byte_count) * 8 AS Bits
       FROM network_flows
-      WHERE dest_mac_address = ?
-        AND timestamp >= ?
-      GROUP BY seconds_ago
+      WHERE timestamp >= ?2
+      GROUP BY dest_mac_address, seconds_ago
     )
-    -- Select seq.s directly as seconds_ago, removing the timestamp calculation
-    SELECT seq.s AS seconds_ago,
-           COALESCE(agg.Bits, 0) AS Bits
-    FROM seq
-    LEFT JOIN agg ON seq.s = agg.seconds_ago
-    ORDER BY seq.s DESC
+    SELECT z.mac_address,
+           z.seconds_ago,
+           COALESCE(a.Bits, 0) AS Bits
+    FROM zero_fill_template z
+    LEFT JOIN agg a
+      ON z.mac_address = a.mac_address AND z.seconds_ago = a.seconds_ago
+    ORDER BY z.mac_address, z.seconds_ago DESC
     """
+
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     with rwlock:
         df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn, params=params)
         df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn, params=params)
@@ -217,10 +235,11 @@ def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
     if df.empty:
         st.caption("No traffic data to display in chart.")
     else:
-        df_plot = df.set_index('seconds_ago')[['Bits']]
+        df_plot = df.drop(columns=['mac_address'])
+        df_plot = df_plot.set_index('seconds_ago')[['Bits']]
         df_plot = df_plot.sort_index(ascending=False)
         st.markdown(f"#### {chart_title}")
-        st.bar_chart(df_plot, use_container_width=True)
+        st.bar_chart(df_plot, width='content')
 
 
 def get_device_metadata(mac_address: str) -> dict:
@@ -366,7 +385,7 @@ def config_set(key: str, value: typing.Any):
 
         # Write the updated config_dict to the file
         with open(config_file_name, 'w') as f:
-            json.dump(config_dict, f, indent=2, sort_keys=True)
+            json.dump(config_dict, f, indent=4, sort_keys=True)
 
 
 def get_device_custom_name(mac_address: str) -> str:

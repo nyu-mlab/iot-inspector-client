@@ -110,7 +110,6 @@ def label_thread():
         payload = _labeling_event_deque.popleft()
         payload['packets'] = pending_packet_list
 
-
         device_name = payload.get('device_name', 'Unknown Device')
         activity_label = payload.get('activity_label', 'Unknown Activity')
         duration = payload.get('end_time', 0) - payload.get('start_time', 0)
@@ -394,11 +393,6 @@ def get_device_info(mac_address: str) -> dict[Any, Any] | None:
     Args:
         mac_address (str): The MAC address of the device to query. This is used
                            as the primary cache key.
-        _db_conn: The database connection object. This is not used as part of
-                  the cache key because it is not hashable.
-        _rwlock: The read-write lock object. This is also not used as part of
-                 the cache key because it is not hashable.
-
     Returns:
         dict: A dictionary containing the device's information, or None if not found.
     """
@@ -489,8 +483,6 @@ def show_device_details(mac_address: str):
     Args:
         mac_address (str): The MAC address of the device to show details for.
     """
-
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     device_custom_name = common.get_device_custom_name(mac_address)
     device_dict = get_device_info(mac_address)
 
@@ -502,14 +494,16 @@ def show_device_details(mac_address: str):
     st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
 
     now = int(time.time())
-    df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(mac_address, now)
+    device_upload, device_download = common.bar_graph_data_frame(now)
     sixty_seconds_ago = now - 60
     df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
 
-    common.plot_traffic_volume(df_upload_bar_graph, "Upload Traffic (sent by device) in the last 60 seconds")
+    device_upload_graph = device_upload[device_upload['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds")
     process_network_flows(df_upload_host_table)
 
-    common.plot_traffic_volume(df_download_bar_graph, "Download Traffic (received by device) in the last 60 seconds")
+    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds")
     process_network_flows(df_download_host_table)
 
 

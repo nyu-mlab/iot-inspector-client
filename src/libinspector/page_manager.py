@@ -81,7 +81,7 @@ def start_inspector_once():
         libinspector.core.start_threads()
         api_thread = threading.Thread(
             name="Device API Thread",
-            target=device_list_page.worker_thread,
+            target=device_list_page.api_worker_thread,
             daemon=True,
         )
         api_thread.start()

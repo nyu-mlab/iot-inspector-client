@@ -7,6 +7,7 @@ import logging
 import functools
 import os
 import requests
+import pandas as pd
 
 
 logger = logging.getLogger("client")
@@ -20,24 +21,14 @@ def show():
     show_list(toast_obj)
 
 
-def worker_thread():
+def api_worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
     while True:
         time.sleep(15)
-        db_conn, rwlock = libinspector.global_state.db_conn_and_lock
-        # Get the list of devices from the database
-        sql = """
-              SELECT * \
-              FROM devices
-              WHERE is_gateway = 0 \
-              """
-        device_list = []
-        with rwlock:
-            for device_dict in db_conn.execute(sql):
-                device_list.append(dict(device_dict))
+        device_list = get_devices()
         logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
 
         # Getting inputs and calling API
@@ -132,14 +123,14 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
     return result
 
 
-@st.fragment(run_every=1)
-def show_list(toast_obj: st.toast):
+@st.cache_data(ttl=3)
+def get_devices() -> list[dict]:
     """
-    The main page that creates a "card" for each device that was found via IoT Inspector
-    """
-    human_readable_time = common.get_human_readable_time()
-    st.markdown(f'Updated: {human_readable_time}')
+    Get the list of devices from the database.
 
+    Returns:
+        list[dict]: A list of device dictionaries.
+    """
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
     # Get the list of devices from the database
@@ -151,14 +142,26 @@ def show_list(toast_obj: st.toast):
     with rwlock:
         for device_dict in db_conn.execute(sql):
             device_list.append(dict(device_dict))
+    return device_list
 
+
+@st.fragment(run_every=1)
+def show_list(toast_obj: st.toast):
+    """
+    The main page that creates a "card" for each device that was found via IoT Inspector
+    """
+    human_readable_time = common.get_human_readable_time()
+    st.markdown(f'Updated: {human_readable_time}')
+
+    device_list = get_devices()
     if not device_list:
         st.warning('We are still scanning the network for devices. Please wait a moment. This page will refresh automatically.')
 
+    device_upload, device_download = common.bar_graph_data_frame(int(time.time()))
     # Create a card entry for the discovered device
     for device_dict in device_list:
         st.markdown('---')
-        show_device_card(device_dict)
+        show_device_card(device_dict, device_upload, device_download)
 
     # Create a pop-up showing if any new devices were found
     prev_device_count = st.session_state.get('prev_device_count', 0)
@@ -168,7 +171,7 @@ def show_list(toast_obj: st.toast):
         time.sleep(1.5)  # Give the user a moment to read the toast
 
 
-def show_device_card(device_dict: dict):
+def show_device_card(device_dict: dict, device_upload: pd.DataFrame, device_download: pd.DataFrame):
     """
     Process the data for a discovered device into a list of cards.
 
@@ -216,14 +219,14 @@ def show_device_card(device_dict: dict):
         st.caption(caption, help='IP address, MAC address, manufacturer OUI, and Device Identification API output')
 
         # --- Add bar charts for upload/download ---
-        now = int(time.time())
-        df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(device_dict['mac_address'], now)
         chart_col_upload, chart_col_download = st.columns(2)
         with chart_col_upload:
-            common.plot_traffic_volume(df_upload_bar_graph,
+            device_upload_graph = device_upload[device_upload['mac_address'] == device_dict["mac_address"]]
+            common.plot_traffic_volume(device_upload_graph,
                                                     "Upload Traffic (sent by device) in the last 60 seconds")
         with chart_col_download:
-            common.plot_traffic_volume(df_download_bar_graph,
+            device_download_graph = device_download[device_download['mac_address'] == device_dict["mac_address"]]
+            common.plot_traffic_volume(device_download_graph,
                                                     "Download Traffic (sent by device) in the last 60 seconds")
     # Set whether a device is to be inspected, favorite, or blocked
     with c2:
