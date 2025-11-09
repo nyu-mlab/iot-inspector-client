@@ -387,7 +387,7 @@ def save_labeled_activity_packets(pkt):
 
 
 @st.cache_data(show_spinner=False)
-def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | None:
+def get_device_info(mac_address: str) -> dict[Any, Any] | None:
     """
     Fetches device info from the database with caching.
 
@@ -406,8 +406,9 @@ def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | Non
         SELECT * FROM devices
         WHERE mac_address = ?
     """
-    with _rwlock:
-        device_row = _db_conn.execute(sql, (mac_address,)).fetchone()
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    with rwlock:
+        device_row = db_conn.execute(sql, (mac_address,)).fetchone()
     # Convert the sqlite3.Row object to a standard dictionary to make it serializable
     if device_row:
         return dict(device_row)
@@ -430,7 +431,7 @@ def process_network_flows(df: pandas.DataFrame):
 
 
 @st.cache_data(ttl=5, show_spinner=False)
-def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int, _db_conn, _rwlock):
+def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
     """
     The flow table is cached for 5 seconds (TTL). This drastically reduces the
     database calls for the heaviest part of the UI, improving performance and stability.
@@ -463,9 +464,10 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int, _db_conn, _rw
                          ORDER BY last_seen DESC \
                          """
 
-    with _rwlock:
-        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, _db_conn, params=(mac_address, sixty_seconds_ago))
-        df_download_host_table = pd.read_sql_query(sql_download_hosts, _db_conn, params=(mac_address, sixty_seconds_ago))
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    with rwlock:
+        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
+        df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
 
     return df_upload_host_table, df_download_host_table
 
@@ -490,7 +492,7 @@ def show_device_details(mac_address: str):
 
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     device_custom_name = common.get_device_custom_name(mac_address)
-    device_dict = get_device_info(mac_address, db_conn, rwlock)
+    device_dict = get_device_info(mac_address)
 
     if not device_dict:
         st.error(f"No device found with MAC address: {mac_address}")
@@ -502,12 +504,12 @@ def show_device_details(mac_address: str):
     now = int(time.time())
     df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(mac_address, now)
     sixty_seconds_ago = now - 60
-    df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago, db_conn, rwlock)
+    df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
 
-    common.plot_traffic_volume(df_upload_bar_graph, now, "Upload Traffic (sent by device) in the last 60 seconds")
+    common.plot_traffic_volume(df_upload_bar_graph, "Upload Traffic (sent by device) in the last 60 seconds")
     process_network_flows(df_upload_host_table)
 
-    common.plot_traffic_volume(df_download_bar_graph, now, "Download Traffic (received by device) in the last 60 seconds")
+    common.plot_traffic_volume(df_download_bar_graph, "Download Traffic (received by device) in the last 60 seconds")
     process_network_flows(df_download_host_table)
 
 

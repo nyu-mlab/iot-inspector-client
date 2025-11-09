@@ -220,10 +220,10 @@ def show_device_card(device_dict: dict):
         df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(device_dict['mac_address'], now)
         chart_col_upload, chart_col_download = st.columns(2)
         with chart_col_upload:
-            common.plot_traffic_volume(df_upload_bar_graph, now,
+            common.plot_traffic_volume(df_upload_bar_graph,
                                                     "Upload Traffic (sent by device) in the last 60 seconds")
         with chart_col_download:
-            common.plot_traffic_volume(df_upload_bar_graph, now,
+            common.plot_traffic_volume(df_download_bar_graph,
                                                     "Download Traffic (sent by device) in the last 60 seconds")
     # Set whether a device is to be inspected, favorite, or blocked
     with c2:

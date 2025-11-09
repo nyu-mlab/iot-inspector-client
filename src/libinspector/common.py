@@ -133,54 +133,94 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
 
 @st.cache_data(ttl=1, show_spinner=False)
 def bar_graph_data_frame(mac_address: str, now: int):
+    """
+    Retrieves and processes network flow data for the last 60 seconds,
+    performing zero-filling directly in the SQL query using Recursive CTEs.
+    The result is indexed by 'seconds_ago' (0 = most recent, 59 = oldest).
+
+    Args:
+        mac_address (str): The MAC address of the device.
+        now (int): The current epoch timestamp.
+    Returns:
+        (pd.DataFrame, pd.DataFrame): DataFrames for upload and download traffic,
+                                      containing the zero-filled 'seconds_ago' and 'Bits' columns.
+    """
     sixty_seconds_ago = now - 60
     db_conn, rwlock = libinspector.global_state.db_conn_and_lock
 
+    # Parameters array: [?1/now, ?2/mac_address, ?3/sixty_seconds_ago]
+    # We no longer need the fourth 'now' parameter since we are returning seconds_ago directly.
+    params = [now, mac_address, sixty_seconds_ago]
+
+    # --- SQL for Upload Chart: Zero-Filled Bits aggregated by 'seconds_ago' ---
     sql_upload_chart = """
-                       SELECT timestamp, SUM (byte_count) * 8 AS Bits
-                       FROM network_flows
-                       WHERE src_mac_address = ?
-                         AND timestamp >= ?
-                       GROUP BY timestamp
-                       ORDER BY timestamp DESC
-                       """
+    WITH RECURSIVE seq(s) AS (
+      SELECT 0
+      UNION ALL
+      SELECT s + 1 FROM seq WHERE s < 59
+    ),
+    agg AS (
+      -- Aggregate traffic and calculate seconds_ago
+      SELECT CAST((? - timestamp) AS INTEGER) AS seconds_ago,
+             SUM(byte_count) * 8 AS Bits
+      FROM network_flows
+      WHERE src_mac_address = ?
+        AND timestamp >= ?
+      GROUP BY seconds_ago
+    )
+    -- Select seq.s directly as seconds_ago, removing the timestamp calculation
+    SELECT seq.s AS seconds_ago,
+           COALESCE(agg.Bits, 0) AS Bits
+    FROM seq
+    LEFT JOIN agg ON seq.s = agg.seconds_ago
+    ORDER BY seq.s DESC
+    """
 
+    # --- SQL for Download Chart: Zero-Filled Bits aggregated by 'seconds_ago' ---
     sql_download_chart = """
-                         SELECT timestamp, SUM (byte_count) * 8 AS Bits
-                         FROM network_flows
-                         WHERE dest_mac_address = ?
-                           AND timestamp >= ?
-                         GROUP BY timestamp
-                         ORDER BY timestamp DESC
-                         """
-
+    WITH RECURSIVE seq(s) AS (
+      SELECT 0
+      UNION ALL
+      SELECT s + 1 FROM seq WHERE s < 59
+    ),
+    agg AS (
+      SELECT CAST((? - timestamp) AS INTEGER) AS seconds_ago,
+             SUM(byte_count) * 8 AS Bits
+      FROM network_flows
+      WHERE dest_mac_address = ?
+        AND timestamp >= ?
+      GROUP BY seconds_ago
+    )
+    -- Select seq.s directly as seconds_ago, removing the timestamp calculation
+    SELECT seq.s AS seconds_ago,
+           COALESCE(agg.Bits, 0) AS Bits
+    FROM seq
+    LEFT JOIN agg ON seq.s = agg.seconds_ago
+    ORDER BY seq.s DESC
+    """
     with rwlock:
-        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn,
-                                                params=(mac_address, sixty_seconds_ago))
-        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn,
-                                                  params=(mac_address, sixty_seconds_ago))
+        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn, params=params)
+        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn, params=params)
+
     return df_upload_bar_graph, df_download_bar_graph
 
 
-@st.cache_data(ttl=1, show_spinner=False)
-def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
+def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
     """
     Plots the traffic volume over time. The bar goes from right to left,
     like Task Manager in Windows.
 
     Args:
         df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
-        now: The current epoch time from which the sql query was executed
         chart_title: The title to display above the chart.
     """
     if df.empty:
         st.caption("No traffic data to display in chart.")
     else:
+        df_plot = df.set_index('seconds_ago')[['Bits']]
+        df_plot = df_plot.sort_index(ascending=False)
         st.markdown(f"#### {chart_title}")
-        df['seconds_ago'] = now - df['timestamp'].astype(int)
-        df_reindexed = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
-        df_reindexed = df_reindexed.sort_values(by='seconds_ago', ascending=False)
-        st.bar_chart(df_reindexed.set_index('seconds_ago')['Bits'], width='content')
+        st.bar_chart(df_plot, use_container_width=True)
 
 
 def get_device_metadata(mac_address: str) -> dict:
@@ -207,7 +247,7 @@ def get_device_metadata(mac_address: str) -> dict:
             return dict()
 
 
-def get_remote_hostnames(mac_address: str):
+def get_remote_hostnames(mac_address: str) -> str:
     """
     Retrieve all distinct remote hostnames associated with a device's MAC address from network flows.
 
