@@ -101,8 +101,7 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
         for field_name, field_value in data["fields"].items()
         if field_name != "talks_to_ads" and bool(field_value)
     ]
-    # TODO: We should make this 2 fields eventually...
-    if len(non_empty_field_values) < 1:
+    if len(non_empty_field_values) < 2:
         logger.warning(
             "[Device ID API] Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
         raise RuntimeError(
@@ -123,7 +122,6 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
     return result
 
 
-@st.cache_data(ttl=3)
 def get_devices() -> list[dict]:
     """
     Get the list of devices from the database.
@@ -171,12 +169,15 @@ def show_list(toast_obj: st.toast):
         time.sleep(1.5)  # Give the user a moment to read the toast
 
 
+@st.fragment()
 def show_device_card(device_dict: dict, device_upload: pd.DataFrame, device_download: pd.DataFrame):
     """
     Process the data for a discovered device into a list of cards.
 
     Args:
         device_dict (dict): information about the device, from the 'devices' table
+        device_upload (pd.DataFrame): DataFrame containing upload traffic data
+        device_download (pd.DataFrame): DataFrame containing download traffic data
     """
     # Check if the user has previously inspected this device
     device_inspected_config_key = f'device_is_inspected_{device_dict["mac_address"]}'

@@ -41,7 +41,17 @@ def show():
         return
 
     label_activity_workflow(device_mac_address)
-    show_device_details(device_mac_address)
+    device_custom_name = common.get_device_custom_name(device_mac_address)
+    device_dict = get_device_info(device_mac_address)
+
+    if not device_dict:
+        st.error(f"No device found with MAC address: {device_mac_address}")
+        return
+
+    st.markdown(f"### {device_custom_name}")
+    st.caption(f"MAC Address: {device_mac_address} | IP Address: {device_dict['ip_address']}")
+    show_device_bar_graph(device_mac_address)
+    show_device_network_flow(device_mac_address)
 
 
 @st.fragment(run_every=10)
@@ -409,7 +419,7 @@ def get_device_info(mac_address: str) -> dict[Any, Any] | None:
     return None
 
 
-def process_network_flows(df: pandas.DataFrame):
+def process_network_flows(df: pandas.DataFrame, chart_title: str):
     """
     Helper function used for both upload and download for 'show_device_details'.
 
@@ -419,7 +429,7 @@ def process_network_flows(df: pandas.DataFrame):
     if df.empty:
         st.warning("No network flows found for this device.")
         return
-    st.markdown("#### Network Flows")
+    st.markdown(chart_title)
     st.data_editor(df, width='content')
 
 
@@ -467,7 +477,21 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
 
 
 @st.fragment(run_every=1)
-def show_device_details(mac_address: str):
+def show_device_bar_graph(mac_address: str):
+    now = int(time.time())
+    device_upload, device_download = common.bar_graph_data_frame(now)
+
+    device_upload_graph = device_upload[device_upload['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds",
+                               full_width=True)
+
+    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds",
+                               full_width=True)
+
+
+@st.fragment(run_every=1)
+def show_device_network_flow(mac_address: str):
     """
     This function has three things to show:
     - At the very top, it shows the device's custom name, MAC address, and IP address.
@@ -483,28 +507,11 @@ def show_device_details(mac_address: str):
     Args:
         mac_address (str): The MAC address of the device to show details for.
     """
-    device_custom_name = common.get_device_custom_name(mac_address)
-    device_dict = get_device_info(mac_address)
-
-    if not device_dict:
-        st.error(f"No device found with MAC address: {mac_address}")
-        return
-
-    st.markdown(f"### {device_custom_name}")
-    st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
-
     now = int(time.time())
-    device_upload, device_download = common.bar_graph_data_frame(now)
     sixty_seconds_ago = now - 60
     df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
-
-    device_upload_graph = device_upload[device_upload['mac_address'] == mac_address]
-    common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds")
-    process_network_flows(df_upload_host_table)
-
-    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
-    common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds")
-    process_network_flows(df_download_host_table)
+    process_network_flows(df_upload_host_table, "#### Upload Network Hosts (sent by device) in the last 60 seconds")
+    process_network_flows(df_download_host_table, "#### Download Network Hosts (received by device) in the last 60 seconds")
 
 
 def show_device_list():

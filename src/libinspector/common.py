@@ -8,6 +8,7 @@ import typing
 import streamlit as st
 import logging
 import re
+import matplotlib.pyplot as plt
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
 
@@ -223,7 +224,7 @@ def bar_graph_data_frame(now: int):
     return df_upload_bar_graph, df_download_bar_graph
 
 
-def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
+def plot_traffic_volume(df: pd.DataFrame, chart_title: str, full_width: bool = False):
     """
     Plots the traffic volume over time. The bar goes from right to left,
     like Task Manager in Windows.
@@ -231,15 +232,57 @@ def plot_traffic_volume(df: pd.DataFrame, chart_title: str):
     Args:
         df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
         chart_title: The title to display above the chart.
+        full_width: Whether to use full width for the chart (True) or a smaller size (False).
     """
     if df.empty:
         st.caption("No traffic data to display in chart.")
+        return
+
+    # 1. Prepare data and sort: Sort by seconds_ago descending.
+    # This places the older data on the left and the most recent data on the right.
+    df_plot = df.drop(columns=['mac_address'])
+    df_plot = df_plot.sort_values(by='seconds_ago', ascending=False).reset_index(drop=True)
+
+    # 2. Create the Matplotlib figure
+    if full_width:
+        # Larger figure size for full-page view
+        fig, ax = plt.subplots(figsize=(16, 5))
     else:
-        df_plot = df.drop(columns=['mac_address'])
-        df_plot = df_plot.set_index('seconds_ago')[['Bits']]
-        df_plot = df_plot.sort_index(ascending=False)
-        st.markdown(f"#### {chart_title}")
-        st.bar_chart(df_plot, width='content')
+        # Smaller figure size for two-column view (like in the card)
+        fig, ax = plt.subplots(figsize=(10, 4))
+
+    # 3. Create the bar chart
+    # Use the index as the x-position, and 'Bits' as the height.
+    bars = ax.bar(df_plot.index, df_plot['Bits'], color='#1f77b4')  # Streamlit blue
+
+    # Optional: Add clear labels to the bars for visual clarity
+    for bar in bars:
+        # Only label the tallest bars to prevent clutter
+        if bar.get_height() > df_plot['Bits'].max() * 0.1:
+            ax.text(bar.get_x() + bar.get_width() / 2., bar.get_height(),
+                    f'{bar.get_height():.0f}',
+                    ha='center', va='bottom', fontsize=8)
+
+    # 4. Set labels and title
+    ax.set_title(chart_title, fontsize=14)
+    ax.set_ylabel('Traffic Volume (Bits)', fontsize=10)
+
+    # Set X-axis ticks to show the actual 'seconds_ago' values
+    # We select a few points to label to keep the axis clean.
+    tick_positions = df_plot.index[::max(1, len(df_plot) // 8)]
+    # Ensure tick labels are formatted as 'Xs'
+    tick_labels = [f"{s}s" for s in df_plot['seconds_ago'].iloc[tick_positions]]
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, rotation=45, ha="right", fontsize=8)
+    ax.set_xlabel('Time (Seconds Ago)', fontsize=10)
+
+    # Clean up the plot
+    plt.tight_layout()
+
+    # 5. Display the Matplotlib figure using st.pyplot
+    st.pyplot(fig, clear_figure=True, width="content")
+    # Important: close the figure to free up memory
+    plt.close(fig)
 
 
 def get_device_metadata(mac_address: str) -> dict:
