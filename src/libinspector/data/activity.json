@@ -121,29 +121,23 @@
     ]
   },
   "Smart Speaker" : {
-    "Echo Show" : [
-      "Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
-      "Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Change alexa device volume from phone app, phone connected to the cellular network",
-      "Make a voice command, ask for weather information",
-      "Make a voice command, change volume to 50,%"
+    "Amazon Echo Show" : [
+      "Use a voice command to ask for time",
+      "Use a voice command to increase volume",
+      "Use a voice command to ask for the current weather today",
+      "Use a voice command to ask for latest news headlines"
     ],
-    "Echo Spot" : [
-      "Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
-      "Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Change alexa device volume from phone app, phone connected to the cellular network",
-      "Make a voice command, ask for weather information",
-      "Make a voice command, change volume to 50%"
+    "Amazon Echo Spot" : [
+      "Use a voice command to ask for time",
+      "Use a voice command to increase volume",
+      "Use a voice command to ask for the current weather today",
+      "Use a voice command to ask for latest news headlines"
     ],
-    "Google Home Mini" : [
-      "Make a voice command, ask for weather information",
-      "Make a voice command, change volume to 50%"
+    "Amazon Echo - Other" : [
+      "Use a voice command to ask for time",
+      "Use a voice command to increase volume",
+      "Use a voice command to ask for the current weather today",
+      "Use a voice command to ask for latest news headlines"
     ]
   },
   "Hub" : {
