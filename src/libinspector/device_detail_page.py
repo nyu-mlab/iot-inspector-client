@@ -19,6 +19,7 @@ _labeling_event_deque = deque()
 _labeled_activity_packet_queue = Queue()
 logger = logging.getLogger("client")
 
+
 def show():
     """
     This function is the main entry point for the device details page.
@@ -40,7 +41,17 @@ def show():
         return
 
     label_activity_workflow(device_mac_address)
-    show_device_details(device_mac_address)
+    device_custom_name = common.get_device_custom_name(device_mac_address)
+    device_dict = get_device_info(device_mac_address)
+
+    if not device_dict:
+        st.error(f"No device found with MAC address: {device_mac_address}")
+        return
+
+    st.markdown(f"### {device_custom_name}")
+    st.caption(f"MAC Address: {device_mac_address} | IP Address: {device_dict['ip_address']}")
+    show_device_bar_graph(device_mac_address)
+    show_device_network_flow(device_mac_address)
 
 
 @st.fragment(run_every=10)
@@ -108,7 +119,6 @@ def label_thread():
 
         payload = _labeling_event_deque.popleft()
         payload['packets'] = pending_packet_list
-
 
         device_name = payload.get('device_name', 'Unknown Device')
         activity_label = payload.get('activity_label', 'Unknown Activity')
@@ -271,8 +281,8 @@ def label_activity_workflow(mac_address: str):
     # --- 3. Label Setup UI (Persists through collection) ---
     if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
         st.subheader("1. Select Activity")
-        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
 
+        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
         try:
             with open(activity_json, 'r') as f:
                 activity_data = json.load(f)
@@ -305,9 +315,6 @@ def label_activity_workflow(mac_address: str):
             st.session_state['device_name'] = selected_device
             st.session_state['activity_label'] = selected_label
             st.session_state['mac_address'] = mac_address
-        else:
-            st.info(
-                f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
 
         st.subheader("2. Control Collection")
         col1, col2 = st.columns(2)
@@ -331,6 +338,8 @@ def label_activity_workflow(mac_address: str):
 
     # --- 4. Countdown Logic (Blocking, happens between Start and Collection) ---
     if st.session_state['countdown']:
+        _labeling_event_deque[-1]['start_time'] = int(time.time())
+        st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         countdown_placeholder = st.empty()
         for i in range(5, 0, -1):
             countdown_placeholder.write(f"**Starting packet capture in {i} seconds...**")
@@ -338,11 +347,11 @@ def label_activity_workflow(mac_address: str):
         countdown_placeholder.empty()
 
         # Start packet capture after countdown
-        _labeling_event_deque[-1]['start_time'] = int(time.time())
-        st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         st.session_state['countdown'] = False
         logger.info("[Packets] The start time is set, packet collection is now ACTIVE.")
         st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
+        st.info(
+            f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
         st.rerun()  # Rerun to update button state and message
 
 
@@ -387,18 +396,13 @@ def save_labeled_activity_packets(pkt):
 
 
 @st.cache_data(show_spinner=False)
-def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | None:
+def get_device_info(mac_address: str) -> dict[Any, Any] | None:
     """
     Fetches device info from the database with caching.
 
     Args:
         mac_address (str): The MAC address of the device to query. This is used
                            as the primary cache key.
-        _db_conn: The database connection object. This is not used as part of
-                  the cache key because it is not hashable.
-        _rwlock: The read-write lock object. This is also not used as part of
-                 the cache key because it is not hashable.
-
     Returns:
         dict: A dictionary containing the device's information, or None if not found.
     """
@@ -406,15 +410,16 @@ def get_device_info(mac_address: str, _db_conn, _rwlock) -> dict[Any, Any] | Non
         SELECT * FROM devices
         WHERE mac_address = ?
     """
-    with _rwlock:
-        device_row = _db_conn.execute(sql, (mac_address,)).fetchone()
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    with rwlock:
+        device_row = db_conn.execute(sql, (mac_address,)).fetchone()
     # Convert the sqlite3.Row object to a standard dictionary to make it serializable
     if device_row:
         return dict(device_row)
     return None
 
 
-def process_network_flows(df: pandas.DataFrame):
+def process_network_flows(df: pandas.DataFrame, chart_title: str):
     """
     Helper function used for both upload and download for 'show_device_details'.
 
@@ -424,20 +429,69 @@ def process_network_flows(df: pandas.DataFrame):
     if df.empty:
         st.warning("No network flows found for this device.")
         return
-
-    df['first_seen'] = pd.to_datetime(df['first_seen'], unit='s')
-    df['last_seen'] = pd.to_datetime(df['last_seen'], unit='s')
-    local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    df['first_seen'] = df['first_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df['last_seen'] = df['last_seen'].dt.tz_localize('UTC').dt.tz_convert(local_timezone)
-    df = df.reset_index(drop=True)
-
-    st.markdown("#### Network Flows")
+    st.markdown(chart_title)
     st.data_editor(df, width='content')
 
 
+
+@st.cache_data(ttl=5, show_spinner=False)
+def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
+    """
+    The flow table is cached for 5 seconds (TTL). This drastically reduces the
+    database calls for the heaviest part of the UI, improving performance and stability.
+
+    This function fetches the upload/download host table data, cached for 5 seconds.
+    """
+    # Upload traffic (sent by device)
+    sql_upload_hosts = """
+                       SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
+                              DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
+                              COALESCE(dest_hostname, dest_ip_address)           AS dest_info,
+                              ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
+                       FROM network_flows
+                       WHERE src_mac_address = ?
+                         AND timestamp >= ?
+                       GROUP BY dest_info
+                       ORDER BY last_seen DESC \
+                       """
+
+    # Download traffic (received by device)
+    sql_download_hosts = """
+                         SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
+                                DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
+                                COALESCE(src_hostname, src_ip_address)             AS src_info,
+                                ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
+                         FROM network_flows
+                         WHERE dest_mac_address = ?
+                           AND timestamp >= ?
+                         GROUP BY src_info
+                         ORDER BY last_seen DESC \
+                         """
+
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    with rwlock:
+        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
+        df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
+
+    return df_upload_host_table, df_download_host_table
+
+
 @st.fragment(run_every=1)
-def show_device_details(mac_address: str):
+def show_device_bar_graph(mac_address: str):
+    now = int(time.time())
+    device_upload, device_download = common.bar_graph_data_frame(now)
+
+    device_upload_graph = device_upload[device_upload['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds",
+                               full_width=True)
+
+    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
+    common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds",
+                               full_width=True)
+
+
+@st.fragment(run_every=1)
+def show_device_network_flow(mac_address: str):
     """
     This function has three things to show:
     - At the very top, it shows the device's custom name, MAC address, and IP address.
@@ -453,57 +507,11 @@ def show_device_details(mac_address: str):
     Args:
         mac_address (str): The MAC address of the device to show details for.
     """
-
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
-    device_custom_name = common.get_device_custom_name(mac_address)
-    device_dict = get_device_info(mac_address, db_conn, rwlock)
-
-    if not device_dict:
-        st.error(f"No device found with MAC address: {mac_address}")
-        return
-
-    st.markdown(f"### {device_custom_name}")
-    st.caption(f"MAC Address: {mac_address} | IP Address: {device_dict['ip_address']}")
-
     now = int(time.time())
-    df_upload_bar_graph, df_download_bar_graph = common.bar_graph_data_frame(mac_address, now)
     sixty_seconds_ago = now - 60
-
-    # Upload traffic (sent by device)
-    sql_upload_hosts =  """
-                 SELECT MIN(timestamp) AS first_seen,
-                        MAX(timestamp) AS last_seen,
-                        COALESCE(dest_hostname, dest_ip_address) AS dest_info,
-                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
-                 FROM network_flows
-                 WHERE src_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY dest_info
-                 ORDER BY last_seen DESC
-                 """
-
-    # Download traffic (received by device)
-    sql_download_hosts =  """
-                 SELECT MIN(timestamp) AS first_seen,
-                        MAX(timestamp) AS last_seen,
-                        COALESCE(src_hostname, src_ip_address) AS src_info,
-                        ROUND(SUM(byte_count) / 1024.0, 2) AS KiloBytes
-                 FROM network_flows
-                 WHERE dest_mac_address = ?
-                   AND timestamp >= ?
-                 GROUP BY src_info
-                 ORDER BY last_seen DESC
-                 """
-
-    with rwlock:
-        df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
-        df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=(mac_address, sixty_seconds_ago))
-
-    common.plot_traffic_volume(df_upload_bar_graph, now, "Upload Traffic (sent by device) in the last 60 seconds")
-    process_network_flows(df_upload_host_table)
-
-    common.plot_traffic_volume(df_download_bar_graph, now, "Download Traffic (received by device) in the last 60 seconds")
-    process_network_flows(df_download_host_table)
+    df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
+    process_network_flows(df_upload_host_table, "#### Upload Network Hosts (sent by device) in the last 60 seconds")
+    process_network_flows(df_download_host_table, "#### Download Network Hosts (received by device) in the last 60 seconds")
 
 
 def show_device_list():
@@ -562,7 +570,7 @@ def show_device_list():
 
     if is_labeling_active:
         st.warning(
-            "⚠️ **Device selection is locked** while a labeling session is in progress.")
+            "⚠️ **Device selection is locked** while a labeling session is in progress. Do NOT close this window!!")
 
     return device_mac_address
 

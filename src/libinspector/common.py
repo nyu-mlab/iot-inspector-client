@@ -8,8 +8,10 @@ import typing
 import streamlit as st
 import logging
 import re
+import matplotlib.pyplot as plt
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
+
 
 config_file_name = 'config.json'
 config_lock = threading.Lock()
@@ -28,7 +30,8 @@ warning_text = (
 
 def remove_warning():
     """
-    Remove the warning acceptance state, forcing the user to see the warning again.
+    Remove the warning screen by setting the suppress_warning flag in the config.
+    This lasts for the duration of this IoT Inspector session.
     """
     config_set("suppress_warning", True)
 
@@ -38,17 +41,6 @@ def reset_prolific_id():
     Clear the stored Prolific ID, forcing the user to re-enter it.
     """
     config_set("prolific_id", "")
-
-
-def set_prolific_id(prolific_id: str):
-    """
-    Store the provided Prolific ID in the configuration.
-
-    Args:
-        prolific_id (str): The Prolific ID to store.
-    """
-    if is_prolific_id_valid(prolific_id):
-        config_set("prolific_id", prolific_id)
 
 
 def show_warning():
@@ -62,10 +54,11 @@ def show_warning():
     """
     current_id = config_get("prolific_id", "")
     st.subheader("1. Prolific ID Confirmation")
-    st.info(f"Your currently stored ID is: `{current_id}`")
-    st.button("Change Prolific ID",
-              on_click=reset_prolific_id,
-              help="Clicking this will clear your stored ID and return you to the ID entry form.")
+    if current_id != "":
+        st.info(f"Your currently stored ID is: `{current_id}`")
+        st.button("Change Prolific ID",
+                  on_click=reset_prolific_id,
+                  help="Clicking this will clear your stored ID and return you to the ID entry form.")
 
     # --- GATE 1: PROLIFIC ID CHECK (Must be valid to proceed to confirmation) ---
     if is_prolific_id_valid(current_id):
@@ -96,10 +89,19 @@ def show_warning():
                 value="",
                 key="prolific_id_input"
             ).strip()
-            st.form_submit_button("Submit ID",
-                                  on_click=set_prolific_id,
-                                  args=(input_id,),
-                                  help="Submit your Prolific ID to proceed.")
+            submitted = st.form_submit_button("Submit ID", help="Submit your Prolific ID to proceed.")
+
+            if submitted:
+                if is_prolific_id_valid(input_id):
+                    # 1. Set the valid ID
+                    config_set("prolific_id", input_id)
+                    st.success("Prolific ID accepted. Please review the details below.")
+
+                    # 2. Rerun the script. In the next run, is_prolific_id_valid(current_id)
+                    #    will be True, and the user jumps to the warning acceptance (Gate 2).
+                    st.rerun()
+                else:
+                    st.error("Invalid Prolific ID. Must be 1-50 alphanumeric characters.")
 
         return True  # BLOCK: ID check still needs resolution.
 
@@ -130,54 +132,157 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
     return True
 
 
-def bar_graph_data_frame(mac_address: str, now: int):
+@st.cache_data(ttl=1, show_spinner=False)
+def bar_graph_data_frame(now: int):
+    """
+    Retrieves and processes network flow data for ALL non-gateway devices
+    for the last 60 seconds, performing zero-filling directly in the SQL query.
+
+    Args:
+        now (int): The current epoch timestamp.
+    Returns:
+        (pd.DataFrame, pd.DataFrame): DataFrames for upload and download traffic,
+                                      containing 'mac_address', 'seconds_ago', and 'Bits'.
+    """
     sixty_seconds_ago = now - 60
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+    # Parameters array: [?1/now, ?2/sixty_seconds_ago]
+    params = [now, sixty_seconds_ago]
 
+    # --- SQL for Upload Chart: Includes mac_address and Zero-Filling for all devices ---
     sql_upload_chart = """
-                       SELECT timestamp, SUM (byte_count) * 8 AS Bits
-                       FROM network_flows
-                       WHERE src_mac_address = ?
-                         AND timestamp >= ?
-                       GROUP BY timestamp
-                       ORDER BY timestamp DESC
-                       """
+    WITH RECURSIVE seq(s) AS (
+      -- Generate 60 time slots (0 to 59 seconds ago)
+      SELECT 0
+      UNION ALL
+      SELECT s + 1 FROM seq WHERE s < 59
+    ),
+    device_macs AS (
+        -- Select all non-gateway MAC addresses to include in the template
+        SELECT mac_address FROM devices WHERE is_gateway = 0
+    ),
+    zero_fill_template AS (
+        -- Create a template of (MAC, seconds_ago) for every device (60 * N rows)
+        SELECT T1.mac_address, T2.s AS seconds_ago
+        FROM device_macs T1, seq T2
+    ),
+    agg AS (
+      -- Aggregate ACTUAL traffic, grouped by source MAC and seconds_ago
+      SELECT src_mac_address AS mac_address,
+             CAST((?1 - timestamp) AS INTEGER) AS seconds_ago,
+             SUM(byte_count) * 8 AS Bits
+      FROM network_flows
+      WHERE timestamp >= ?2
+      GROUP BY src_mac_address, seconds_ago
+    )
+    -- Join the template (ensuring zero fill) with the aggregated data
+    SELECT z.mac_address,
+           z.seconds_ago,
+           COALESCE(a.Bits, 0) AS Bits
+    FROM zero_fill_template z
+    LEFT JOIN agg a
+      ON z.mac_address = a.mac_address AND z.seconds_ago = a.seconds_ago
+    ORDER BY z.mac_address, z.seconds_ago DESC
+    """
 
+    # --- SQL for Download Chart: Includes mac_address and Zero-Filling for all devices ---
     sql_download_chart = """
-                         SELECT timestamp, SUM (byte_count) * 8 AS Bits
-                         FROM network_flows
-                         WHERE dest_mac_address = ?
-                           AND timestamp >= ?
-                         GROUP BY timestamp
-                         ORDER BY timestamp DESC
-                         """
+    WITH RECURSIVE seq(s) AS (
+      SELECT 0
+      UNION ALL
+      SELECT s + 1 FROM seq WHERE s < 59
+    ),
+    device_macs AS (
+        SELECT mac_address FROM devices WHERE is_gateway = 0
+    ),
+    zero_fill_template AS (
+        SELECT T1.mac_address, T2.s AS seconds_ago
+        FROM device_macs T1, seq T2
+    ),
+    agg AS (
+      -- Aggregate ACTUAL traffic, grouped by destination MAC and seconds_ago
+      SELECT dest_mac_address AS mac_address,
+             CAST((?1 - timestamp) AS INTEGER) AS seconds_ago,
+             SUM(byte_count) * 8 AS Bits
+      FROM network_flows
+      WHERE timestamp >= ?2
+      GROUP BY dest_mac_address, seconds_ago
+    )
+    SELECT z.mac_address,
+           z.seconds_ago,
+           COALESCE(a.Bits, 0) AS Bits
+    FROM zero_fill_template z
+    LEFT JOIN agg a
+      ON z.mac_address = a.mac_address AND z.seconds_ago = a.seconds_ago
+    ORDER BY z.mac_address, z.seconds_ago DESC
+    """
 
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
     with rwlock:
-        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn,
-                                                params=(mac_address, sixty_seconds_ago))
-        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn,
-                                                  params=(mac_address, sixty_seconds_ago))
+        df_upload_bar_graph = pd.read_sql_query(sql_upload_chart, db_conn, params=params)
+        df_download_bar_graph = pd.read_sql_query(sql_download_chart, db_conn, params=params)
+
     return df_upload_bar_graph, df_download_bar_graph
 
 
-def plot_traffic_volume(df: pd.DataFrame, now: int, chart_title: str):
+def plot_traffic_volume(df: pd.DataFrame, chart_title: str, full_width: bool = False):
     """
     Plots the traffic volume over time. The bar goes from right to left,
     like Task Manager in Windows.
 
     Args:
         df (pd.DataFrame): DataFrame containing 'Time' and 'Bits' columns.
-        now: The current epoch time from which the sql query was executed
         chart_title: The title to display above the chart.
+        full_width: Whether to use full width for the chart (True) or a smaller size (False).
     """
     if df.empty:
         st.caption("No traffic data to display in chart.")
+        return
+
+    # 1. Prepare data and sort: Sort by seconds_ago descending.
+    # This places the older data on the left and the most recent data on the right.
+    df_plot = df.drop(columns=['mac_address'])
+    df_plot = df_plot.sort_values(by='seconds_ago', ascending=False).reset_index(drop=True)
+
+    # 2. Create the Matplotlib figure
+    if full_width:
+        # Larger figure size for full-page view
+        fig, ax = plt.subplots(figsize=(16, 5))
     else:
-        st.markdown(f"#### {chart_title}")
-        df['seconds_ago'] = now - df['timestamp'].astype(int)
-        df_reindexed = df.set_index('seconds_ago').reindex(range(0, 60), fill_value=0).reset_index()
-        df_reindexed = df_reindexed.sort_values(by='seconds_ago', ascending=False)
-        st.bar_chart(df_reindexed.set_index('seconds_ago')['Bits'], width='content')
+        # Smaller figure size for two-column view (like in the card)
+        fig, ax = plt.subplots(figsize=(10, 4))
+
+    # 3. Create the bar chart
+    # Use the index as the x-position, and 'Bits' as the height.
+    bars = ax.bar(df_plot.index, df_plot['Bits'], color='#1f77b4')  # Streamlit blue
+
+    # Optional: Add clear labels to the bars for visual clarity
+    for bar in bars:
+        # Only label the tallest bars to prevent clutter
+        if bar.get_height() > df_plot['Bits'].max() * 0.1:
+            ax.text(bar.get_x() + bar.get_width() / 2., bar.get_height(),
+                    f'{bar.get_height():.0f}',
+                    ha='center', va='bottom', fontsize=8)
+
+    # 4. Set labels and title
+    ax.set_title(chart_title, fontsize=14)
+    ax.set_ylabel('Traffic Volume (Bits)', fontsize=10)
+
+    # Set X-axis ticks to show the actual 'seconds_ago' values
+    # We select a few points to label to keep the axis clean.
+    tick_positions = df_plot.index[::max(1, len(df_plot) // 8)]
+    # Ensure tick labels are formatted as 'Xs'
+    tick_labels = [f"{s}s" for s in df_plot['seconds_ago'].iloc[tick_positions]]
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, rotation=45, ha="right", fontsize=8)
+    ax.set_xlabel('Time (Seconds Ago)', fontsize=10)
+
+    # Clean up the plot
+    plt.tight_layout()
+
+    # 5. Display the Matplotlib figure using st.pyplot
+    st.pyplot(fig, clear_figure=True, width="content")
+    # Important: close the figure to free up memory
+    plt.close(fig)
 
 
 def get_device_metadata(mac_address: str) -> dict:
@@ -204,7 +309,7 @@ def get_device_metadata(mac_address: str) -> dict:
             return dict()
 
 
-def get_remote_hostnames(mac_address: str):
+def get_remote_hostnames(mac_address: str) -> str:
     """
     Retrieve all distinct remote hostnames associated with a device's MAC address from network flows.
 
@@ -247,7 +352,7 @@ def get_human_readable_time(timestamp=None):
     """
     if timestamp is None:
         timestamp = time.time()
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%b %d,%Y %I:%M:%S%p")
 
 
 def initialize_config_dict():
@@ -323,7 +428,7 @@ def config_set(key: str, value: typing.Any):
 
         # Write the updated config_dict to the file
         with open(config_file_name, 'w') as f:
-            json.dump(config_dict, f, indent=2, sort_keys=True)
+            json.dump(config_dict, f, indent=4, sort_keys=True)
 
 
 def get_device_custom_name(mac_address: str) -> str:

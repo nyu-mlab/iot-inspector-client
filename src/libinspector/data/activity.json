@@ -1,269 +1,269 @@
 {
   "Home Automation & Sensor" : {
     "Amazon Plug" : [
-      "Android LAN On: Turn on amazon plug from mobile app, both connected in the same wifi",
-      "Android LAN Off: Turn off amazon plug from mobile app, both connected in the same wifi",
-      "Android WAN On: Turn on amazon plug from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off amazon plug from mobile app, phone connected to the cellular network"
+      "Turn on amazon plug from mobile app, both connected in the same wifi",
+      "Turn off amazon plug from mobile app, both connected in the same wifi",
+      "Turn on amazon plug from mobile app, phone connected to the cellular network",
+      "Turn off amazon plug from mobile app, phone connected to the cellular network"
     ],
     "Jinvoo Bulb" : [
-      "Alexa On: Turn on bulb with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off bulb with alexa command, both connected in the same wifi network",
-      "Alexa Dim: Dim bulb with alexa command, both connected in the same wifi network",
-      "Alexa Color: Change bulb color with an alexa command, both connected in the same network",
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Dim: Dim bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Dim: Dim bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Turn on bulb with alexa command, both connected in the same wifi network",
+      "Turn off bulb with alexa command, both connected in the same wifi network",
+      "Dim bulb with alexa command, both connected in the same wifi network",
+      "Change bulb color with an alexa command, both connected in the same network",
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Dim bulb from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Dim bulb from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "Gosund Bulb" : [
-      "Alexa On: Turn on bulb with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off bulb with alexa command, both connected in the same wifi network",
-      "Alexa Dim: Dim bulb with alexa command, both connected in the same wifi network",
-      "Alexa Color: Change bulb color with an alexa command, both connected in the same network",
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Dim: Dim bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Dim: Dim bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Turn on bulb with alexa command, both connected in the same wifi network",
+      "Turn off bulb with alexa command, both connected in the same wifi network",
+      "Dim bulb with alexa command, both connected in the same wifi network",
+      "Change bulb color with an alexa command, both connected in the same network",
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Dim bulb from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Dim bulb from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "Govee LED" : [
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Dim: Dim bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Dim: Dim bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Dim bulb from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Dim bulb from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "iKettle" : [
-      "Start: Start a QUICK BOIL form phone app"
+      "Start a QUICK BOIL form phone app"
     ],
     "Magic Home Strip" : [
-      "Alexa Color: Change bulb color with an alexa command, both connected in the same network",
-      "Alexa Dim: Dim bulb with alexa command, both connected in the same wifi network",
-      "Alexa On: Turn on bulb with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off bulb with alexa command, both connected in the same wifi network",
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Scene: Change scene from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Scene: Change scene from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Change bulb color with an alexa command, both connected in the same network",
+      "Dim bulb with alexa command, both connected in the same wifi network",
+      "Turn on bulb with alexa command, both connected in the same wifi network",
+      "Turn off bulb with alexa command, both connected in the same wifi network",
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Change scene from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Change scene from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "Meross Dooropener" : [
-      "Alexa Close: Close dooropener with an alexa command",
-      "Android LAN Close: Close dooropener from mobile app, both device connected to the same network",
-      "Android WAN Close: Close dooropener from mobile app, mobile device connected to the cellular network"
+      "Close dooropener with an alexa command",
+      "Close dooropener from mobile app, both device connected to the same network",
+      "Close dooropener from mobile app, mobile device connected to the cellular network"
     ],
     "Nest Thermostat" : [
-      "Alexa Set: Set mode with an alexa command",
-      "Android LAN On: Turn on a feature (cooling) from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off a feature (cooling) from mobile app, both connected in the same wifi network",
-      "Android LAN Temp: Set temperature from mobile app, both connected in the same wifi network",
-      "Android WAN On: Turn on a feature (cooling) from mobile app, both connected in the same wifi network",
-      "Android WAN Off: Turn off a feature (cooling) from mobile app, both connected in the same wifi network",
-      "Android WAN Temp: Set temperature from mobile app, both connected in the same wifi network"
+      "Set mode with an alexa command",
+      "Turn on a feature (cooling) from mobile app, both connected in the same wifi network",
+      "Turn off a feature (cooling) from mobile app, both connected in the same wifi network",
+      "Set temperature from mobile app, both connected in the same wifi network",
+      "Turn on a feature (cooling) from mobile app, both connected in the same wifi network",
+      "Turn off a feature (cooling) from mobile app, both connected in the same wifi network",
+      "Set temperature from mobile app, both connected in the same wifi network"
     ],
     "Smart Life Bulb" : [
-      "Alexa On: Turn on bulb with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off bulb with alexa command, both connected in the same wifi network",
-      "Alexa Dim: Dim bulb with alexa command, both connected in the same wifi network",
-      "Alexa Color: Change bulb color with an alexa command, both connected in the same network",
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Dim: Dim bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Dim: Dim bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Turn on bulb with alexa command, both connected in the same wifi network",
+      "Turn off bulb with alexa command, both connected in the same wifi network",
+      "Dim bulb with alexa command, both connected in the same wifi network",
+      "Change bulb color with an alexa command, both connected in the same network",
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Dim bulb from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Dim bulb from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "TP Link Bulb" : [
-      "Alexa On: Turn on bulb with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off bulb with alexa command, both connected in the same wifi network",
-      "Alexa Dim: Dim bulb with alexa command, both connected in the same wifi network",
-      "Alexa Color: Change bulb color with an alexa command, both connected in the same network",
-      "Android LAN On: Turn on bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Dim: Dim bulb from mobile app, both connected in the same wifi network",
-      "Android LAN Color: Change bulb color from mobile app, both connected in the same network",
-      "Android WAN On: Turn on bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Dim: Dim bulb from mobile app, phone connected to the cellular network",
-      "Android WAN Color: Change bulb color from mobile app, phone connected to the cellular network"
+      "Turn on bulb with alexa command, both connected in the same wifi network",
+      "Turn off bulb with alexa command, both connected in the same wifi network",
+      "Dim bulb with alexa command, both connected in the same wifi network",
+      "Change bulb color with an alexa command, both connected in the same network",
+      "Turn on bulb from mobile app, both connected in the same wifi network",
+      "Turn off bulb from mobile app, both connected in the same wifi network",
+      "Dim bulb from mobile app, both connected in the same wifi network",
+      "Change bulb color from mobile app, both connected in the same network",
+      "Turn on bulb from mobile app, phone connected to the cellular network",
+      "Turn off bulb from mobile app, phone connected to the cellular network",
+      "Dim bulb from mobile app, phone connected to the cellular network",
+      "Change bulb color from mobile app, phone connected to the cellular network"
     ],
     "TP Link Plug" : [
-      "Alexa On: Turn on plug with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off plug with alexa command, both connected in the same wifi network",
-      "Android LAN On: Turn on plug from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off plug from mobile app, both connected in the same wifi network",
-      "Android WAN On: Turn on plug from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off plug from mobile app, phone connected to the cellular network"
+      "Turn on plug with alexa command, both connected in the same wifi network",
+      "Turn off plug with alexa command, both connected in the same wifi network",
+      "Turn on plug from mobile app, both connected in the same wifi network",
+      "Turn off plug from mobile app, both connected in the same wifi network",
+      "Turn on plug from mobile app, phone connected to the cellular network",
+      "Turn off plug from mobile app, phone connected to the cellular network"
     ],
     "Wemo Plug" : [
-      "Alexa On: Turn on plug with alexa command, both connected in the same wifi network",
-      "Alexa Off: Turn off plug with alexa command, both connected in the same wifi network",
-      "Android LAN On: Turn on plug from mobile app, both connected in the same wifi network",
-      "Android LAN Off: Turn off plug from mobile app, both connected in the same wifi network",
-      "Android WAN On: Turn on plug from mobile app, phone connected to the cellular network",
-      "Android WAN Off: Turn off plug from mobile app, phone connected to the cellular network"
+      "Turn on plug with alexa command, both connected in the same wifi network",
+      "Turn off plug with alexa command, both connected in the same wifi network",
+      "Turn on plug from mobile app, both connected in the same wifi network",
+      "Turn off plug from mobile app, both connected in the same wifi network",
+      "Turn on plug from mobile app, phone connected to the cellular network",
+      "Turn off plug from mobile app, phone connected to the cellular network"
     ]
   },
   "Smart Speaker" : {
     "Echo Show" : [
-      "Android LAN Disturn On: Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Android LAN Disturn Off: Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Android LAN Volume: Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
-      "Android WAN Disturn On: Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Android WAN Disturn Off: Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Android WAN Volume: Change alexa device volume from phone app, phone connected to the cellular network",
-      "Local Voice: Make a voice command, ask for weather information",
-      "Local Volume: Make a voice command, change volume to 50,%"
+      "Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
+      "Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
+      "Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
+      "Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
+      "Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
+      "Change alexa device volume from phone app, phone connected to the cellular network",
+      "Make a voice command, ask for weather information",
+      "Make a voice command, change volume to 50,%"
     ],
     "Echo Spot" : [
-      "Android LAN Disturn On: Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Android LAN Disturn Off: Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
-      "Android LAN Volume: Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
-      "Android WAN Disturn On: Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Android WAN Disturn Off: Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
-      "Android WAN Volume: Change alexa device volume from phone app, phone connected to the cellular network",
-      "Local Voice: Make a voice command, ask for weather information",
-      "Local Volume: Make a voice command, change volume to 50%"
+      "Turn on DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
+      "Turn off DO NOT DISTURB mode from phone app, both alexa and phone connected to the same wifi network",
+      "Change alexa device volume from phone app, both alexa and phone connected to the same wifi network",
+      "Turn on DO NOT DISTURB mode from phone app, phone connected to the cellular network",
+      "Turn off DO NOT DISTURB mode from phone app, phone connected to the cellular network",
+      "Change alexa device volume from phone app, phone connected to the cellular network",
+      "Make a voice command, ask for weather information",
+      "Make a voice command, change volume to 50%"
     ],
     "Google Home Mini" : [
-      "Local Voice: Make a voice command, ask for weather information",
-      "Local Volume: Make a voice command, change volume to 50%"
+      "Make a voice command, ask for weather information",
+      "Make a voice command, change volume to 50%"
     ]
   },
   "Hub" : {
     "Aqara Hub": [
-      "Android LAN On: Turn on hub from mobile app, both connected in the same wifi",
-      "Android LAN Off: Turn off hub from mobile app, both connected in the same wifi",
-      "Android WAN On: Turn on hub from mobile app, phone connected cellular network",
-      "Android WAN Off: Turn off hub from mobile app, phone connected cellular network"
+      "Turn on hub from mobile app, both connected in the same wifi",
+      "Turn off hub from mobile app, both connected in the same wifi",
+      "Turn on hub from mobile app, phone connected cellular network",
+      "Turn off hub from mobile app, phone connected cellular network"
     ],
     "Ikea Hub" : [
-      "Android LAN On: Turn on hub from mobile app, both connected in the same wifi",
-      "Android LAN Off: Turn off hub from mobile app, both connected in the same wifi"
+      "Turn on hub from mobile app, both connected in the same wifi",
+      "Turn off hub from mobile app, both connected in the same wifi"
     ],
     "SmartThings Hub": [
-      "Android LAN On: Turn on hub from mobile app, both connected in the same wifi",
-      "Android LAN Off: Turn off hub from mobile app, both connected in the same wifi",
-      "Android WAN On: Turn on hub from mobile app, phone connected cellular network",
-      "Android WAN Off: Turn off hub from mobile app, phone connected cellular network"
+      "Turn on hub from mobile app, both connected in the same wifi",
+      "Turn off hub from mobile app, both connected in the same wifi",
+      "Turn on hub from mobile app, phone connected cellular network",
+      "Turn off hub from mobile app, phone connected cellular network"
     ],
     "SwitchBot Hub" : [
-      "Android LAN On: Turn on hub from mobile app, both connected in the same wifi",
-      "Android LAN Off: Turn off hub from mobile app, both connected in the same wifi",
-      "Android WAN On: Turn on hub from mobile app, phone connected cellular network",
-      "Android WAN Off: Turn off hub from mobile app, phone connected cellular network"
+      "Turn on hub from mobile app, both connected in the same wifi",
+      "Turn off hub from mobile app, both connected in the same wifi",
+      "Turn on hub from mobile app, phone connected cellular network",
+      "Turn off hub from mobile app, phone connected cellular network"
     ]
   },
   "Camera" : {
     "DLink Camera" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network"
     ],
     "iCSee Doorbell" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Lefun Camera" : [
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network"
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Microseven Camera" : [
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network"
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Ring Camera" : [
-      "Alexa Stop: Stop ringing with a voice command, both devices connected to the same network",
-      "Alexa Watch: Watch from Alexa app or an Alexa device",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network"
+      "Stop ringing with a voice command, both devices connected to the same network",
+      "Watch from Alexa app or an Alexa device",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Ring Doorbell" : [
-      "Alexa Stop: Stop ringing with a voice command, both devices connected to the same network",
-      "Alexa Watch: Watch from Alexa app or an Alexa device",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network"
+      "Stop ringing with a voice command, both devices connected to the same network",
+      "Watch from Alexa app or an Alexa device",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Tuya Camera" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Ubell Doorbell" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Wansview Camera" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Rotate: Rotate the camera to the left/right from phone, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Rotate: Rotate the camera to the left/right from phone, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Rotate the camera to the left/right from phone, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network",
+      "Rotate the camera to the left/right from phone, phone connected to the cellular network"
     ],
     "Wyze Doorbell" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network"
     ],
     "Yi Doorbell" : [
-      "Android LAN Photo: Take a photo from phone app, both camera and phone connected to the same network",
-      "Android LAN Audio: Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Watch: Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android LAN Recording: Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
-      "Android WAN Photo: Take a photo from phone app, phone connected to the cellular network",
-      "Android WAN Audio: Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Watch: Watch from the phone app for 5 seconds, phone connected to the cellular network",
-      "Android WAN Recording: Record a video from the phone app for 5 seconds, phone connected to the cellular network"
+      "Take a photo from phone app, both camera and phone connected to the same network",
+      "Talk to the doorbell from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Watch from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Record a video from the phone app for 5 seconds, both camera and phone connected to the same network",
+      "Take a photo from phone app, phone connected to the cellular network",
+      "Talk to the doorbell from the phone app for 5 seconds, phone connected to the cellular network",
+      "Watch from the phone app for 5 seconds, phone connected to the cellular network",
+      "Record a video from the phone app for 5 seconds, phone connected to the cellular network"
     ]
   }
 }
