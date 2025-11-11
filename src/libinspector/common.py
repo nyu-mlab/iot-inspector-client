@@ -352,7 +352,7 @@ def get_human_readable_time(timestamp=None):
     """
     if timestamp is None:
         timestamp = time.time()
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%b %d,%Y %I:%M:%S%p")
 
 
 def initialize_config_dict():
