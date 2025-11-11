@@ -113,5 +113,4 @@ jobs:
           generate_release_notes: true
           prerelease: false
           files: |
-            dist/*.exe
             dist/*.whl

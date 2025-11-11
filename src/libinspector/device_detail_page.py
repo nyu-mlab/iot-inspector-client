@@ -570,7 +570,7 @@ def show_device_list():
 
     if is_labeling_active:
         st.warning(
-            "⚠️ **Device selection is locked** while a labeling session is in progress.")
+            "⚠️ **Device selection is locked** while a labeling session is in progress. Do NOT close this window!!")
 
     return device_mac_address
 

@@ -169,7 +169,6 @@ def show_list(toast_obj: st.toast):
         time.sleep(1.5)  # Give the user a moment to read the toast
 
 
-@st.fragment()
 def show_device_card(device_dict: dict, device_upload: pd.DataFrame, device_download: pd.DataFrame):
     """
     Process the data for a discovered device into a list of cards.
