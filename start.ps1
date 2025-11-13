@@ -44,22 +44,17 @@ $CurrentDir = $PSScriptRoot
 # Check if uv is available. If it's not, we assume the initial setup needs to run.
 $NpcapFound = Test-NpcapInstalled
 if (-not (Get-Command uv -ErrorAction SilentlyContinue) -or -not $NpcapFound) {
-    Write-Warning "'uv' not found. Launching initial setup script: $DependencyScript"
+    Write-Warning "Launching initial setup script: $DependencyScript"
 
     # Execute install.ps1 directly (since we are already running as Admin)
     # The dependency script handles uv installation and Npcap checks.
     & "$CurrentDir\$DependencyScript"
 
-    Write-Host "Setup finished. Re-verifying installation..."
-
     # Crucial: After UV is installed, we must start a new shell session
     # for the PATH variable (where uv is located) to be properly updated.
-    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-        Write-Host "UV installation successful, but the PATH variable needs refreshing."
-        Write-Host "Please close this window and run the desktop shortcut again."
-        Read-Host "Press Enter to exit and relaunch"
-        exit
-    }
+    Write-Host "Setup finished!!"
+    Read-Host "Please close this window by clicking the X and click IoT Inspector again."
+    exit
 }
 
 # --- 3. Virtual Environment Setup (Non-Admin system tasks) ---

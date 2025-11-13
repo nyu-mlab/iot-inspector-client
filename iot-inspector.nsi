@@ -94,6 +94,10 @@ Section "Uninstall"
     ; Execute the dedicated uninstall script to handle all cleanup tasks
     ExecWait 'powershell.exe -ExecutionPolicy ByPass -File "$INSTDIR\uninstall.ps1"'
 
+    ; Remove shortcuts created at install (if present)
+    Delete "$SMPROGRAMS\${APP_NAME}.lnk"
+    Delete "$DESKTOP\${APP_NAME}.lnk"
+
     ; Remove files
     RMDir /r "$INSTDIR"
 SectionEnd
