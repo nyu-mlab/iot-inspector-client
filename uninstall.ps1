@@ -37,8 +37,7 @@ $filesToDelete = @(
     "setup.py",
     "uv.lock",
     "README.md",
-    "LICENSE",
-    "npcap-1.76.exe"
+    "LICENSE"
 )
 
 foreach ($file in $filesToDelete) {

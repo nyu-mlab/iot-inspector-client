@@ -11,6 +11,7 @@ requires-python = "==3.13.*"
 dependencies = [
     "libinspector==1.0.12",
     "streamlit>=1.50.0",
+    "matplotlib==3.10.3",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },
