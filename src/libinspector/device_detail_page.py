@@ -145,6 +145,9 @@ def label_thread():
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
                     display_message = f"Labeled packets successfully | {label_data}"
                     common.config_set('api_message', f"success|{display_message}")
+                    common.config_set('last_labeled_category', payload.get('device_category'))
+                    common.config_set('last_labeled_device', payload.get('device_name'))
+                    common.config_set('last_labeled_label', payload.get('activity_label'))
                 else:
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!.")
                     common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code}. {len(pending_packet_list)} Packets were not sent.")
@@ -168,6 +171,7 @@ def reset_labeling_state():
     st.session_state['end_time'] = None
     st.session_state['device_name'] = None
     st.session_state['activity_label'] = None
+    st.session_state['device_category'] = None
 
 
 def _collect_packets_callback():
@@ -180,6 +184,7 @@ def _collect_packets_callback():
 
     labeling_event = {
         "prolific_id": common.config_get('prolific_id', ''),
+        "device_category": st.session_state['device_category'],
         "device_name": st.session_state['device_name'],
         "activity_label": st.session_state['activity_label'],
         "mac_address": st.session_state['mac_address'],
@@ -312,18 +317,56 @@ def label_activity_workflow(mac_address: str):
 
         # Update state on selection changes, unless running
         if not is_currently_labeling:
+            st.session_state['device_category'] = selected_category
             st.session_state['device_name'] = selected_device
             st.session_state['activity_label'] = selected_label
             st.session_state['mac_address'] = mac_address
 
+        last_category = common.config_get('last_labeled_category', default="")
+        last_device = common.config_get('last_labeled_device', default="")
+        last_label = common.config_get('last_labeled_label', default="")
+
+        current_category = st.session_state['device_category']
+        current_device = st.session_state['device_name']
+        current_label = st.session_state['activity_label']
+
+        is_duplicate = False
+
+        # Check for match only if a previous session was completed (last_label is not None)
+        if (last_label != "" and
+            current_category == last_category and
+            current_device == last_device and
+            current_label == last_label):
+
+            is_duplicate = True
+
+            st.warning(f"""
+                ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
+                (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
+                Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
+            """)
+
+            # Use a checkbox for explicit confirmation
+            st.session_state['confirm_duplicate'] = st.checkbox(
+                "Yes, I confirm I want to label this exact activity again.",
+                key="duplicate_confirm_checkbox",
+                value=st.session_state['confirm_duplicate'] # maintain state across rerun
+            )
         st.subheader("2. Control Collection")
         col1, col2 = st.columns(2)
         with col1:
+            # Determine if the start button should be disabled
+            start_disabled = is_currently_labeling or st.session_state['countdown']
+
+            # If it's a duplicate label, it must also be confirmed
+            if is_duplicate:
+                start_disabled = start_disabled or not st.session_state['confirm_duplicate']
+
             # "Start" button is enabled only when setup is complete and not yet started.
             st.button(
                 "Start",
                 on_click=_collect_packets_callback,
-                disabled=is_currently_labeling or st.session_state['countdown'],  # Disable if running or counting down
+                disabled=start_disabled,
                 help="Click to start collecting packets for labeling. You will have 5 seconds to prepare before packet collection starts."
             )
 

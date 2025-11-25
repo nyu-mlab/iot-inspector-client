@@ -107,7 +107,7 @@ def label_packets():
 
     data = request.get_json()
     app.logger.info("Received POST data:", json.dumps(data, indent=4))
-    required_keys = ["packets", "prolific_id", "mac_address", "device_name", "activity_label", "start_time", "end_time"]
+    required_keys = ["packets", "prolific_id", "mac_address", "device_category", "device_name", "activity_label", "start_time", "end_time"]
     if not data or not all(key in data for key in required_keys):
         app.logger.warning("Missing required fields in POST data")
         return jsonify({"error": "Missing required fields"}), 400
@@ -142,6 +142,7 @@ def label_packets():
     doc = {
         "mac_address": data["mac_address"],
         "device_name": data["device_name"],
+        "device_category": data["device_category"],
         "activity_label": data["activity_label"],
         "start_time": int(data["start_time"]),
         "end_time": int(data["end_time"]),

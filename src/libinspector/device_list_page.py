@@ -86,6 +86,10 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
     data = {
         "prolific_id": common.config_get("prolific_id", ""),
         "mac_address": mac_address,
+        "current_time" : common.get_human_readable_time(),
+        "device_category": common.config_get("device_category", ''),
+        "device_name": common.config_get("device_name", ''),
+        "activity_label": common.config_get("activity_label", ''),
         "fields": {
             "oui_friendly": meta_data.get("oui_vendor", ""),
             "dhcp_hostname": meta_data.get("dhcp_hostname", ""),

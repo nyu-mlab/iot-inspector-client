@@ -1,3 +1,7 @@
+# Ignore Keys
+*.crt
+*.pem
+
 # Ignore packet dumps
 *.pcap
 *.pcapng
