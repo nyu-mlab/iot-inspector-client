@@ -25,6 +25,16 @@ def api_worker_thread():
     A worker thread to periodically clear the cache of call_predict_api.
     """
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
+    
+    # To avoid a 15-second delay, just use OUI, and update it with Device API later
+    for device_dict in get_all_devices():
+        custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
+        meta_data = common.get_device_metadata(device_dict['mac_address'])
+        vendor = (meta_data.get('oui_vendor') or '').strip()
+        if not vendor:
+            vendor = 'Unknown Device, likely a Mobile Phone'
+        common.config_set(custom_name_key, vendor)
+
     while True:
         time.sleep(15)
         device_list = get_all_devices()
