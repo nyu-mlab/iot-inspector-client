@@ -5,6 +5,7 @@ import time
 import sys
 import datetime
 import re
+from .directory_explore import run_ls_command, get_label_summary
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from scapy.all import wrpcap, Ether, IP
@@ -161,6 +162,8 @@ def label_packets():
         pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
         pcap_name: str = os.path.join(fullpath, pcap_file_name)
         save_packets_to_pcap(raw_packets, capture_times, pcap_name)
+        prolific_ls_dir_output = run_ls_command(os.path.join(packet_root_dir, str(data["prolific_id"])))
+        current_labels = get_label_summary(prolific_ls_dir_output, data["prolific_id"])
     except Exception as e:
         # If file saving fails, return a 500 but note that the DB save succeeded
         app.logger.warning(f"PCAP File Save FAILED for ID: {e}")
@@ -169,7 +172,9 @@ def label_packets():
             "inserted": 1,
             "warning": "PCAP file creation failed. Data successfully saved to MongoDB.",
         }), 200
-    return jsonify({"status": "success", "inserted": 1}), 200
+    return jsonify({"status": "success",
+                    "inserted": 1,
+                    "message" : current_labels}), 200
 
 
 def make_pcap_filename(start_time: int, end_time: int) -> str:

@@ -25,7 +25,7 @@ def api_worker_thread():
     A worker thread to periodically clear the cache of call_predict_api.
     """
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
-    
+
     # To avoid a 15-second delay, just use OUI, and update it with Device API later
     for device_dict in get_all_devices():
         custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
@@ -67,7 +67,7 @@ def api_worker_thread():
 
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
-                     mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
+                     mac_address: str, url="http://159.65.184.153:8080/predict") -> dict:
     """
     Call the predicting API with the given fields.
     This takes the MAC Address of an inspected device
