@@ -27,6 +27,7 @@ def api_worker_thread():
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
 
     # To avoid a 15-second delay, just use OUI, and update it with Device API later
+    time.sleep(2)
     for device_dict in get_all_devices():
         custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
         meta_data = common.get_device_metadata(device_dict['mac_address'])
@@ -58,7 +59,8 @@ def api_worker_thread():
                 logger.info("[Device ID API] Exception when calling API: %s", str(e))
             finally:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
-                if common.config_get(custom_name_key, default='') == '':
+                custom_key_name = common.config_get(custom_name_key, default='')
+                if custom_key_name == '' or custom_key_name == 'Unknown':
                     vendor = (meta_data.get('oui_vendor') or '').strip()
                     if not vendor:
                         vendor = 'Unknown Device, likely a Mobile Phone'

@@ -54,6 +54,54 @@ def show():
     show_device_network_flow(device_mac_address)
 
 
+def generate_label_progress_table(current_label_status: dict):
+    """
+    Takes the API response string (which is a dictionary string of labeled files),
+    parses it, and displays it as a clean Streamlit table.
+
+    Example input data_string:
+    "{'Amazon Echo Spot:Idle Time...': 1, 'Amazon Plug:Android LAN On...': 4, ...}"
+    """
+    data_rows = []
+
+    for full_label, count in current_label_status.items():
+        # Split only on the first colon to correctly separate Device from the rest of the Label
+        try:
+            device, activity_label = full_label.split(':', 1)
+        except ValueError:
+            # Handle cases where the key might be malformed (shouldn't happen with the Python parser)
+            device = "N/A"
+            activity_label = full_label
+
+        data_rows.append({
+            "Device": device.strip(),
+            "Activity Label": activity_label.strip(),
+            "Count (Files)": count
+        })
+
+    if not data_rows:
+        return
+
+    # Create and sort the DataFrame
+    df = pd.DataFrame(data_rows)
+    df = df.sort_values(by=["Device", "Activity Label"])
+
+    st.markdown("#### Progress Summary")
+    st.dataframe(
+        df,
+        width='content',
+        hide_index=True,
+        column_order=("Device", "Activity Label", "Count (Files)"),
+        column_config={
+            "Count (Files)": st.column_config.NumberColumn(
+                "Count (Files)",
+                help="Total number of PCAP files successfully labeled for this device and activity.",
+                format="%d",
+            )
+        }
+    )
+
+
 @st.fragment(run_every=10)
 def display_api_status():
     """
@@ -74,6 +122,11 @@ def display_api_status():
             status_placeholder.error(f"❌ {msg}")
         elif msg_type == 'warning':
             status_placeholder.warning(f"⚠️ {msg}")
+
+    progress_data_dict = common.config_get('label_progress_data', default={})
+    if len(progress_data_dict) != 0:
+        st.subheader("Current Labeling Progress")
+        generate_label_progress_table(progress_data_dict)
 
 
 def label_thread():
@@ -131,7 +184,7 @@ def label_thread():
                 logger.info(
                 f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
                 remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-                remote_port = common.config_get("packet_collect_port", '443')
+                remote_port = common.config_get("packet_collector_port", '443')
                 api_path = "/iot_inspector_data_capture/label_packets"
                 api_url = f"https://{remote_host}:{remote_port}{api_path}"
 
@@ -143,6 +196,9 @@ def label_thread():
                 )
                 if response.status_code == 200:
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
+                    current_pcap_directory_information = response.json()['message']
+                    common.config_set('label_progress_data', current_pcap_directory_information)
+
                     display_message = f"Labeled packets successfully | {label_data}"
                     common.config_set('api_message', f"success|{display_message}")
                     common.config_set('last_labeled_category', payload.get('device_category'))

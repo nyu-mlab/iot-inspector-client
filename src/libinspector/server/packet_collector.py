@@ -111,18 +111,18 @@ def label_packets():
     required_keys = ["packets", "prolific_id", "mac_address", "device_category", "device_name", "activity_label", "start_time", "end_time"]
     if not data or not all(key in data for key in required_keys):
         app.logger.warning("Missing required fields in POST data")
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"message": "Missing required fields"}), 400
 
     if not is_prolific_id_valid(data["prolific_id"]):
         app.logger.warning("Invalid Prolific ID received")
-        return jsonify({"error": "Prolific ID is invalid"}), 500
+        return jsonify({"message": "Prolific ID is invalid"}), 400
 
     try:
         for pkt_metadata in data["packets"]:
             # Validate essential keys are present
             if not isinstance(pkt_metadata, dict) or 'time' not in pkt_metadata or 'raw_data' not in pkt_metadata:
                 app.logger.error("Packet object missing 'time' or 'raw_data' key.")
-                return jsonify({"error": "Packet metadata structure is invalid"}), 400
+                return jsonify({"message": "Packet metadata structure is invalid"}), 400
 
             raw_data_bytes = base64.b64decode(pkt_metadata["raw_data"])
             raw_packets.append(raw_data_bytes)
@@ -130,13 +130,13 @@ def label_packets():
             capture_lengths.append(len(raw_data_bytes))
     except Exception as e:
         app.logger.warning(f"Packet decoding occurred for collection '{data['prolific_id']}': {e}")
-        return jsonify({"error": "Packet decoding failed"}), 400
+        return jsonify({"message": "Packet decoding failed"}), 400
 
     folder_path: str = os.path.join(str(data["prolific_id"]), str(data["device_name"]), str(data["activity_label"]))
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
     if not fullpath.startswith(packet_root_dir):
         app.logger.warning("Invalid characters detected in path components")
-        return jsonify({"error": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
+        return jsonify({"message": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
 
     prolific_user_packets_collected = db[data["prolific_id"]]
 
@@ -155,7 +155,7 @@ def label_packets():
         prolific_user_packets_collected.insert_one(doc)
     except Exception as e:
         app.logger.warning(f"MongoDB Insert FAILED for collection '{data['prolific_id']}': {e}")
-        return jsonify({"error": "Database insert failed"}), 500
+        return jsonify({"message": "Database insert failed"}), 500
 
     try:
         os.makedirs(fullpath, exist_ok=True)
@@ -164,17 +164,18 @@ def label_packets():
         save_packets_to_pcap(raw_packets, capture_times, pcap_name)
         prolific_ls_dir_output = run_ls_command(os.path.join(packet_root_dir, str(data["prolific_id"])))
         current_labels = get_label_summary(prolific_ls_dir_output, data["prolific_id"])
+
+        return jsonify({"status": "success",
+                        "inserted": 1,
+                        "message": current_labels}), 200
     except Exception as e:
         # If file saving fails, return a 500 but note that the DB save succeeded
         app.logger.warning(f"PCAP File Save FAILED for ID: {e}")
         return jsonify({
             "status": "partial_success",
             "inserted": 1,
-            "warning": "PCAP file creation failed. Data successfully saved to MongoDB.",
-        }), 200
-    return jsonify({"status": "success",
-                    "inserted": 1,
-                    "message" : current_labels}), 200
+            "message": "PCAP file creation failed. Data successfully saved to MongoDB.",
+        }), 500
 
 
 def make_pcap_filename(start_time: int, end_time: int) -> str:
