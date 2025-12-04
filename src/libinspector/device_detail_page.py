@@ -332,6 +332,33 @@ def label_activity_workflow(mac_address: str):
         if len(_labeling_event_deque) > 0:
             st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
             return
+
+        settings_json = os.path.join(os.path.dirname(__file__), 'data', 'settings.json')
+        try:
+            with open(settings_json, 'r') as f:
+                settings_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            st.error("Error loading activity definitions. Check 'data/settings.json'.")
+            return
+
+        device_custom_name = common.get_device_custom_name(mac_address)
+        is_whitelisted = False
+        for vendor in settings_data["Allowed Vendors"]:
+            # Check if the device name contains the vendor name (case-insensitive)
+            if vendor.lower() in device_custom_name.lower():
+                is_whitelisted = True
+                break
+
+        if not is_whitelisted and not common.config_get("debug", default=False):
+            vendor_list = ", ".join(settings_data["Allowed Vendors"])
+            st.warning(
+                f"🚨 **Device not whitelisted for labeling!**\n\n"
+                f"The device **'{device_custom_name}'** does not appear to be from an allowed vendor. "
+                f"Only devices from the following vendors are currently allowed for labeling: {vendor_list}. "
+                f"Please select a whitelisted device or ensure the device name is correctly configured."
+            )
+            return
+
         update_device_inspected_status(mac_address)
         # Keep labeling_in_progress=True until the very end, controlled by config_get/set
         common.config_set('labeling_in_progress', True)
