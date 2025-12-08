@@ -102,7 +102,7 @@ def generate_label_progress_table(current_label_status: dict):
         data_rows.append({
             "Device": device.strip(),
             "Activity Label": activity_label.strip(),
-            "Count (Files)": count
+            "Labels Completed": count
         })
 
     if not data_rows:
@@ -117,15 +117,56 @@ def generate_label_progress_table(current_label_status: dict):
         df,
         width='content',
         hide_index=True,
-        column_order=("Device", "Activity Label", "Count (Files)"),
+        column_order=("Device", "Activity Label", "Labels Completed"),
         column_config={
-            "Count (Files)": st.column_config.NumberColumn(
-                "Count (Files)",
+            "Labels Completed": st.column_config.NumberColumn(
+                "Labels Completed",
                 help="Total number of PCAP files successfully labeled for this device and activity.",
                 format="%d",
             )
         }
     )
+
+
+@st.fragment(run_every=1)
+def show_active_labeling_status(mac_address: str):
+    """
+    Shows a continuous timer and status bar while a labeling session is active.
+    This fragment runs every second to provide real-time feedback.
+    """
+    is_currently_labeling = common.config_get('labeling_in_progress', default=False)
+    start_time = st.session_state.get('start_time')
+    end_time = st.session_state.get('end_time')
+
+    if is_currently_labeling and start_time is not None and end_time is None:
+        elapsed_seconds = int(time.time() - start_time)
+
+        # For visual effect, cap the progress bar at a duration (e.g., 2 minutes)
+        max_duration_visual = 120
+        progress_value = min(elapsed_seconds / max_duration_visual, 1.0)
+
+        # Ensure the container visually pops
+        with st.container(border=True):
+            st.markdown(f"#### ⏱️ Active Labeling Session")
+            col_t1, col_t2 = st.columns([1, 3])
+            with col_t1:
+                st.metric("Time Elapsed", f"{elapsed_seconds} seconds")
+            with col_t2:
+                st.info(f"**Device:** {st.session_state.get('device_name', 'N/A')}")
+                st.info(f"**Activity:** {st.session_state.get('activity_label', 'N/A')}")
+
+            # Use a progress bar that cycles when it reaches the visual max
+            progress_text = f"Collecting packets... (Max visual duration {max_duration_visual} seconds)"
+            if progress_value >= 1.0:
+                 progress_text = f"Collecting packets... Timer exceeded {max_duration_visual} seconds"
+
+            st.progress(progress_value, text=progress_text)
+            st.caption(f"Traffic for MAC: `{mac_address}` is being queued.")
+
+    elif end_time is not None and start_time is not None:
+        # Show a summary after completion until the 'Label' button is pressed again
+        duration = end_time - start_time
+        st.success(f"✅ Session Completed! Collected **{duration} seconds** of activity.")
 
 
 @st.fragment(run_every=10)
@@ -231,8 +272,9 @@ def label_thread():
                     common.config_set('last_labeled_device', payload.get('device_name'))
                     common.config_set('last_labeled_label', payload.get('activity_label'))
                 else:
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!.")
-                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code}. {len(pending_packet_list)} Packets were not sent.")
+                    error_message = response.json()['message']
+                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
+                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
             else:
                 logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
                 common.config_set('api_message', "error|No packets were captured for labeling.")
@@ -292,8 +334,11 @@ def _send_packets_callback():
     logger.info("[Packets] Collect the end time and prep for packet collection.")
     if len(_labeling_event_deque) == 0:
         logger.warning("[Packets] No labeling event found in the queue when trying to set end time.")
+        st.warning("No labeling event found in the queue when trying to set end time.")
+        return
     else:
-        _labeling_event_deque[-1]['end_time'] = int(time.time())
+        # Set a minimum end time of 1 minute after start time to ensure idle activity is captured
+        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, int(time.time()))
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
@@ -457,6 +502,7 @@ def label_activity_workflow(mac_address: str):
                 value=st.session_state['confirm_duplicate'] # maintain state across rerun
             )
         st.subheader("2. Control Collection")
+        show_active_labeling_status(mac_address)
         col1, col2 = st.columns(2)
         with col1:
             # Determine if the start button should be disabled
@@ -489,7 +535,12 @@ def label_activity_workflow(mac_address: str):
         st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         countdown_placeholder = st.empty()
         for i in range(5, 0, -1):
-            countdown_placeholder.write(f"**Starting packet capture in {i} seconds...**")
+            if i == 5:
+                countdown_placeholder.markdown(f"**Prepare Activity Now!** Packet capture starts in **{i} seconds...**")
+            elif i == 1:
+                countdown_placeholder.markdown(f"**GO!** Begin the activity **NOW!**")
+            else:
+                countdown_placeholder.markdown(f"**Get Ready!** Capture starts in **{i} seconds...**")
             time.sleep(1)
         countdown_placeholder.empty()
 
