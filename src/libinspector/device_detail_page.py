@@ -228,6 +228,7 @@ def reset_labeling_state():
     st.session_state['device_name'] = None
     st.session_state['activity_label'] = None
     st.session_state['device_category'] = None
+    st.session_state['confirm_duplicate'] = False
 
 
 def _collect_packets_callback():
@@ -317,7 +318,7 @@ def label_activity_workflow(mac_address: str):
         mac_address (str): The MAC address of the device targeted for the activity labeling.
     """
     # --- 1. Initialize State ---
-    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label']:
+    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate']:
         if key not in st.session_state:
             st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
 
@@ -475,9 +476,6 @@ def label_activity_workflow(mac_address: str):
         # Start packet capture after countdown
         st.session_state['countdown'] = False
         logger.info("[Packets] The start time is set, packet collection is now ACTIVE.")
-        st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
-        st.info(
-            f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
         st.rerun()  # Rerun to update button state and message
 
 
