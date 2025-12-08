@@ -54,6 +54,32 @@ def show():
     show_device_network_flow(device_mac_address)
 
 
+@st.cache_data
+def _load_activity_data() -> dict:
+    """
+    Loads activity definitions from activity.json and caches the result.
+    """
+    activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
+    try:
+        with open(activity_json, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading activity definitions from {activity_json}: {e}")
+        return {}
+
+
+@st.cache_data
+def _load_settings_data() -> dict:
+    """Loads settings data from settings.json and caches the result."""
+    settings_json = os.path.join(os.path.dirname(__file__), 'data', 'settings.json')
+    try:
+        with open(settings_json, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading settings data from {settings_json}: {e}")
+        return {}
+
+
 def generate_label_progress_table(current_label_status: dict):
     """
     Takes the API response string (which is a dictionary string of labeled files),
@@ -334,28 +360,24 @@ def label_activity_workflow(mac_address: str):
             st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
             return
 
-        settings_json = os.path.join(os.path.dirname(__file__), 'data', 'settings.json')
-        try:
-            with open(settings_json, 'r') as f:
-                settings_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            st.error("Error loading activity definitions. Check 'data/settings.json'.")
+        settings_data = _load_settings_data()
+        if not settings_data:
+            st.error("Error loading settings definitions. Check logs.")
             return
-
         device_custom_name = common.get_device_custom_name(mac_address)
         is_whitelisted = False
-        for vendor in settings_data["Allowed Vendors"]:
+        for vendor in settings_data.get("Allowed Vendors", []):
             # Check if the device name contains the vendor name (case-insensitive)
             if vendor.lower() in device_custom_name.lower():
                 is_whitelisted = True
                 break
 
         if not is_whitelisted and not common.config_get("debug", default=False):
-            vendor_list = ", ".join(settings_data["Allowed Vendors"])
+            vendor_list = ", ".join(settings_data.get("Allowed Vendors", []))
             st.warning(
                 f"🚨 **Device not whitelisted for labeling!**\n\n"
                 f"The device **'{device_custom_name}'** does not appear to be from an allowed vendor. "
-                f"Only devices from the following vendors are currently allowed for labeling: {vendor_list}. "
+                f"Only devices from the following vendors are currently allowed for labeling: **{vendor_list}**. "
                 f"Please select a whitelisted device or ensure the device name is correctly configured."
             )
             return
@@ -371,14 +393,10 @@ def label_activity_workflow(mac_address: str):
     if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
         st.subheader("1. Select Activity")
 
-        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
-        try:
-            with open(activity_json, 'r') as f:
-                activity_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            st.error("Error loading activity definitions. Check 'data/activity.json'.")
+        activity_data = _load_activity_data()
+        if not activity_data:
+            st.error("Error loading activity definitions. Check logs.")
             return
-
         # Use the status of the session (running or done) to control if the select boxes are disabled
         is_currently_labeling = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
         categories = list(activity_data.keys())
@@ -393,7 +411,9 @@ def label_activity_workflow(mac_address: str):
                                        disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
-        activity_labels.append("Idle Time: No Activity, just background traffic for 2 minutes")
+        idle_key = "Idle Time: No Activity, just background traffic for 2 minutes"
+        if idle_key not in activity_labels:
+            activity_labels.append(idle_key)
         selected_label = st.selectbox("Select activity label",
                                       activity_labels,
                                       key="label_select",
