@@ -73,6 +73,9 @@ def initialize_config():
     common.config_set("labeling_in_progress", False)
     common.config_set("label_progress_data", {})
     common.config_set("api_message", "")
+    common.config_set("last_labeled_category", "")
+    common.config_set("last_labeled_device", "")
+    common.config_set("last_labeled_label", "")
 
 
 @functools.lru_cache(maxsize=1)
