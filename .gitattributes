@@ -4,3 +4,6 @@
 
 # Always checkout with CRLF
 *.bat           text eol=crlf
+
+# Default behavior: CRLF on Windows, LF on Unix
+*               text=auto

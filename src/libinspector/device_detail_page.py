@@ -54,6 +54,121 @@ def show():
     show_device_network_flow(device_mac_address)
 
 
+@st.cache_data
+def _load_activity_data() -> dict:
+    """
+    Loads activity definitions from activity.json and caches the result.
+    """
+    activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
+    try:
+        with open(activity_json, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading activity definitions from {activity_json}: {e}")
+        return {}
+
+
+@st.cache_data
+def _load_settings_data() -> dict:
+    """Loads settings data from settings.json and caches the result."""
+    settings_json = os.path.join(os.path.dirname(__file__), 'data', 'settings.json')
+    try:
+        with open(settings_json, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading settings data from {settings_json}: {e}")
+        return {}
+
+
+def generate_label_progress_table(current_label_status: dict):
+    """
+    Takes the API response string (which is a dictionary string of labeled files),
+    parses it, and displays it as a clean Streamlit table.
+
+    Example input data_string:
+    "{'Amazon Echo Spot:Idle Time...': 1, 'Amazon Plug:Android LAN On...': 4, ...}"
+    """
+    data_rows = []
+
+    for full_label, count in current_label_status.items():
+        # Split only on the first colon to correctly separate Device from the rest of the Label
+        try:
+            device, activity_label = full_label.split(':', 1)
+        except ValueError:
+            # Handle cases where the key might be malformed (shouldn't happen with the Python parser)
+            device = "N/A"
+            activity_label = full_label
+
+        data_rows.append({
+            "Device": device.strip(),
+            "Activity Label": activity_label.strip(),
+            "Labels Completed": count
+        })
+
+    if not data_rows:
+        return
+
+    # Create and sort the DataFrame
+    df = pd.DataFrame(data_rows)
+    df = df.sort_values(by=["Device", "Activity Label"])
+
+    st.markdown("#### Progress Summary")
+    st.dataframe(
+        df,
+        width='content',
+        hide_index=True,
+        column_order=("Device", "Activity Label", "Labels Completed"),
+        column_config={
+            "Labels Completed": st.column_config.NumberColumn(
+                "Labels Completed",
+                help="Total number of PCAP files successfully labeled for this device and activity.",
+                format="%d",
+            )
+        }
+    )
+
+
+@st.fragment(run_every=1)
+def show_active_labeling_status(mac_address: str):
+    """
+    Shows a continuous timer and status bar while a labeling session is active.
+    This fragment runs every second to provide real-time feedback.
+    """
+    is_currently_labeling = common.config_get('labeling_in_progress', default=False)
+    start_time = st.session_state.get('start_time')
+    end_time = st.session_state.get('end_time')
+
+    if is_currently_labeling and start_time is not None and end_time is None:
+        elapsed_seconds = int(time.time() - start_time)
+
+        # For visual effect, cap the progress bar at a duration (e.g., 2 minutes)
+        max_duration_visual = 120
+        progress_value = min(elapsed_seconds / max_duration_visual, 1.0)
+
+        # Ensure the container visually pops
+        with st.container(border=True):
+            st.markdown("#### ⏱️ Active Labeling Session")
+            col_t1, col_t2 = st.columns([1, 3])
+            with col_t1:
+                st.metric("Time Elapsed", f"{elapsed_seconds} seconds")
+            with col_t2:
+                st.info(f"**Device:** {st.session_state.get('device_name', 'N/A')}")
+                st.info(f"**Activity:** {st.session_state.get('activity_label', 'N/A')}")
+
+            # Use a progress bar that cycles when it reaches the visual max
+            progress_text = f"Collecting packets... (Max visual duration {max_duration_visual} seconds)"
+            if progress_value >= 1.0:
+                 progress_text = f"Collecting packets... Timer exceeded {max_duration_visual} seconds"
+
+            st.progress(progress_value, text=progress_text)
+            st.caption(f"Traffic for MAC: `{mac_address}` is being queued.")
+
+    elif end_time is not None and start_time is not None:
+        # Show a summary after completion until the 'Label' button is pressed again
+        duration = end_time - start_time
+        st.success(f"✅ Session Completed! Collected **{duration} seconds** of activity.")
+
+
 @st.fragment(run_every=10)
 def display_api_status():
     """
@@ -74,6 +189,11 @@ def display_api_status():
             status_placeholder.error(f"❌ {msg}")
         elif msg_type == 'warning':
             status_placeholder.warning(f"⚠️ {msg}")
+
+    progress_data_dict = common.config_get('label_progress_data', default={})
+    if len(progress_data_dict) != 0:
+        st.subheader("Current Labeling Progress")
+        generate_label_progress_table(progress_data_dict)
 
 
 def label_thread():
@@ -131,7 +251,7 @@ def label_thread():
                 logger.info(
                 f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
                 remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-                remote_port = common.config_get("packet_collect_port", '443')
+                remote_port = common.config_get("packet_collector_port", '443')
                 api_path = "/iot_inspector_data_capture/label_packets"
                 api_url = f"https://{remote_host}:{remote_port}{api_path}"
 
@@ -143,11 +263,18 @@ def label_thread():
                 )
                 if response.status_code == 200:
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
+                    current_pcap_directory_information = response.json()['message']
+                    common.config_set('label_progress_data', current_pcap_directory_information)
+
                     display_message = f"Labeled packets successfully | {label_data}"
                     common.config_set('api_message', f"success|{display_message}")
+                    common.config_set('last_labeled_category', payload.get('device_category'))
+                    common.config_set('last_labeled_device', payload.get('device_name'))
+                    common.config_set('last_labeled_label', payload.get('activity_label'))
                 else:
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!.")
-                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code}. {len(pending_packet_list)} Packets were not sent.")
+                    error_message = response.json()['message']
+                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
+                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
             else:
                 logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
                 common.config_set('api_message', "error|No packets were captured for labeling.")
@@ -168,6 +295,8 @@ def reset_labeling_state():
     st.session_state['end_time'] = None
     st.session_state['device_name'] = None
     st.session_state['activity_label'] = None
+    st.session_state['device_category'] = None
+    st.session_state['confirm_duplicate'] = False
 
 
 def _collect_packets_callback():
@@ -180,6 +309,7 @@ def _collect_packets_callback():
 
     labeling_event = {
         "prolific_id": common.config_get('prolific_id', ''),
+        "device_category": st.session_state['device_category'],
         "device_name": st.session_state['device_name'],
         "activity_label": st.session_state['activity_label'],
         "mac_address": st.session_state['mac_address'],
@@ -204,8 +334,11 @@ def _send_packets_callback():
     logger.info("[Packets] Collect the end time and prep for packet collection.")
     if len(_labeling_event_deque) == 0:
         logger.warning("[Packets] No labeling event found in the queue when trying to set end time.")
+        st.warning("No labeling event found in the queue when trying to set end time.")
+        return
     else:
-        _labeling_event_deque[-1]['end_time'] = int(time.time())
+        # Set a minimum end time of 1 minute after start time to ensure idle activity is captured
+        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, int(time.time()))
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
@@ -256,7 +389,7 @@ def label_activity_workflow(mac_address: str):
         mac_address (str): The MAC address of the device targeted for the activity labeling.
     """
     # --- 1. Initialize State ---
-    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label']:
+    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate']:
         if key not in st.session_state:
             st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
 
@@ -271,6 +404,29 @@ def label_activity_workflow(mac_address: str):
         if len(_labeling_event_deque) > 0:
             st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
             return
+
+        settings_data = _load_settings_data()
+        if not settings_data:
+            st.error("Error loading settings definitions. Check logs.")
+            return
+        device_custom_name = common.get_device_custom_name(mac_address)
+        is_whitelisted = False
+        for vendor in settings_data.get("Allowed Vendors", []):
+            # Check if the device name contains the vendor name (case-insensitive)
+            if vendor.lower() in device_custom_name.lower():
+                is_whitelisted = True
+                break
+
+        if not is_whitelisted and not common.config_get("debug", default=False):
+            vendor_list = ", ".join(settings_data.get("Allowed Vendors", []))
+            st.warning(
+                f"🚨 **Device not whitelisted for labeling!**\n\n"
+                f"The device **'{device_custom_name}'** does not appear to be from an allowed vendor. "
+                f"Only devices from the following vendors are currently allowed for labeling: **{vendor_list}**. "
+                f"Please select a whitelisted device or ensure the device name is correctly configured."
+            )
+            return
+
         update_device_inspected_status(mac_address)
         # Keep labeling_in_progress=True until the very end, controlled by config_get/set
         common.config_set('labeling_in_progress', True)
@@ -282,14 +438,10 @@ def label_activity_workflow(mac_address: str):
     if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
         st.subheader("1. Select Activity")
 
-        activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
-        try:
-            with open(activity_json, 'r') as f:
-                activity_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            st.error("Error loading activity definitions. Check 'data/activity.json'.")
+        activity_data = _load_activity_data()
+        if not activity_data:
+            st.error("Error loading activity definitions. Check logs.")
             return
-
         # Use the status of the session (running or done) to control if the select boxes are disabled
         is_currently_labeling = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
         categories = list(activity_data.keys())
@@ -304,7 +456,9 @@ def label_activity_workflow(mac_address: str):
                                        disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
-        activity_labels.append("Idle Time: No Activity, just background traffic for 2 minutes")
+        idle_key = "Idle Time: No Activity, just background traffic for 2 minutes"
+        if idle_key not in activity_labels:
+            activity_labels.append(idle_key)
         selected_label = st.selectbox("Select activity label",
                                       activity_labels,
                                       key="label_select",
@@ -312,18 +466,57 @@ def label_activity_workflow(mac_address: str):
 
         # Update state on selection changes, unless running
         if not is_currently_labeling:
+            st.session_state['device_category'] = selected_category
             st.session_state['device_name'] = selected_device
             st.session_state['activity_label'] = selected_label
             st.session_state['mac_address'] = mac_address
 
+        last_category = common.config_get('last_labeled_category', default="")
+        last_device = common.config_get('last_labeled_device', default="")
+        last_label = common.config_get('last_labeled_label', default="")
+
+        current_category = st.session_state['device_category']
+        current_device = st.session_state['device_name']
+        current_label = st.session_state['activity_label']
+
+        is_duplicate = False
+
+        # Check for match only if a previous session was completed (last_label is not None)
+        if (last_label != "" and
+            current_category == last_category and
+            current_device == last_device and
+            current_label == last_label):
+
+            is_duplicate = True
+
+            st.warning(f"""
+                ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
+                (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
+                Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
+            """)
+
+            # Use a checkbox for explicit confirmation
+            st.session_state['confirm_duplicate'] = st.checkbox(
+                "Yes, I confirm I want to label this exact activity again.",
+                key="duplicate_confirm_checkbox",
+                value=st.session_state['confirm_duplicate'] # maintain state across rerun
+            )
         st.subheader("2. Control Collection")
+        show_active_labeling_status(mac_address)
         col1, col2 = st.columns(2)
         with col1:
+            # Determine if the start button should be disabled
+            start_disabled = is_currently_labeling or st.session_state['countdown']
+
+            # If it's a duplicate label, it must also be confirmed
+            if is_duplicate:
+                start_disabled = start_disabled or not st.session_state['confirm_duplicate']
+
             # "Start" button is enabled only when setup is complete and not yet started.
             st.button(
                 "Start",
                 on_click=_collect_packets_callback,
-                disabled=is_currently_labeling or st.session_state['countdown'],  # Disable if running or counting down
+                disabled=start_disabled,
                 help="Click to start collecting packets for labeling. You will have 5 seconds to prepare before packet collection starts."
             )
 
@@ -342,16 +535,18 @@ def label_activity_workflow(mac_address: str):
         st.session_state['start_time'] = _labeling_event_deque[-1]['start_time']
         countdown_placeholder = st.empty()
         for i in range(5, 0, -1):
-            countdown_placeholder.write(f"**Starting packet capture in {i} seconds...**")
+            if i == 5:
+                countdown_placeholder.markdown(f"**Prepare Activity Now!** Packet capture starts in **{i} seconds...**")
+            elif i == 1:
+                countdown_placeholder.markdown("**GO!** Begin the activity **NOW!**")
+            else:
+                countdown_placeholder.markdown(f"**Get Ready!** Capture starts in **{i} seconds...**")
             time.sleep(1)
         countdown_placeholder.empty()
 
         # Start packet capture after countdown
         st.session_state['countdown'] = False
         logger.info("[Packets] The start time is set, packet collection is now ACTIVE.")
-        st.info("Packet collection is **ACTIVE**. Perform the activity on your device now.")
-        st.info(
-            f"Currently labeling **{st.session_state['activity_label']}** on **{st.session_state['device_name']}**.")
         st.rerun()  # Rerun to update button state and message
 
 

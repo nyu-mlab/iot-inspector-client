@@ -25,6 +25,17 @@ def api_worker_thread():
     A worker thread to periodically clear the cache of call_predict_api.
     """
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
+
+    # To avoid a 15-second delay, just use OUI, and update it with Device API later
+    time.sleep(2)
+    for device_dict in get_all_devices():
+        custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
+        meta_data = common.get_device_metadata(device_dict['mac_address'])
+        vendor = (meta_data.get('oui_vendor') or '').strip()
+        if not vendor:
+            vendor = 'Unknown Device, likely a Mobile Phone'
+        common.config_set(custom_name_key, vendor)
+
     while True:
         time.sleep(15)
         device_list = get_all_devices()
@@ -48,7 +59,8 @@ def api_worker_thread():
                 logger.info("[Device ID API] Exception when calling API: %s", str(e))
             finally:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
-                if common.config_get(custom_name_key, default='') == '':
+                custom_key_name = common.config_get(custom_name_key, default='')
+                if custom_key_name == '' or custom_key_name == 'UNKNOWN':
                     vendor = (meta_data.get('oui_vendor') or '').strip()
                     if not vendor:
                         vendor = 'Unknown Device, likely a Mobile Phone'
@@ -57,7 +69,7 @@ def api_worker_thread():
 
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
-                     mac_address: str, url="https://dev-id-1.tailcedbd.ts.net/predict") -> dict:
+                     mac_address: str, url="http://159.65.184.153:8080/predict") -> dict:
     """
     Call the predicting API with the given fields.
     This takes the MAC Address of an inspected device
@@ -86,6 +98,10 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
     data = {
         "prolific_id": common.config_get("prolific_id", ""),
         "mac_address": mac_address,
+        "current_time" : common.get_human_readable_time(),
+        "device_category": common.config_get("device_category", ''),
+        "device_name": common.config_get("device_name", ''),
+        "activity_label": common.config_get("activity_label", ''),
         "fields": {
             "oui_friendly": meta_data.get("oui_vendor", ""),
             "dhcp_hostname": meta_data.get("dhcp_hostname", ""),
