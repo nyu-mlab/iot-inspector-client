@@ -60,7 +60,7 @@ def api_worker_thread():
             finally:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
                 custom_key_name = common.config_get(custom_name_key, default='')
-                if custom_key_name == '' or custom_key_name == 'Unknown':
+                if custom_key_name == '' or custom_key_name == 'UNKNOWN':
                     vendor = (meta_data.get('oui_vendor') or '').strip()
                     if not vendor:
                         vendor = 'Unknown Device, likely a Mobile Phone'

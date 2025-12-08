@@ -147,7 +147,7 @@ def show_active_labeling_status(mac_address: str):
 
         # Ensure the container visually pops
         with st.container(border=True):
-            st.markdown(f"#### ⏱️ Active Labeling Session")
+            st.markdown("#### ⏱️ Active Labeling Session")
             col_t1, col_t2 = st.columns([1, 3])
             with col_t1:
                 st.metric("Time Elapsed", f"{elapsed_seconds} seconds")
@@ -538,7 +538,7 @@ def label_activity_workflow(mac_address: str):
             if i == 5:
                 countdown_placeholder.markdown(f"**Prepare Activity Now!** Packet capture starts in **{i} seconds...**")
             elif i == 1:
-                countdown_placeholder.markdown(f"**GO!** Begin the activity **NOW!**")
+                countdown_placeholder.markdown("**GO!** Begin the activity **NOW!**")
             else:
                 countdown_placeholder.markdown(f"**Get Ready!** Capture starts in **{i} seconds...**")
             time.sleep(1)

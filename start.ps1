@@ -115,8 +115,13 @@ while (-not $isReady) {
 Start-Process -FilePath $appUrl
 
 # Wait for the Streamlit process to finish or for the user to close this window
-Write-Host "IoT Inspector is running. Close this window to stop the application."
+Write-Host "IoT Inspector is running. Go to Settings and click 'Exit Application' to close it."
 if ($streamlitProcess) {
     $streamlitProcess.WaitForExit()
 }
-Write-Host "IoT Inspector has been closed. Exiting setup script."
+# We use Write-Output instead of Write-Host here, so we can redirect it easily.
+Write-Output "Application exited. Initiating forced closure of the console window." | Out-Null
+
+# Force the entire admin shell to close too
+# We redirect the output stream (2 for errors/warnings) to $null to silence any final complaints.
+[Environment]::Exit(0) 2> $null

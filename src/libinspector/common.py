@@ -81,7 +81,9 @@ def show_warning():
     else:
         # ID is missing or invalid -> BLOCK and show input form
         st.subheader("Prolific ID Required")
-        st.warning("Please enter your Prolific ID to proceed. This ID is essential for data labeling and your payment.")
+        st.warning("Please enter your Prolific ID to proceed. "
+                   "This ID is essential for data labeling and your payment. "
+                   "If you are NOT part of the study, please input an arbitrary alphanumeric ID.")
 
         with st.form("prolific_id_form"):
             input_id = st.text_input(
