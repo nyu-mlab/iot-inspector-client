@@ -1,13 +1,13 @@
 import streamlit as st
 import time
-import json
 import libinspector.global_state
 import common
 import logging
 import functools
 import os
 import requests
-
+import json
+from typing import List, Dict, Any
 
 logger = logging.getLogger("client")
 
@@ -20,30 +20,76 @@ def show():
     show_list(toast_obj)
 
 
+# Define the common TXT record keys that hold the best, most human-readable name,
+# in order of preference (most descriptive first).
+PREFERRED_NAME_KEYS = ['fn', 'n', 'name', 'md', 'model']
+
+
+def _extract_instance_name(device_name: str) -> str:
+    """
+    Extracts the clean, human-readable instance name from the full mDNS string.
+
+    Example: "GoogleTV6541._androidtvremote2._tcp.local." -> "GoogleTV6541"
+    """
+    # Split by '.' (dot)
+    parts = device_name.split('.')
+    # The instance name is always the first part.
+    if parts:
+        return parts[0].strip()
+    return ""
+
+
+def guess_device_name_from_mdns_list(mdns_device_list: List[Dict[str, Any]]) -> str:
+    """
+    Analyzes a list of mDNS JSON entries to find the most human-readable device name.
+
+    Prioritizes names found in TXT records (device_properties) over the
+    raw service instance name.
+
+    Args:
+        mdns_device_list: A list of mDNS dictionaries, e.g.,
+                          meta_data.get('mdns_json', []).
+
+    Returns:
+        The best guess for the device's name, or an empty string if nothing useful is found.
+    """
+    best_name = ""
+
+    # 1. Search through all entries for a highly preferred TXT key
+    for entry in mdns_device_list:
+        properties = entry.get('device_properties', {})
+
+        # Check preferred keys in order
+        for key in PREFERRED_NAME_KEYS:
+            name_candidate = properties.get(key, '').strip()
+
+            # If we find a non-empty name, use it immediately and stop searching.
+            if name_candidate:
+                return name_candidate
+
+        # 2. If no TXT key was found, fall back to the cleanest part of the device_name.
+        # This is the lowest priority, so we just store the first one found as a fallback.
+        if not best_name:
+            device_name = entry.get('device_name', '').strip()
+            if device_name:
+                best_name = _extract_instance_name(device_name)
+
+    return best_name
+
+
 def api_worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
     logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
-
-    # To avoid a 15-second delay, just use OUI, and update it with Device API later
     time.sleep(2)
-    for device_dict in get_all_devices():
-        custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
-        meta_data = common.get_device_metadata(device_dict['mac_address'])
-        vendor = (meta_data.get('oui_vendor') or '').strip()
-        if not vendor:
-            vendor = 'Unknown Device, likely a Mobile Phone'
-        common.config_set(custom_name_key, vendor)
-
     while True:
-        time.sleep(15)
-        device_list = get_all_devices()
-        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
-
         # Getting inputs and calling API
-        for device_dict in device_list:
+        for device_dict in get_all_devices():
             meta_data = common.get_device_metadata(device_dict['mac_address'])
+            mdns_device_list = meta_data.get('mdns_json', [])
+            mdns_device_name = guess_device_name_from_mdns_list(mdns_device_list)
+            oui_vendor = meta_data.get('oui_vendor', '').strip()
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
             custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
             try:
@@ -61,10 +107,18 @@ def api_worker_thread():
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
                 custom_key_name = common.config_get(custom_name_key, default='')
                 if custom_key_name == '' or custom_key_name == 'UNKNOWN':
-                    vendor = (meta_data.get('oui_vendor') or '').strip()
-                    if not vendor:
-                        vendor = 'Unknown Device, likely a Mobile Phone'
-                    common.config_set(custom_name_key, vendor)
+                    if mdns_device_name:
+                        # Prioritize the full mDNS name as it's the most descriptive identifier
+                        final_device_name = mdns_device_name
+                    elif oui_vendor:
+                        # Fall back to the OUI vendor name if mDNS data is absent
+                        final_device_name = oui_vendor
+                    else:
+                        # Use the final generic fallback name
+                        final_device_name = 'Unknown Device, likely a Mobile Phone'
+                    common.config_set(custom_name_key, final_device_name)
+        time.sleep(15)
+        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
 
 
 @functools.cache

@@ -55,30 +55,31 @@ def show():
 
 
 @st.cache_data
-def _load_activity_data() -> dict:
+def _load_json_data(filename: str) -> dict:
     """
-    Loads activity definitions from activity.json and caches the result.
+    Loads JSON data from a file in the 'data' directory and caches the result.
+    The cache is unique for each distinct filename provided.
+
+    Args:
+        filename: The name of the JSON file (e.g., 'activity.json').
+
+    Returns:
+        The dictionary content of the file, or an empty dictionary upon failure.
     """
-    activity_json = os.path.join(os.path.dirname(__file__), 'data', 'activity.json')
+    # NOTE: os.path.dirname(__file__) only works if this code is in a file,
+    # not interactively in a shell/notebook. This is standard practice for module code.
+    data_path = os.path.join(os.path.dirname(__file__), 'data', filename)
+
     try:
-        with open(activity_json, 'r') as f:
+        with open(data_path, 'r') as f:
             return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"Error loading activity definitions from {activity_json}: {e}")
+    except FileNotFoundError:
+        # FileNotFoundError is common for optional config files, log as warning
+        logger.warning(f"Configuration file not found: {data_path}")
         return {}
-
-
-@st.cache_data
-def _load_settings_data() -> dict:
-    """Loads settings data from settings.json and caches the result."""
-    settings_json = os.path.join(os.path.dirname(__file__), 'data', 'settings.json')
-    try:
-        with open(settings_json, 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"Error loading settings data from {settings_json}: {e}")
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decoding JSON from {data_path}: {e}")
         return {}
-
 
 def generate_label_progress_table(current_label_status: dict):
     """
@@ -129,7 +130,7 @@ def generate_label_progress_table(current_label_status: dict):
 
 
 @st.fragment(run_every=1)
-def show_active_labeling_status(mac_address: str):
+def show_active_labeling_status(mac_address: str, settings_data: dict):
     """
     Shows a continuous timer and status bar while a labeling session is active.
     This fragment runs every second to provide real-time feedback.
@@ -142,7 +143,7 @@ def show_active_labeling_status(mac_address: str):
         elapsed_seconds = int(time.time() - start_time)
 
         # For visual effect, cap the progress bar at a duration (e.g., 2 minutes)
-        max_duration_visual = 120
+        max_duration_visual = settings_data.get("max_idle_time_seconds", 600)
         progress_value = min(elapsed_seconds / max_duration_visual, 1.0)
 
         # Ensure the container visually pops
@@ -405,7 +406,7 @@ def label_activity_workflow(mac_address: str):
             st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
             return
 
-        settings_data = _load_settings_data()
+        settings_data = _load_json_data("settings.json")
         if not settings_data:
             st.error("Error loading settings definitions. Check logs.")
             return
@@ -438,7 +439,7 @@ def label_activity_workflow(mac_address: str):
     if st.session_state['show_labeling_setup'] or st.session_state['start_time']:
         st.subheader("1. Select Activity")
 
-        activity_data = _load_activity_data()
+        activity_data = _load_json_data("activity.json")
         if not activity_data:
             st.error("Error loading activity definitions. Check logs.")
             return
@@ -502,7 +503,7 @@ def label_activity_workflow(mac_address: str):
                 value=st.session_state['confirm_duplicate'] # maintain state across rerun
             )
         st.subheader("2. Control Collection")
-        show_active_labeling_status(mac_address)
+        show_active_labeling_status(mac_address, settings_data)
         col1, col2 = st.columns(2)
         with col1:
             # Determine if the start button should be disabled

@@ -1,3 +1,4 @@
 {
-  "Allowed Vendors": ["Amazon"]
+  "Allowed Vendors": ["Amazon"],
+  "max_idle_time_seconds": 600
 }

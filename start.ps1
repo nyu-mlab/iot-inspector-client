@@ -97,7 +97,7 @@ while (-not $isReady) {
     try {
         # Use Invoke-WebRequest to check for a successful connection (Status Code 200).
         # We set a short TimeoutSec on the request itself to prevent hanging.
-        $request = Invoke-WebRequest -Uri $appUrl -TimeoutSec 5 -ErrorAction Stop
+        $request = Invoke-WebRequest -Uri $appUrl -TimeoutSec 5 -ErrorAction Stop -UseBasicParsing
         if ($request.StatusCode -eq 200) {
             $isReady = $true
             Write-Host "✅ Server is ready. Launching browser."
