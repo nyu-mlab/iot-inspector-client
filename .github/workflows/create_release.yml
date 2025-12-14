@@ -38,7 +38,7 @@ jobs:
 
     steps:
     - name: Checkout project sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Create wheel file
       if: runner.os == 'Linux'
@@ -67,7 +67,7 @@ jobs:
 
     - name: Store the IoT Inspector executable
       if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: iot-exe
         path: ./*.exe
@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Download the wheel file
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: iot-inspector
           path: dist/
@@ -98,7 +98,7 @@ jobs:
           verbose: true
 
       - name: Download all the IoT Inspector executable
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: iot-exe
           path: dist/

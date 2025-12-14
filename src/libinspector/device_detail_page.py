@@ -629,7 +629,6 @@ def process_network_flows(df: pandas.DataFrame, chart_title: str):
     st.data_editor(df, width='content')
 
 
-
 @st.cache_data(ttl=5, show_spinner=False)
 def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
     """
