@@ -10,8 +10,8 @@ readme = "README.md"
 requires-python = "==3.13.*"
 dependencies = [
     "libinspector==1.0.12",
-    "streamlit>=1.50.0",
-    "matplotlib==3.10.3",
+    "streamlit>=1.52.1",
+    "matplotlib==3.10.8",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },
@@ -26,12 +26,12 @@ classifiers = [
 [tool.setuptools.packages.find]
 where = ["src"]
 include = [
-    "libinspector",
-    "libinspector.*"
+    "iot_inspector",
+    "iot_inspector.*"
 ]
 
 [tool.setuptools.package-data]
-libinspector = [
+iot_inspector = [
     "static/images/*.png",
     "data/*.json",
     ".streamlit/*.toml",

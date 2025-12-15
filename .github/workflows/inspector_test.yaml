@@ -55,7 +55,7 @@ jobs:
 
     - name: Test with pytest and obtain code coverage
       run: |
-        coverage run --source=src/libinspector -m pytest src/tests
+        coverage run --source=src/iot_inspector -m pytest src/tests
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

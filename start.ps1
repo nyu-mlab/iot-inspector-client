@@ -77,7 +77,7 @@ Write-Host "Starting IoT Inspector..."
 
 # Use the dedicated Streamlit executable installed by uv.
 # This is to avoid 'C:\Program Files\' being seen as two arguments because of the space!
-$streamlitAppPath = "$PSScriptRoot\src\libinspector\dashboard.py"
+$streamlitAppPath = "$PSScriptRoot\src\iot_inspector\dashboard.py"
 
 # FIX: Use uv run directly with correct quoting for the path, which handles spaces.
 # The entire argument list is passed to uv.

@@ -3,7 +3,7 @@ import os
 from typing import List
 from scapy.utils import rdpcap
 from scapy.packet import Packet
-from libinspector.server.pcap_check import check_for_application_data, convert_bytes_to_packet
+from iot_inspector.server.pcap_check import check_for_application_data, convert_bytes_to_packet
 
 
 def read_packets_from_pcap(filename: str) -> List[Packet]:

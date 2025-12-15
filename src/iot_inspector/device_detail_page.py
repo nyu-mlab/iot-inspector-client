@@ -1,5 +1,3 @@
-from typing import Any
-import pandas
 import streamlit as st
 import libinspector.global_state
 import pandas as pd
@@ -14,9 +12,9 @@ import json
 import os
 import logging
 from collections import deque
+from typing import Deque, Dict, Any
 
-_labeling_event_deque = deque()
-_labeled_activity_packet_queue = Queue()
+_labeling_event_deque : Deque[Dict[str, Any]] = deque()
 logger = logging.getLogger("client")
 
 
@@ -226,9 +224,16 @@ def label_thread():
             logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
             continue
 
+        end_dt_object = datetime.datetime.fromtimestamp(end_time)
+        end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+        start_dt_object = datetime.datetime.fromtimestamp( _labeling_event_deque[0].get('start_time', None))
+        start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+        logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
         # 2. Process and empty the queue
-        while not _labeled_activity_packet_queue.empty():
-            packet = _labeled_activity_packet_queue.get()
+        while not _labeling_event_deque[0]["packet_queue"].empty():
+            packet = _labeling_event_deque[0]["packet_queue"].get()
             dt_object = datetime.datetime.fromtimestamp(packet.time)
             timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
             logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
@@ -237,9 +242,14 @@ def label_thread():
                 "raw_data": base64.b64encode(packet.original).decode('utf-8')
             }
             pending_packet_list.append(packet_metadata)
+        logger.info(f"[Packets] Labeling session has ended at {end_timestamp_str}")
 
         payload = _labeling_event_deque.popleft()
         payload['packets'] = pending_packet_list
+
+        # REMOVE the non-serializable Queue object before sending the payload
+        if 'packet_queue' in payload:
+            del payload['packet_queue']
 
         device_name = payload.get('device_name', 'Unknown Device')
         activity_label = payload.get('activity_label', 'Unknown Activity')
@@ -314,6 +324,7 @@ def _collect_packets_callback():
         "device_name": st.session_state['device_name'],
         "activity_label": st.session_state['activity_label'],
         "mac_address": st.session_state['mac_address'],
+        "packet_queue": Queue()
     }
     _labeling_event_deque.append(labeling_event)
 
@@ -339,8 +350,13 @@ def _send_packets_callback():
         return
     else:
         # Set a minimum end time of 1 minute after start time to ensure idle activity is captured
-        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, int(time.time()))
+        user_end_time = int(time.time())
+        user_end_dt_object = datetime.datetime.fromtimestamp(user_end_time)
+        user_end_timestamp_str = user_end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        logger.info(f"[Packets] User requested end time at {user_end_timestamp_str}")
+        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, user_end_time)
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
+    logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
     reset_labeling_state()
@@ -390,6 +406,7 @@ def label_activity_workflow(mac_address: str):
         mac_address (str): The MAC address of the device targeted for the activity labeling.
     """
     # --- 1. Initialize State ---
+    settings_data = _load_json_data("settings.json")
     for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate']:
         if key not in st.session_state:
             st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
@@ -406,15 +423,14 @@ def label_activity_workflow(mac_address: str):
             st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
             return
 
-        settings_data = _load_json_data("settings.json")
         if not settings_data:
             st.error("Error loading settings definitions. Check logs.")
             return
-        device_custom_name = common.get_device_custom_name(mac_address)
+        device_oui_vendor = common.config_get(f"oui@{mac_address}", default="Unknown Vendor")
         is_whitelisted = False
         for vendor in settings_data.get("Allowed Vendors", []):
             # Check if the device name contains the vendor name (case-insensitive)
-            if vendor.lower() in device_custom_name.lower():
+            if vendor.lower() in device_oui_vendor.lower():
                 is_whitelisted = True
                 break
 
@@ -422,7 +438,7 @@ def label_activity_workflow(mac_address: str):
             vendor_list = ", ".join(settings_data.get("Allowed Vendors", []))
             st.warning(
                 f"🚨 **Device not whitelisted for labeling!**\n\n"
-                f"The device **'{device_custom_name}'** does not appear to be from an allowed vendor. "
+                f"The device's vendor **'{device_oui_vendor}'** does not appear to be from an allowed vendor. "
                 f"Only devices from the following vendors are currently allowed for labeling: **{vendor_list}**. "
                 f"Please select a whitelisted device or ensure the device name is correctly configured."
             )
@@ -565,9 +581,9 @@ def save_labeled_activity_packets(pkt):
     # TODO: how do I know if it isn't label event 1, 2, 3, or ..., n that actually needs this packet?
     # TODO: maybe have config store a point to element in the deque that is being labeled?
     # TODO: For now, I am sticking to one element in the deque at a time.
-    mac_address = _labeling_event_deque[0].get('mac_address', None)
-    start_time = _labeling_event_deque[0].get('start_time', None)
-    end_time = _labeling_event_deque[0].get('end_time', None)
+    mac_address = _labeling_event_deque[-1].get('mac_address', None)
+    start_time = _labeling_event_deque[-1].get('start_time', None)
+    end_time = _labeling_event_deque[-1].get('end_time', None)
 
     # start_time must be set and not after the packet time
     if start_time is None:
@@ -585,7 +601,7 @@ def save_labeled_activity_packets(pkt):
     # We check both source and destination MAC to capture all relevant traffic
     if mac_address and (pkt[sc.Ether].src == mac_address or pkt[sc.Ether].dst == mac_address):
         # We also check if the timestamp is correct
-        _labeled_activity_packet_queue.put(pkt)
+        _labeling_event_deque[-1]["packet_queue"].put(pkt)
         packet_count = common.config_get('packet_count', 0)
         packet_count += 1
         common.config_set('packet_count', packet_count)
@@ -615,12 +631,13 @@ def get_device_info(mac_address: str) -> dict[Any, Any] | None:
     return None
 
 
-def process_network_flows(df: pandas.DataFrame, chart_title: str):
+def process_network_flows(df: pd.DataFrame, chart_title: str):
     """
     Helper function used for both upload and download for 'show_device_details'.
 
     Args:
         df: The Dataframe with SQL results to process and display.
+        chart_title: The title to display above the chart.
     """
     if df.empty:
         st.warning("No network flows found for this device.")

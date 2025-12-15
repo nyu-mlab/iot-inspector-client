@@ -342,6 +342,27 @@ def get_remote_hostnames(mac_address: str) -> str:
     return remote_hostnames
 
 
+def get_all_devices() -> list[dict]:
+    """
+    Get the list of devices from the database.
+
+    Returns:
+        list[dict]: A list of device dictionaries.
+    """
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+
+    # Get the list of devices from the database
+    sql = """
+        SELECT * FROM devices
+        WHERE is_gateway = 0
+    """
+    device_list = []
+    with rwlock:
+        for device_dict in db_conn.execute(sql):
+            device_list.append(dict(device_dict))
+    return device_list
+
+
 def get_human_readable_time(timestamp=None):
     """
     Convert a timestamp to a human-readable time format.

@@ -1,3 +1,6 @@
+# Ignore packets directory
+packets/**
+
 # Ignore Keys
 *.crt
 *.pem
@@ -13,7 +16,7 @@
 .*
 !.gitattributes
 !.github
-!.src/libinspector/.streamlit
+!.src/iot_inspector/.streamlit
 user-data*
 3rd-party-software
 *.zip
