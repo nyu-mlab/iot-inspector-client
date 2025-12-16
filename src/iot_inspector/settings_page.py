@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import signal
+import common
 import libinspector
 import libinspector.packet_collector as packet_collector
 
@@ -23,7 +24,14 @@ def show():
     """
     Display the settings for IoT Inspector
     """
-    st.markdown('Settings!')
+    with st.container(border=True):
+        st.toggle(
+            "Enable debug mode for IoT Inspector, if you are a developer (Not Recommended for Prolific users)",
+            key='enable_debug_mode',
+            value=common.config_get('debug', False),
+            help="Toggle ON if you are debugging IoT Inspector, otherwise leave it OFF. This is for NYU Researchers and Developers only.",
+            on_change=lambda: common.config_set('debug', st.session_state['enable_debug_mode'])
+        )
 
     st.button(
         "🛑 Exit Application",
