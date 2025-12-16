@@ -375,6 +375,7 @@ def _send_packets_callback():
         logger.info(f"[Packets] User requested end time at {user_end_timestamp_str}")
         _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, user_end_time)
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
+    common.config_set('last_label_end_time', st.session_state['end_time'])
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
@@ -433,6 +434,16 @@ def label_activity_workflow(mac_address: str):
 
     # --- 2. Initial "Label" Button / State Check ---
     session_active = common.config_get('labeling_in_progress', default=False)
+    cooldown_seconds = settings_data.get("labeling_cooldown_seconds", 60)
+    last_end_time = common.config_get('last_label_end_time', 0)
+    time_since_last_label = time.time() - last_end_time
+    is_on_cooldown = last_end_time != 0 and time_since_last_label < cooldown_seconds
+
+    if is_on_cooldown:
+        remaining_time = int(cooldown_seconds - time_since_last_label)
+        st.warning(f"⏳ **Cooldown active:** Please wait {remaining_time} more seconds before starting a new labeling session.")
+        # Override session_active status to effectively disable the button
+        session_active = True
 
     if st.button(
             "Label",
@@ -525,7 +536,7 @@ def label_activity_workflow(mac_address: str):
             common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
 
             # Check if the duplicate count is at or above the threshold
-            if consecutive_duplicate_count >= maximum_duplicate_labels:
+            if consecutive_duplicate_count > maximum_duplicate_labels:
                 requires_confirmation = True
                 st.warning(f"""
                 ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
