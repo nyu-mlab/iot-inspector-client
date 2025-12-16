@@ -270,7 +270,7 @@ def label_thread():
                 response = requests.post(
                     api_url,
                     json=payload,
-                    timeout=10
+                    timeout=30
                 )
                 if response.status_code == 200:
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
@@ -327,6 +327,25 @@ def _collect_packets_callback():
         "packet_queue": Queue()
     }
     _labeling_event_deque.append(labeling_event)
+
+
+def _cancel_label_callback():
+    """
+    Executed when the 'Cancel current labeling session' button is clicked.
+    Handles stopping packet collection and resetting state.
+    """
+    if not common.config_get('labeling_in_progress', default=False):
+        common.config_set('api_message', "warning|No labeling session in progress. Please start a labeling session first.")
+        return
+
+    logger.info("[Packets] Labeling session canceled by user.")
+    if len(_labeling_event_deque) > 0:
+        logger.info("[Packets] Removing labeling event from the queue due to cancellation.")
+        _labeling_event_deque.pop()
+    common.config_set('api_message', "warning|Labeling session has been canceled. No packets were sent.")
+    common.config_set('labeling_in_progress', False)
+    common.config_set('packet_count', 0)
+    reset_labeling_state()
 
 
 def _send_packets_callback():
@@ -386,7 +405,7 @@ def label_activity_workflow(mac_address: str):
     This function orchestrates the entire user labeling process, enforcing a strict sequential order
     (Label -> Start -> Complete) using Streamlit's session state and dynamic button disabling.
     It handles user consent, activity selection persistence, the 5-second countdown to start
-    packet capture, and uses an in-place placeholder to display real-time status messages
+    packet capture, and uses a placeholder to display real-time status messages
     (success, error, warning) from the API submission.
 
     This is passed to the start and send callbacks for packet filtering and API submission.
@@ -407,6 +426,7 @@ def label_activity_workflow(mac_address: str):
     """
     # --- 1. Initialize State ---
     settings_data = _load_json_data("settings.json")
+    maximum_duplicate_labels = settings_data.get("max_duplicate_labels", 2)
     for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate']:
         if key not in st.session_state:
             st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
@@ -419,10 +439,6 @@ def label_activity_workflow(mac_address: str):
             disabled=session_active or st.session_state['end_time'] is not None,
             help="Click to start labeling an activity for this device. This will reset any previous labeling state."
     ):
-        if len(_labeling_event_deque) > 0:
-            st.warning("A previous labeling session is still active. Try again in 15 seconds when the previous session's packets should have been sent.")
-            return
-
         if not settings_data:
             st.error("Error loading settings definitions. Check logs.")
             return
@@ -492,41 +508,50 @@ def label_activity_workflow(mac_address: str):
         last_device = common.config_get('last_labeled_device', default="")
         last_label = common.config_get('last_labeled_label', default="")
 
+        consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
+
         current_category = st.session_state['device_category']
         current_device = st.session_state['device_name']
         current_label = st.session_state['activity_label']
 
-        is_duplicate = False
+        requires_confirmation = False
 
         # Check for match only if a previous session was completed (last_label is not None)
         if (last_label != "" and
             current_category == last_category and
             current_device == last_device and
             current_label == last_label):
+            consecutive_duplicate_count += 1
+            common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
 
-            is_duplicate = True
-
-            st.warning(f"""
+            # Check if the duplicate count is at or above the threshold
+            if consecutive_duplicate_count >= maximum_duplicate_labels:
+                requires_confirmation = True
+                st.warning(f"""
                 ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
                 (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
                 Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
-            """)
+                """)
 
-            # Use a checkbox for explicit confirmation
-            st.session_state['confirm_duplicate'] = st.checkbox(
-                "Yes, I confirm I want to label this exact activity again.",
-                key="duplicate_confirm_checkbox",
-                value=st.session_state['confirm_duplicate'] # maintain state across rerun
-            )
+                # Use a checkbox for explicit confirmation
+                st.session_state['confirm_duplicate'] = st.checkbox(
+                    "Yes, I confirm I want to label this exact activity again.",
+                    key="duplicate_confirm_checkbox",
+                    value=st.session_state['confirm_duplicate'] # maintain state across rerun
+                )
+        else:
+            # Reset the duplicate count if the selection is different
+            logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
+            common.config_set('consecutive_duplicate_count', 0)
         st.subheader("2. Control Collection")
         show_active_labeling_status(mac_address, settings_data)
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             # Determine if the start button should be disabled
             start_disabled = is_currently_labeling or st.session_state['countdown']
 
             # If it's a duplicate label, it must also be confirmed
-            if is_duplicate:
+            if requires_confirmation:
                 start_disabled = start_disabled or not st.session_state['confirm_duplicate']
 
             # "Start" button is enabled only when setup is complete and not yet started.
@@ -538,6 +563,15 @@ def label_activity_workflow(mac_address: str):
             )
 
         with col2:
+            # "Cancel" button is enabled only during labeling, should someone made a mistake undo it
+            st.button(
+                "Cancel current labeling session",
+                on_click=_cancel_label_callback,
+                disabled=not is_currently_labeling,
+                help="Click to cancel the current labeling session. This will stop packet collection and discard any collected packets."
+            )
+
+        with col3:
             # "Labeling Complete" button is enabled only when collection is active.
             st.button(
                 "Labeling Complete",
@@ -577,10 +611,6 @@ def save_labeled_activity_packets(pkt):
     if len(_labeling_event_deque) == 0:
         return
 
-    # TODO: Think with Danny, but say the first label in the queue is done,
-    # TODO: how do I know if it isn't label event 1, 2, 3, or ..., n that actually needs this packet?
-    # TODO: maybe have config store a point to element in the deque that is being labeled?
-    # TODO: For now, I am sticking to one element in the deque at a time.
     mac_address = _labeling_event_deque[-1].get('mac_address', None)
     start_time = _labeling_event_deque[-1].get('start_time', None)
     end_time = _labeling_event_deque[-1].get('end_time', None)

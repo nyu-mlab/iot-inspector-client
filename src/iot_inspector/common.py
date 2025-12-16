@@ -468,9 +468,13 @@ def get_device_custom_name(mac_address: str) -> str:
         device_custom_name = config_get(f'device_custom_name_{mac_address}')
     except KeyError:
         # Use the last part of the MAC address as the name suffix
+        logger.debug("KeyError: Custom name not found in config, using default naming.")
         device_custom_name = mac_address.split(':')[-1].upper()
         device_custom_name = f'Unnamed Device {device_custom_name}'
-
+    except Exception as e:
+        logger.error(f"Error retrieving custom name in config, using default naming: {e}")
+        device_custom_name = mac_address.split(':')[-1].upper()
+        device_custom_name = f'Unnamed Device {device_custom_name}'
     return device_custom_name
 
 

@@ -112,7 +112,6 @@ def show_device_bar_graph(device_dict: dict):
     caption = f'{device_dict["ip_address"]} | {device_dict["mac_address"]}'
     if "oui_vendor" in metadata_dict:
         caption += f' | {metadata_dict["oui_vendor"]}'
-        common.config_set(f"oui@{device_dict['mac_address']}", metadata_dict["oui_vendor"])
 
     api_output = common.config_get(f'device_details@{device_dict["mac_address"]}', default={})
     if "Vendor" in api_output or "Explanation" in api_output:

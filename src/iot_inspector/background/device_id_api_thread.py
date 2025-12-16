@@ -130,8 +130,8 @@ def api_worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
-    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
     time.sleep(2)
+    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
     while True:
         # Getting inputs and calling API
         for device_dict in common.get_all_devices():
@@ -141,6 +141,7 @@ def api_worker_thread():
             oui_vendor = meta_data.get('oui_vendor', '').strip()
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
             custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
+            common.config_set(f"oui@{device_dict['mac_address']}", meta_data.get("oui_vendor", ""))
             try:
                 # Note I am passing the metadata as a string because functions with cache cannot take dicts
                 # as a dict is mutable, and the cache would not work as expected.
@@ -148,11 +149,10 @@ def api_worker_thread():
                 common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
                 if "Vendor" in api_output:
                     custom_name = api_output["Vendor"]
-                    if api_output["Vendor"] != "":
+                    if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
                         common.config_set(custom_name_key, custom_name)
             except Exception as e:
                 logger.info("[Device ID API] Exception when calling API: %s", str(e))
-            finally:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
                 if mdns_device_name:
                     # Prioritize the full mDNS name as it's the most descriptive identifier
