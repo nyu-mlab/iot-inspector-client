@@ -187,11 +187,15 @@ def show_cool_down():
     is_on_cooldown = time_since_last_label < cooldown_seconds
 
     if is_on_cooldown:
+        st.session_state['cooldown_in_progress'] = True
         remaining_time = int(cooldown_seconds - time_since_last_label)
         st.warning(f"⏳ **Cooldown active:** Please wait {remaining_time} more seconds before starting a new labeling session.")
     else:
-        common.config_set("cooldown_in_progress", False)
-        # st.rerun()
+        # ONLY rerun if we were previously 'on cooldown'. This prevents the infinite rerun loop
+        if st.session_state.get('cooldown_in_progress', False):
+            st.session_state['cooldown_in_progress'] = False
+            # This triggers the rest of the GUI to become 'live' again
+            st.rerun()
 
 
 @st.fragment(run_every=10)
@@ -416,7 +420,6 @@ def _send_packets_callback():
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
-    common.config_set("cooldown_in_progress", True)
     reset_labeling_state()
 
     # Reset the duplicate count if this label is different from the last one
@@ -481,17 +484,16 @@ def label_activity_workflow(mac_address: str, ip_address: str):
     # --- 1. Initialize State ---
     settings_data = _load_json_data("settings.json")
     maximum_duplicate_labels = settings_data.get("max_duplicate_labels", 2)
-    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate']:
+    for key in ['countdown', 'show_labeling_setup', 'start_time', 'end_time', 'device_name', 'activity_label', 'confirm_duplicate', 'cooldown_in_progress']:
         if key not in st.session_state:
             st.session_state[key] = None if key in ['start_time', 'end_time', 'device_name', 'activity_label'] else False
 
     # --- 2. Initial "Label" Button / State Check ---
     session_active = common.config_get('labeling_in_progress', default=False)
-    cooldown_active = common.config_get('cooldown_in_progress', default=False)
 
     if st.button(
             "Label",
-            disabled=session_active or cooldown_active or st.session_state['end_time'] is not None,
+            disabled=session_active or st.session_state['cooldown_in_progress'] or st.session_state['end_time'] is not None,
             help="Click to start labeling an activity for this device. This will reset any previous labeling state."
     ):
         if not settings_data:
