@@ -306,20 +306,6 @@ def label_thread():
                     display_message = f"Labeled packets successfully | {label_data}"
                     common.config_set('api_message', f"success|{display_message}")
 
-                    # Reset the duplicate count if this label is different from the last one
-                    last_category = common.config_get('last_labeled_category', default="")
-                    last_device = common.config_get('last_labeled_device', default="")
-                    last_label = common.config_get('last_labeled_label', default="")
-                    if (payload.get('device_category') != last_category or
-                        payload.get('device_name') != last_device or
-                        payload.get('activity_label') != last_label):
-                        logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
-                        common.config_set('consecutive_duplicate_count', 0)
-
-                    common.config_set('last_labeled_category', payload.get('device_category'))
-                    common.config_set('last_labeled_device', payload.get('device_name'))
-                    common.config_set('last_labeled_label', payload.get('activity_label'))
-
                 else:
                     error_message = response.json()['message']
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
@@ -365,6 +351,19 @@ def _collect_packets_callback():
         "packet_queue": Queue()
     }
     _labeling_event_deque.append(labeling_event)
+
+    # Check if it is a duplicate labeling event
+    last_category = common.config_get('last_labeled_category', default="")
+    last_device = common.config_get('last_labeled_device', default="")
+    last_label = common.config_get('last_labeled_label', default="")
+    if (st.session_state['device_category'] == last_category and
+        st.session_state['device_name'] == last_device and
+        st.session_state['activity_label'] == last_label):
+
+        logger.info("A duplicate labeling occurred!")
+        consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
+        consecutive_duplicate_count += 1
+        common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
 
 
 def _cancel_label_callback():
@@ -419,6 +418,20 @@ def _send_packets_callback():
     common.config_set('packet_count', 0)
     common.config_set("cooldown_in_progress", True)
     reset_labeling_state()
+
+    # Reset the duplicate count if this label is different from the last one
+    last_category = common.config_get('last_labeled_category', default="")
+    last_device = common.config_get('last_labeled_device', default="")
+    last_label = common.config_get('last_labeled_label', default="")
+    if (_labeling_event_deque[-1].get('device_category', '') != last_category or
+        _labeling_event_deque[-1].get('device_name', '') != last_device or
+        _labeling_event_deque[-1].get('activity_label', '') != last_label):
+        logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
+        common.config_set('consecutive_duplicate_count', 0)
+
+    common.config_set('last_labeled_category', _labeling_event_deque[-1].get('device_category'))
+    common.config_set('last_labeled_device', _labeling_event_deque[-1].get('device_name'))
+    common.config_set('last_labeled_label', _labeling_event_deque[-1].get('activity_label'))
 
 
 def update_device_inspected_status(mac_address: str):
@@ -551,36 +564,24 @@ def label_activity_workflow(mac_address: str, ip_address: str):
         last_label = common.config_get('last_labeled_label', default="")
 
         consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
-
-        current_category = st.session_state['device_category']
-        current_device = st.session_state['device_name']
-        current_label = st.session_state['activity_label']
-
         requires_confirmation = False
 
-        if (current_category == last_category and
-            current_device == last_device and
-            current_label == last_label):
-            logger.info("A duplicate labeling occurred!")
-            consecutive_duplicate_count += 1
-            common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
+        # Check if the duplicate count is at or above the threshold
+        if consecutive_duplicate_count >= maximum_duplicate_labels:
+            logger.info("Maximum duplicate labeling attempts exceeded, requiring user confirmation.")
+            requires_confirmation = True
+            st.warning(f"""
+            ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
+            (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
+            Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
+            """)
 
-            # Check if the duplicate count is at or above the threshold
-            if consecutive_duplicate_count > maximum_duplicate_labels:
-                logger.info("Maximum duplicate labeling attempts exceeded, requiring user confirmation.")
-                requires_confirmation = True
-                st.warning(f"""
-                ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
-                (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
-                Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
-                """)
-
-                # Use a checkbox for explicit confirmation
-                st.session_state['confirm_duplicate'] = st.checkbox(
-                    "Yes, I confirm I want to label this exact activity again.",
-                    key="duplicate_confirm_checkbox",
-                    value=st.session_state['confirm_duplicate'] # maintain state across rerun
-                )
+            # Use a checkbox for explicit confirmation
+            st.session_state['confirm_duplicate'] = st.checkbox(
+                "Yes, I confirm I want to label this exact activity again.",
+                key="duplicate_confirm_checkbox",
+                value=st.session_state['confirm_duplicate'] # maintain state across rerun
+            )
 
         # TODO: Technically you can have two or more MAC address that are Echos, etc. but for now, lets keep it simple.
         # Confirm correlation between label and device name
@@ -633,11 +634,16 @@ def label_activity_workflow(mac_address: str, ip_address: str):
             )
 
         with col3:
+            # If it's a duplicate label, it must also be confirmed
+            label_disabled = not is_currently_labeling
+            if requires_confirmation:
+                label_disabled = label_disabled or not st.session_state['confirm_duplicate']
+
             # "Labeling Complete" button is enabled only when collection is active.
             st.button(
                 "Labeling Complete",
                 on_click=_send_packets_callback,
-                disabled=not is_currently_labeling,  # Enable only when actively labeling (start_time is set, end_time is not)
+                disabled=label_disabled,  # Enable only when actively labeling (start_time is set, end_time is not)
                 help="Click to stop collecting packets and send the labeled packets to NYU mLab."
             )
 
