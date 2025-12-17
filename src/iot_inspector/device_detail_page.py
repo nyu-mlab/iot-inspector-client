@@ -40,6 +40,7 @@ def show():
 
     device_dict = get_device_info(device_mac_address)
     ip_address = device_dict['ip_address']
+    show_cool_down()
     label_activity_workflow(device_mac_address, ip_address)
     device_custom_name = common.get_device_custom_name(device_mac_address)
 
@@ -79,6 +80,7 @@ def _load_json_data(filename: str) -> dict:
     except json.JSONDecodeError as e:
         logger.error(f"Error decoding JSON from {data_path}: {e}")
         return {}
+
 
 def generate_label_progress_table(current_label_status: dict):
     """
@@ -167,6 +169,24 @@ def show_active_labeling_status(mac_address: str, settings_data: dict):
         # Show a summary after completion until the 'Label' button is pressed again
         duration = end_time - start_time
         st.success(f"✅ Session Completed! Collected **{duration} seconds** of activity.")
+
+
+@st.fragment(run_every=10)
+def show_cool_down():
+    """
+    Let users know how much time they have until they can start labeling again.
+    """
+    settings_data = _load_json_data("settings.json")
+    cooldown_seconds = settings_data.get("labeling_cooldown_seconds", 60)
+    last_end_time = common.config_get('last_label_end_time', 0)
+    time_since_last_label = time.time() - last_end_time
+    is_on_cooldown = last_end_time != 0 and time_since_last_label < cooldown_seconds
+
+    if is_on_cooldown:
+        remaining_time = int(cooldown_seconds - time_since_last_label)
+        st.warning(f"⏳ **Cooldown active:** Please wait {remaining_time} more seconds before starting a new labeling session.")
+    else:
+        common.config_set("cooldown_in_progress", False)
 
 
 @st.fragment(run_every=10)
@@ -380,6 +400,7 @@ def _send_packets_callback():
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
     common.config_set('labeling_in_progress', False)
     common.config_set('packet_count', 0)
+    common.config_set("cooldown_in_progress", True)
     reset_labeling_state()
 
 
@@ -425,6 +446,7 @@ def label_activity_workflow(mac_address: str, ip_address: str):
 
     Args:
         mac_address (str): The MAC address of the device targeted for the activity labeling.
+        ip_address (str): The IP address of the device targeted for the activity labeling.
     """
     # --- 1. Initialize State ---
     settings_data = _load_json_data("settings.json")
@@ -435,20 +457,11 @@ def label_activity_workflow(mac_address: str, ip_address: str):
 
     # --- 2. Initial "Label" Button / State Check ---
     session_active = common.config_get('labeling_in_progress', default=False)
-    cooldown_seconds = settings_data.get("labeling_cooldown_seconds", 60)
-    last_end_time = common.config_get('last_label_end_time', 0)
-    time_since_last_label = time.time() - last_end_time
-    is_on_cooldown = last_end_time != 0 and time_since_last_label < cooldown_seconds
-
-    if is_on_cooldown:
-        remaining_time = int(cooldown_seconds - time_since_last_label)
-        st.warning(f"⏳ **Cooldown active:** Please wait {remaining_time} more seconds before starting a new labeling session.")
-        # Override session_active status to effectively disable the button
-        session_active = True
+    cooldown_active = common.config_get('cooldown_in_progress', default=False)
 
     if st.button(
             "Label",
-            disabled=session_active or st.session_state['end_time'] is not None,
+            disabled=session_active or cooldown_active or st.session_state['end_time'] is not None,
             help="Click to start labeling an activity for this device. This will reset any previous labeling state."
     ):
         if not settings_data:

@@ -72,6 +72,7 @@ def initialize_config():
     common.config_get("packet_count", 0)
     common.config_set("suppress_warning", False)
     common.config_set("labeling_in_progress", False)
+    common.config_set("cooldown_in_progress", False)
     common.config_set("label_progress_data", {})
     common.config_set("api_message", "")
     common.config_set("last_labeled_category", "")
