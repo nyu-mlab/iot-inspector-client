@@ -38,16 +38,17 @@ def show():
         st.warning("No device selected. Please select a device to view details.")
         return
 
-    label_activity_workflow(device_mac_address)
-    device_custom_name = common.get_device_custom_name(device_mac_address)
     device_dict = get_device_info(device_mac_address)
+    ip_address = device_dict['ip_address']
+    label_activity_workflow(device_mac_address, ip_address)
+    device_custom_name = common.get_device_custom_name(device_mac_address)
 
     if not device_dict:
         st.error(f"No device found with MAC address: {device_mac_address}")
         return
 
     st.markdown(f"### {device_custom_name}")
-    st.caption(f"MAC Address: {device_mac_address} | IP Address: {device_dict['ip_address']}")
+    st.caption(f"MAC Address: {device_mac_address} | IP Address: {ip_address}")
     show_device_bar_graph(device_mac_address)
     show_device_network_flow(device_mac_address)
 
@@ -400,7 +401,7 @@ def update_device_inspected_status(mac_address: str):
     common.config_set(device_inspected_config_key, True)
 
 
-def label_activity_workflow(mac_address: str):
+def label_activity_workflow(mac_address: str, ip_address: str):
     """
     Manages the interactive, state-driven workflow for labeling network activity in Streamlit.
     This function orchestrates the entire user labeling process, enforcing a strict sequential order
@@ -554,6 +555,29 @@ def label_activity_workflow(mac_address: str):
             # Reset the duplicate count if the selection is different
             logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
             common.config_set('consecutive_duplicate_count', 0)
+
+        # TODO: Technically you can have two or more MAC address that are Echos, etc. but for now, lets keep it simple.
+        # Confirm correlation between label and device name
+        #labels_for_device = common.config_get(f"label@{current_device}", default={})
+        #if "device_name" in labels_for_device:
+        #    if labels_for_device['device_name'] != current_device:
+        #        st.error("❌ The selected activity label does not correspond to the actual device type. "
+        #                 f"You previously labeled {current_device} as having MAC Address of {mac_address} and "
+        #                 f"IP address {ip_address}. "
+        #                 "Please select the correct device and activity label.")
+        #        return
+        #else:
+        #    st.info(f"ℹ️ No previous labels found for this device to cross-check activity label. "
+        #            f"Please confirm that the device {current_device} has the IP address "
+        #            f"{ip_address} and/or MAC address {mac_address}. This can be done by checking your application connected "
+        #            f"to the device or by checking the Device's general/Wi-Fi settings. Note mislabeling data will risk "
+        #            f"no payment for your Prolific submission.")
+        #    labels_for_device['device_mac'] = mac_address
+        #    labels_for_device['device_ip'] = ip_address
+        #    labels_for_device['current_time'] = int(time.time())
+        #    labels_for_device['current_time_string'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        #    common.config_set(f"label@{current_device}", labels_for_device)
+
         st.subheader("2. Control Collection")
         show_active_labeling_status(mac_address, settings_data)
         col1, col2, col3 = st.columns(3)
