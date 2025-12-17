@@ -78,6 +78,8 @@ def initialize_config():
     common.config_set("last_labeled_category", "")
     common.config_set("last_labeled_device", "")
     common.config_set("last_labeled_label", "")
+    common.config_set("consecutive_duplicate_count",0)
+    common.config_set("last_label_end_time", 0)
 
 
 @functools.lru_cache(maxsize=1)

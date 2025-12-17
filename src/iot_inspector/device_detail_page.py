@@ -175,18 +175,23 @@ def show_active_labeling_status(mac_address: str, settings_data: dict):
 def show_cool_down():
     """
     Let users know how much time they have until they can start labeling again.
+    Once the cooldown is complete, the Start button is re-enabled.
     """
     settings_data = _load_json_data("settings.json")
     cooldown_seconds = settings_data.get("labeling_cooldown_seconds", 60)
     last_end_time = common.config_get('last_label_end_time', 0)
+    # If never labeled before, skip cooldown
+    if last_end_time == 0:
+        return
     time_since_last_label = time.time() - last_end_time
-    is_on_cooldown = last_end_time != 0 and time_since_last_label < cooldown_seconds
+    is_on_cooldown = time_since_last_label < cooldown_seconds
 
     if is_on_cooldown:
         remaining_time = int(cooldown_seconds - time_since_last_label)
         st.warning(f"⏳ **Cooldown active:** Please wait {remaining_time} more seconds before starting a new labeling session.")
     else:
         common.config_set("cooldown_in_progress", False)
+        # st.rerun()
 
 
 @st.fragment(run_every=10)
@@ -300,9 +305,21 @@ def label_thread():
 
                     display_message = f"Labeled packets successfully | {label_data}"
                     common.config_set('api_message', f"success|{display_message}")
+
+                    # Reset the duplicate count if this label is different from the last one
+                    last_category = common.config_get('last_labeled_category', default="")
+                    last_device = common.config_get('last_labeled_device', default="")
+                    last_label = common.config_get('last_labeled_label', default="")
+                    if (payload.get('device_category') != last_category or
+                        payload.get('device_name') != last_device or
+                        payload.get('activity_label') != last_label):
+                        logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
+                        common.config_set('consecutive_duplicate_count', 0)
+
                     common.config_set('last_labeled_category', payload.get('device_category'))
                     common.config_set('last_labeled_device', payload.get('device_name'))
                     common.config_set('last_labeled_label', payload.get('activity_label'))
+
                 else:
                     error_message = response.json()['message']
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
@@ -541,16 +558,16 @@ def label_activity_workflow(mac_address: str, ip_address: str):
 
         requires_confirmation = False
 
-        # Check for match only if a previous session was completed (last_label is not None)
-        if (last_label != "" and
-            current_category == last_category and
+        if (current_category == last_category and
             current_device == last_device and
             current_label == last_label):
+            logger.info("A duplicate labeling occurred!")
             consecutive_duplicate_count += 1
             common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
 
             # Check if the duplicate count is at or above the threshold
             if consecutive_duplicate_count > maximum_duplicate_labels:
+                logger.info("Maximum duplicate labeling attempts exceeded, requiring user confirmation.")
                 requires_confirmation = True
                 st.warning(f"""
                 ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
@@ -564,10 +581,6 @@ def label_activity_workflow(mac_address: str, ip_address: str):
                     key="duplicate_confirm_checkbox",
                     value=st.session_state['confirm_duplicate'] # maintain state across rerun
                 )
-        else:
-            # Reset the duplicate count if the selection is different
-            logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
-            common.config_set('consecutive_duplicate_count', 0)
 
         # TODO: Technically you can have two or more MAC address that are Echos, etc. but for now, lets keep it simple.
         # Confirm correlation between label and device name
