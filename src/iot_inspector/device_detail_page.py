@@ -569,13 +569,16 @@ def label_activity_workflow(mac_address: str, ip_address: str):
         requires_confirmation = False
 
         # Check if the duplicate count is at or above the threshold
+        # Remember, maximum_duplicate_labels is the number of allowed duplicates, so say you want 5 labels
+        # You should set maximum_duplicate_labels=4
         if consecutive_duplicate_count >= maximum_duplicate_labels:
             logger.info("Maximum duplicate labeling attempts exceeded, requiring user confirmation.")
             requires_confirmation = True
             st.warning(f"""
-            ⚠️ **Warning: You selected the same activity combination as the last successful submission!**
+            ⚠️ **Warning: You selected the same activity combination as the last {consecutive_duplicate_count + 1} successful submission(s)!**
             (Category: `{last_category}`, Device: `{last_device}`, Activity: `{last_label}`)
-            Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above.
+            Are you sure you want to collect this activity again? To label a different activity, please adjust the selections above. 
+            ** Mislabeled data may risk payment for your Prolific submission. **
             """)
 
             # Use a checkbox for explicit confirmation
