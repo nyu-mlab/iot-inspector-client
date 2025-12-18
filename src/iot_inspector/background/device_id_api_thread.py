@@ -6,8 +6,8 @@ import functools
 import logging
 import os
 import json
-from .. import common
-
+import common
+# NOTE: do NOT use .. for import. This will cause two config_dicts! Do NOT try that again!
 
 logger = logging.getLogger("client")
 # Define the common TXT record keys that hold the best, most human-readable name,
