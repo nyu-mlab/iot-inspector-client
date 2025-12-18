@@ -437,6 +437,53 @@ def _send_packets_callback():
     common.config_set('last_labeled_label', _labeling_event_deque[-1].get('activity_label'))
 
 
+def _confirm_mapping_callback(mac_address: str, current_device: str, ip_address: str):
+    """
+    Saves the confirmed mapping and clears the pending state.
+    Args:
+        mac_address (str): The MAC address being confirmed.
+        current_device (str): The device name being confirmed.
+        ip_address (str): The IP Address of the device being confirmed.
+    """
+    labels_for_device = {
+        'device_mac': mac_address,
+        'device_ip': ip_address,
+        'device_name': current_device,
+        'current_time': int(time.time()),
+        'current_time_string': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    common.config_set(f"label@{current_device}", labels_for_device)
+    # Also save a reverse lookup for conflict detection
+    common.config_set(f"mac_to_device@{mac_address}", current_device)
+    st.toast(f"✅ Mapping confirmed for {current_device}")
+
+
+def _resolve_conflict_callback(mac_address: str, current_device: str):
+    """
+    Logs the conflict error and deletes the old mapping to allow a fresh start.
+    Args:
+        mac_address (str): The MAC address with the conflict.
+        current_device (str): The device name the user is trying to map to.
+    """
+    old_device = common.config_get(f"mac_to_device@{mac_address}")
+    logger.error(
+        f"User reported mapping conflict: MAC {mac_address} was {old_device}, now {current_device}. Deleting cache.")
+
+    # Delete the old mappings
+    if old_device:
+        common.config_set(f"label@{old_device}", {})
+    common.config_set(f"mac_to_device@{mac_address}", "")
+    st.toast("⚠️ Previous mapping deleted. Please confirm the new mapping.")
+
+
+def _cancel_mapping_callback():
+    """
+    Simply force a selection change or clear query params to 'reset' the page
+    """
+    reset_labeling_state()
+    st.toast("Verification cancelled. Please adjust your selections next time.")
+
+
 def update_device_inspected_status(mac_address: str):
     """
     Manually update to inspected status so that all the packets can be collected for the MAC Address.
@@ -533,6 +580,7 @@ def label_activity_workflow(mac_address: str, ip_address: str):
             st.error("Error loading activity definitions. Check logs.")
             return
         # Use the status of the session (running or done) to control if the select boxes are disabled
+        # Note that start_time is only set by the 'Start' button click
         is_currently_labeling = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
         categories = list(activity_data.keys())
         selected_category = st.selectbox("Select device category",
@@ -546,7 +594,8 @@ def label_activity_workflow(mac_address: str, ip_address: str):
                                        disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
-        idle_key = "Idle Time: No Activity, just background traffic for 2 minutes"
+        max_idle_time = settings_data.get("max_idle_time_seconds", 600)
+        idle_key = f"Idle Time: No Activity, just background traffic for {max_idle_time} seconds"
         if idle_key not in activity_labels:
             activity_labels.append(idle_key)
         selected_label = st.selectbox("Select activity label",
@@ -561,6 +610,73 @@ def label_activity_workflow(mac_address: str, ip_address: str):
             st.session_state['activity_label'] = selected_label
             st.session_state['mac_address'] = mac_address
 
+        # CHECK 1: CONFIRM THAT MAC/IP MAPS TO CORRECT DEVICE!
+        # TODO: Technically you can have two or more MAC address that are Echos, etc. but for now, lets keep it simple.
+        # Confirm correlation between label and device name
+        current_device = st.session_state['device_name']
+        labels_for_device = common.config_get(f"label@{current_device}", default={})
+        existing_device_for_mac = common.config_get(f"mac_to_device@{mac_address}", default='')
+
+        if existing_device_for_mac and existing_device_for_mac != current_device:
+            st.error("🛑 **Device Mapping Conflict!**")
+            st.warning(f"""
+                This MAC address (`{mac_address}`) / IP (`{ip_address}`) was previously 
+                confirmed as a **{existing_device_for_mac}**. 
+                You are now trying to label it as a **{current_device}**.
+            """)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.button(
+                    "Fix it: Clear old identity",
+                    on_click=_resolve_conflict_callback,
+                    args=(mac_address, current_device),
+                    help="Click if you mislabeled the device name previously.",
+                    use_container_width=True
+                )
+            with col2:
+                st.button("Cancel Labeling",
+                          on_click=_cancel_mapping_callback,
+                          use_container_width=True,
+                          help="Click to cancel labeling.")
+            # Stop execution here so they can't start labeling with a conflict
+            return
+
+        # --- 2. First-time Confirmation (Device name never seen before) ---
+        elif not labels_for_device:
+            st.info(f"ℹ️ **First-time Labeling for {current_device}**")
+            st.warning(f"""
+                Please confirm that this device is indeed a **{current_device}** with:
+                - **IP:** `{ip_address}`
+                - **MAC:** `{mac_address}`
+                - You can confirm this by either checking Device settings under Wi-Fi for IP address, 
+                or any app that you are connecting to interact with the device.
+            """)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.button(
+                    "Yes, Confirm",
+                    on_click=_confirm_mapping_callback,
+                    args=(mac_address, current_device, ip_address),
+                    type="primary",
+                    use_container_width=True
+                )
+            with col2:
+                st.button("Cancel Labeling",
+                          on_click=_cancel_mapping_callback,
+                          use_container_width=True,
+                          help="Click to cancel labeling.")
+            st.caption("Note: Mislabeling physical devices will invalidate your data submission.")
+            # Stop execution until they click the button
+            return
+
+        # --- 3. Routine Check (Device name matches the recorded MAC) ---
+        elif labels_for_device.get('device_mac') != mac_address:
+            st.error(
+                f"❌ **Label Mismatch!** This `{current_device}` label is already tied to a different physical device "
+                f"(MAC: `{labels_for_device.get('device_mac')}`). Please select the correct device name.")
+            return
+
+        # CHECK 2: DUPLICATE LABELING DETECTION
         last_category = common.config_get('last_labeled_category', default="")
         last_device = common.config_get('last_labeled_device', default="")
         last_label = common.config_get('last_labeled_label', default="")
@@ -587,28 +703,6 @@ def label_activity_workflow(mac_address: str, ip_address: str):
                 key="duplicate_confirm_checkbox",
                 value=st.session_state['confirm_duplicate'] # maintain state across rerun
             )
-
-        # TODO: Technically you can have two or more MAC address that are Echos, etc. but for now, lets keep it simple.
-        # Confirm correlation between label and device name
-        #labels_for_device = common.config_get(f"label@{current_device}", default={})
-        #if "device_name" in labels_for_device:
-        #    if labels_for_device['device_name'] != current_device:
-        #        st.error("❌ The selected activity label does not correspond to the actual device type. "
-        #                 f"You previously labeled {current_device} as having MAC Address of {mac_address} and "
-        #                 f"IP address {ip_address}. "
-        #                 "Please select the correct device and activity label.")
-        #        return
-        #else:
-        #    st.info(f"ℹ️ No previous labels found for this device to cross-check activity label. "
-        #            f"Please confirm that the device {current_device} has the IP address "
-        #            f"{ip_address} and/or MAC address {mac_address}. This can be done by checking your application connected "
-        #            f"to the device or by checking the Device's general/Wi-Fi settings. Note mislabeling data will risk "
-        #            f"no payment for your Prolific submission.")
-        #    labels_for_device['device_mac'] = mac_address
-        #    labels_for_device['device_ip'] = ip_address
-        #    labels_for_device['current_time'] = int(time.time())
-        #    labels_for_device['current_time_string'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        #    common.config_set(f"label@{current_device}", labels_for_device)
 
         st.subheader("2. Control Collection")
         show_active_labeling_status(mac_address, settings_data)
