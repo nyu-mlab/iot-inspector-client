@@ -414,7 +414,13 @@ def _send_packets_callback():
         user_end_dt_object = datetime.datetime.fromtimestamp(user_end_time)
         user_end_timestamp_str = user_end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         logger.info(f"[Packets] User requested end time at {user_end_timestamp_str}")
-        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + 60, user_end_time)
+        # Set to 0 if you are letting users fully decide when to send a recording.
+        # For maximum recording, I'm setting it for a day maximum allowed time
+        minimum_recording_time = common.config_get("minimum_record_time_seconds", 0)
+        maximum_recording_time = common.config_get("maximum_record_time_seconds", 86400)
+        _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + minimum_recording_time,
+                                                    min(user_end_time,
+                                                        _labeling_event_deque[-1]['start_time'] + maximum_recording_time))
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
     common.config_set('last_label_end_time', st.session_state['end_time'])
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
@@ -455,6 +461,7 @@ def _confirm_mapping_callback(mac_address: str, current_device: str, ip_address:
     common.config_set(f"label@{current_device}", labels_for_device)
     # Also save a reverse lookup for conflict detection
     common.config_set(f"mac_to_device@{mac_address}", current_device)
+    logger.info(f"Create mapping of {current_device} to {mac_address}")
     st.toast(f"✅ Mapping confirmed for {current_device}")
 
 
@@ -468,6 +475,8 @@ def _resolve_conflict_callback(mac_address: str, current_device: str):
     old_device = common.config_get(f"mac_to_device@{mac_address}")
     logger.error(
         f"User reported mapping conflict: MAC {mac_address} was {old_device}, now {current_device}. Deleting cache.")
+
+    # TODO: Create POST request, delete old mapping on server side as well.
 
     # Delete the old mappings
     if old_device:

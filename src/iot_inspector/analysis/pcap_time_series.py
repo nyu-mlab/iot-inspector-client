@@ -140,10 +140,11 @@ if __name__ == "__main__":
         dest="input_file",
         action="store",
         type=str,
-        help="The path to the input PCAP file."
+        help="The path to the input PCAP file.",
+        required=True
     )
     parser.add_argument(
-        "--target-mac",
+        "-m", "--target-mac",
         dest="target_mac",
         action="store",
         type=str,
