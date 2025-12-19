@@ -13,7 +13,7 @@ command_exists () {
 # --- Configuration ---
 VENV_DIR=".venv"
 # Relative path to the Streamlit app file
-APP_PATH="src/libinspector/dashboard.py"
+APP_PATH="src/iot_inspector/dashboard.py"
 # Assuming the dependency script from the previous step is in the same directory
 INSTALL_SCRIPT="./install.sh"
 APP_URL="http://localhost:33721/"

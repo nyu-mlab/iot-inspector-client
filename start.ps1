@@ -77,7 +77,7 @@ Write-Host "Starting IoT Inspector..."
 
 # Use the dedicated Streamlit executable installed by uv.
 # This is to avoid 'C:\Program Files\' being seen as two arguments because of the space!
-$streamlitAppPath = "$PSScriptRoot\src\libinspector\dashboard.py"
+$streamlitAppPath = "$PSScriptRoot\src\iot_inspector\dashboard.py"
 
 # FIX: Use uv run directly with correct quoting for the path, which handles spaces.
 # The entire argument list is passed to uv.
@@ -97,7 +97,7 @@ while (-not $isReady) {
     try {
         # Use Invoke-WebRequest to check for a successful connection (Status Code 200).
         # We set a short TimeoutSec on the request itself to prevent hanging.
-        $request = Invoke-WebRequest -Uri $appUrl -TimeoutSec 5 -ErrorAction Stop
+        $request = Invoke-WebRequest -Uri $appUrl -TimeoutSec 5 -ErrorAction Stop -UseBasicParsing
         if ($request.StatusCode -eq 200) {
             $isReady = $true
             Write-Host "✅ Server is ready. Launching browser."

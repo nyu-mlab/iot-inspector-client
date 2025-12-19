@@ -6,10 +6,11 @@ import sys
 import datetime
 import re
 from .directory_explore import run_ls_command, get_label_summary
+from .pcap_check import convert_bytes_to_packet, check_for_application_data
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
-from scapy.all import wrpcap, Ether, IP
 from dotenv import load_dotenv
+from scapy.all import wrpcap
 
 
 load_dotenv()
@@ -161,13 +162,18 @@ def label_packets():
         os.makedirs(fullpath, exist_ok=True)
         pcap_file_name: str = make_pcap_filename(int(data["start_time"]), int(data["end_time"]))
         pcap_name: str = os.path.join(fullpath, pcap_file_name)
-        save_packets_to_pcap(raw_packets, capture_times, pcap_name)
-        prolific_ls_dir_output = run_ls_command(os.path.join(packet_root_dir, str(data["prolific_id"])))
-        current_labels = get_label_summary(prolific_ls_dir_output, data["prolific_id"])
+        packet_list = convert_bytes_to_packet(raw_packets, capture_times)
 
-        return jsonify({"status": "success",
-                        "inserted": 1,
-                        "message": current_labels}), 200
+        if check_for_application_data(packet_list):
+            wrpcap(pcap_name, packet_list)
+            prolific_ls_dir_output = run_ls_command(os.path.join(packet_root_dir, str(data["prolific_id"])))
+            current_labels = get_label_summary(prolific_ls_dir_output, data["prolific_id"])
+            return jsonify({"status": "success",
+                            "inserted": 1,
+                            "message": current_labels}), 200
+        else:
+            return jsonify({"message": "The packet capture has an error, please re-do the labeling, "
+                                       "try recording for a longer time, like an extra minute."}), 500
     except Exception as e:
         # If file saving fails, return a 500 but note that the DB save succeeded
         app.logger.warning(f"PCAP File Save FAILED for ID: {e}")
@@ -199,36 +205,12 @@ def make_pcap_filename(start_time: int, end_time: int) -> str:
     start_dt_utc = datetime.datetime.fromtimestamp(start_time, tz=datetime.timezone.utc)
     start_dt_localized = start_dt_utc.astimezone(local_tz)
     duration_seconds = end_time - start_time
-    safe_start = start_dt_localized.strftime("%b-%d-%Y_%I:%M:%S%p")
+    # Format: Mon-DD-YYYY_HH-MM-SSAM/PM_TZ
+    safe_start = start_dt_localized.strftime("%b-%d-%Y_%I-%M-%S%p_%Z")
 
     # Generate the filename with duration
     filename = f"{safe_start}_{duration_seconds:.2f}s.pcap"
     return filename
-
-
-def save_packets_to_pcap(raw_packets: list, capture_times: list, filename="output.pcap"):
-    """
-    Saves a list of raw packet bytes to a pcap file.
-
-    Args:
-        raw_packets (list): List of bytes objects representing raw packets.
-        capture_times (list): The epoch time of each packet when it was captured by IoT Inspector.
-        filename (str): Output pcap file name.
-    """
-    scapy_packets = []
-    for i, pkt_bytes in enumerate(raw_packets):
-        try:
-            pkt = Ether(pkt_bytes)
-            if pkt.__class__.__name__ == "Raw":
-                pkt = IP(pkt_bytes)
-        except Exception:
-            pkt = IP(pkt_bytes)
-
-        # CRITICAL STEP: Assign the supplied original capture time
-        # This is guaranteed to be correct for ALL packets.
-        pkt.time = capture_times[i]
-        scapy_packets.append(pkt)
-    wrpcap(filename, scapy_packets)
 
 
 if __name__ == '__main__':

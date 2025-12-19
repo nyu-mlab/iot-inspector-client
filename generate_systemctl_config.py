@@ -21,8 +21,8 @@ Description=IoT Inspector Packet Collector
 After=network.target
 
 [Service]
-# ExecStart=/usr/bin/gunicorn -w 4 -b 0.0.0.0:5000 src.libinspector.server.packet_collector:app 
-ExecStart=/path/to/gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - --access-logformat '%%(h)s "%%(r)s" %%(s)s %%(b)s' src.libinspector.server.packet_collector:app
+# ExecStart=/usr/bin/gunicorn -w 4 -b 0.0.0.0:5000 src.iot_inspector.server.packet_collector:app 
+ExecStart=/usr/bin/gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - --access-logformat '%%(h)s "%%(r)s" %%(s)s %%(b)s' src.iot_inspector.server.packet_collector:app
 WorkingDirectory={os.path.dirname(os.path.abspath(__file__))}
 User={os.getenv("SUDO_USER", "root")}
 Environment=PYTHONUNBUFFERED=1

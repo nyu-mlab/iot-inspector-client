@@ -342,6 +342,27 @@ def get_remote_hostnames(mac_address: str) -> str:
     return remote_hostnames
 
 
+def get_all_devices() -> list[dict]:
+    """
+    Get the list of devices from the database.
+
+    Returns:
+        list[dict]: A list of device dictionaries.
+    """
+    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
+
+    # Get the list of devices from the database
+    sql = """
+        SELECT * FROM devices
+        WHERE is_gateway = 0
+    """
+    device_list = []
+    with rwlock:
+        for device_dict in db_conn.execute(sql):
+            device_list.append(dict(device_dict))
+    return device_list
+
+
 def get_human_readable_time(timestamp=None):
     """
     Convert a timestamp to a human-readable time format.
@@ -443,13 +464,18 @@ def get_device_custom_name(mac_address: str) -> str:
     Returns:
         str: The custom name of the device or an empty string if not set.
     """
+    device_custom_name_key = f'device_custom_name_{mac_address}'
     try:
-        device_custom_name = config_get(f'device_custom_name_{mac_address}')
+        device_custom_name = config_get(device_custom_name_key)
     except KeyError:
         # Use the last part of the MAC address as the name suffix
+        logger.debug(f"KeyError: Custom name not found in config, using default naming. {device_custom_name_key}")
         device_custom_name = mac_address.split(':')[-1].upper()
         device_custom_name = f'Unnamed Device {device_custom_name}'
-
+    except Exception as e:
+        logger.error(f"Error retrieving custom name in config, using default naming: {e}")
+        device_custom_name = mac_address.split(':')[-1].upper()
+        device_custom_name = f'Unnamed Device {device_custom_name}'
     return device_custom_name
 
 

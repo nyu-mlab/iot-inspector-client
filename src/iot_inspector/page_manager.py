@@ -12,6 +12,7 @@ import common
 import libinspector.core
 import threading
 import libinspector.global_state
+from iot_inspector.background.device_id_api_thread import api_worker_thread
 
 
 def get_page(title, material_icon, show_page_func):
@@ -76,6 +77,8 @@ def initialize_config():
     common.config_set("last_labeled_category", "")
     common.config_set("last_labeled_device", "")
     common.config_set("last_labeled_label", "")
+    common.config_set("consecutive_duplicate_count",0)
+    common.config_set("last_label_end_time", 0)
 
 
 @functools.lru_cache(maxsize=1)
@@ -85,7 +88,7 @@ def start_inspector_once():
         libinspector.core.start_threads()
         api_thread = threading.Thread(
             name="Device API Thread",
-            target=device_list_page.api_worker_thread,
+            target=api_worker_thread,
             daemon=True,
         )
         api_thread.start()

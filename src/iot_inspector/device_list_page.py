@@ -1,12 +1,9 @@
 import streamlit as st
 import time
-import json
 import libinspector.global_state
 import common
 import logging
-import functools
-import os
-import requests
+import json
 
 
 logger = logging.getLogger("client")
@@ -18,146 +15,6 @@ def show():
     """
     toast_obj = st.toast('Discovering devices...')
     show_list(toast_obj)
-
-
-def api_worker_thread():
-    """
-    A worker thread to periodically clear the cache of call_predict_api.
-    """
-    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
-
-    # To avoid a 15-second delay, just use OUI, and update it with Device API later
-    time.sleep(2)
-    for device_dict in get_all_devices():
-        custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
-        meta_data = common.get_device_metadata(device_dict['mac_address'])
-        vendor = (meta_data.get('oui_vendor') or '').strip()
-        if not vendor:
-            vendor = 'Unknown Device, likely a Mobile Phone'
-        common.config_set(custom_name_key, vendor)
-
-    while True:
-        time.sleep(15)
-        device_list = get_all_devices()
-        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
-
-        # Getting inputs and calling API
-        for device_dict in device_list:
-            meta_data = common.get_device_metadata(device_dict['mac_address'])
-            remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
-            custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
-            try:
-                # Note I am passing the metadata as a string because functions with cache cannot take dicts
-                # as a dict is mutable, and the cache would not work as expected.
-                api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
-                common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
-                if "Vendor" in api_output:
-                    custom_name = api_output["Vendor"]
-                    if api_output["Vendor"] != "":
-                        common.config_set(custom_name_key, custom_name)
-            except Exception as e:
-                logger.info("[Device ID API] Exception when calling API: %s", str(e))
-            finally:
-                # If API is down, just try using OUI vendor if no custom name is set in config.json
-                custom_key_name = common.config_get(custom_name_key, default='')
-                if custom_key_name == '' or custom_key_name == 'UNKNOWN':
-                    vendor = (meta_data.get('oui_vendor') or '').strip()
-                    if not vendor:
-                        vendor = 'Unknown Device, likely a Mobile Phone'
-                    common.config_set(custom_name_key, vendor)
-
-
-@functools.cache
-def call_predict_api(meta_data_string: str, remote_hostnames: str,
-                     mac_address: str, url="http://159.65.184.153:8080/predict") -> dict:
-    """
-    Call the predicting API with the given fields.
-    This takes the MAC Address of an inspected device
-    and checks the `devices` table, where iot inspector core collected meta-data
-    based on SSDP discovery.
-    Please see Page 11 Table A.1. We explain how to get the data from IoT Inspector:
-    1. oui_friendly: we use the OUI database from IoT Inspector Core
-    2. dhcp_hostname: this is extracted from the 'devices' table, check meta-data and look for 'dhcp_hostname' key.
-    3. remote_hostnames: IoT Inspector collects this information the DHCP hostname via either DNS or SNI
-    Args:
-        meta_data_string (str): Device Metadata, User Agent info, OUI info, DHCP hostname, etc. in string format
-        remote_hostnames (str): The remote hostnames the device has contacted
-        mac_address (str): The MAC address of the device we want to use AI to get more info about
-        url (str): The API endpoint.
-    Returns:
-        dict: The response text from the API.
-    """
-    api_key = os.environ.get("API_KEY", "momo")
-    device_tracked_key = f'tracked@{mac_address}'
-    meta_data = json.loads(meta_data_string)
-
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": api_key
-    }
-    data = {
-        "prolific_id": common.config_get("prolific_id", ""),
-        "mac_address": mac_address,
-        "current_time" : common.get_human_readable_time(),
-        "device_category": common.config_get("device_category", ''),
-        "device_name": common.config_get("device_name", ''),
-        "activity_label": common.config_get("activity_label", ''),
-        "fields": {
-            "oui_friendly": meta_data.get("oui_vendor", ""),
-            "dhcp_hostname": meta_data.get("dhcp_hostname", ""),
-            "remote_hostnames": remote_hostnames,
-            "user_agent_info": meta_data.get("user_agent_info", ""),
-            "mdns_info": meta_data.get("mdns_json", ""),
-            "ssdp_info": meta_data.get("ssdp_json", ""),
-            "user_labels": "",
-            "talks_to_ads": common.config_get(device_tracked_key, False)
-        }
-    }
-    non_empty_field_values = [
-        field_value
-        for field_name, field_value in data["fields"].items()
-        if field_name != "talks_to_ads" and bool(field_value)
-    ]
-    if len(non_empty_field_values) < 2:
-        logger.warning(
-            "[Device ID API] Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
-        raise RuntimeError(
-            "Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
-
-    if common.config_get("debug", default=False):
-        logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
-
-    try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
-        response.raise_for_status()
-        result = response.json()
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(f"[Device ID API] API request failed: {e}")
-        raise RuntimeError("API request failed, not caching this result.")
-
-    logger.info("[Device ID API] API query successful!")
-    return result
-
-
-def get_all_devices() -> list[dict]:
-    """
-    Get the list of devices from the database.
-
-    Returns:
-        list[dict]: A list of device dictionaries.
-    """
-    db_conn, rwlock = libinspector.global_state.db_conn_and_lock
-
-    # Get the list of devices from the database
-    sql = """
-        SELECT * FROM devices
-        WHERE is_gateway = 0
-    """
-    device_list = []
-    with rwlock:
-        for device_dict in db_conn.execute(sql):
-            device_list.append(dict(device_dict))
-    return device_list
 
 
 def get_device_data(mac_address: str) -> dict:
@@ -187,7 +44,7 @@ def show_list(toast_obj: st.toast):
     human_readable_time = common.get_human_readable_time()
     st.markdown(f'Last Page Refresh: {human_readable_time}')
 
-    device_list = get_all_devices()
+    device_list = common.get_all_devices()
     if not device_list:
         st.warning('We are still scanning the network for devices. Please wait a moment. This page will refresh automatically.')
         time.sleep(5)

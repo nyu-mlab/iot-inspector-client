@@ -139,7 +139,7 @@ sudo systemctl start iot-inspector-packet-collector.service
 
 The API will be available at `http://localhost:5000/label_packets`.
 ```bash
-python3 src/libinspector/server/packet_collector.py
+python3 src/iot_inspector/server/packet_collector.py
 ```
 
 The API will be available at `http://localhost:5000/label_packets`.
@@ -149,7 +149,9 @@ The API will be available at `http://localhost:5000/label_packets`.
 Send a POST request to `/label_packets` with JSON containing:
 
 - `packets` (list of base64 strings)
+- `prolific_id`
 - `mac_address`
+- `device_category`
 - `device_name`
 - `activity_label`
 - `start_time`
@@ -159,7 +161,9 @@ Example payload:
 ```json
 {
   "packets": ["base64string1", "base64string2"],
+  "prolific_id": "PROLIFIC123",
   "mac_address": "AA:BB:CC:DD:EE:FF",
+  "device_category": "Category1",
   "device_name": "Device1",
   "activity_label": "activity",
   "start_time": "1717243200",

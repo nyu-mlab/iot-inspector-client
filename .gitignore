@@ -1,16 +1,22 @@
+# Ignore packets directory
+packets/**
+
 # Ignore Keys
 *.crt
 *.pem
 
-# Ignore packet dumps
+# Ignore packet dumps, except those in src/tests
 *.pcap
 *.pcapng
+!src/tests/data/
+!src/tests/data/*.pcap
+!src/tests/data/*.pcapng
 
 *~
 .*
 !.gitattributes
 !.github
-!.src/libinspector/.streamlit
+!.src/iot_inspector/.streamlit
 user-data*
 3rd-party-software
 *.zip
