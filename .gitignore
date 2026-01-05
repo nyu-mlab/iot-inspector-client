@@ -116,3 +116,15 @@ v2-src/.vscode/settings.json
 config.json
 uv.lock
 models/
+
+# data collection files
+data_collection/
+
+# privacyagent files
+privacy_agent/
+
+# model files
+models/
+
+# config files 
+config.json
