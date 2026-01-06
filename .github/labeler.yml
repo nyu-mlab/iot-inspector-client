@@ -1,0 +1,26 @@
+Documentation:
+  - '**/*.md'
+
+Github-files:
+  - '.github/**'
+
+Tests:
+  - 'src/tests/**'
+
+Core:
+  - 'src/libinspector/**.py'
+  - 'pyproject.toml'
+  - 'setup.py'
+  - 'uv.lock'
+
+Scripts:
+  - '**/*.sh'
+  - '**/*.ps1'
+  - '**/*.bat'
+
+Data:
+  - 'src/libinspector/data/**'
+
+Streamlit:
+  - 'src/libinspector/.streamlit/**'
+  - '.streamlit/**'

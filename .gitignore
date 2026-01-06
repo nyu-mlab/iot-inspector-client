@@ -1,14 +1,33 @@
+# Ignore packets directory
+packets/**
+
+# Ignore Keys
+*.crt
+*.pem
+
+# Ignore packet dumps, except those in src/tests
+*.pcap
+*.pcapng
+!src/tests/data/
+!src/tests/data/*.pcap
+!src/tests/data/*.pcapng
+
 *~
 .*
+!.gitattributes
+!.github
+!.src/iot_inspector/.streamlit
 user-data*
 3rd-party-software
 *.zip
-
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.exe
+IoT_Inspector_Installer
 
 # C extensions
 *.so
@@ -122,9 +141,8 @@ data_collection/
 
 # privacyagent files
 privacy_agent/
-
-# model files
-models/
+emulate_device_communication/
+user_intent_classifier/
 
 # config files 
 config.json

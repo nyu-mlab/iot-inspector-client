@@ -1,0 +1,4 @@
+recursive-include src/libinspector/data *
+recursive-include src/libinspector/static *
+
+global-exclude *.py[cod] __pycache__ *.sw* .git*
