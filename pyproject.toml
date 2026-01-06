@@ -12,10 +12,14 @@ dependencies = [
     "libinspector==1.0.12",
     "streamlit>=1.52.1",
     "matplotlib==3.10.8",
+    "scipy==1.15.3",
+    "statsmodels==0.14.4",
+    "scikit-learn==1.7.0",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },
-    { name = "Andrew Quijano", email = "andrew.quijano@nyu.edu" }
+    { name = "Andrew Quijano", email = "andrew.quijano@nyu.edu" },
+    { name = "Md Jakaria", email = "mjakari@ncsu.edu" }
 ]
 license = "Apache-2.0"
 classifiers = [
@@ -39,6 +43,13 @@ iot_inspector = [
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools_scm]
+git_describe_command = "git describe --dirty --tags --long --match v*"
+tag_regex = "^v?(?P<version>\\d+\\.\\d+\\.\\d+)$"
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+fallback_version = "0.1.0"
 
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"

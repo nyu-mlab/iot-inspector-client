@@ -132,3 +132,17 @@ venv.bak/
 *.idea
 v2-src/.vscode/settings.json
 .vscode/settings.json
+config.json
+uv.lock
+models/
+
+# data collection files
+data_collection/
+
+# privacyagent files
+privacy_agent/
+emulate_device_communication/
+user_intent_classifier/
+
+# config files 
+config.json
