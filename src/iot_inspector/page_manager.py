@@ -17,6 +17,7 @@ from iot_inspector.background.device_id_api_thread import api_worker_thread
 from libinspector import safe_loop
 import event_detection.global_state
 from event_detection import packet_processor
+from event_detection import burst_processor
 
 
 def get_page(title, material_icon, show_page_func):
@@ -88,9 +89,12 @@ def initialize_config():
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
-    
+
     # Start the packet processing thread
     safe_loop.SafeLoopThread(packet_processor.start)
+
+    # Start the burst processing thread
+    safe_loop.SafeLoopThread(burst_processor.start)
 
 
     with st.spinner("Starting Inspector Core Library..."):
