@@ -14,6 +14,8 @@ import logging
 from collections import deque
 from typing import Deque, Dict, Any
 
+import event_detection.global_state
+
 _labeling_event_deque : Deque[Dict[str, Any]] = deque()
 logger = logging.getLogger("client")
 
@@ -783,6 +785,10 @@ def save_labeled_activity_packets(pkt):
     Args:
         pkt: The network packet (scapy packet) to process.
     """
+
+    # Note: (Jakaria) I need to save a copy of the packet, for event inference
+    event_detection.global_state.packet_queue.put(pkt)
+
     if len(_labeling_event_deque) == 0:
         return
 

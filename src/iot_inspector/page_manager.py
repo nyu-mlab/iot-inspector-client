@@ -14,6 +14,10 @@ import threading
 import libinspector.global_state
 from iot_inspector.background.device_id_api_thread import api_worker_thread
 
+from libinspector import safe_loop
+import event_detection.global_state
+from event_detection import packet_processor
+
 
 def get_page(title, material_icon, show_page_func):
     icon = f":material/{material_icon}:"
@@ -84,6 +88,11 @@ def initialize_config():
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
+    
+    # Start the packet processing thread
+    safe_loop.SafeLoopThread(packet_processor.start)
+
+
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
         api_thread = threading.Thread(
@@ -100,6 +109,7 @@ def start_inspector_once():
         label_thread.start()
         with libinspector.global_state.global_state_lock:
             libinspector.global_state.custom_packet_callback_func = device_detail_page.save_labeled_activity_packets
+
 
 
 device_list_page_obj = get_page(
