@@ -20,6 +20,7 @@ from event_detection import packet_processor
 from event_detection import burst_processor
 from event_detection import feature_generation
 from event_detection import feature_standardization
+from event_detection import periodic_filter
 
 
 def get_page(title, material_icon, show_page_func):
@@ -104,7 +105,8 @@ def start_inspector_once():
     # Start the feature standardization thread
     safe_loop.SafeLoopThread(feature_standardization.start)
 
-
+    # Start the periodic filter thread
+    safe_loop.SafeLoopThread(periodic_filter.start)
 
 
     with st.spinner("Starting Inspector Core Library..."):
