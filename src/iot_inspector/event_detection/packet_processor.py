@@ -59,7 +59,7 @@ def process_packet_helper(pkt):
             # logger.info(f'[Pkt Processor] Ignoring duplicate UDP packet: {pkt.summary()}')
             return 
 
-    print(f'[Pkt Processor] Processing packet: {pkt.summary()}')
+    # print(f'[Pkt Processor] Processing packet: {pkt.summary()}')
     # Put the packet into the flow queue for further processing
     # the flow queue is processed by the burst processor thread
     global_state.flow_queue.put(pkt)

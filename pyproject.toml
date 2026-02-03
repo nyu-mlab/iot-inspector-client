@@ -21,6 +21,9 @@ dependencies = [
     "libinspector==1.0.15",
     "streamlit>=1.52.1",
     "matplotlib==3.10.8",
+    "scipy==1.15.3",
+    "statsmodels==0.14.4",
+    "scikit-learn==1.7.0",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },

@@ -18,6 +18,7 @@ from libinspector import safe_loop
 import event_detection.global_state
 from event_detection import packet_processor
 from event_detection import burst_processor
+from event_detection import feature_generation
 
 
 def get_page(title, material_icon, show_page_func):
@@ -95,6 +96,9 @@ def start_inspector_once():
 
     # Start the burst processing thread
     safe_loop.SafeLoopThread(burst_processor.start)
+
+    # Start the feature processing thread
+    safe_loop.SafeLoopThread(feature_generation.start)
 
 
     with st.spinner("Starting Inspector Core Library..."):
