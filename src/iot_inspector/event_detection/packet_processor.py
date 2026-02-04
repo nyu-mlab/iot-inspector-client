@@ -76,7 +76,7 @@ def process_retransmission(pkt):
         packet_hash = hash((pkt[sc.IP].src, pkt[sc.IP].dst, pkt[sc.TCP].seq, pkt[sc.TCP].ack))
     except AttributeError:
         # If the packet is not TCP, we don't need to check for retransmission
-        logger.debug(f"[Packet Processor] Not a TCP packet - retransmission check skipped")
+        logger.debug("[Packet Processor] Not a TCP packet - retransmission check skipped")
         return False
     
     if packet_hash in seen_packets:
@@ -104,7 +104,7 @@ def is_duplicate_udp(pkt):
         )
     except AttributeError:
         # If the packet is not TCP or UDP, we don't need to check for retransmission
-        logger.debug(f"[Packet Processor] Not a TCP or UDP packet - retransmission check skipped")
+        logger.debug("[Packet Processor] Not a TCP or UDP packet - retransmission check skipped")
         return False
 
     if packet_hash in seen_packets:

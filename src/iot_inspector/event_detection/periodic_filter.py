@@ -28,6 +28,8 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
     Filter out periodic bursts from the standardized burst features.
     Args:
         burst (tuple): A tuple containing burst features.
+        device_name (str): The name of the device.
+        model_name (str): The name of the model.
     Returns:
         None: The function processes the burst and does not return anything.
     """
@@ -90,7 +92,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
         if tmp_host == '':
             continue
 
-        # todo: remove this hardcosing checking
+        # todo: remove this hardcoding checking
         if tmp_host == 'n-devs.tplinkcloud.com':
             tmp_host_model = 'devs.tplinkcloud.com'
         else:
@@ -109,15 +111,15 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
         else:
             filter_test = False
 
-        if filter_test == False:
+        if not filter_test:
             if (test_hosts.endswith('.'.join(tmp_host.split('.')[-3:]))) and test_protocols == tmp_proto:
                 filter_test = True    
 
         # if filtering not needed
-        if filter_test == False:
+        if not filter_test:
             continue
 
-        # Note: update model names perodically
+        # Note: update model names periodically
         # dname = device_name_mapping(device_name)
         
 
@@ -178,9 +180,9 @@ def get_periods(model_name):
                     tmp_proto = tmp[0]
                     tmp_host = tmp[1]
                     tmp_period = tmp[2]
-                except:
+                except Exception:
                     # print(tmp)# exit(1)
-                    return ('unknown', 'unknown')
+                    return 'unknown', 'unknown'
                 
                 if tmp_host == '#' or tmp_host  == ' ':
                     tmp_host = ''
@@ -188,9 +190,9 @@ def get_periods(model_name):
                 periodic_tuple.append((tmp_host, tmp_proto, tmp_period))
                 host_set.add(tmp_host)
 
-        return (periodic_tuple, host_set)
+        return periodic_tuple, host_set
         
-    return ('unknown', 'unknown')
+    return 'unknown', 'unknown'
 
 
 def dbscan_predict(dbscan_model, x_new, metric=sp.spatial.distance.euclidean):
@@ -199,7 +201,7 @@ def dbscan_predict(dbscan_model, x_new, metric=sp.spatial.distance.euclidean):
     for i, x_core in enumerate(dbscan_model.components_):
         # print(metric(x_new, x_core))
         # common.event_log('[Burst Periodic-filter] DB_Scan: \n Feature = ' + str (x_new) + "\n Core = " + str(x_core))
-        if metric(x_new, x_core) < (dbscan_model.eps): 
+        if metric(x_new, x_core) < dbscan_model.eps:
             # Assign label of x_core to x_new
             y_new = dbscan_model.labels_[dbscan_model.core_sample_indices_[i]]
             break

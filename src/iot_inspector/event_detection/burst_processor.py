@@ -36,7 +36,7 @@ def start():
         logger.error(f'[Burst Processor] Error processing packet: {e} for packet: {pkt}\n{traceback.format_exc()}')
         
 
-# Note: This fiunction proess packet for activity detection
+# Note: This function process packet for activity detection
 # ==========================================================================================
 # Process packet to burst; Input: packet; Output: none
 # Technical debt: libinspector.core lib do some minimal packet processing, 
@@ -56,10 +56,10 @@ def process_burst(pkt):
         return
     
     # =================================================================
-    # Parse packet informations
+    # Parse packet information
     # =================================================================
     # frame_number = 0              # not useful for feature generation
-    # time_delta = 0                # will be canculated lated
+    # time_delta = 0                # will be calculated later
     # stream = 0                    # not useful for feature generation
     time_epoch = pkt.time           # packet current time, to be used to generate time_delta for consecutive packets
     frame_len = len(pkt)            # size of packet
@@ -72,7 +72,7 @@ def process_burst(pkt):
         highest_layer = pkt.lastlayer()
         _ws_protocol = getattr(highest_layer, 'name', str(highest_layer))
         # todo: check if highest layer captures the TLS versions; for now it is not 
-    except: 
+    except Exception:
         _ws_protocol = protocol
     # ############################# END ######################################
 
@@ -84,14 +84,14 @@ def process_burst(pkt):
     src_port = pkt[layer].sport
     dst_port = pkt[layer].dport
 
-    # Note: Ignoring broscasting messes
-    # Note: Maynot appropriate for anomaly detection 
+    # Note: Ignoring broadcasting messes
+    # Note: May not appropriate for anomaly detection
     if dst_mac_addr == 'ff:ff:ff:ff:ff:ff' or dst_ip_addr == '255.255.255.255':
         return
     
     # Note: validating correct ip_address
-    # Note: Maynot appropriate for anomaly detection 
-    if utils.validate_ip_address(src_ip_addr)==False or utils.validate_ip_address(dst_ip_addr)==False:
+    # Note: May not appropriate for anomaly detection
+    if not utils.validate_ip_address(src_ip_addr) or not utils.validate_ip_address(dst_ip_addr):
             return
     
     # Finding host MAC address
@@ -115,7 +115,7 @@ def process_burst(pkt):
     # extract hostnames
     # Note: North Eastern (BehavIoT) use different method for finding the hostname
     # BehavIoT Method: look DNS, SNI for hostnames; if found: return else: use dig -x ip_address 
-    # todo Ask libinspectoe team; ask NYU to find host name
+    # TODO: Ask libinspector team; ask NYU to find host name
     src_hostname = utils.get_hostname_from_ip_addr(src_ip_addr)
     dst_hostname = utils.get_hostname_from_ip_addr(dst_ip_addr)
 
@@ -138,7 +138,7 @@ def process_burst(pkt):
 
 
     # Note: Key is different from IoT Inspector: inspector use different sets of 7 elements, different order
-    # Used to idenfy flow which current packets belong to
+    # Used to identify flow which current packets belong to
     flow_key = (ip_proto, src_ip_addr, src_port, dst_ip_addr, dst_port, src_mac_addr)
     hostname = dst_hostname.lower()
     
@@ -185,4 +185,3 @@ def process_burst(pkt):
     # print(f"burst_dict_all_burst: {burst_dict_all_burst}")
     # print("")
     return 
-            

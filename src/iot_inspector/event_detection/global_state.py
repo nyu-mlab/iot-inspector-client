@@ -1,6 +1,6 @@
 """
 Maintains the global state in a singleton design pattern.
-This is separte from the libinspector global state
+This is separate from the libinspector global state
 """
 import threading
 import queue
@@ -29,7 +29,7 @@ processed_burst = queue.Queue()
 
 
 # A queue that holds standardized burst features;
-# need to discart periodic burst from all bursts;
+# need to discard periodic burst from all bursts;
 ss_burst_queue = queue.Queue()
 
 # A queue that holds standardized burst features that are filtered;

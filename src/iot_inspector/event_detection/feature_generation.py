@@ -37,13 +37,13 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
     # [time_epoch, frame_len, _ws_protocol, hostname, ip_proto, src_ip_addr, src_port, dst_ip_addr, dst_port, dst_mac_addr]
     header = ["ts","frame_len","protocol","host", "trans_proto", "ip_src", "srcport", "ip_dst", "dstport","mac_addr"]
 
-    # check number of packets in the burst discart if 
+    # check number of packets in the burst discard if
     # burst has only one packet
     if len(pop_burst) < 2: 
         return
     
     # ----------------------------------------------------
-    # compute features from burst of packetes and flow key
+    # compute features from burst of packets and flow key
     # ----------------------------------------------------
     pd_burst = pd.DataFrame(pop_burst, columns=header)
     pd_burst.frame_len = pd_burst.frame_len.astype(int)
@@ -106,7 +106,7 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
     for j, m in zip(pd_burst.ip_dst, pd_burst.mac_addr):
         if m == my_device_mac:
             continue
-        elif ipaddress.ip_address(j).is_private==True:  # router IPs
+        elif ipaddress.ip_address(j).is_private:  # router IPs
             local_destination_device = m
             break
     
@@ -114,25 +114,25 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
     for i, j, f_len, k_host in zip(pd_burst.ip_src, pd_burst.ip_dst, pd_burst.frame_len, pd_burst.host):
         network_total += 1
         
-        if ipaddress.ip_address(i).is_private==True and (ipaddress.ip_address(j).is_private==False): 
+        if ipaddress.ip_address(i).is_private and not ipaddress.ip_address(j).is_private:
             # source addr; outbound packet 
             network_out += 1
             network_external += 1
             meanBytes_out_external += f_len
             
-        elif ipaddress.ip_address(j).is_private==True and (ipaddress.ip_address(i).is_private==False): 
-            # destation addr; inbound packet 
+        elif ipaddress.ip_address(j).is_private and not ipaddress.ip_address(i).is_private:
+            # destination addr; inbound packet
             network_in += 1
             network_external += 1
             meanBytes_in_external += f_len
 
-        elif i == my_device_addr and (ipaddress.ip_address(j).is_private==True) : 
+        elif i == my_device_addr and ipaddress.ip_address(j).is_private :
             # local outgoing packet 
             network_out_local += 1
             network_local += 1
             meanBytes_out_local+= f_len
 
-        elif (ipaddress.ip_address(i).is_private==True) and j == my_device_addr: 
+        elif ipaddress.ip_address(i).is_private and j == my_device_addr:
             # local inbound packet 
             network_in_local += 1
             network_local += 1
@@ -157,12 +157,12 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
         pass
     else:
         if pd_burst.trans_proto[0] == 6:
-            protocol = set(['TCP'])
+            protocol = {'TCP'}
         elif pd_burst.trans_proto[0] == 17:
-            protocol = set(['UDP'])
+            protocol = {'UDP'}
     if network_total == network_local: 
         # hosts = set(['local'])
-        hosts = set([str(local_destination_device)])
+        hosts = {str(local_destination_device)}
     
     host_output = ";".join([x for x in hosts if x!= ""])
     # merge hostnames

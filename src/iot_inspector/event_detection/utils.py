@@ -20,7 +20,7 @@ def validate_ip_address(address):
         bool: true as valid 
     """
     try:
-        ip = ipaddress.ip_address(address)
+        # ip = ipaddress.ip_address(address)
         # print("IP address {} is valid. The object returned is {}".format(address, ip))
         return True
     except ValueError:
@@ -170,13 +170,13 @@ def protocol_transform(test_protocols):
 @ttl_cache(maxsize=128)
 def host_transform(test_hosts):
     # process host
-    if test_hosts == None:
+    if test_hosts is None:
         return 'non'
 
     if test_hosts!= '':
         try:
             tmp = test_hosts.split(';')
-        except:
+        except Exception:
             return 'non'
         test_hosts= tmp[0]
     else:

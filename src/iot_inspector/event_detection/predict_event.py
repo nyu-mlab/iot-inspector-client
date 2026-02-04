@@ -69,7 +69,7 @@ def predict_event_helper(burst, dname=None, model_name=None):
         event = str(list(positive_label_set)[predictions.index(1)])
         logger.info('[Predict-Event] Success: ' + ' for device : ' + str(dname) + ' event: ' + event )
         store_events_in_db(burst[-6], burst[-3], event)
-    except:
+    except Exception:
         logger.warning('[Predict-Event] Success: ' + ' for device : ' + str(dname) + ' event: periodic/unexpected event')
     return
 
@@ -93,19 +93,19 @@ def get_list_of_models(device_name: str, model_name: str | None = None):
 
     if device_name == 'unknown':
         logger.warning('[Predict Event] device not found: ' + str(device_name))
-        return ('', '')
+        return '', ''
     
     # _, model_name = find_best_match(device_name)
     if model_name is None or model_name == 'unknown':
         logger.warning('[Predict Event] device not found: ' + str(device_name))
-        return ('', '')
+        return '', ''
 
     # Load event models
     model_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..', 'models', 'binary', 'rf', model_name)
     
     if not os.path.exists(model_dir):
         logger.warning('[Predict Event] event model not found: ' + str(model_dir))
-        return ('', '')
+        return '', ''
     
     for f1 in os.listdir(model_dir):
         # positive_label_set.append('_'.join(f1.split('_')[1:-1]))
@@ -115,7 +115,7 @@ def get_list_of_models(device_name: str, model_name: str | None = None):
     
     positive_label_set = set(positive_label_set)
 
-    return (positive_label_set, list_models)
+    return positive_label_set, list_models
 
 def store_events_in_db(device, time, event):
     # todo: for now storing in a queue, later store in database

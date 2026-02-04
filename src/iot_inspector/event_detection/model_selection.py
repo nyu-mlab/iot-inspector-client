@@ -19,8 +19,8 @@ def import_models():
 
     #  Check if the models directory exists
     if not os.path.exists(models_dir):
-
         return []
+
     model_folders = [name for name in os.listdir(models_dir) if os.path.isdir(os.path.join(models_dir, name))]
     return model_folders
 

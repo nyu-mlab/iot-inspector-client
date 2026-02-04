@@ -1,6 +1,5 @@
 import logging
 import traceback
-import sys
 import os
 
 from . import global_state
@@ -45,15 +44,15 @@ def start():
 @ttl_cache(maxsize=128, ttl=300)
 def get_ss_pca_model(device_name):
     if device_name == 'unknown':
-        return ("unknown", "unknown")
+        return "unknown", "unknown"
 
-    # Note: the model is choosen from the available pre-trained models 
-    # todo: update threashold for matching device name with model name
+    # Note: the model is chosen from the available pre-trained models
+    # todo: update threshold for matching device name with model name
     _, model_name = find_best_match(device_name)
 
     if model_name == 'unknown' or model_name is None:
         logger.warning('[Feature Standardization] Model not found: ' + str(device_name))
-        return ("unknown", "unknown")
+        return "unknown", "unknown"
 
     # Load ss and pca file
     model_dir = os.path.join(
@@ -63,15 +62,14 @@ def get_ss_pca_model(device_name):
 
     if os.path.exists(model_dir):
         with open(model_dir, 'rb') as file:
-            return (pickle.load(file), model_name)
-        return ("unknown", "unknown")
-        
-    return ("unknown", "unknown")
+            return pickle.load(file), model_name
+        return "unknown", "unknown"
 
+    return "unknown", "unknown"
 
 
 # pre-process burst file with pre-trained SS and PCA model 
-# Note: we are using latest model of sk_learn, but the models are traied on 1.3.0 version 
+# Note: we are using latest model of sk_learn, but the models are trained on 1.3.0 version
 # mismatch of version, might lead to breaking code or invalid results. 
 # todo: train ss/pca models with latest version of numpy, sklean 
 
@@ -103,7 +101,6 @@ def standardize_burst_feature(burst):
     
     logger.info('[Feature Standardization] Burst stored for: ' + str(device_name) + ' ' + burst[-1] + ' ' + burst[-2])
     store_processed_burst_in_db(X_feature, device_name, model_name)
-    
     return 
 
 
@@ -118,5 +115,5 @@ def store_processed_burst_in_db(data, device_name, model_name):
     Adds a data to the data queue.
     """
     global_state.ss_burst_queue.put((data, device_name, model_name))
-    # print(f'[Feature Sta ndardization] Storing standardized burst features for device {data[-6]} at time {data[-3]}')
+    # print(f'[Feature Standardization] Storing standardized burst features for device {data[-6]} at time {data[-3]}')
         
