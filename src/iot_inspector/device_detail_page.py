@@ -41,14 +41,14 @@ def show():
         return
 
     device_dict = get_device_info(device_mac_address)
+    if not device_dict:
+        st.error(f"No device found with MAC address: {device_mac_address}")
+        return
+    
     ip_address = device_dict['ip_address']
     show_cool_down()
     label_activity_workflow(device_mac_address, ip_address)
     device_custom_name = common.get_device_custom_name(device_mac_address)
-
-    if not device_dict:
-        st.error(f"No device found with MAC address: {device_mac_address}")
-        return
 
     st.markdown(f"### {device_custom_name}")
     st.caption(f"MAC Address: {device_mac_address} | IP Address: {ip_address}")
@@ -259,7 +259,7 @@ def label_thread():
         end_dt_object = datetime.datetime.fromtimestamp(end_time)
         end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        start_dt_object = datetime.datetime.fromtimestamp( _labeling_event_deque[0].get('start_time', None))
+        start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
         start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
         logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
@@ -951,11 +951,6 @@ def display_inferred_events(mac_address: str):
         device, ts, event = item
         if device != mac_address:
             continue
-        try:
-            ts_readable = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")[-1]
-        except Exception:
-            ts_readable = str(ts)
-        # rows.append({"_ts": ts, "Time": ts_readable, "Event": event})
         rows.append({"Time": ts, "Event": event})
 
     if not rows:

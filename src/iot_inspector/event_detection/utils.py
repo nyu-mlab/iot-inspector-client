@@ -20,7 +20,7 @@ def validate_ip_address(address):
         bool: true as valid 
     """
     try:
-        # ip = ipaddress.ip_address(address)
+        ipaddress.ip_address(address)
         # print("IP address {} is valid. The object returned is {}".format(address, ip))
         return True
     except ValueError:
