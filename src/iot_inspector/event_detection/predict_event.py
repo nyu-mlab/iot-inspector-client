@@ -7,6 +7,7 @@ from .ttl_cache import ttl_cache
 
 import numpy as np
 import pickle
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ def store_events_in_db(device, time, event):
     """
     Adds a data to the data queue.
     """
-    global_state.filtered_event_queue.put((device, time, event))
-    logger.info('[Predict-Event] Stored event in DB: ' + str((device, time, event)))
-    # print('[Predict-Event] Stored event in DB: ' + str((device, time, event)))
+    global_state.filtered_event_queue.put((device, datetime.fromtimestamp(float(time)), event))
+    logger.info('[Predict-Event] Stored event in DB: ' + str((device, datetime.fromtimestamp(float(time)), event)))
+    print(f"[Predict-Event] Stored event in DB: {device}, {datetime.fromtimestamp(float(time))}, {event}")
 

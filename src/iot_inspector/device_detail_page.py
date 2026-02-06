@@ -935,6 +935,39 @@ def show_device_network_flow(mac_address: str):
     df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
     process_network_flows(df_upload_host_table, "#### Upload Network Hosts (sent by device) in the last 60 seconds")
     process_network_flows(df_download_host_table, "#### Download Network Hosts (received by device) in the last 60 seconds")
+    display_inferred_events(mac_address)
+
+
+def display_inferred_events(mac_address: str):
+    # Snapshot the queue without consuming it so other threads remain unaffected
+    q = event_detection.global_state.filtered_event_queue
+    with q.mutex:
+        events_snapshot = list(q.queue)
+
+    rows = []
+    for item in events_snapshot:
+        if not isinstance(item, tuple) or len(item) != 3:
+            continue
+        device, ts, event = item
+        if device != mac_address:
+            continue
+        try:
+            ts_readable = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")[-1]
+        except Exception:
+            ts_readable = str(ts)
+        # rows.append({"_ts": ts, "Time": ts_readable, "Event": event})
+        rows.append({"Time": ts, "Event": event})
+
+    if not rows:
+        st.info("No inferred events yet for this device.")
+        return
+
+    # rows.sort(key=lambda r: r["_ts"] if isinstance(r["_ts"], (int, float)) else 0, reverse=True)
+    df = pd.DataFrame(rows)[["Time", "Event"]]
+
+    st.markdown("#### Inferred Events")
+    st.data_editor(df, hide_index=True, width='content')
+
 
 
 def show_device_list():

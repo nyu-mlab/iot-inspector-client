@@ -15,7 +15,6 @@ import libinspector.global_state
 from iot_inspector.background.device_id_api_thread import api_worker_thread
 
 from libinspector import safe_loop
-import event_detection.global_state
 from event_detection import packet_processor
 from event_detection import burst_processor
 from event_detection import feature_generation
