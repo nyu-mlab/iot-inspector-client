@@ -20,6 +20,7 @@ requires-python = ">=3.10"
 dependencies = [
     "libinspector==1.0.15",
     "streamlit>=1.52.1",
+    "gdown>=5.2.1",
     "matplotlib==3.10.8",
     "scipy==1.15.3",
     "statsmodels==0.14.4",

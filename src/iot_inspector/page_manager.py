@@ -21,7 +21,7 @@ from event_detection import feature_generation
 from event_detection import feature_standardization
 from event_detection import periodic_filter
 from event_detection import predict_event
-
+from event_detection import model_selection
 
 def get_page(title, material_icon, show_page_func):
     icon = f":material/{material_icon}:"
@@ -92,6 +92,8 @@ def initialize_config():
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
+    # Download the models
+    model_selection.download_models()
 
     # Start the packet processing thread
     safe_loop.SafeLoopThread(packet_processor.start)

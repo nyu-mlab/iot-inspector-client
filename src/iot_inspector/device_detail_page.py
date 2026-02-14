@@ -901,6 +901,9 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
 
 @st.fragment(run_every=1)
 def show_device_bar_graph(mac_address: str):
+    """
+    Show a bar graph of traffic volume for the device in the last 60 seconds, split by upload (sent) and download (received).
+    """
     now = int(time.time())
     device_upload, device_download = common.bar_graph_data_frame(now)
 
@@ -908,7 +911,7 @@ def show_device_bar_graph(mac_address: str):
     common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds",
                                full_width=True)
 
-    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
+    device_download_graph = device_download[device_download['mac_address'] == mac_address]
     common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds",
                                full_width=True)
 
@@ -939,7 +942,9 @@ def show_device_network_flow(mac_address: str):
 
 
 def display_inferred_events(mac_address: str):
-    # Snapshot the queue without consuming it so other threads remain unaffected
+    """
+    Snapshot the queue without consuming it so other threads remain unaffected
+    """
     q = event_detection.global_state.filtered_event_queue
     with q.mutex:
         events_snapshot = list(q.queue)
