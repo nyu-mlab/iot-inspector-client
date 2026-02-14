@@ -949,14 +949,29 @@ def display_inferred_events(mac_address: str):
     with q.mutex:
         events_snapshot = list(q.queue)
 
+    # 1. Fetch current list from config (under your new key)
+    current_event_list = common.config_get("event_list", [])
+
+    # 2. Build a set of "seen" fingerprints (Time + Event)
+    # This prevents adding the exact same event at the exact same time twice.
+    seen = {(e['Time'], e['Event']) for e in current_event_list}
+
     rows = []
     for item in events_snapshot:
         if not isinstance(item, tuple) or len(item) != 3:
             continue
+
         device, ts, event = item
-        if device != mac_address:
-            continue
-        rows.append({"Time": ts, "Event": event})
+        if device == mac_address:
+            rows.append({"Time": ts, "Event": event})
+            if (ts, event) not in seen:
+                seen.add((ts, event))
+
+    # 3. Update the config only if there's new data
+    current_event_list.extend(seen)
+    # Optional: Keep it tidy by sorting by timestamp
+    current_event_list.sort(key=lambda x: x['Time'])
+    common.config_set("event_list", current_event_list)
 
     if not rows:
         st.info("No inferred events yet for this device.")

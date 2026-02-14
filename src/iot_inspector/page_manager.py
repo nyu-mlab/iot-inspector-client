@@ -87,6 +87,7 @@ def initialize_config():
     common.config_set("last_labeled_label", "")
     common.config_set("consecutive_duplicate_count",0)
     common.config_set("last_label_end_time", 0)
+    common.config_set("event_list", [])
 
 
 @functools.lru_cache(maxsize=1)
@@ -113,8 +114,6 @@ def start_inspector_once():
     # Start the event prediction thread
     safe_loop.SafeLoopThread(predict_event.start)
 
-
-
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
         api_thread = threading.Thread(
@@ -131,7 +130,6 @@ def start_inspector_once():
         label_thread.start()
         with libinspector.global_state.global_state_lock:
             libinspector.global_state.custom_packet_callback_func = device_detail_page.save_labeled_activity_packets
-
 
 
 device_list_page_obj = get_page(
