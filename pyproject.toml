@@ -18,6 +18,7 @@ description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "pandas==2.3.3",
     "flask==3.1.2",
     "pymongo==4.16.0",
     "python-dotenv==1.2.1",

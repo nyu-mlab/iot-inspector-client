@@ -330,6 +330,8 @@ def reset_labeling_state():
     """
     Resets all state variables related to a labeling session.
     """
+    common.config_set('packet_count', 0)
+    common.config_set('labeling_in_progress', False)
     st.session_state['countdown'] = False
     st.session_state['show_labeling_setup'] = False
     st.session_state['start_time'] = None
@@ -386,8 +388,6 @@ def _cancel_label_callback():
         logger.info("[Packets] Removing labeling event from the queue due to cancellation.")
         _labeling_event_deque.pop()
     common.config_set('api_message', "warning|Labeling session has been canceled. No packets were sent.")
-    common.config_set('labeling_in_progress', False)
-    common.config_set('packet_count', 0)
     reset_labeling_state()
 
 
@@ -426,8 +426,6 @@ def _send_packets_callback():
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
     common.config_set('last_label_end_time', st.session_state['end_time'])
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
-    common.config_set('labeling_in_progress', False)
-    common.config_set('packet_count', 0)
     reset_labeling_state()
 
     # Reset the duplicate count if this label is different from the last one
@@ -484,15 +482,16 @@ def _resolve_conflict_callback(mac_address: str, current_device: str):
     if old_device:
         common.config_set(f"label@{old_device}", {})
     common.config_set(f"mac_to_device@{mac_address}", "")
-    st.toast("⚠️ Previous mapping deleted. Please confirm the new mapping.")
+    st.toast("⚠️ Previous mapping deleted. Confirm the correct device mapping next time.")
+    reset_labeling_state()
 
 
 def _cancel_mapping_callback():
     """
     Simply force a selection change or clear query params to 'reset' the page
     """
+    st.toast("Cancel labeling due to labeling mismatch detected!")
     reset_labeling_state()
-    st.toast("Verification cancelled. Please adjust your selections next time.")
 
 
 def update_device_inspected_status(mac_address: str):
@@ -647,8 +646,8 @@ def label_activity_workflow(mac_address: str, ip_address: str):
             with col2:
                 st.button("Cancel Labeling",
                           on_click=_cancel_mapping_callback,
-                          use_container_width=True,
-                          help="Click to cancel labeling.")
+                          help="Click to cancel labeling.",
+                          use_container_width=True)
             # Stop execution here so they can't start labeling with a conflict
             return
 
