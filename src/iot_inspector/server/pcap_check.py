@@ -1,6 +1,7 @@
 from scapy.packet import Packet
 from scapy.all import Ether, IP
 from typing import List
+import datetime
 
 
 def convert_bytes_to_packet(raw_packets: list, capture_times: list) -> List[Packet]:
@@ -89,3 +90,23 @@ def check_for_application_data(scapy_packets: List[Packet]) -> bool:
             pkt.show()
             return True
     return False
+
+
+def make_pcap_filename(start_time: int, end_time: int) -> str:
+    """
+    Generates a pcap filename using the machine's local timezone.
+    The format is: 'Mon-DD-YYYY_HH-MM-SSAM/PM_TZ_DurationSeconds.pcap'
+    """
+    # 1. Convert epoch to an 'aware' datetime object in the local timezone
+    # .fromtimestamp(start_time) converts the epoch to local wall time
+    # .astimezone() ensures it's an 'aware' object so %Z (timezone name) works
+    start_dt = datetime.datetime.fromtimestamp(start_time).astimezone()
+    duration_seconds = end_time - start_time
+
+    # 2. Format: Mon-DD-YYYY_HH-MM-SSAM/PM_TZ
+    # We use dashes '-' instead of colons ':' to ensure the filename is
+    # compatible with Windows and macOS file systems.
+    safe_start = start_dt.strftime("%b-%d-%Y_%I-%M-%S%p_%Z")
+
+    # 3. Generate the final filename
+    return f"{safe_start}_{duration_seconds:.2f}s.pcap"
