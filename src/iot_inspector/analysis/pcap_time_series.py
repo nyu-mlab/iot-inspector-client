@@ -5,6 +5,7 @@ from scapy.all import rdpcap, Ether
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 # --- Setup Logging ---
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
