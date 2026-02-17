@@ -93,9 +93,21 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
     
     # Add relative time column (seconds since first packet)
     df['rel_time'] = (df.index - df.index.min()).total_seconds()
-    # Resample and sum bytes based on the requested interval (e.g., '1Min' or '5Min')
-    interval = f'{interval_minutes}Min'
-    df_agg = df.resample(interval).sum()
+
+    BIN_SIZE = 0.05  # 50ms bins
+
+    max_time = df['rel_time'].max()
+    bins = np.arange(0, max_time + BIN_SIZE, BIN_SIZE)
+    
+    digitized = np.digitize(df['rel_time'], bins)
+    
+    upload_binned = np.zeros(len(bins))
+    download_binned = np.zeros(len(bins))
+    
+    for idx, row in zip(digitized, df.itertuples()):
+        if idx < len(bins):
+            upload_binned[idx] += row.upload_bytes
+            download_binned[idx] += row.download_bytes
 
     # Remove rows where all traffic is zero
     df_agg = df_agg[(df_agg['upload_bytes'] > 0) | (df_agg['download_bytes'] > 0)]
