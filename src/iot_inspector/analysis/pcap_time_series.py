@@ -109,32 +109,31 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
             upload_binned[idx] += row.upload_bytes
             download_binned[idx] += row.download_bytes
 
-    # Remove rows where all traffic is zero
-    df_agg = df_agg[(df_agg['upload_bytes'] > 0) | (df_agg['download_bytes'] > 0)]
-
     # --- 3. Plotting ---
     logger.info("Generating plot...")
 
     plt.style.use('seaborn-v0_8-whitegrid')
-    fig, ax = plt.subplots(figsize=(15, 7))
 
-    # Convert bytes to megabytes for plotting
-    df_agg['upload_mb'] = df_agg['upload_bytes'] / (1024 * 1024)
-    df_agg['download_mb'] = df_agg['download_bytes'] / (1024 * 1024)
-
-    # Plot the two series
-    df_agg['upload_mb'].plot(ax=ax, label='Upload Traffic (MB)', marker='.', linestyle='-', color='teal', linewidth=1.5)
-    df_agg['download_mb'].plot(ax=ax, label='Download Traffic (MB)', marker='.', linestyle='-', color='firebrick',
-                               linewidth=1.5)
-
-    # Customizing the plot
-    ax.set_title(f"Network Traffic Over Time for MAC: {target_mac}", fontsize=16)
-    ax.set_xlabel(f"Time (Aggregated every {interval_minutes} minute(s))", fontsize=12)
-    ax.set_ylabel("Data Transfer (Megabytes)", fontsize=12)
-    ax.legend(loc='upper right', fontsize=10)
-
-    # Format the x-axis to show HH:MM time, suitable for long captures
-    plt.xticks(rotation=45, ha='right')
+    upload_mb = upload_binned / (1024 * 1024)
+    download_mb = download_binned / (1024 * 1024)
+    
+    fig, axes = plt.subplots(
+        nrows=2,
+        ncols=1,
+        figsize=(15, 8),
+        sharex=True
+    )
+    
+    axes[0].plot(bins, upload_mb, linewidth=1.0)
+    axes[0].set_title(f"Upload Traffic (MAC: {target_mac})")
+    axes[0].set_ylabel("MB per bin")
+    axes[0].grid(True, alpha=0.3)
+    
+    axes[1].plot(bins, download_mb, linewidth=1.0)
+    axes[1].set_title("Download Traffic")
+    axes[1].set_ylabel("MB per bin")
+    axes[1].set_xlabel("Time (seconds since capture start)")
+    axes[1].grid(True, alpha=0.3)
 
     plt.tight_layout()
 
