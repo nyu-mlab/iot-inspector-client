@@ -49,4 +49,8 @@ def test_packets_in_different_bins():
         "download_bytes": [0, 0]
     })
 
-    bins, up, down = bin
+    bins, up, down = bin_traffic(df, bin_size=0.05)
+
+    assert np.sum(up) == 300
+    assert len(up) >= 2
+
