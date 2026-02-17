@@ -11,6 +11,29 @@ import numpy as np
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+def bin_traffic(df: pd.DataFrame, bin_size: float):
+    """
+    Bin upload and download bytes into fixed-width time bins.
+    """
+
+    if df.empty:
+        return np.array([]), np.array([]), np.array([])
+
+    max_time = df['rel_time'].max()
+    bins = np.arange(0, max_time + bin_size, bin_size)
+
+    digitized = np.digitize(df['rel_time'], bins)
+
+    upload_binned = np.zeros(len(bins))
+    download_binned = np.zeros(len(bins))
+
+    for idx, row in zip(digitized, df.itertuples()):
+        bin_index = idx - 1
+        if 0 <= bin_index < len(upload_binned):
+            upload_binned[bin_index] += row.upload_bytes
+            download_binned[bin_index] += row.download_bytes
+
+    return bins, upload_binned, download_binned
 
 def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, target_mac: str):
     """
@@ -95,20 +118,8 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
     df['rel_time'] = (df.index - df.index.min()).total_seconds()
 
     BIN_SIZE = 0.05  # 50ms bins
+    bins, upload_binned, download_binned = bin_traffic(df, BIN_SIZE)
 
-    max_time = df['rel_time'].max()
-    bins = np.arange(0, max_time + BIN_SIZE, BIN_SIZE)
-    
-    digitized = np.digitize(df['rel_time'], bins)
-    
-    upload_binned = np.zeros(len(bins))
-    download_binned = np.zeros(len(bins))
-    
-    for idx, row in zip(digitized, df.itertuples()):
-        bin_index = idx - 1
-        if 0 <= bin_index < len(upload_binned):
-            upload_binned[bin_index] += row.upload_bytes
-            download_binned[bin_index] += row.download_bytes
 
     # --- 3. Plotting ---
     logger.info("Generating plot...")
