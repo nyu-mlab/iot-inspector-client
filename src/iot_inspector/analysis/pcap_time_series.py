@@ -90,7 +90,9 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
 
     # Set timestamp as the index
     df = df.set_index('timestamp')
-
+    
+    # Add relative time column (seconds since first packet)
+    df['rel_time'] = (df.index - df.index.min()).total_seconds()
     # Resample and sum bytes based on the requested interval (e.g., '1Min' or '5Min')
     interval = f'{interval_minutes}Min'
     df_agg = df.resample(interval).sum()
