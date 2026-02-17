@@ -105,9 +105,10 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
     download_binned = np.zeros(len(bins))
     
     for idx, row in zip(digitized, df.itertuples()):
-        if idx < len(bins):
-            upload_binned[idx] += row.upload_bytes
-            download_binned[idx] += row.download_bytes
+        bin_index = idx - 1
+        if 0 <= bin_index < len(upload_binned):
+            upload_binned[bin_index] += row.upload_bytes
+            download_binned[bin_index] += row.download_bytes
 
     # --- 3. Plotting ---
     logger.info("Generating plot...")
