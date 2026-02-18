@@ -43,7 +43,6 @@ def sanitize_pcap(input_file: str, output_file: str):
 
     for packet in packets:
         # --- Filtering Logic (Dropping packets) ---
-
         should_drop = False
 
         # Check for protocols using specific UDP ports (DHCP, MDNS, SSDP)
@@ -88,7 +87,7 @@ def sanitize_pcap(input_file: str, output_file: str):
     logger.info("-" * 40)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Anonymize MACs and filter specific control packets (DHCP, SSDP, MDNS) from a PCAP file."
     )
@@ -107,6 +106,9 @@ if __name__ == "__main__":
         default="sanitized_output.pcap",
         help="The path to save the anonymized PCAP file (default: sanitized_output.pcap)."
     )
-
     args = parser.parse_args()
     sanitize_pcap(args.input_file, args.output)
+
+
+if __name__ == "__main__":
+    main()
