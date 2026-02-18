@@ -9,6 +9,9 @@ packets/**
 *.pem
 
 # Ignore packet dumps, except those in src/tests
+*.png
+*.jpeg
+*.jpg
 *.pcap
 *.pcapng
 !src/tests/data/

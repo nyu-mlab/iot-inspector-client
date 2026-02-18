@@ -77,3 +77,69 @@ CREATE TABLE network_flows (
         )
 );
 ```
+
+# IoT Inspector Helper Scripts
+We also include two scripts to help with development and debugging.
+
+## Anonymize
+After installing IoT Inspector, you can run the following command:
+```bash
+anonymize -i <input_pcap_file> -o <output_pcap_file>
+```
+
+Here is the help output
+```text
+anonymize -h
+usage: anonymize [-h] [-i INPUT_FILE] [-o OUTPUT]
+
+Anonymize MACs and filter specific control packets (DHCP, SSDP, MDNS) from a PCAP file.
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input INPUT_FILE
+                        The path to the input PCAP file.
+  -o OUTPUT, --output OUTPUT
+                        The path to save the anonymized PCAP file (default: sanitized_output.pcap).
+```
+
+The output PCAP file will have all 
+* MAC addresses anonymized 
+* all DHCP, SSDP, and MDNS packets removed. 
+
+This is useful for sharing PCAP files without revealing sensitive information.
+
+## PCAP Time Series
+After installing IoT Inspector, you can run the following command:
+```bash
+time-series -i <PCAP_FILE> -m <TARGET_MAC> -o <OUTPUT_PNG_FILE> --b <BIN_SIZE_IN_SECONDS>
+```
+
+Here is the help output
+```text
+usage: time_series [-h] -i INPUT_FILE -m TARGET_MAC [-o OUTPUT] [--interval INTERVAL]
+
+Analyze PCAP file to plot upload and download traffic over time for a specific MAC address.
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input INPUT_FILE
+                        The path to the input PCAP file.
+  -m TARGET_MAC, --target-mac TARGET_MAC
+                        The MAC address of the device to analyze (e.g., 'aa:bb:cc:dd:ee:ff').
+  -o OUTPUT, --output OUTPUT
+                        The path to save the output plot PNG file (default: traffic_timeseries.png).
+  -b BIN_SIZE, --bin BIN_SIZE
+                        The width of time bins in seconds for aggregating traffic data (default: 0.05 seconds).
+```
+
+The output will be a PNG file showing the upload and download traffic over time for the specified MAC address. This is useful for visualizing traffic patterns of a device in a PCAP file.
+
+The output should look something like this on the console.
+```text
+INFO: Starting analysis for: TEST.pcap
+INFO: Target MAC for analysis: 44:3d:54:e3:4b:6e
+INFO: Time bin size: 0.05 seconds
+INFO: Read 2392 packets. Starting data processing...
+INFO: Generating plot...
+INFO: Successfully saved plot to 'traffic_timeseries.png'
+```
