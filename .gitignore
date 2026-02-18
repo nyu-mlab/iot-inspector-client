@@ -1,3 +1,6 @@
+# Ignore MAC stuff
+__MACOSX/
+
 # Ignore packets directory
 packets/**
 
@@ -132,3 +135,9 @@ venv.bak/
 *.idea
 v2-src/.vscode/settings.json
 .vscode/settings.json
+
+# Configuration files
+config.json
+
+# ML models
+models/

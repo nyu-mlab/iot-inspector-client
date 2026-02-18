@@ -32,10 +32,10 @@ def bin_traffic(df: pd.DataFrame, bin_size: float):
         if 0 <= bin_index < len(upload_binned):
             upload_binned[bin_index] += row.upload_bytes
             download_binned[bin_index] += row.download_bytes
-
     return bins, upload_binned, download_binned
 
-def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, target_mac: str):
+
+def analyze_traffic(input_file: str, output_file: str, target_mac: str, bin_size: float):
     """
     Reads a PCAP file, calculates upload/download traffic for a specific MAC address
     over time, and generates a plot.
@@ -43,10 +43,10 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
     Args:
         input_file (str): Path to the input PCAP file.
         output_file (str): Path to save the output PNG plot.
-        interval_minutes (int): Time interval (in minutes) for aggregation.
         target_mac (str): The MAC address of the device to analyze (e.g., 'aa:bb:cc:dd:ee:ff').
+        bin_size (float): Width of time bins in seconds for aggregating traffic data.
     """
-    if not os.path.exists(input_file):
+    if not os.path.exists(input_file) or not os.path.isfile(input_file):
         logger.error(f"Error: Input file not found at '{input_file}'")
         return
 
@@ -55,7 +55,7 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
 
     logger.info(f"Starting analysis for: {input_file}")
     logger.info(f"Target MAC for analysis: {target_mac}")
-    logger.info(f"Aggregation interval: {interval_minutes} minute(s)")
+    logger.info(f"Time bin size: {bin_size} seconds")
 
     try:
         # 1. Read all packets from the input file
@@ -116,10 +116,7 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
     
     # Add relative time column (seconds since first packet)
     df['rel_time'] = (df.index - df.index.min()).total_seconds()
-
-    BIN_SIZE = 0.05  # 50ms bins
-    bins, upload_binned, download_binned = bin_traffic(df, BIN_SIZE)
-
+    bins, upload_binned, download_binned = bin_traffic(df, bin_size)
 
     # --- 3. Plotting ---
     logger.info("Generating plot...")
@@ -157,7 +154,7 @@ def analyze_traffic(input_file: str, output_file: str, interval_minutes: int, ta
         logger.error(f"Error saving plot to '{output_file}': {e}")
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Analyze PCAP file to plot upload and download traffic over time for a specific MAC address."
     )
@@ -186,13 +183,16 @@ if __name__ == "__main__":
         help="The path to save the output plot PNG file (default: traffic_timeseries.png)."
     )
     parser.add_argument(
-        "--interval",
-        dest="interval",
+        "-b", "--bin",
+        dest="bin_size",
         action="store",
-        type=int,
-        default=1,
-        help="The time aggregation interval in minutes (default: 1)."
+        type=float,
+        default=0.05,
+        help="The width of time bins in seconds for aggregating traffic data (default: 0.05 seconds)."
     )
-
     args = parser.parse_args()
-    analyze_traffic(args.input_file, args.output, args.interval, args.target_mac)
+    analyze_traffic(args.input_file, args.output, args.target_mac, args.bin_size)
+
+
+if __name__ == "__main__":
+    main()

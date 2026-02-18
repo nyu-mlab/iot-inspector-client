@@ -2,14 +2,23 @@
 requires = ["setuptools>=64", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
+[tool.pytest.ini_options]
+# Add both 'src' (for your code) and 'tests'
+pythonpath = [
+  "tests",
+]
+
+# Optional: Add this to see your debug prints automatically without typing -s
+addopts = "-s"
+
 [project]
 name = "iot-inspector"
 dynamic = ["version"]
 description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = ">=3.10"
 dependencies = [
-    "libinspector==1.0.12",
+    "libinspector==1.0.15",
     "streamlit>=1.52.1",
     "matplotlib==3.10.8",
 ]
@@ -18,9 +27,19 @@ authors = [
     { name = "Andrew Quijano", email = "andrew.quijano@nyu.edu" }
 ]
 license = "Apache-2.0"
+keywords = ["iot-inspector", "network-traffic-analysis", "network-monitoring", "iot-security"]
 classifiers = [
+    "Topic :: System :: Networking :: Monitoring",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English"
 ]
 
 [tool.setuptools.packages.find]
@@ -40,7 +59,13 @@ iot_inspector = [
 [tool.setuptools]
 include-package-data = true
 
+[project.scripts]
+anonymize = "iot_inspector.analysis.anonymize:main"
+time_series = "iot_inspector.analysis.pcap_time_series:main"
+
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"
 Source = "https://github.com/nyu-mlab/iot-inspector-client/"
 Tracker = "https://github.com/nyu-mlab/iot-inspector-client/issues"
+Documentation = "https://github.com/nyu-mlab/iot-inspector-client/wiki"
+Download = "https://github.com/nyu-mlab/iot-inspector-client/releases/latest"
