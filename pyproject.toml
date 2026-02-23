@@ -70,6 +70,7 @@ include-package-data = true
 [project.scripts]
 anonymize = "iot_inspector.analysis.anonymize:main"
 time_series = "iot_inspector.analysis.pcap_time_series:main"
+iot_inspector = "iot_inspector.dashboard:main"
 
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"
