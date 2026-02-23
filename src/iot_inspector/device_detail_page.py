@@ -79,8 +79,8 @@ def _load_json_data(filename: str) -> dict:
         # FileNotFoundError is common for optional config files, log as warning
         logger.exception(f"Configuration file not found: {data_path}")
         return {}
-    except json.JSONDecodeError as e:
-        logger.exception(f"Error decoding JSON from {data_path}: {e}")
+    except json.JSONDecodeError:
+        logger.exception(f"Error decoding JSON from {data_path}.")
         return {}
 
 
@@ -320,10 +320,10 @@ def label_thread():
                 logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
                 common.config_set('api_message', "error|No packets were captured for labeling.")
         except requests.RequestException as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
             common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
         except Exception as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred: {e}")
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
             common.config_set('api_message', f"error|An unexpected error occurred: {e}")
         finally:
             pending_packet_list.clear()
