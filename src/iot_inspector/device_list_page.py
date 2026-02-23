@@ -6,7 +6,7 @@ import logging
 import json
 
 
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 
 
 def show():

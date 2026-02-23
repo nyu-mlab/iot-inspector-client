@@ -3,15 +3,13 @@ import os
 import base64
 import time
 import sys
-import datetime
 import re
 from .directory_explore import run_ls_command, get_label_summary
-from .pcap_check import convert_bytes_to_packet, check_for_application_data
+from .pcap_check import convert_bytes_to_packet, check_for_application_data, make_pcap_filename
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from scapy.all import wrpcap
-
 
 load_dotenv()
 app = Flask(__name__)
@@ -78,6 +76,7 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
 
     return True
 
+
 @app.route('/label_packets', methods=['GET'])
 def check_status():
     """
@@ -109,7 +108,8 @@ def label_packets():
 
     data = request.get_json()
     app.logger.info("Received POST data:", json.dumps(data, indent=4))
-    required_keys = ["packets", "prolific_id", "mac_address", "device_category", "device_name", "activity_label", "start_time", "end_time"]
+    required_keys = ["packets", "prolific_id", "mac_address", "device_category", "device_name", "activity_label",
+                     "start_time", "end_time"]
     if not data or not all(key in data for key in required_keys):
         app.logger.warning("Missing required fields in POST data")
         return jsonify({"message": "Missing required fields"}), 400
@@ -137,7 +137,8 @@ def label_packets():
     fullpath = os.path.normpath(os.path.join(packet_root_dir, folder_path))
     if not fullpath.startswith(packet_root_dir):
         app.logger.warning("Invalid characters detected in path components")
-        return jsonify({"message": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
+        return jsonify(
+            {"message": "Seems like invalid characters used in prolific ID, device name or activity label"}), 500
 
     prolific_user_packets_collected = db[data["prolific_id"]]
 
@@ -182,35 +183,6 @@ def label_packets():
             "inserted": 1,
             "message": "PCAP file creation failed. Data successfully saved to MongoDB.",
         }), 500
-
-
-def make_pcap_filename(start_time: int, end_time: int) -> str:
-    """
-    Generates a pcap filename that is both human-readable and informative.
-    The format is: 'Mon-DD-YYYY_HHMMSSAM/PM_DurationSeconds.pcap'
-
-    Example: 'Oct-31-2025_11:31:00AM_6s.pcap'
-
-    Args:
-        start_time (int): Start time in seconds since the epoch.
-        end_time (int): End time in seconds since the epoch.
-
-    Returns:
-        str: Human-readable filename.
-    """
-    # Determine the local timezone object of the machine running the script.
-    local_tz = datetime.datetime.now().astimezone().tzinfo
-
-    # We explicitly tell fromtimestamp() that the input is UTC.
-    start_dt_utc = datetime.datetime.fromtimestamp(start_time, tz=datetime.timezone.utc)
-    start_dt_localized = start_dt_utc.astimezone(local_tz)
-    duration_seconds = end_time - start_time
-    # Format: Mon-DD-YYYY_HH-MM-SSAM/PM_TZ
-    safe_start = start_dt_localized.strftime("%b-%d-%Y_%I-%M-%S%p_%Z")
-
-    # Generate the filename with duration
-    filename = f"{safe_start}_{duration_seconds:.2f}s.pcap"
-    return filename
 
 
 if __name__ == '__main__':

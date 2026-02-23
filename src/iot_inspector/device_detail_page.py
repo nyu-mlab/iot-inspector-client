@@ -14,8 +14,10 @@ import logging
 from collections import deque
 from typing import Deque, Dict, Any
 
+import event_detection.global_state
+
 _labeling_event_deque : Deque[Dict[str, Any]] = deque()
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 
 
 def show():
@@ -39,14 +41,14 @@ def show():
         return
 
     device_dict = get_device_info(device_mac_address)
+    if not device_dict:
+        st.error(f"No device found with MAC address: {device_mac_address}")
+        return
+    
     ip_address = device_dict['ip_address']
     show_cool_down()
     label_activity_workflow(device_mac_address, ip_address)
     device_custom_name = common.get_device_custom_name(device_mac_address)
-
-    if not device_dict:
-        st.error(f"No device found with MAC address: {device_mac_address}")
-        return
 
     st.markdown(f"### {device_custom_name}")
     st.caption(f"MAC Address: {device_mac_address} | IP Address: {ip_address}")
@@ -75,10 +77,10 @@ def _load_json_data(filename: str) -> dict:
             return json.load(f)
     except FileNotFoundError:
         # FileNotFoundError is common for optional config files, log as warning
-        logger.warning(f"Configuration file not found: {data_path}")
+        logger.exception(f"Configuration file not found: {data_path}")
         return {}
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON from {data_path}: {e}")
+    except json.JSONDecodeError:
+        logger.exception(f"Error decoding JSON from {data_path}.")
         return {}
 
 
@@ -257,7 +259,7 @@ def label_thread():
         end_dt_object = datetime.datetime.fromtimestamp(end_time)
         end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        start_dt_object = datetime.datetime.fromtimestamp( _labeling_event_deque[0].get('start_time', None))
+        start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
         start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
         logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
@@ -318,8 +320,11 @@ def label_thread():
                 logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
                 common.config_set('api_message', "error|No packets were captured for labeling.")
         except requests.RequestException as e:
-            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
             common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
+        except Exception as e:
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
+            common.config_set('api_message', f"error|An unexpected error occurred: {e}")
         finally:
             pending_packet_list.clear()
 
@@ -328,6 +333,8 @@ def reset_labeling_state():
     """
     Resets all state variables related to a labeling session.
     """
+    common.config_set('packet_count', 0)
+    common.config_set('labeling_in_progress', False)
     st.session_state['countdown'] = False
     st.session_state['show_labeling_setup'] = False
     st.session_state['start_time'] = None
@@ -384,8 +391,6 @@ def _cancel_label_callback():
         logger.info("[Packets] Removing labeling event from the queue due to cancellation.")
         _labeling_event_deque.pop()
     common.config_set('api_message', "warning|Labeling session has been canceled. No packets were sent.")
-    common.config_set('labeling_in_progress', False)
-    common.config_set('packet_count', 0)
     reset_labeling_state()
 
 
@@ -424,8 +429,6 @@ def _send_packets_callback():
         st.session_state['end_time'] = _labeling_event_deque[-1]['end_time']
     common.config_set('last_label_end_time', st.session_state['end_time'])
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
-    common.config_set('labeling_in_progress', False)
-    common.config_set('packet_count', 0)
     reset_labeling_state()
 
     # Reset the duplicate count if this label is different from the last one
@@ -482,15 +485,16 @@ def _resolve_conflict_callback(mac_address: str, current_device: str):
     if old_device:
         common.config_set(f"label@{old_device}", {})
     common.config_set(f"mac_to_device@{mac_address}", "")
-    st.toast("⚠️ Previous mapping deleted. Please confirm the new mapping.")
+    st.toast("⚠️ Previous mapping deleted. Confirm the correct device mapping next time.")
+    reset_labeling_state()
 
 
 def _cancel_mapping_callback():
     """
     Simply force a selection change or clear query params to 'reset' the page
     """
+    st.toast("Cancel labeling due to labeling mismatch detected!")
     reset_labeling_state()
-    st.toast("Verification cancelled. Please adjust your selections next time.")
 
 
 def update_device_inspected_status(mac_address: str):
@@ -645,8 +649,8 @@ def label_activity_workflow(mac_address: str, ip_address: str):
             with col2:
                 st.button("Cancel Labeling",
                           on_click=_cancel_mapping_callback,
-                          use_container_width=True,
-                          help="Click to cancel labeling.")
+                          help="Click to cancel labeling.",
+                          use_container_width=True)
             # Stop execution here so they can't start labeling with a conflict
             return
 
@@ -783,6 +787,10 @@ def save_labeled_activity_packets(pkt):
     Args:
         pkt: The network packet (scapy packet) to process.
     """
+
+    # Note: (Jakaria) I need to save a copy of the packet, for event inference
+    event_detection.global_state.packet_queue.put(pkt)
+
     if len(_labeling_event_deque) == 0:
         return
 
@@ -895,6 +903,9 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
 
 @st.fragment(run_every=1)
 def show_device_bar_graph(mac_address: str):
+    """
+    Show a bar graph of traffic volume for the device in the last 60 seconds, split by upload (sent) and download (received).
+    """
     now = int(time.time())
     device_upload, device_download = common.bar_graph_data_frame(now)
 
@@ -902,7 +913,7 @@ def show_device_bar_graph(mac_address: str):
     common.plot_traffic_volume(device_upload_graph, "Upload Traffic (sent by device) in the last 60 seconds",
                                full_width=True)
 
-    device_download_graph = device_upload[device_download['mac_address'] == mac_address]
+    device_download_graph = device_download[device_download['mac_address'] == mac_address]
     common.plot_traffic_volume(device_download_graph, "Download Traffic (received by device) in the last 60 seconds",
                                full_width=True)
 
@@ -929,6 +940,51 @@ def show_device_network_flow(mac_address: str):
     df_upload_host_table, df_download_host_table = get_host_flow_tables(mac_address, sixty_seconds_ago)
     process_network_flows(df_upload_host_table, "#### Upload Network Hosts (sent by device) in the last 60 seconds")
     process_network_flows(df_download_host_table, "#### Download Network Hosts (received by device) in the last 60 seconds")
+    display_inferred_events(mac_address)
+
+
+def display_inferred_events(mac_address: str):
+    """
+    Snapshot the queue without consuming it so other threads remain unaffected
+    """
+    q = event_detection.global_state.filtered_event_queue
+    with q.mutex:
+        events_snapshot = list(q.queue)
+
+    # 1. Fetch current list from config (under your new key)
+    current_event_list = common.config_get("event_list", [])
+
+    # 2. Build a set of "seen" fingerprints (Time + Event)
+    # This prevents adding the exact same event at the exact same time twice.
+    seen = {(e['Time'], e['Event']) for e in current_event_list}
+
+    rows = []
+    for item in events_snapshot:
+        if not isinstance(item, tuple) or len(item) != 3:
+            continue
+
+        device, ts, event = item
+        if device == mac_address:
+            rows.append({"Time": ts, "Event": event})
+            if (ts, event) not in seen:
+                seen.add((ts, event))
+
+    # 3. Update the config only if there's new data
+    current_event_list.extend(seen)
+    # Optional: Keep it tidy by sorting by timestamp
+    current_event_list.sort(key=lambda x: x['Time'])
+    common.config_set("event_list", current_event_list)
+
+    if not rows:
+        st.info("No inferred events yet for this device.")
+        return
+
+    # rows.sort(key=lambda r: r["_ts"] if isinstance(r["_ts"], (int, float)) else 0, reverse=True)
+    df = pd.DataFrame(rows)[["Time", "Event"]]
+
+    st.markdown("#### Inferred Events")
+    st.data_editor(df, hide_index=True, width='content')
+
 
 
 def show_device_list():

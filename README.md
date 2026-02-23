@@ -1,7 +1,5 @@
 # IoT Inspector 3
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)  
-[![libinspector_test](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml/badge.svg)](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml)  
-[![codecov](https://codecov.io/gh/nyu-mlab/iot-inspector-client/graph/badge.svg?token=SFZ2QUJWQW)](https://codecov.io/gh/nyu-mlab/iot-inspector-client)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)[![libinspector_test](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml/badge.svg)](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml)[![codecov](https://codecov.io/gh/nyu-mlab/iot-inspector-client/graph/badge.svg?token=SFZ2QUJWQW)](https://codecov.io/gh/nyu-mlab/iot-inspector-client)
 
 Simply run `./start.bash` for Linux/Mac and `start.bat` for Windows. It will take care of all the dependencies.
 

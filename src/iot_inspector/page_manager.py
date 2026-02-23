@@ -14,8 +14,17 @@ import threading
 import libinspector.global_state
 from iot_inspector.background.device_id_api_thread import api_worker_thread
 
+from libinspector import safe_loop
+from event_detection import packet_processor
+from event_detection import burst_processor
+from event_detection import feature_generation
+from event_detection import feature_standardization
+from event_detection import periodic_filter
+from event_detection import predict_event
+from event_detection import model_selection
 
-def get_page(title, material_icon, show_page_func):
+
+def get_page(title: str, material_icon: str, show_page_func):
     icon = f":material/{material_icon}:"
     url_path = title.lower().replace(' ', '_')
 
@@ -41,7 +50,6 @@ def get_page(title, material_icon, show_page_func):
 
 
 def initialize_page():
-
     # Set the page properties
     st.set_page_config(
         page_title="IoT Inspector",
@@ -79,11 +87,33 @@ def initialize_config():
     common.config_set("last_labeled_label", "")
     common.config_set("consecutive_duplicate_count",0)
     common.config_set("last_label_end_time", 0)
+    common.config_set("event_list", [])
 
 
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
+    # Download the models
+    model_selection.download_models()
+
+    # Start the packet processing thread
+    safe_loop.SafeLoopThread(packet_processor.start)
+
+    # Start the burst processing thread
+    safe_loop.SafeLoopThread(burst_processor.start)
+
+    # Start the feature processing thread
+    safe_loop.SafeLoopThread(feature_generation.start)
+
+    # Start the feature standardization thread
+    safe_loop.SafeLoopThread(feature_standardization.start)
+
+    # Start the periodic filter thread
+    safe_loop.SafeLoopThread(periodic_filter.start)
+
+    # Start the event prediction thread
+    safe_loop.SafeLoopThread(predict_event.start)
+
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
         api_thread = threading.Thread(

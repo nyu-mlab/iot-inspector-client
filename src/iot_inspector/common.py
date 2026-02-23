@@ -17,7 +17,7 @@ config_file_name = 'config.json'
 config_lock = threading.Lock()
 config_dict = {}
 
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 warning_text = (
     "⚠️ **IoT Inspector Warning**\n\n"
     "This tool monitors network traffic using techniques such as ARP spoofing. "
@@ -469,11 +469,11 @@ def get_device_custom_name(mac_address: str) -> str:
         device_custom_name = config_get(device_custom_name_key)
     except KeyError:
         # Use the last part of the MAC address as the name suffix
-        logger.debug(f"KeyError: Custom name not found in config, using default naming. {device_custom_name_key}")
+        logger.exception(f"KeyError: Custom name not found in config, using default naming. {device_custom_name_key}")
         device_custom_name = mac_address.split(':')[-1].upper()
         device_custom_name = f'Unnamed Device {device_custom_name}'
     except Exception as e:
-        logger.error(f"Error retrieving custom name in config, using default naming: {e}")
+        logger.exception(f"Error retrieving custom name in config, using default naming: {e}")
         device_custom_name = mac_address.split(':')[-1].upper()
         device_custom_name = f'Unnamed Device {device_custom_name}'
     return device_custom_name

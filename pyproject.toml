@@ -16,11 +16,19 @@ name = "iot-inspector"
 dynamic = ["version"]
 description = "IoT Inspector Client for analyzing IoT device firmware"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <3.14"
 dependencies = [
-    "libinspector==1.0.15",
+    "pandas==2.3.3",
+    "flask==3.1.3",
+    "pymongo==4.16.0",
+    "python-dotenv==1.2.1",
+    "libinspector>=1.0.17",
     "streamlit>=1.52.1",
+    "gdown>=5.2.1",
     "matplotlib==3.10.8",
+    "scipy==1.15.3",
+    "statsmodels==0.14.4",
+    "scikit-learn==1.7.0",
 ]
 authors = [
     { name = "Danny Huang", email = "dhuang@nyu.edu" },
@@ -62,6 +70,7 @@ include-package-data = true
 [project.scripts]
 anonymize = "iot_inspector.analysis.anonymize:main"
 time_series = "iot_inspector.analysis.pcap_time_series:main"
+iot_inspector = "iot_inspector.dashboard:main"
 
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"

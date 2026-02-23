@@ -9,7 +9,7 @@ import json
 import common
 # NOTE: do NOT use .. for import. This will cause two config_dicts! Do NOT try that again!
 
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 # Define the common TXT record keys that hold the best, most human-readable name,
 # in order of preference (most descriptive first).
 # Keys prioritized from most human-friendly to most technical/model-based.
@@ -139,20 +139,19 @@ def api_worker_thread():
             mdns_device_list = meta_data.get('mdns_json', [])
             mdns_device_name = guess_device_name_from_mdns_list(mdns_device_list)
             oui_vendor = meta_data.get('oui_vendor', '').strip()
-            remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
             custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
             common.config_set(f"oui@{device_dict['mac_address']}", meta_data.get("oui_vendor", ""))
             try:
                 # Note I am passing the metadata as a string because functions with cache cannot take dicts
                 # as a dict is mutable, and the cache would not work as expected.
+                remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
                 api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
                 common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
                 if "Vendor" in api_output:
                     custom_name = api_output["Vendor"]
                     if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
                         common.config_set(custom_name_key, custom_name)
-            except Exception as e:
-                logger.info("[Device ID API] Exception when calling API: %s", str(e))
+            except RuntimeError:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
                 if mdns_device_name:
                     # Prioritize the full mDNS name as it's the most descriptive identifier
@@ -164,6 +163,8 @@ def api_worker_thread():
                     # Use the final generic fallback name
                     final_device_name = 'Unknown Device, likely a Mobile Phone'
                 common.config_set(custom_name_key, final_device_name)
+            except Exception as e:
+                logger.exception(f"[Device ID API] Unexpected error while calling API for device {device_dict['mac_address']}: {e}")
         time.sleep(15)
         logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
 
@@ -220,8 +221,6 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
         if field_name != "talks_to_ads" and bool(field_value)
     ]
     if len(non_empty_field_values) < 2:
-        logger.warning(
-            "[Device ID API] Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
         raise RuntimeError(
             "Fewer than two string fields in data are non-empty; refusing to call API. Wait until IoT Inspector collects more data.")
 
@@ -233,8 +232,7 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
         response.raise_for_status()
         result = response.json()
     except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(f"[Device ID API] API request failed: {e}")
+        logger.exception(f"[Device ID API] API request failed: {e}")
         raise RuntimeError("API request failed, not caching this result.")
 
-    logger.info("[Device ID API] API query successful!")
     return result
