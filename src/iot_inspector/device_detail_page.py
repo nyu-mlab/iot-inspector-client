@@ -17,7 +17,7 @@ from typing import Deque, Dict, Any
 import event_detection.global_state
 
 _labeling_event_deque : Deque[Dict[str, Any]] = deque()
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 
 
 def show():
@@ -77,10 +77,10 @@ def _load_json_data(filename: str) -> dict:
             return json.load(f)
     except FileNotFoundError:
         # FileNotFoundError is common for optional config files, log as warning
-        logger.warning(f"Configuration file not found: {data_path}")
+        logger.exception(f"Configuration file not found: {data_path}")
         return {}
     except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON from {data_path}: {e}")
+        logger.exception(f"Error decoding JSON from {data_path}: {e}")
         return {}
 
 
@@ -320,8 +320,11 @@ def label_thread():
                 logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
                 common.config_set('api_message', "error|No packets were captured for labeling.")
         except requests.RequestException as e:
-            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission: {e}")
             common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
+        except Exception as e:
+            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred: {e}")
+            common.config_set('api_message', f"error|An unexpected error occurred: {e}")
         finally:
             pending_packet_list.clear()
 

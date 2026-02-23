@@ -23,7 +23,8 @@ from event_detection import periodic_filter
 from event_detection import predict_event
 from event_detection import model_selection
 
-def get_page(title, material_icon, show_page_func):
+
+def get_page(title: str, material_icon: str, show_page_func):
     icon = f":material/{material_icon}:"
     url_path = title.lower().replace(' ', '_')
 
@@ -49,7 +50,6 @@ def get_page(title, material_icon, show_page_func):
 
 
 def initialize_page():
-
     # Set the page properties
     st.set_page_config(
         page_title="IoT Inspector",
