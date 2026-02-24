@@ -2,9 +2,14 @@ import streamlit as st
 import page_manager
 import sidebar
 import os
+import common
 
 
 def main():
+    """
+    Main function to run the IoT Inspector dashboard.
+    """
+    common.fix_ssl_paths()
     nav_menu_list = [
         page_manager.device_list_page_obj,
         page_manager.overview_page_obj,

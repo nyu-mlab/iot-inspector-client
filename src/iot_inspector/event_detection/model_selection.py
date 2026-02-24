@@ -3,6 +3,7 @@ import logging
 import gdown
 import zipfile
 import requests
+import certifi
 from functools import lru_cache
 
 # This file aims to provide a set of functions to 
@@ -36,7 +37,7 @@ def download_models():
     logger.info(f"Downloading models to {zip_path}...")
     url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_ID}"
     try:
-        gdown.download(url, zip_path, quiet=False)
+        gdown.download(url, zip_path, quiet=False, verify=certifi.where())
     except requests.exceptions.ConnectionError:
         logger.error("Network unreachable. Check your internet connection or Caddy proxy.")
         return
@@ -83,7 +84,7 @@ def is_close_match(str1: str, str2: str, threshold=0.75) -> int:
 
 
 @lru_cache(maxsize=128)
-def find_best_match(device_name: str, model_names=None, threshold=0.75):
+def find_best_match(device_name: str, model_names=None, threshold: float = 0.75):
     best_match = None
     highest_score = 0
 

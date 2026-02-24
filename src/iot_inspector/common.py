@@ -8,6 +8,8 @@ import typing
 import streamlit as st
 import logging
 import re
+import certifi
+import os
 import matplotlib.pyplot as plt
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
@@ -132,6 +134,16 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
         return False
 
     return True
+
+
+def fix_ssl_paths():
+    """
+    Forces Python to use the correct CA Bundle path.
+    Fixes the non-deterministic OSError on Windows/OneDrive.
+    """
+    path = certifi.where()
+    os.environ['REQUESTS_CA_BUNDLE'] = path
+    os.environ['SSL_CERT_FILE'] = path
 
 
 @st.cache_data(ttl=1, show_spinner=False)

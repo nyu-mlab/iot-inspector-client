@@ -11,6 +11,7 @@ import scapy.all as sc
 import json
 import os
 import logging
+import certifi
 from collections import deque
 from typing import Deque, Dict, Any
 from libinspector.privacy import get_country_from_ip_addr
@@ -233,6 +234,7 @@ def label_thread():
     It runs every 15 seconds, and if the labeling session has ended, it processes
     and sends the packets in the queue to the remote API endpoint.
     """
+    common.fix_ssl_paths()
     pending_packet_list = []
     logger.info("[Packets] Labeling Packets Thread started.")
     while True:
@@ -302,7 +304,8 @@ def label_thread():
                 response = requests.post(
                     api_url,
                     json=payload,
-                    timeout=30
+                    timeout=30,
+                    verify=certifi.where()
                 )
                 if response.status_code == 200:
                     logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
