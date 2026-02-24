@@ -13,7 +13,7 @@ import os
 import logging
 from collections import deque
 from typing import Deque, Dict, Any
-
+from libinspector.privacy import get_country_from_ip_addr
 import event_detection.global_state
 
 _labeling_event_deque : Deque[Dict[str, Any]] = deque()
@@ -872,6 +872,7 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
                        SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
                               DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
                               COALESCE(dest_hostname, dest_ip_address)           AS dest_info,
+                              dest_ip_address,
                               ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
                        FROM network_flows
                        WHERE src_mac_address = ?
@@ -885,6 +886,7 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
                          SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
                                 DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
                                 COALESCE(src_hostname, src_ip_address)             AS src_info,
+                                src_ip_address,
                                 ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
                          FROM network_flows
                          WHERE dest_mac_address = ?
@@ -898,6 +900,11 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
         df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
         df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
 
+    if not df_upload_host_table.empty:
+        df_upload_host_table['country'] = df_upload_host_table['dest_ip_address'].apply(get_country_from_ip_addr)
+
+    if not df_download_host_table.empty:
+        df_download_host_table['country'] = df_download_host_table['src_ip_address'].apply(get_country_from_ip_addr)
     return df_upload_host_table, df_download_host_table
 
 
