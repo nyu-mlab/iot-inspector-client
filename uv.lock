@@ -686,7 +686,7 @@ requires-dist = [
     { name = "certifi", specifier = "==2026.1.4" },
     { name = "flask", specifier = "==3.1.3" },
     { name = "gdown", specifier = ">=5.2.1" },
-    { name = "libinspector", specifier = ">=1.0.17" },
+    { name = "libinspector", specifier = ">=1.0.18" },
     { name = "matplotlib", specifier = "==3.10.8" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pymongo", specifier = "==4.16.0" },
@@ -839,19 +839,18 @@ wheels = [
 
 [[package]]
 name = "libinspector"
-version = "1.0.17"
+version = "1.0.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "geoip2" },
     { name = "netaddr" },
-    { name = "platformdirs" },
     { name = "psutil" },
     { name = "requests" },
     { name = "scapy" },
     { name = "zeroconf" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/9b/92b3762303a8d12b12d30987aa86c7b495c5489a5c6c66c932e363ea93b7/libinspector-1.0.17-py3-none-any.whl", hash = "sha256:1c9e206c36507ec43aa3d16199c768465105c5e38c12c4f84c6f2543ef05ecdf", size = 6801067, upload-time = "2026-02-22T17:08:59.948Z" },
+    { url = "https://files.pythonhosted.org/packages/db/cc/20c996d92a6ad8aee5b0801f142ea8e404923983590835df6da0d7f2d58a/libinspector-1.0.18-py3-none-any.whl", hash = "sha256:25711fd0c1bf446c4c707cf4b38762440c7fff64dd112a52761835559aab7023", size = 6801208, upload-time = "2026-02-25T02:57:43.898Z" },
 ]
 
 [[package]]
@@ -1429,15 +1428,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/00/98/fc53ab36da80b88df0967896b6c4b4cd948a0dc5aa40a754266aa3ae48b3/pillow-12.1.1-pp311-pypy311_pp73-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f975aa7ef9684ce7e2c18a3aa8f8e2106ce1e46b94ab713d156b2898811651d3", size = 5313850, upload-time = "2026-02-11T04:23:00.554Z" },
     { url = "https://files.pythonhosted.org/packages/30/02/00fa585abfd9fe9d73e5f6e554dc36cc2b842898cbfc46d70353dae227f8/pillow-12.1.1-pp311-pypy311_pp73-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8089c852a56c2966cf18835db62d9b34fef7ba74c726ad943928d494fa7f4735", size = 5963343, upload-time = "2026-02-11T04:23:02.934Z" },
     { url = "https://files.pythonhosted.org/packages/f2/26/c56ce33ca856e358d27fda9676c055395abddb82c35ac0f593877ed4562e/pillow-12.1.1-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:cb9bb857b2d057c6dfc72ac5f3b44836924ba15721882ef103cecb40d002d80e", size = 7029880, upload-time = "2026-02-11T04:23:04.783Z" },
-]
-
-[[package]]
-name = "platformdirs"
-version = "4.9.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1b/04/fea538adf7dbbd6d186f551d595961e564a3b6715bdf276b477460858672/platformdirs-4.9.2.tar.gz", hash = "sha256:9a33809944b9db043ad67ca0db94b14bf452cc6aeaac46a88ea55b26e2e9d291", size = 28394, upload-time = "2026-02-16T03:56:10.574Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/31/05e764397056194206169869b50cf2fee4dbbbc71b344705b9c0d878d4d8/platformdirs-4.9.2-py3-none-any.whl", hash = "sha256:9170634f126f8efdae22fb58ae8a0eaa86f38365bc57897a6c4f781d1f5875bd", size = 21168, upload-time = "2026-02-16T03:56:08.891Z" },
 ]
 
 [[package]]
