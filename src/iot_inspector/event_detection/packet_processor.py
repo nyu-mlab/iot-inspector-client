@@ -11,12 +11,9 @@ logger = logging.getLogger(__name__)
 seen_packets = set()
 
 def start():
-
     pkt = global_state.packet_queue.get()
-
     try:
         process_packet_helper(pkt)
-
     except Exception as e:
         logger.error(f'[Pkt Processor] Error processing packet: {e} for packet: {pkt}\n{traceback.format_exc()}')
 

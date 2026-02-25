@@ -8,6 +8,8 @@ import typing
 import streamlit as st
 import logging
 import re
+import certifi
+import os
 import matplotlib.pyplot as plt
 import libinspector.global_state
 from libinspector.privacy import is_ad_tracked
@@ -132,6 +134,16 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
         return False
 
     return True
+
+
+def fix_ssl_paths():
+    """
+    Forces Python to use the correct CA Bundle path.
+    Fixes the non-deterministic OSError on Windows/OneDrive.
+    """
+    path = certifi.where()
+    os.environ['REQUESTS_CA_BUNDLE'] = path
+    os.environ['SSL_CERT_FILE'] = path
 
 
 @st.cache_data(ttl=1, show_spinner=False)
@@ -363,7 +375,7 @@ def get_all_devices() -> list[dict]:
     return device_list
 
 
-def get_human_readable_time(timestamp=None):
+def get_human_readable_time(timestamp: float = None) -> str:
     """
     Convert a timestamp to a human-readable time format.
 
@@ -395,7 +407,7 @@ def initialize_config_dict():
     config_dict['app_start_time'] = time.time()
 
 
-def config_get(key, default=None) -> typing.Any:
+def config_get(key: str, default=None) -> typing.Any:
     """
     Get a configuration value.
 
@@ -418,7 +430,7 @@ def config_get(key, default=None) -> typing.Any:
         raise KeyError(f"Key '{key}' not found in configuration.")
 
 
-def config_get_prefix(key_prefix: str):
+def config_get_prefix(key_prefix: str) -> dict:
     """
     Get all configuration values that start with a given prefix.
 

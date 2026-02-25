@@ -171,7 +171,7 @@ def api_worker_thread():
 
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
-                     mac_address: str, url="http://159.65.184.153:8080/predict") -> dict:
+                     mac_address: str, url="http://100.99.193.120:8080/predict") -> dict:
     """
     Call the predicting API with the given fields.
     This takes the MAC Address of an inspected device
