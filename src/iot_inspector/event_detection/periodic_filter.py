@@ -23,7 +23,7 @@ def start():
         logger.error('[Periodic Filter] Error processing burst: ' + str(e) + ' for burst: ' + str(burst) + '\n' + traceback.format_exc())
 
 
-def periodic_filter_burst_helper(burst, device_name, model_name):
+def periodic_filter_burst_helper(burst, device_name: str, model_name: str):
     """
     Filter out periodic bursts from the standardized burst features.
     Args:

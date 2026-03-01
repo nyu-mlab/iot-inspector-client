@@ -42,7 +42,7 @@ def start():
 # todo: update every 10 mins, or clean memory every 10 mis 
 # @ttl_lru_cache(ttl_seconds=300, maxsize=128)
 @ttl_cache(maxsize=128, ttl=300)
-def get_ss_pca_model(device_name):
+def get_ss_pca_model(device_name: str):
     if device_name == 'unknown':
         return "unknown", "unknown"
 

@@ -18,7 +18,7 @@ def start():
         logger.error(f'[Pkt Processor] Error processing packet: {e} for packet: {pkt}\n{traceback.format_exc()}')
 
 
-def process_packet_helper(pkt):
+def process_packet_helper(pkt: sc.Packet):
 
     # ====================
     # Process individual packets and terminate
@@ -63,7 +63,7 @@ def process_packet_helper(pkt):
 
 
 # # Packet deduplication and retransmission detection
-def process_retransmission(pkt):
+def process_retransmission(pkt: sc.Packet):
     global seen_packets
 
     if len(seen_packets) > 5000:
@@ -84,7 +84,7 @@ def process_retransmission(pkt):
         return False
     
 # Check packet deduplication for UDP packets
-def is_duplicate_udp(pkt):
+def is_duplicate_udp(pkt: sc.Packet) -> bool:
     global seen_packets
    
     if len(seen_packets) > 5000:
