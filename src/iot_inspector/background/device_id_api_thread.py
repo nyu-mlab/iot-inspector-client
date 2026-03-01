@@ -151,6 +151,9 @@ def api_worker_thread():
                     custom_name = api_output["Vendor"]
                     if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
                         common.config_set(custom_name_key, custom_name)
+            except requests.exceptions.ReadTimeout:
+                logger.warning(
+                    "[Device ID API] API request timed out. This may be a temporary issue. Will retry on the next scheduled call.")
             except RuntimeError:
                 # If API is down, just try using OUI vendor if no custom name is set in config.json
                 if mdns_device_name:

@@ -114,9 +114,9 @@ def show_device_bar_graph(device_dict: dict):
         caption += f' | {metadata_dict["oui_vendor"]}'
 
     api_output = common.config_get(f'device_details@{device_dict["mac_address"]}', default={})
-    if "Vendor" in api_output or "Explanation" in api_output:
-        vendor = api_output.get("Vendor", "")
-        explanation = api_output.get("Explanation", "")
+    if "vendor" in api_output or "explanation" in api_output:
+        vendor = api_output.get("vendor", "")
+        explanation = api_output.get("explanation", "")
         if vendor or explanation:
             caption += f"| Vendor: {vendor} | Explanation: {explanation}"
     st.caption(caption, help='IP address, MAC address, manufacturer OUI, and Device Identification API output')
