@@ -12,8 +12,6 @@ def exit_application_callback():
     """
     if packet_collector.inspector_is_running():
         st.warning("IoT Inspector closing... Please wait a moment.")
-        with libinspector.global_state.global_state_lock:
-            libinspector.global_state.is_running = False
     else:
         st.info("IoT Inspector was already not running.")
     libinspector.core.clean_up()

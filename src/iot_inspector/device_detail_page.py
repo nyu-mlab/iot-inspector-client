@@ -234,102 +234,99 @@ def label_thread():
     It runs every 15 seconds, and if the labeling session has ended, it processes
     and sends the packets in the queue to the remote API endpoint.
     """
-    common.fix_ssl_paths()
     pending_packet_list = []
-    logger.info("[Packets] Labeling Packets Thread started.")
-    while True:
-        time.sleep(15)
-        logger.info("[Packets] Will check if there are labeled packets to send...")
-        # 1. Check if labeling session has ended
-        if len(_labeling_event_deque) == 0:
-            logger.info("[Packets] There is no labeling event ready. Not sending packets.")
-            continue
-        else:
-            logger.info(f"[Packets] Found labeling event, the queue is of size {len(_labeling_event_deque)}")
 
-        # Make sure end time is NOT a none
-        end_time = _labeling_event_deque[0].get('end_time', None)
-        if end_time is None:
-            logger.info("[Packets] End time hasn't been set yet, The labeling session is still ongoing. Not sending packets yet.")
-            continue
+    logger.info("[Packets] Will check if there are labeled packets to send...")
+    # 1. Check if labeling session has ended
+    if len(_labeling_event_deque) == 0:
+        logger.info("[Packets] There is no labeling event ready. Not sending packets.")
+        return
+    else:
+        logger.info(f"[Packets] Found labeling event, the queue is of size {len(_labeling_event_deque)}")
 
-        # If the labeling session is still ongoing, skip sending
-        if time.time() <= end_time:
-            logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
-            continue
+    # Make sure end time is NOT a none
+    end_time = _labeling_event_deque[0].get('end_time', None)
+    if end_time is None:
+        logger.info("[Packets] End time hasn't been set yet, The labeling session is still ongoing. Not sending packets yet.")
+        return
 
-        end_dt_object = datetime.datetime.fromtimestamp(end_time)
-        end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    # If the labeling session is still ongoing, skip sending
+    if time.time() <= end_time:
+        logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
+        return
 
-        start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
-        start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    end_dt_object = datetime.datetime.fromtimestamp(end_time)
+    end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
-        # 2. Process and empty the queue
-        while not _labeling_event_deque[0]["packet_queue"].empty():
-            packet = _labeling_event_deque[0]["packet_queue"].get()
-            dt_object = datetime.datetime.fromtimestamp(packet.time)
-            timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
-            packet_metadata = {
-                "time": packet.time,
-                "raw_data": base64.b64encode(packet.original).decode('utf-8')
-            }
-            pending_packet_list.append(packet_metadata)
-        logger.info(f"[Packets] Labeling session has ended at {end_timestamp_str}")
+    start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
+    start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        payload = _labeling_event_deque.popleft()
-        payload['packets'] = pending_packet_list
+    logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
+    # 2. Process and empty the queue
+    while not _labeling_event_deque[0]["packet_queue"].empty():
+        packet = _labeling_event_deque[0]["packet_queue"].get()
+        dt_object = datetime.datetime.fromtimestamp(packet.time)
+        timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
+        packet_metadata = {
+            "time": packet.time,
+            "raw_data": base64.b64encode(packet.original).decode('utf-8')
+        }
+        pending_packet_list.append(packet_metadata)
+    logger.info(f"[Packets] Labeling session has ended at {end_timestamp_str}")
 
-        # REMOVE the non-serializable Queue object before sending the payload
-        if 'packet_queue' in payload:
-            del payload['packet_queue']
+    payload = _labeling_event_deque.popleft()
+    payload['packets'] = pending_packet_list
 
-        device_name = payload.get('device_name', 'Unknown Device')
-        activity_label = payload.get('activity_label', 'Unknown Activity')
-        duration = payload.get('end_time', 0) - payload.get('start_time', 0)
-        label_data = f"Device: {device_name}, Activity: {activity_label}, Duration: {duration} seconds, Packets: {len(pending_packet_list)}"
+    # REMOVE the non-serializable Queue object before sending the payload
+    if 'packet_queue' in payload:
+        del payload['packet_queue']
 
-        # 3. API Sending Logic - results are saved to api_message for display
-        try:
-            if len(pending_packet_list) > 0:
-                logger.info(
-                f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
-                remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-                remote_port = common.config_get("packet_collector_port", '443')
-                api_path = "/iot_inspector_data_capture/label_packets"
-                api_url = f"https://{remote_host}:{remote_port}{api_path}"
+    device_name = payload.get('device_name', 'Unknown Device')
+    activity_label = payload.get('activity_label', 'Unknown Activity')
+    duration = payload.get('end_time', 0) - payload.get('start_time', 0)
+    label_data = f"Device: {device_name}, Activity: {activity_label}, Duration: {duration} seconds, Packets: {len(pending_packet_list)}"
 
-                # NOTE: We avoid st.write here, save the info to session_state instead
-                response = requests.post(
-                    api_url,
-                    json=payload,
-                    timeout=30,
-                    verify=certifi.where()
-                )
-                if response.status_code == 200:
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
-                    current_pcap_directory_information = response.json()['message']
-                    common.config_set('label_progress_data', current_pcap_directory_information)
+    # 3. API Sending Logic - results are saved to api_message for display
+    try:
+        if len(pending_packet_list) > 0:
+            logger.info(
+            f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
+            remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
+            remote_port = common.config_get("packet_collector_port", '443')
+            api_path = "/iot_inspector_data_capture/label_packets"
+            api_url = f"https://{remote_host}:{remote_port}{api_path}"
 
-                    display_message = f"Labeled packets successfully | {label_data}"
-                    common.config_set('api_message', f"success|{display_message}")
+            # NOTE: We avoid st.write here, save the info to session_state instead
+            response = requests.post(
+                api_url,
+                json=payload,
+                timeout=30,
+                verify=certifi.where()
+            )
+            if response.status_code == 200:
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
+                current_pcap_directory_information = response.json()['message']
+                common.config_set('label_progress_data', current_pcap_directory_information)
 
-                else:
-                    error_message = response.json()['message']
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
-                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
+                display_message = f"Labeled packets successfully | {label_data}"
+                common.config_set('api_message', f"success|{display_message}")
+
             else:
-                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
-                common.config_set('api_message', "error|No packets were captured for labeling.")
-        except requests.RequestException as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
-            common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
-        except Exception as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
-            common.config_set('api_message', f"error|An unexpected error occurred: {e}")
-        finally:
-            pending_packet_list.clear()
+                error_message = response.json()['message']
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
+                common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
+        else:
+            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
+            common.config_set('api_message', "error|No packets were captured for labeling.")
+    except requests.RequestException as e:
+        logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
+        common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
+    except Exception as e:
+        logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
+        common.config_set('api_message', f"error|An unexpected error occurred: {e}")
+    finally:
+        pending_packet_list.clear()
 
 
 def reset_labeling_state():

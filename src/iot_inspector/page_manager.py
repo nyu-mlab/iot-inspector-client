@@ -9,12 +9,10 @@ import settings_page
 import overview_page
 import functools
 import common
-import libinspector.core
-import threading
-import libinspector.global_state
 import logging
 from iot_inspector.background.device_id_api_thread import api_worker_thread
-
+import libinspector.core
+import libinspector.global_state
 from libinspector import safe_loop
 from event_detection import packet_processor
 from event_detection import burst_processor
@@ -96,46 +94,41 @@ def initialize_config():
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
-    if common.config_get("event_inference", False):
-        # Download the models
-        model_selection.download_models()
-
-        # Start the packet processing thread
-        safe_loop.SafeLoopThread(packet_processor.start)
-
-        # Start the burst processing thread
-        safe_loop.SafeLoopThread(burst_processor.start)
-
-        # Start the feature processing thread
-        safe_loop.SafeLoopThread(feature_generation.start)
-
-        # Start the feature standardization thread
-        safe_loop.SafeLoopThread(feature_standardization.start)
-
-        # Start the periodic filter thread
-        safe_loop.SafeLoopThread(periodic_filter.start)
-
-        # Start the event prediction thread
-        safe_loop.SafeLoopThread(predict_event.start)
-    else:
-        logger.warning("Event inference is disabled. To enable, toggle the setting in the Settings page and restart the app.")
-
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
-        api_thread = threading.Thread(
-            name="Device API Thread",
-            target=api_worker_thread,
-            daemon=True,
-        )
-        api_thread.start()
-        label_thread = threading.Thread(
-            name="Device Label Thread",
-            target=device_detail_page.label_thread,
-            daemon=True
-        )
-        label_thread.start()
+        extra_threads = [
+            safe_loop.SafeLoopThread(api_worker_thread, name="Device API Thread", sleep_time=15),
+            safe_loop.SafeLoopThread(device_detail_page.label_thread, name="Device Label Thread", sleep_time=15)
+        ]
         with libinspector.global_state.global_state_lock:
             libinspector.global_state.custom_packet_callback_func = device_detail_page.save_labeled_activity_packets
+            libinspector.global_state.active_threads.extend(extra_threads)
+        if common.config_get("event_inference", False):
+            # Download the models
+            model_selection.download_models()
+            extra_threads = [
+            # Start the packet processing thread
+            safe_loop.SafeLoopThread(packet_processor.start, name="Packet Processor Thread"),
+
+            # Start the burst processing thread
+            safe_loop.SafeLoopThread(burst_processor.start, name="Burst Processor Thread"),
+
+            # Start the feature processing thread
+            safe_loop.SafeLoopThread(feature_generation.start, name="Feature Generation Thread"),
+
+            # Start the feature standardization thread
+            safe_loop.SafeLoopThread(feature_standardization.start, name="Feature Standardization Thread"),
+
+            # Start the periodic filter thread
+            safe_loop.SafeLoopThread(periodic_filter.start, name="Periodic Filter Thread"),
+
+            # Start the event prediction thread
+            safe_loop.SafeLoopThread(predict_event.start, name="Event Prediction Thread"),
+            ]
+            with libinspector.global_state.global_state_lock:
+                libinspector.global_state.active_threads.extend(extra_threads)
+        else:
+            logger.warning("Event inference is disabled. To enable, toggle the setting in the Settings page and restart the app.")
 
 
 device_list_page_obj = get_page(
