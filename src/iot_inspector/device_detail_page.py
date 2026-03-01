@@ -792,7 +792,8 @@ def save_labeled_activity_packets(pkt):
     """
 
     # Note: (Jakaria) I need to save a copy of the packet, for event inference
-    event_detection.global_state.packet_queue.put(pkt)
+    if common.config_get("event_inference", False):
+        event_detection.global_state.packet_queue.put(pkt)
 
     if len(_labeling_event_deque) == 0:
         return

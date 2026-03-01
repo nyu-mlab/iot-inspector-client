@@ -12,6 +12,7 @@ import common
 import libinspector.core
 import threading
 import libinspector.global_state
+import logging
 from iot_inspector.background.device_id_api_thread import api_worker_thread
 
 from libinspector import safe_loop
@@ -23,6 +24,8 @@ from event_detection import periodic_filter
 from event_detection import predict_event
 from event_detection import model_selection
 
+
+logger = logging.getLogger(__name__)
 
 def get_page(title: str, material_icon: str, show_page_func):
     icon = f":material/{material_icon}:"
@@ -93,26 +96,29 @@ def initialize_config():
 @functools.lru_cache(maxsize=1)
 def start_inspector_once():
     """Initialize the Inspector core only once."""
-    # Download the models
-    model_selection.download_models()
+    if common.config_get("event_inference", False):
+        # Download the models
+        model_selection.download_models()
 
-    # Start the packet processing thread
-    safe_loop.SafeLoopThread(packet_processor.start)
+        # Start the packet processing thread
+        safe_loop.SafeLoopThread(packet_processor.start)
 
-    # Start the burst processing thread
-    safe_loop.SafeLoopThread(burst_processor.start)
+        # Start the burst processing thread
+        safe_loop.SafeLoopThread(burst_processor.start)
 
-    # Start the feature processing thread
-    safe_loop.SafeLoopThread(feature_generation.start)
+        # Start the feature processing thread
+        safe_loop.SafeLoopThread(feature_generation.start)
 
-    # Start the feature standardization thread
-    safe_loop.SafeLoopThread(feature_standardization.start)
+        # Start the feature standardization thread
+        safe_loop.SafeLoopThread(feature_standardization.start)
 
-    # Start the periodic filter thread
-    safe_loop.SafeLoopThread(periodic_filter.start)
+        # Start the periodic filter thread
+        safe_loop.SafeLoopThread(periodic_filter.start)
 
-    # Start the event prediction thread
-    safe_loop.SafeLoopThread(predict_event.start)
+        # Start the event prediction thread
+        safe_loop.SafeLoopThread(predict_event.start)
+    else:
+        logger.warning("Event inference is disabled. To enable, toggle the setting in the Settings page and restart the app.")
 
     with st.spinner("Starting Inspector Core Library..."):
         libinspector.core.start_threads()
