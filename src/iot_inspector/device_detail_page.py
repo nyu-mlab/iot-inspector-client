@@ -955,6 +955,24 @@ def display_inferred_events(mac_address: str):
     """
     Snapshot the queue without consuming it so other threads remain unaffected
     """
+    def _serialize_time(value):
+        if isinstance(value, datetime.datetime):
+            return value.isoformat()
+        return value
+
+    def _sort_key(item):
+        ts = item.get("Time")
+        if isinstance(ts, datetime.datetime):
+            return ts.timestamp()
+        if isinstance(ts, (int, float)):
+            return ts
+        if isinstance(ts, str):
+            try:
+                return datetime.datetime.fromisoformat(ts).timestamp()
+            except ValueError:
+                return 0
+        return 0
+
     q = event_detection.global_state.filtered_event_queue
     with q.mutex:
         events_snapshot = list(q.queue)
@@ -962,9 +980,28 @@ def display_inferred_events(mac_address: str):
     # 1. Fetch current list from config (under your new key)
     current_event_list = common.config_get("event_list", [])
 
+    # Normalize any legacy tuple entries into dicts.
+    normalized_events = []
+    for item in current_event_list:
+        if isinstance(item, dict) and "Time" in item and "Event" in item:
+            normalized_events.append({
+                "Time": _serialize_time(item.get("Time")),
+                "Event": item.get("Event"),
+                "Device": item.get("Device"),
+            })
+        elif isinstance(item, tuple) and len(item) == 2:
+            ts, event = item
+            normalized_events.append({
+                "Time": _serialize_time(ts),
+                "Event": event,
+                "Device": None,
+            })
+
+    current_event_list = normalized_events
+
     # 2. Build a set of "seen" fingerprints (Time + Event)
     # This prevents adding the exact same event at the exact same time twice.
-    seen = {(e['Time'], e['Event']) for e in current_event_list}
+    seen = {(e["Time"], e["Event"], e.get("Device")) for e in current_event_list}
 
     rows = []
     for item in events_snapshot:
@@ -973,14 +1010,20 @@ def display_inferred_events(mac_address: str):
 
         device, ts, event = item
         if device == mac_address:
-            rows.append({"Time": ts, "Event": event})
-            if (ts, event) not in seen:
-                seen.add((ts, event))
+            serialized_ts = _serialize_time(ts)
+            device_name = common.get_device_custom_name(mac_address)
+            rows.append({"Time": serialized_ts, "Event": event})
+            if (serialized_ts, event, device_name) not in seen:
+                seen.add((serialized_ts, event, device_name))
+                current_event_list.append({
+                    "Time": serialized_ts,
+                    "Event": event,
+                    "Device": device_name,
+                })
 
     # 3. Update the config only if there's new data
-    current_event_list.extend(seen)
     # Optional: Keep it tidy by sorting by timestamp
-    current_event_list.sort(key=lambda x: x['Time'])
+    current_event_list.sort(key=_sort_key)
     common.config_set("event_list", current_event_list)
 
     if not rows:
