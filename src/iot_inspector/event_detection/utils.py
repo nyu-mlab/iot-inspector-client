@@ -121,6 +121,8 @@ def get_product_name_by_mac(mac_address: str) -> str:
         return 'echospot'
     if mac_address == '0c:dc:91:8f:55:4d':
         return 'echospot'
+    if mac_address == '2c:71:ff:02:e7:97':
+        return 'echospot'
     if mac_address == '192.166.1.?':
         return 'ring-camera' 
     if mac_address == 'a8:6e:84:ed:84:bd':

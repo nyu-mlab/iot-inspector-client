@@ -184,4 +184,4 @@ def process_burst(pkt: sc.Packet):
     # print(f"burst_dict_start_time: {burst_dict_start_time}")
     # print(f"burst_dict_all_burst: {burst_dict_all_burst}")
     # print("")
-    return 
+    return None

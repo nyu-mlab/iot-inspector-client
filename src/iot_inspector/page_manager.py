@@ -14,12 +14,7 @@ from iot_inspector.background.device_id_api_thread import api_worker_thread
 import libinspector.core
 import libinspector.global_state
 from libinspector import safe_loop
-from event_detection import packet_processor
-from event_detection import burst_processor
-from event_detection import feature_generation
-from event_detection import feature_standardization
-from event_detection import periodic_filter
-from event_detection import predict_event
+from event_detection import pipeline
 from event_detection import model_selection
 
 
@@ -107,23 +102,11 @@ def start_inspector_once():
             # Download the models
             model_selection.download_models()
             extra_threads = [
-            # Start the packet processing thread
-            safe_loop.SafeLoopThread(packet_processor.start, name="Packet Processor Thread"),
+                # Ingest packets and build bursts
+                safe_loop.SafeLoopThread(pipeline.ingest_and_burst_worker, name="Packet/Burst Thread"),
 
-            # Start the burst processing thread
-            safe_loop.SafeLoopThread(burst_processor.start, name="Burst Processor Thread"),
-
-            # Start the feature processing thread
-            safe_loop.SafeLoopThread(feature_generation.start, name="Feature Generation Thread"),
-
-            # Start the feature standardization thread
-            safe_loop.SafeLoopThread(feature_standardization.start, name="Feature Standardization Thread"),
-
-            # Start the periodic filter thread
-            safe_loop.SafeLoopThread(periodic_filter.start, name="Periodic Filter Thread"),
-
-            # Start the event prediction thread
-            safe_loop.SafeLoopThread(predict_event.start, name="Event Prediction Thread"),
+                # Run burst feature extraction and event inference
+                safe_loop.SafeLoopThread(pipeline.inference_worker, name="Event Inference Thread"),
             ]
             with libinspector.global_state.global_state_lock:
                 libinspector.global_state.active_threads.extend(extra_threads)
