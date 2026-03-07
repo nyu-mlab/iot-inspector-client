@@ -12,8 +12,6 @@ def exit_application_callback():
     """
     if packet_collector.inspector_is_running():
         st.warning("IoT Inspector closing... Please wait a moment.")
-        with libinspector.global_state.global_state_lock:
-            libinspector.global_state.is_running = False
     else:
         st.info("IoT Inspector was already not running.")
     libinspector.core.clean_up()
@@ -32,6 +30,18 @@ def show():
             help="Toggle ON if you are debugging IoT Inspector, otherwise leave it OFF. This is for NYU Researchers and Developers only.",
             on_change=lambda: common.config_set('debug', st.session_state['enable_debug_mode'])
         )
+        st.divider()
+        st.toggle(
+            "Enable Device Event Detection",
+            key='enable_event_inference',
+            value=common.config_get('event_inference', False),
+            help="Toggle ON if you want IoT Inspector to run its event inference pipeline. This can be resource intensive, so we recommend leaving it OFF if you are not interested in seeing the 'Inferred Events' tab!",
+            on_change=lambda: common.config_set(
+                'event_inference',
+                st.session_state.get('enable_event_inference', False)
+            )
+        )
+        st.divider()
 
     st.button(
         "🛑 Exit Application",

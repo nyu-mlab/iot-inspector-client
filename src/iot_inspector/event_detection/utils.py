@@ -1,5 +1,5 @@
 import ipaddress
-import subprocess
+import socket
 import logging
 
 from libinspector import networking
@@ -10,7 +10,7 @@ import libinspector.global_state as libinspector_state
 logger = logging.getLogger(__name__)
 
 @ttl_cache(maxsize=8192, ttl=15)
-def validate_ip_address(address):
+def validate_ip_address(address: str) -> bool:
     """ check if it's a valid ip address
 
     Args:
@@ -83,25 +83,22 @@ def get_hostname_from_ip_addr(ip_addr: str) -> str:
     # Step 2: Ask libinspector SNI Extractor in the main thread
 
     # Step 3: # Step 3: Use `dig -x ip_address` for reverse DNS lookup
+    hostname = resolve_hostname(ip_addr)
+    return hostname
+
+
+def resolve_hostname(ip_addr: str) -> str:
     try:
-        result = subprocess.run(
-                ["dig", "-x", ip_addr, "+short"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-        hostname = result.stdout.strip()
-        if hostname:
-            # Remove trailing dots
-            if hostname.endswith('.'):
-                return hostname[:-1]
-            return hostname
-    except Exception as e:
-        logging.error(f"Error resolving hostname for {ip_addr}: {e}")
-
-    return ''
-
-
+        # socket.gethostbyaddr returns a tuple: (hostname, alias list, ipaddr list)
+        hostname, _, _ = socket.gethostbyaddr(ip_addr)
+        return hostname
+    except socket.herror:
+        # This is specifically for "Host not found"
+        return ""
+    except Exception:
+        # Using logger.exception to capture the traceback automatically
+        logging.exception(f"Unexpected error resolving hostname for {ip_addr}")
+        return ""
 
 
 # """
@@ -117,12 +114,14 @@ def get_hostname_from_ip_addr(ip_addr: str) -> str:
 # Note: Currently hard coded
 # TODO: Add 
 @ttl_cache(maxsize=8192, ttl=300)
-def get_product_name_by_mac(mac_address):
+def get_product_name_by_mac(mac_address: str) -> str:
     if mac_address == '20:fe:00:d0:c2:9b':
         return 'amazon-plug'
     if mac_address == 'b0:f7:c4:6f:30:7f':
         return 'echospot'
     if mac_address == '0c:dc:91:8f:55:4d':
+        return 'echospot'
+    if mac_address == '2c:71:ff:02:e7:97':
         return 'echospot'
     if mac_address == '192.166.1.?':
         return 'ring-camera' 
@@ -150,7 +149,7 @@ def get_product_name_by_mac(mac_address):
     
 
 @ttl_cache(maxsize=128)
-def protocol_transform(test_protocols):
+def protocol_transform(test_protocols: list):
     # for i in range(len(test_protocols)):
     if 'TCP' in test_protocols:
         test_protocols = 'TCP'
@@ -168,7 +167,7 @@ def protocol_transform(test_protocols):
 
 # transform multiple hosts to single host
 @ttl_cache(maxsize=128)
-def host_transform(test_hosts):
+def host_transform(test_hosts: str) -> str:
     # process host
     if test_hosts is None:
         return 'non'
@@ -183,6 +182,5 @@ def host_transform(test_hosts):
         return 'non'
 
     test_hosts = test_hosts.lower()   
-    test_hosts = test_hosts.replace('?','')   
-
+    test_hosts = test_hosts.replace('?','')
     return test_hosts

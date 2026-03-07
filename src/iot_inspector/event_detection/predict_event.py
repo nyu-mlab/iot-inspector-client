@@ -125,5 +125,5 @@ def store_events_in_db(device, time, event):
     """
     global_state.filtered_event_queue.put((device, datetime.fromtimestamp(float(time)), event))
     logger.info('[Predict-Event] Stored event in DB: ' + str((device, datetime.fromtimestamp(float(time)), event)))
-    print(f"[Predict-Event] Stored event in DB: {device}, {datetime.fromtimestamp(float(time))}, {event}")
+    # print(f"[Predict-Event] Stored event in DB: {device}, {datetime.fromtimestamp(float(time))}, {event}")
 

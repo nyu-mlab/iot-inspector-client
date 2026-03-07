@@ -2,6 +2,8 @@ import os
 import logging
 import gdown
 import zipfile
+import requests
+import certifi
 from functools import lru_cache
 
 # This file aims to provide a set of functions to 
@@ -10,7 +12,7 @@ from difflib import SequenceMatcher
 # This files aims to provide a set of functions to 
 # perform model selection for a device based on the
 # data available in the database.
-logger = logging.getLogger("client")
+logger = logging.getLogger(__name__)
 
 # Configuration
 GOOGLE_DRIVE_ID = "15ZyxyqzhO-tDaBYgwo3vpM9cMq7XfanR"
@@ -34,16 +36,27 @@ def download_models():
     # 1. Download from Google Drive
     logger.info(f"Downloading models to {zip_path}...")
     url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_ID}"
-    gdown.download(url, zip_path, quiet=False)
-
-    # 2. Extract using native zipfile
+    try:
+        gdown.download(url, zip_path, quiet=False, verify=certifi.where())
+    except requests.exceptions.ConnectionError:
+        logger.error("Network unreachable. Check your internet connection or Caddy proxy.")
+        return
+    except requests.exceptions.Timeout:
+        logger.error("Download timed out. The server is taking too long to respond.")
+        return
+    except PermissionError:
+        logger.error(f"Cannot write to {zip_path}. Check folder permissions (OneDrive locking issue?).")
+        return
+    except Exception:
+        # This is for the 'weird' stuff (like the certifi error or disk full)
+        logger.exception("Unexpected failure during model download")
+        return
+    # Extract using native zipfile
     if os.path.exists(zip_path):
         logger.info("Extracting models...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             # We extract into PACKAGE_ROOT assuming zip contains 'models/binary/rf/...'
             zip_ref.extractall(PACKAGE_ROOT)
-
-        # 3. Cleanup
         os.remove(zip_path)
         logger.info("Models successfully installed.")
     else:
@@ -58,19 +71,20 @@ def import_models():
     #  Check if the models directory exists
     if not os.path.exists(MODELS_DIR):
         logger.warning(f"Models directory not found at {MODELS_DIR}. Please ensure the models are downloaded and placed in the correct directory.")
+        download_models()
         return []
 
     model_folders = [name for name in os.listdir(MODELS_DIR) if os.path.isdir(os.path.join(MODELS_DIR, name))]
     return model_folders
 
 
-def is_close_match(str1: str, str2: str, threshold=0.75):
+def is_close_match(str1: str, str2: str, threshold=0.75) -> int:
     match_score = SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
     return 1 if match_score > threshold else 0
 
 
 @lru_cache(maxsize=128)
-def find_best_match(device_name: str, model_names=None, threshold=0.75):
+def find_best_match(device_name: str, model_names=None, threshold: float = 0.75):
     best_match = None
     highest_score = 0
 

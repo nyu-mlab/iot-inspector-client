@@ -43,7 +43,7 @@ def start():
 # but we need to do more here.
 # ==========================================================================================
 
-def process_burst(pkt):
+def process_burst(pkt: sc.Packet):
     # Note: Packets must have TCP or UDP layer 
     # Note: WE only consider packets which has either TCP layer or UDP layer 
     if sc.TCP in pkt:
@@ -184,4 +184,4 @@ def process_burst(pkt):
     # print(f"burst_dict_start_time: {burst_dict_start_time}")
     # print(f"burst_dict_all_burst: {burst_dict_all_burst}")
     # print("")
-    return 
+    return None

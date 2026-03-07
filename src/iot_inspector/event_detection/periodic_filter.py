@@ -23,7 +23,7 @@ def start():
         logger.error('[Periodic Filter] Error processing burst: ' + str(e) + ' for burst: ' + str(burst) + '\n' + traceback.format_exc())
 
 
-def periodic_filter_burst_helper(burst, device_name, model_name):
+def filter_periodic_burst(burst, device_name: str, model_name: str):
     """
     Filter out periodic bursts from the standardized burst features.
     Args:
@@ -52,7 +52,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
         logger.error(
             '[Periodic-filter] Failed loading periodic events: ' + ' for device: '\
                 + str(device_name) + " " + str(burst))
-        return
+        return None
 
 
     # test_data = burst
@@ -68,7 +68,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
 
     # Filter local and DNS/NTP. 
     if test_protocols == 'DNS' or test_protocols == 'MDNS' or test_protocols == 'NTP' or test_protocols == 'SSDP' or test_protocols == 'DHCP':
-        return 
+        return None
     # else: filter_dns.append(True)
 
     # Filter local
@@ -78,7 +78,7 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
 
 
     if test_hosts in mac_dic or test_hosts in local_mac_list or test_hosts=='multicast' or ':' in test_hosts:
-        return
+        return None
 
     # """
     # For each tuple: 
@@ -152,10 +152,20 @@ def periodic_filter_burst_helper(burst, device_name, model_name):
             break
     
     if aperiodic_event:
-        store_processed_burst_in_db(burst, device_name, model_name)
         logger.info('[Periodic Filter] non-periodic event found ' + device_name + ' : ' + test_hosts + ' ' + test_protocols)
+        return burst, device_name, model_name
 
-    return 
+    return None
+
+
+def periodic_filter_burst_helper(burst, device_name: str, model_name: str):
+    filtered = filter_periodic_burst(burst, device_name, model_name)
+    if filtered is None:
+        return
+
+    data, device_name, model_name = filtered
+    store_processed_burst_in_db(data, device_name, model_name)
+    return
 
 
 

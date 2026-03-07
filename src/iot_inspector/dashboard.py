@@ -5,6 +5,9 @@ import os
 
 
 def main():
+    """
+    Main function to run the IoT Inspector dashboard.
+    """
     nav_menu_list = [
         page_manager.device_list_page_obj,
         page_manager.overview_page_obj,

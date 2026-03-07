@@ -11,9 +11,10 @@ import scapy.all as sc
 import json
 import os
 import logging
+import certifi
 from collections import deque
 from typing import Deque, Dict, Any
-
+from libinspector.privacy import get_country_from_ip_addr
 import event_detection.global_state
 
 _labeling_event_deque : Deque[Dict[str, Any]] = deque()
@@ -234,99 +235,98 @@ def label_thread():
     and sends the packets in the queue to the remote API endpoint.
     """
     pending_packet_list = []
-    logger.info("[Packets] Labeling Packets Thread started.")
-    while True:
-        time.sleep(15)
-        logger.info("[Packets] Will check if there are labeled packets to send...")
-        # 1. Check if labeling session has ended
-        if len(_labeling_event_deque) == 0:
-            logger.info("[Packets] There is no labeling event ready. Not sending packets.")
-            continue
-        else:
-            logger.info(f"[Packets] Found labeling event, the queue is of size {len(_labeling_event_deque)}")
 
-        # Make sure end time is NOT a none
-        end_time = _labeling_event_deque[0].get('end_time', None)
-        if end_time is None:
-            logger.info("[Packets] End time hasn't been set yet, The labeling session is still ongoing. Not sending packets yet.")
-            continue
+    logger.info("[Packets] Will check if there are labeled packets to send...")
+    # 1. Check if labeling session has ended
+    if len(_labeling_event_deque) == 0:
+        logger.info("[Packets] There is no labeling event ready. Not sending packets.")
+        return
+    else:
+        logger.info(f"[Packets] Found labeling event, the queue is of size {len(_labeling_event_deque)}")
 
-        # If the labeling session is still ongoing, skip sending
-        if time.time() <= end_time:
-            logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
-            continue
+    # Make sure end time is NOT a none
+    end_time = _labeling_event_deque[0].get('end_time', None)
+    if end_time is None:
+        logger.info("[Packets] End time hasn't been set yet, The labeling session is still ongoing. Not sending packets yet.")
+        return
 
-        end_dt_object = datetime.datetime.fromtimestamp(end_time)
-        end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    # If the labeling session is still ongoing, skip sending
+    if time.time() <= end_time:
+        logger.info("[Packets] Labeling session not complete yet. The end time is still in the future.")
+        return
 
-        start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
-        start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    end_dt_object = datetime.datetime.fromtimestamp(end_time)
+    end_timestamp_str = end_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
-        # 2. Process and empty the queue
-        while not _labeling_event_deque[0]["packet_queue"].empty():
-            packet = _labeling_event_deque[0]["packet_queue"].get()
-            dt_object = datetime.datetime.fromtimestamp(packet.time)
-            timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
-            packet_metadata = {
-                "time": packet.time,
-                "raw_data": base64.b64encode(packet.original).decode('utf-8')
-            }
-            pending_packet_list.append(packet_metadata)
-        logger.info(f"[Packets] Labeling session has ended at {end_timestamp_str}")
+    start_dt_object = datetime.datetime.fromtimestamp(_labeling_event_deque[0].get('start_time', None))
+    start_timestamp_str = start_dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        payload = _labeling_event_deque.popleft()
-        payload['packets'] = pending_packet_list
+    logger.info(f"[Packets] Labeling session has started at {start_timestamp_str}")
+    # 2. Process and empty the queue
+    while not _labeling_event_deque[0]["packet_queue"].empty():
+        packet = _labeling_event_deque[0]["packet_queue"].get()
+        dt_object = datetime.datetime.fromtimestamp(packet.time)
+        timestamp_str = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        logger.info(f"[Packets] Packet reports time-stamp of {timestamp_str}")
+        packet_metadata = {
+            "time": packet.time,
+            "raw_data": base64.b64encode(packet.original).decode('utf-8')
+        }
+        pending_packet_list.append(packet_metadata)
+    logger.info(f"[Packets] Labeling session has ended at {end_timestamp_str}")
 
-        # REMOVE the non-serializable Queue object before sending the payload
-        if 'packet_queue' in payload:
-            del payload['packet_queue']
+    payload = _labeling_event_deque.popleft()
+    payload['packets'] = pending_packet_list
 
-        device_name = payload.get('device_name', 'Unknown Device')
-        activity_label = payload.get('activity_label', 'Unknown Activity')
-        duration = payload.get('end_time', 0) - payload.get('start_time', 0)
-        label_data = f"Device: {device_name}, Activity: {activity_label}, Duration: {duration} seconds, Packets: {len(pending_packet_list)}"
+    # REMOVE the non-serializable Queue object before sending the payload
+    if 'packet_queue' in payload:
+        del payload['packet_queue']
 
-        # 3. API Sending Logic - results are saved to api_message for display
-        try:
-            if len(pending_packet_list) > 0:
-                logger.info(
-                f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
-                remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
-                remote_port = common.config_get("packet_collector_port", '443')
-                api_path = "/iot_inspector_data_capture/label_packets"
-                api_url = f"https://{remote_host}:{remote_port}{api_path}"
+    device_name = payload.get('device_name', 'Unknown Device')
+    activity_label = payload.get('activity_label', 'Unknown Activity')
+    duration = payload.get('end_time', 0) - payload.get('start_time', 0)
+    label_data = f"Device: {device_name}, Activity: {activity_label}, Duration: {duration} seconds, Packets: {len(pending_packet_list)}"
 
-                # NOTE: We avoid st.write here, save the info to session_state instead
-                response = requests.post(
-                    api_url,
-                    json=payload,
-                    timeout=30
-                )
-                if response.status_code == 200:
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
-                    current_pcap_directory_information = response.json()['message']
-                    common.config_set('label_progress_data', current_pcap_directory_information)
+    # 3. API Sending Logic - results are saved to api_message for display
+    try:
+        if len(pending_packet_list) > 0:
+            logger.info(
+            f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - Packets to be sent: {len(pending_packet_list)}")
+            remote_host = common.config_get("packet_collector_host", 'mlab.cyber.nyu.edu')
+            remote_port = common.config_get("packet_collector_port", '443')
+            api_path = "/iot_inspector_data_capture/label_packets"
+            api_url = f"https://{remote_host}:{remote_port}{api_path}"
 
-                    display_message = f"Labeled packets successfully | {label_data}"
-                    common.config_set('api_message', f"success|{display_message}")
+            # NOTE: We avoid st.write here, save the info to session_state instead
+            response = requests.post(
+                api_url,
+                json=payload,
+                timeout=30,
+                verify=certifi.where()
+            )
+            if response.status_code == 200:
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - All packets sent successfully. \n {label_data}")
+                current_pcap_directory_information = response.json()['message']
+                common.config_set('label_progress_data', current_pcap_directory_information)
 
-                else:
-                    error_message = response.json()['message']
-                    logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
-                    common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
+                display_message = f"Labeled packets successfully | {label_data}"
+                common.config_set('api_message', f"success|{display_message}")
+
             else:
-                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
-                common.config_set('api_message', "error|No packets were captured for labeling.")
-        except requests.RequestException as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
-            common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
-        except Exception as e:
-            logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
-            common.config_set('api_message', f"error|An unexpected error occurred: {e}")
-        finally:
-            pending_packet_list.clear()
+                error_message = response.json()['message']
+                logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - API Failed, packets NOT sent!. Message: {error_message}")
+                common.config_set('api_message', f"error|Failed to send labeled packets. Server status: {response.status_code} | Message: {error_message}")
+        else:
+            logger.info(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - No packets found to be labeled.")
+            common.config_set('api_message', "error|No packets were captured for labeling.")
+    except requests.RequestException as e:
+        logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An error occurred during API transmission.")
+        common.config_set('api_message', f"error|An error occurred during API transmission: {e}")
+    except Exception as e:
+        logger.exception(f"[Packets] {time.strftime('%Y-%m-%d %H:%M:%S')} - An unexpected error occurred.")
+        common.config_set('api_message', f"error|An unexpected error occurred: {e}")
+    finally:
+        pending_packet_list.clear()
 
 
 def reset_labeling_state():
@@ -789,7 +789,8 @@ def save_labeled_activity_packets(pkt):
     """
 
     # Note: (Jakaria) I need to save a copy of the packet, for event inference
-    event_detection.global_state.packet_queue.put(pkt)
+    if common.config_get("event_inference", False):
+        event_detection.global_state.packet_queue.put(pkt)
 
     if len(_labeling_event_deque) == 0:
         return
@@ -872,6 +873,7 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
                        SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
                               DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
                               COALESCE(dest_hostname, dest_ip_address)           AS dest_info,
+                              dest_ip_address,
                               ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
                        FROM network_flows
                        WHERE src_mac_address = ?
@@ -885,6 +887,7 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
                          SELECT DATETIME(MIN(timestamp), 'unixepoch', 'localtime') AS first_seen,
                                 DATETIME(MAX(timestamp), 'unixepoch', 'localtime') AS last_seen,
                                 COALESCE(src_hostname, src_ip_address)             AS src_info,
+                                src_ip_address,
                                 ROUND(SUM(byte_count) / 1024.0, 2)                 AS KiloBytes
                          FROM network_flows
                          WHERE dest_mac_address = ?
@@ -898,6 +901,11 @@ def get_host_flow_tables(mac_address: str, sixty_seconds_ago: int):
         df_upload_host_table = pd.read_sql_query(sql_upload_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
         df_download_host_table = pd.read_sql_query(sql_download_hosts, db_conn, params=[mac_address, sixty_seconds_ago])
 
+    if not df_upload_host_table.empty:
+        df_upload_host_table['country'] = df_upload_host_table['dest_ip_address'].apply(get_country_from_ip_addr)
+
+    if not df_download_host_table.empty:
+        df_download_host_table['country'] = df_download_host_table['src_ip_address'].apply(get_country_from_ip_addr)
     return df_upload_host_table, df_download_host_table
 
 
@@ -947,6 +955,24 @@ def display_inferred_events(mac_address: str):
     """
     Snapshot the queue without consuming it so other threads remain unaffected
     """
+    def _serialize_time(value):
+        if isinstance(value, datetime.datetime):
+            return value.isoformat()
+        return value
+
+    def _sort_key(item):
+        ts = item.get("Time")
+        if isinstance(ts, datetime.datetime):
+            return ts.timestamp()
+        if isinstance(ts, (int, float)):
+            return ts
+        if isinstance(ts, str):
+            try:
+                return datetime.datetime.fromisoformat(ts).timestamp()
+            except ValueError:
+                return 0
+        return 0
+
     q = event_detection.global_state.filtered_event_queue
     with q.mutex:
         events_snapshot = list(q.queue)
@@ -954,9 +980,28 @@ def display_inferred_events(mac_address: str):
     # 1. Fetch current list from config (under your new key)
     current_event_list = common.config_get("event_list", [])
 
+    # Normalize any legacy tuple entries into dicts.
+    normalized_events = []
+    for item in current_event_list:
+        if isinstance(item, dict) and "Time" in item and "Event" in item:
+            normalized_events.append({
+                "Time": _serialize_time(item.get("Time")),
+                "Event": item.get("Event"),
+                "Device": item.get("Device"),
+            })
+        elif isinstance(item, tuple) and len(item) == 2:
+            ts, event = item
+            normalized_events.append({
+                "Time": _serialize_time(ts),
+                "Event": event,
+                "Device": None,
+            })
+
+    current_event_list = normalized_events
+
     # 2. Build a set of "seen" fingerprints (Time + Event)
     # This prevents adding the exact same event at the exact same time twice.
-    seen = {(e['Time'], e['Event']) for e in current_event_list}
+    seen = {(e["Time"], e["Event"], e.get("Device")) for e in current_event_list}
 
     rows = []
     for item in events_snapshot:
@@ -965,14 +1010,20 @@ def display_inferred_events(mac_address: str):
 
         device, ts, event = item
         if device == mac_address:
-            rows.append({"Time": ts, "Event": event})
-            if (ts, event) not in seen:
-                seen.add((ts, event))
+            serialized_ts = _serialize_time(ts)
+            device_name = common.get_device_custom_name(mac_address)
+            rows.append({"Time": serialized_ts, "Event": event})
+            if (serialized_ts, event, device_name) not in seen:
+                seen.add((serialized_ts, event, device_name))
+                current_event_list.append({
+                    "Time": serialized_ts,
+                    "Event": event,
+                    "Device": device_name,
+                })
 
     # 3. Update the config only if there's new data
-    current_event_list.extend(seen)
     # Optional: Keep it tidy by sorting by timestamp
-    current_event_list.sort(key=lambda x: x['Time'])
+    current_event_list.sort(key=_sort_key)
     common.config_set("event_list", current_event_list)
 
     if not rows:
