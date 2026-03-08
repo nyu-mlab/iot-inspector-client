@@ -1,4 +1,7 @@
 import scapy.all as sc
+from scapy.layers.inet import TCP, UDP, IP
+from scapy.layers.l2 import Ether
+from scapy.layers.tls.all import TLS
 import logging
 import traceback
 import ipaddress
@@ -46,12 +49,12 @@ def start():
 def process_burst(pkt: sc.Packet):
     # Note: Packets must have TCP or UDP layer 
     # Note: WE only consider packets which has either TCP layer or UDP layer 
-    if sc.TCP in pkt:
+    if TCP in pkt:
         protocol = 'TCP'
-        layer = sc.TCP
-    elif sc.UDP in pkt:
+        layer = TCP
+    elif UDP in pkt:
         protocol = 'UDP'
-        layer = sc.UDP
+        layer = UDP
     else:
         return
     
@@ -63,7 +66,7 @@ def process_burst(pkt: sc.Packet):
     # stream = 0                    # not useful for feature generation
     time_epoch = pkt.time           # packet current time, to be used to generate time_delta for consecutive packets
     frame_len = len(pkt)            # size of packet
-    ip_proto = pkt[sc.IP].proto     # protocol number: 6 (TCP), 17 (UDP)  
+    ip_proto = pkt[IP].proto     # protocol number: 6 (TCP), 17 (UDP)  
     
     # ########################### REMOVE #####################################
     # todo: check if _ws_protocol and _ws_expert needed or not
@@ -77,10 +80,10 @@ def process_burst(pkt: sc.Packet):
     # ############################# END ######################################
 
     # Get MAC, IP addresses, port numbers 
-    src_mac_addr = pkt[sc.Ether].src
-    dst_mac_addr = pkt[sc.Ether].dst
-    src_ip_addr = pkt[sc.IP].src
-    dst_ip_addr = pkt[sc.IP].dst
+    src_mac_addr = pkt[Ether].src
+    dst_mac_addr = pkt[Ether].dst
+    src_ip_addr = pkt[IP].src
+    dst_ip_addr = pkt[IP].dst
     src_port = pkt[layer].sport
     dst_port = pkt[layer].dport
 
@@ -124,14 +127,14 @@ def process_burst(pkt: sc.Packet):
     if src_hostname == '':
         # code block for SNI checking; 
         try:
-            src_hostname = pkt[sc.TLS].server_name.decode('utf-8')
+            src_hostname = pkt[TLS].server_name.decode('utf-8')
         except (AttributeError, UnicodeDecodeError):
             logger.debug(f"[Burst Processor] No SNI found for source IP: {src_ip_addr}")
             src_hostname = ''
             
     if dst_hostname == '':
         try:
-            dst_hostname = pkt[sc.TLS].server_name.decode('utf-8')
+            dst_hostname = pkt[TLS].server_name.decode('utf-8')
         except (AttributeError, UnicodeDecodeError):
             logger.debug(f"[Burst Processor] No SNI found for destination IP: {dst_ip_addr}")
             dst_hostname = ''
@@ -150,7 +153,7 @@ def process_burst(pkt: sc.Packet):
         
     # if ipaddress.ip_address(dst_ip_addr).is_private and ipaddress.ip_address(src_ip_addr).is_private: # incoming local packet
     elif dst_hostname == '(local network)' and src_hostname == '(local network)': # incoming local packet
-        if ipaddress.ip_address(dst_ip_addr) > ipaddress.ip_address(src_ip_addr):
+        if int(ipaddress.ip_address(dst_ip_addr)) > int(ipaddress.ip_address(src_ip_addr)):
             flow_key = (ip_proto, dst_ip_addr, dst_port, src_ip_addr, src_port, dst_mac_addr)
             hostname = src_hostname.lower()
 
