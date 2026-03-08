@@ -5,6 +5,8 @@ import logging
 from libinspector import networking
 from .ttl_cache import ttl_cache
 import libinspector.global_state as libinspector_state
+import common
+from .model_selection import find_best_match
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,10 @@ def get_mac_address_list() -> list:
     Assumes the table 'devices' exists and conn is a valid DB connection.
     """
     try:
-        conn, rw_lock = libinspector_state.db_conn_and_lock
+        db_conn_and_lock = libinspector_state.db_conn_and_lock
+        if db_conn_and_lock is None:
+            return []
+        conn, rw_lock = db_conn_and_lock
         with rw_lock:
             cursor = conn.execute("SELECT mac_address FROM devices")
             macs = [row[0] for row in cursor.fetchall()]
@@ -62,17 +67,19 @@ def get_hostname_from_ip_addr(ip_addr: str) -> str:
 
     # Step 1: Ask the database
     try:
-        conn, rw_lock = libinspector_state.db_conn_and_lock
-        with rw_lock:
-            cursor = conn.execute(
-                "SELECT hostname FROM hostnames WHERE ip_address = ?",
-                (ip_addr,)
-            )
-            row = cursor.fetchone()
-            if row:
-                if row[0].endswith('.'):
-                    return row[0][:-1]
-                return row[0]
+        db_conn_and_lock = libinspector_state.db_conn_and_lock
+        if db_conn_and_lock is not None:
+            conn, rw_lock = db_conn_and_lock
+            with rw_lock:
+                cursor = conn.execute(
+                    "SELECT hostname FROM hostnames WHERE ip_address = ?",
+                    (ip_addr,)
+                )
+                row = cursor.fetchone()
+                if row:
+                    if row[0].endswith('.'):
+                        return row[0][:-1]
+                    return row[0]
     except Exception:
         print("Error in get_hostname_from_ip_addr()")
         pass
@@ -115,28 +122,11 @@ def resolve_hostname(ip_addr: str) -> str:
 # TODO: Add 
 @ttl_cache(maxsize=8192, ttl=300)
 def get_product_name_by_mac(mac_address: str) -> str:
-    if mac_address == '20:fe:00:d0:c2:9b':
-        return 'amazon-plug'
-    if mac_address == 'b0:f7:c4:6f:30:7f':
-        return 'echospot'
-    if mac_address == '0c:dc:91:8f:55:4d':
-        return 'echospot'
-    if mac_address == '2c:71:ff:02:e7:97':
-        return 'echospot'
-    if mac_address == '192.166.1.?':
-        return 'ring-camera' 
-    if mac_address == 'a8:6e:84:ed:84:bd':
-        return 'tplink-bulb'
-    if mac_address == '192.166.1.?':
-        return 'yi-camera'
-    if mac_address == '192.166.1.?':
-        return 'ring-camera'
-    if mac_address == '192.166.1.?':
-        return 'wyze-cam'
-    if mac_address == 'e0:9d:13:31:2c:6a':
-        return 'samsung-tv'
-    
-    return 'unknown'
+    device_custom_name = common.get_device_custom_name(mac_address)
+    if device_custom_name.startswith('Unknown Device'):
+        return 'unknown'
+    _,  model_name = find_best_match(device_custom_name)
+    return model_name if model_name else 'unknown'
 
     """with model.db:
         # Query the database for the device with the specified MAC address
@@ -149,20 +139,22 @@ def get_product_name_by_mac(mac_address: str) -> str:
     
 
 @ttl_cache(maxsize=128)
-def protocol_transform(test_protocols: list):
+def protocol_transform(test_protocols: list) -> str:
     # for i in range(len(test_protocols)):
     if 'TCP' in test_protocols:
-        test_protocols = 'TCP'
+        result = 'TCP'
     elif 'MQTT' in test_protocols:
-        test_protocols = 'TCP'
+        result = 'TCP'
     elif 'UDP' in test_protocols:
-        test_protocols = 'UDP'
+        result = 'UDP'
     elif 'TLS' in test_protocols:
-        test_protocols = 'TCP'
-    if ';' in test_protocols:
-        tmp = test_protocols.split(';')
-        test_protocols = ' & '.join(tmp)
-    return test_protocols
+        result = 'TCP'
+    else:
+        result = str(test_protocols)
+    if ';' in result:
+        tmp = result.split(';')
+        result = ' & '.join(tmp)
+    return result
 
 
 # transform multiple hosts to single host

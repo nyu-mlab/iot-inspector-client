@@ -453,7 +453,7 @@ def config_set(key: str, value: typing.Any):
         with open(config_file_name, 'w') as f:
             json.dump(config_dict, f, indent=4, sort_keys=True)
 
-
+@functools.cache
 def get_device_custom_name(mac_address: str) -> str:
     """
     Get the custom name for a device based on its MAC address.
