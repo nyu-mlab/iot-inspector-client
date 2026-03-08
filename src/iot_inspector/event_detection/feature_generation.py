@@ -46,14 +46,14 @@ def compute_burst_features(flow_key, pop_time, pop_burst):
     # compute features from burst of packets and flow key
     # ----------------------------------------------------
     pd_burst = pd.DataFrame(pop_burst, columns=header)
-    pd_burst.frame_len = pd_burst.frame_len.astype(int)
-    pd_burst.ts = pd_burst.ts.astype(float)
+    pd_burst["frame_len"] = pd_burst["frame_len"].astype(int)
+    pd_burst["ts"] = pd_burst["ts"].astype(float)
 
     # Calculate the time difference (delta) between consecutive rows and
     # Set the first value of time_delta to 0
     pd_burst['ts_delta'] = pd_burst['ts'].diff()
     pd_burst.loc[0, 'ts_delta'] = 0.0      
-    pd_burst.ts_delta = pd_burst.ts_delta.astype(float)
+    pd_burst["ts_delta"] = pd_burst["ts_delta"].astype(float)
 
     # compute_tbp_features
     start_time = pd_burst.ts.min()

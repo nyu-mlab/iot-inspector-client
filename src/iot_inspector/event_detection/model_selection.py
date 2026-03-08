@@ -37,7 +37,7 @@ def download_models():
     logger.info(f"Downloading models to {zip_path}...")
     url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_ID}"
     try:
-        gdown.download(url, zip_path, quiet=False, verify=certifi.where())
+        gdown.download(url, zip_path, quiet=False, verify=certifi.where()) # type: ignore
     except requests.exceptions.ConnectionError:
         logger.error("Network unreachable. Check your internet connection or Caddy proxy.")
         return

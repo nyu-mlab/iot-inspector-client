@@ -2,6 +2,10 @@ import logging
 import scapy.all as sc
 import traceback
 import libinspector.global_state as libinspector_state
+from scapy.layers.l2 import ARP, Ether
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.dhcp import DHCP
+from scapy.layers.dns import DNS
 from . import global_state
 
 
@@ -33,34 +37,34 @@ def filter_packet(pkt: sc.Packet):
     # Process individual packets and terminate
     # ====================
 
-    if sc.ARP in pkt:
+    if ARP in pkt:
         return None
 
-    if sc.DHCP in pkt:
+    if DHCP in pkt:
         return None
     
     # Must have Ether frame and IP frame.
-    if not (sc.Ether in pkt and sc.IP in pkt):
+    if not (Ether in pkt and IP in pkt):
         return None
 
 
     # Ignore traffic to and from this host's IP. Hopefully we don't hit this statement because the sniff filter already excludes this host's IP.
-    if libinspector_state.host_ip_addr in (pkt[sc.IP].src, pkt[sc.IP].dst):
+    if libinspector_state.host_ip_addr in (pkt[IP].src, pkt[IP].dst):
         logger.debug(f'[Pkt Processor] Ignoring packet to/from host IP: {pkt.summary()}')
         return None
 
     # DNS
-    if sc.DNS in pkt:
+    if DNS in pkt:
         return None
     
     # Ignore TCP retransmissions
-    if sc.TCP in pkt :
+    if TCP in pkt :
         if process_retransmission(pkt):
             # logger.info(f'[Pkt Processor] Ignoring TCP retransmission packet: {pkt.summary()}')
             return None
     
     # Ignore duplicate UDP packets    
-    if sc.UDP in pkt:
+    if UDP in pkt:
         if is_duplicate_udp(pkt):
             # logger.info(f'[Pkt Processor] Ignoring duplicate UDP packet: {pkt.summary()}')
             return None
@@ -89,7 +93,7 @@ def process_retransmission(pkt: sc.Packet):
         seen_packets = set(list(seen_packets)[-1000:])  
 
     try:
-        packet_hash = hash((pkt[sc.IP].src, pkt[sc.IP].dst, pkt[sc.TCP].seq, pkt[sc.TCP].ack))
+        packet_hash = hash((pkt[IP].src, pkt[IP].dst, pkt[TCP].seq, pkt[TCP].ack))
     except AttributeError:
         # If the packet is not TCP, we don't need to check for retransmission
         logger.debug("[Packet Processor] Not a TCP packet - retransmission check skipped")
@@ -112,10 +116,10 @@ def is_duplicate_udp(pkt: sc.Packet) -> bool:
 
     try:
         packet_hash = hash(
-            (pkt[sc.IP].src,
-            pkt[sc.IP].dst,
-            pkt[sc.UDP].sport, 
-            pkt[sc.UDP].dport, 
+            (pkt[IP].src,
+            pkt[IP].dst,
+            pkt[UDP].sport, 
+            pkt[UDP].dport, 
             bytes(pkt.payload))
         )
     except AttributeError:

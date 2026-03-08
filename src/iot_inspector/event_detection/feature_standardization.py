@@ -42,16 +42,16 @@ def start():
 # todo: update every 10 mins, or clean memory every 10 mis 
 # @ttl_lru_cache(ttl_seconds=300, maxsize=128)
 @ttl_cache(maxsize=128, ttl=300)
-def get_ss_pca_model(device_name: str):
-    if device_name == 'unknown':
-        return "unknown", "unknown"
+def get_ss_pca_model(model_name: str):
+    # if device_name == 'unknown':
+    #     return "unknown", "unknown"
 
-    # Note: the model is chosen from the available pre-trained models
-    # todo: update threshold for matching device name with model name
-    _, model_name = find_best_match(device_name)
+    # # Note: the model is chosen from the available pre-trained models
+    # # todo: update threshold for matching device name with model name
+    # _, model_name = find_best_match(device_name)
 
     if model_name == 'unknown' or model_name is None:
-        logger.warning('[Feature Standardization] Model not found: ' + str(device_name))
+        logger.warning('[Feature Standardization] Model not found: ' + str(model_name))
         return "unknown", "unknown"
 
     # Load ss and pca file
