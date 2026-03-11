@@ -5,7 +5,7 @@ import os
 from . import global_state
 from .utils import get_product_name_by_mac
 from .ttl_cache import ttl_cache
-from .model_selection import find_best_match
+# from .model_selection import find_best_match
 
 import pandas as pd
 import numpy as np

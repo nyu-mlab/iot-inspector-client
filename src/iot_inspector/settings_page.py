@@ -3,17 +3,12 @@ import os
 import signal
 import common
 import libinspector
-import libinspector.packet_collector as packet_collector
 
 
 def exit_application_callback():
     """
     Kill the IoT Inspector application, background threads, and parent shell.
     """
-    if packet_collector.inspector_is_running():
-        st.warning("IoT Inspector closing... Please wait a moment.")
-    else:
-        st.info("IoT Inspector was already not running.")
     libinspector.core.clean_up()
     os.kill(os.getpid(), signal.SIGTERM)
 
