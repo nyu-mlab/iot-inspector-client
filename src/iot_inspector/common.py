@@ -363,7 +363,7 @@ def get_all_devices() -> list[dict]:
     return device_list
 
 
-def get_human_readable_time(timestamp=None):
+def get_human_readable_time(timestamp: float = None) -> str:
     """
     Convert a timestamp to a human-readable time format.
 
@@ -395,7 +395,7 @@ def initialize_config_dict():
     config_dict['app_start_time'] = time.time()
 
 
-def config_get(key, default=None) -> typing.Any:
+def config_get(key: str, default=None) -> typing.Any:
     """
     Get a configuration value.
 
@@ -418,7 +418,7 @@ def config_get(key, default=None) -> typing.Any:
         raise KeyError(f"Key '{key}' not found in configuration.")
 
 
-def config_get_prefix(key_prefix: str):
+def config_get_prefix(key_prefix: str) -> dict:
     """
     Get all configuration values that start with a given prefix.
 
@@ -453,7 +453,7 @@ def config_set(key: str, value: typing.Any):
         with open(config_file_name, 'w') as f:
             json.dump(config_dict, f, indent=4, sort_keys=True)
 
-
+@functools.cache
 def get_device_custom_name(mac_address: str) -> str:
     """
     Get the custom name for a device based on its MAC address.

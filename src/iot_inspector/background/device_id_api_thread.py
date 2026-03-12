@@ -1,7 +1,6 @@
 import re
 from typing import List, Dict, Any
 import requests
-import time
 import functools
 import logging
 import os
@@ -130,43 +129,41 @@ def api_worker_thread():
     """
     A worker thread to periodically clear the cache of call_predict_api.
     """
-    time.sleep(2)
-    logger.info("[Device ID API] Starting worker thread to periodically call the API for each device.")
-    while True:
-        # Getting inputs and calling API
-        for device_dict in common.get_all_devices():
-            meta_data = common.get_device_metadata(device_dict['mac_address'])
-            mdns_device_list = meta_data.get('mdns_json', [])
-            mdns_device_name = guess_device_name_from_mdns_list(mdns_device_list)
-            oui_vendor = meta_data.get('oui_vendor', '').strip()
-            custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
-            common.config_set(f"oui@{device_dict['mac_address']}", meta_data.get("oui_vendor", ""))
-            try:
-                # Note I am passing the metadata as a string because functions with cache cannot take dicts
-                # as a dict is mutable, and the cache would not work as expected.
-                remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
-                api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
-                common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
-                if "Vendor" in api_output:
-                    custom_name = api_output["Vendor"]
-                    if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
-                        common.config_set(custom_name_key, custom_name)
-            except RuntimeError:
-                # If API is down, just try using OUI vendor if no custom name is set in config.json
-                if mdns_device_name:
-                    # Prioritize the full mDNS name as it's the most descriptive identifier
-                    final_device_name = mdns_device_name
-                elif oui_vendor:
-                    # Fall back to the OUI vendor name if mDNS data is absent
-                    final_device_name = oui_vendor
-                else:
-                    # Use the final generic fallback name
-                    final_device_name = 'Unknown Device, likely a Mobile Phone'
-                common.config_set(custom_name_key, final_device_name)
-            except Exception as e:
-                logger.exception(f"[Device ID API] Unexpected error while calling API for device {device_dict['mac_address']}: {e}")
-        time.sleep(15)
-        logger.info("[Device ID API] 15 seconds passed, will start calling API for each device if needed.")
+    # Getting inputs and calling API
+    for device_dict in common.get_all_devices():
+        meta_data = common.get_device_metadata(device_dict['mac_address'])
+        mdns_device_list = meta_data.get('mdns_json', [])
+        mdns_device_name = guess_device_name_from_mdns_list(mdns_device_list)
+        oui_vendor = meta_data.get('oui_vendor', '').strip()
+        custom_name_key = f"device_custom_name_{device_dict['mac_address']}"
+        common.config_set(f"oui@{device_dict['mac_address']}", meta_data.get("oui_vendor", ""))
+        try:
+            # Note I am passing the metadata as a string because functions with cache cannot take dicts
+            # as a dict is mutable, and the cache would not work as expected.
+            remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
+            api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
+            common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
+            if "Vendor" in api_output:
+                custom_name = api_output["Vendor"]
+                if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
+                    common.config_set(custom_name_key, custom_name)
+        except requests.exceptions.ReadTimeout:
+            logger.warning(
+                    "[Device ID API] API request timed out. This may be a temporary issue. Will retry on the next scheduled call.")
+        except RuntimeError:
+            # If API is down, just try using OUI vendor if no custom name is set in config.json
+            if mdns_device_name:
+                # Prioritize the full mDNS name as it's the most descriptive identifier
+                final_device_name = mdns_device_name
+            elif oui_vendor:
+                # Fall back to the OUI vendor name if mDNS data is absent
+                final_device_name = oui_vendor
+            else:
+                # Use the final generic fallback name
+                final_device_name = 'Unknown Device, likely a Mobile Phone'
+            common.config_set(custom_name_key, final_device_name)
+        except Exception as e:
+            logger.exception(f"[Device ID API] Unexpected error while calling API for device {device_dict['mac_address']}: {e}")
 
 
 @functools.cache
@@ -228,7 +225,7 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
         logger.info("[Device ID API] Calling API with data: %s", json.dumps(data, indent=4))
 
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=data, timeout=120)
         response.raise_for_status()
         result = response.json()
     except (requests.exceptions.RequestException, ValueError) as e:

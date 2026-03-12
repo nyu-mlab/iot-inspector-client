@@ -1,8 +1,6 @@
 # IoT Inspector 3
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)[![libinspector_test](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml/badge.svg)](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml)[![codecov](https://codecov.io/gh/nyu-mlab/iot-inspector-client/graph/badge.svg?token=SFZ2QUJWQW)](https://codecov.io/gh/nyu-mlab/iot-inspector-client)
 
-Simply run `./start.bash` for Linux/Mac and `start.bat` for Windows. It will take care of all the dependencies.
-
 If the underlying dependencies is updated, please run the following first:
 
 ```bash
@@ -13,6 +11,23 @@ uv sync
 
 # User guide
 Please review the [User Guide](https://github.com/nyu-mlab/iot-inspector-client/wiki) for instructions how to run IoT Inspector. 
+
+## Running on Windows
+You have two options
+1. Click `IoT Inspector.lnk`
+2. Run `start.bat` on your terminal
+
+It will spawn a new PowerShell admin shell to run IoT Inspector. For first time installation, you need to run `start.bat` twice, as `uv` requires a shell refresh.
+
+For a detailed guide, see how to use IoT Inspector for Windows [here](https://github.com/nyu-mlab/iot-inspector-client/wiki/IoT-Inspector-%E2%80%90-Prolific-Guide).
+
+## Running on Mac
+This assumes that you currently have **brew** installed. Once done, run the `./start.bash` script to both install and run IoT Inspector.
+
+## Running on Linux
+This assumes that you have either `apt`, `yum` of `dnf` package managers first, which should come by default with your Linux distribution.
+
+Once done, run the `./start.bash` script to both install and run IoT Inspector.
 
 # Developer Guide
 

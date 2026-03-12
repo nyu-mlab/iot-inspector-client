@@ -5,7 +5,7 @@ import os
 from . import global_state
 from .utils import get_product_name_by_mac
 from .ttl_cache import ttl_cache
-from .model_selection import find_best_match
+# from .model_selection import find_best_match
 
 import pandas as pd
 import numpy as np
@@ -42,16 +42,16 @@ def start():
 # todo: update every 10 mins, or clean memory every 10 mis 
 # @ttl_lru_cache(ttl_seconds=300, maxsize=128)
 @ttl_cache(maxsize=128, ttl=300)
-def get_ss_pca_model(device_name):
-    if device_name == 'unknown':
-        return "unknown", "unknown"
+def get_ss_pca_model(model_name: str):
+    # if device_name == 'unknown':
+    #     return "unknown", "unknown"
 
-    # Note: the model is chosen from the available pre-trained models
-    # todo: update threshold for matching device name with model name
-    _, model_name = find_best_match(device_name)
+    # # Note: the model is chosen from the available pre-trained models
+    # # todo: update threshold for matching device name with model name
+    # _, model_name = find_best_match(device_name)
 
     if model_name == 'unknown' or model_name is None:
-        logger.warning('[Feature Standardization] Model not found: ' + str(device_name))
+        logger.warning('[Feature Standardization] Model not found: ' + str(model_name))
         return "unknown", "unknown"
 
     # Load ss and pca file
@@ -73,7 +73,7 @@ def get_ss_pca_model(device_name):
 # mismatch of version, might lead to breaking code or invalid results. 
 # todo: train ss/pca models with latest version of numpy, sklean 
 
-def standardize_burst_feature(burst):
+def standardize_burst_feature_data(burst):
     # get device name from MAC address
     device_name = get_product_name_by_mac(burst[-6])
     logger.info('[Feature Standardization] Processing burst for device name: ' + device_name+ " mac: " + str(burst[-6]))
@@ -87,7 +87,7 @@ def standardize_burst_feature(burst):
 
     if ss_pca_model == "unknown":
         logger.warning('[Feature Standardization] Process unsuccessful for device mac: ' + str(burst[-6]) + ' SS PCA not exist')
-        return
+        return None
     
     try:
         ss = ss_pca_model['ss']
@@ -100,8 +100,17 @@ def standardize_burst_feature(burst):
     # todo: send processed data to next step 
     
     logger.info('[Feature Standardization] Burst stored for: ' + str(device_name) + ' ' + burst[-1] + ' ' + burst[-2])
-    store_processed_burst_in_db(X_feature, device_name, model_name)
-    return 
+    return X_feature, device_name, model_name
+
+
+def standardize_burst_feature(burst):
+    standardized = standardize_burst_feature_data(burst)
+    if standardized is None:
+        return
+
+    data, device_name, model_name = standardized
+    store_processed_burst_in_db(data, device_name, model_name)
+    return
 
 
 # store standardized processed burst features (data) into database

@@ -32,28 +32,28 @@ def start():
 
 # process a burst from the queue to extract features
 
-def process_pending_burst(flow_key, pop_time, pop_burst):
+def compute_burst_features(flow_key, pop_time, pop_burst):
     # create a header for storing the burst into a dataframe corresponding to burst element
     # [time_epoch, frame_len, _ws_protocol, hostname, ip_proto, src_ip_addr, src_port, dst_ip_addr, dst_port, dst_mac_addr]
     header = ["ts","frame_len","protocol","host", "trans_proto", "ip_src", "srcport", "ip_dst", "dstport","mac_addr"]
 
     # check number of packets in the burst discard if
     # burst has only one packet
-    if len(pop_burst) < 2: 
-        return
+    if len(pop_burst) < 2:
+        return None
     
     # ----------------------------------------------------
     # compute features from burst of packets and flow key
     # ----------------------------------------------------
     pd_burst = pd.DataFrame(pop_burst, columns=header)
-    pd_burst.frame_len = pd_burst.frame_len.astype(int)
-    pd_burst.ts = pd_burst.ts.astype(float)
+    pd_burst["frame_len"] = pd_burst["frame_len"].astype(int)
+    pd_burst["ts"] = pd_burst["ts"].astype(float)
 
     # Calculate the time difference (delta) between consecutive rows and
     # Set the first value of time_delta to 0
     pd_burst['ts_delta'] = pd_burst['ts'].diff()
     pd_burst.loc[0, 'ts_delta'] = 0.0      
-    pd_burst.ts_delta = pd_burst.ts_delta.astype(float)
+    pd_burst["ts_delta"] = pd_burst["ts_delta"].astype(float)
 
     # compute_tbp_features
     start_time = pd_burst.ts.min()
@@ -183,7 +183,15 @@ def process_pending_burst(flow_key, pop_time, pop_burst):
          meanBytes_out_local, meanBytes_in_local, my_device_mac, 'unctrl', 'unctrl',
          start_time, ";".join([x for x in protocol if x!= ""]), host_output ]
 
-    store_burst_in_db(d)
+    return d
+
+
+def process_pending_burst(flow_key, pop_time, pop_burst):
+    burst_features = compute_burst_features(flow_key, pop_time, pop_burst)
+    if burst_features is None:
+        return
+
+    store_burst_in_db(burst_features)
     return
         
 

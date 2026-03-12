@@ -108,15 +108,40 @@ def show_device_bar_graph(device_dict: dict):
     device_custom_name = common.get_device_custom_name(device_dict['mac_address'])
     device_detail_url = f"/device_details?device_mac_address={device_dict['mac_address']}"
     title_text = f'**[{device_custom_name}]({device_detail_url})**'
-    st.markdown(title_text)
+    rename_flag_key = f"rename_open_{device_dict['mac_address']}"
+    rename_input_key = f"rename_input_{device_dict['mac_address']}"
+
+    def _save_rename():
+        name_value = st.session_state.get(rename_input_key, "").strip()
+        if not name_value:
+            return
+        common.config_set(f"device_custom_name_{device_dict['mac_address']}", name_value)
+        st.session_state[rename_flag_key] = False
+        common.get_device_custom_name.cache_clear()
+
+    header_col, action_col = st.columns([4, 1])
+    with header_col:
+        st.markdown(title_text)
+    with action_col:
+        if st.button("Rename", key=f"rename_button_{device_dict['mac_address']}"):
+            st.session_state[rename_flag_key] = True
+
+    if st.session_state.get(rename_flag_key, False):
+        st.text_input(
+            "New device name",
+            value=device_custom_name,
+            key=rename_input_key,
+            help="Type a new name and press Enter to save.",
+            on_change=_save_rename,
+        )
     caption = f'{device_dict["ip_address"]} | {device_dict["mac_address"]}'
     if "oui_vendor" in metadata_dict:
         caption += f' | {metadata_dict["oui_vendor"]}'
 
     api_output = common.config_get(f'device_details@{device_dict["mac_address"]}', default={})
-    if "Vendor" in api_output or "Explanation" in api_output:
-        vendor = api_output.get("Vendor", "")
-        explanation = api_output.get("Explanation", "")
+    if "vendor" in api_output or "explanation" in api_output:
+        vendor = api_output.get("vendor", "")
+        explanation = api_output.get("explanation", "")
         if vendor or explanation:
             caption += f"| Vendor: {vendor} | Explanation: {explanation}"
     st.caption(caption, help='IP address, MAC address, manufacturer OUI, and Device Identification API output')

@@ -6,6 +6,10 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+if [ "$EUID" -eq 0 ]; then
+    echo "Error: Do not run this script as root. Please run as a regular user."
+    exit 1
+fi
 # --- 0. Utility Functions ---
 
 # Function to check if a command exists

@@ -1,9 +1,9 @@
 import json
 import os
 import base64
-import time
 import sys
 import re
+import logging
 from .directory_explore import run_ls_command, get_label_summary
 from .pcap_check import convert_bytes_to_packet, check_for_application_data, make_pcap_filename
 from flask import Flask, request, jsonify
@@ -13,42 +13,7 @@ from scapy.all import wrpcap
 
 load_dotenv()
 app = Flask(__name__)
-
 packet_root_dir = "packets"
-mongo_user = os.environ.get("MONGO_USER")
-mongo_pass = os.environ.get("MONGO_PASS")
-mongo_host = os.environ.get("MONGO_HOST", "localhost")
-mongo_port = os.environ.get("MONGO_PORT", "27017")
-if mongo_user and mongo_pass:
-    mongo_uri = f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}/"
-else:
-    mongo_uri = f"mongodb://{mongo_host}:{mongo_port}/"
-
-mongo_client = MongoClient(mongo_uri, maxPoolSize=100)
-db = mongo_client["iot_inspector"]
-
-# --- CRITICAL: Database Connectivity Test on Startup ---
-# We try to list collection names. If the connection or auth is bad, this will raise an exception
-# and prevent the Flask server from starting with a bad configuration.
-try:
-    # Attempt a simple database operation (list collection names) to force connection/auth check
-    app.logger.info("Attempting connection and write test to MongoDB...")
-    # 1. Attempt to insert a test document
-    db.test_connection.insert_one({"status": "startup_check", "timestamp": int(time.time())})
-    # 2. Attempt to delete the test document
-    db.test_connection.delete_one({"status": "startup_check"})
-    # 3. Final check to ensure we can list collections
-    db.list_collection_names()
-    app.logger.info("Successfully connected and confirmed write access to MongoDB.")
-except Exception as e:
-    app.logger.info("=" * 50)
-    app.logger.info("FATAL ERROR: Could not connect to MongoDB or authentication failed.")
-    app.logger.info(f"Connection URI: {mongo_uri}")
-    app.logger.info(f"Exception: {e}")
-    app.logger.info("=" * 50)
-    sys.exit(1)
-    # If using gunicorn/uwsgi, this exit won't stop the workers, but will prevent the app from running correctly.
-    # If running with 'python app.py', this will stop the application.
 
 
 def is_prolific_id_valid(prolific_id: str) -> bool:
@@ -75,6 +40,11 @@ def is_prolific_id_valid(prolific_id: str) -> bool:
         return False
 
     return True
+
+
+def get_db(current_app: Flask):
+    """Helper to get the database instance from the current app context."""
+    return current_app.config['MONGO_CLIENT']["iot_inspector"]
 
 
 @app.route('/label_packets', methods=['GET'])
@@ -105,6 +75,7 @@ def label_packets():
     raw_packets = []
     capture_times = []
     capture_lengths = []
+    db = get_db(app)
 
     data = request.get_json()
     app.logger.info("Received POST data:", json.dumps(data, indent=4))
@@ -185,10 +156,49 @@ def label_packets():
         }), 500
 
 
+def init_db(app_instance: Flask):
+    """Initializes Mongo and attaches it to the app config."""
+    mongo_user = os.environ.get("MONGO_USER")
+    mongo_pass = os.environ.get("MONGO_PASS")
+    mongo_host = os.environ.get("MONGO_HOST", "localhost")
+    mongo_port = os.environ.get("MONGO_PORT", "27017")
+
+    if mongo_user and mongo_pass:
+        uri = f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}/"
+    else:
+        uri = f"mongodb://{mongo_host}:{mongo_port}/"
+
+    client = MongoClient(uri, maxPoolSize=100)
+
+    try:
+        db = client["iot_inspector"]
+        db.test_connection.insert_one({"status": "startup_check"})
+        db.test_connection.delete_one({"status": "startup_check"})
+        app_instance.config['MONGO_CLIENT'] = client
+        app_instance.logger.info("Successfully connected to MongoDB.")
+        db.list_collection_names()
+        app.logger.info("Successfully connected and confirmed write access to MongoDB.")
+    except Exception as e:
+        app_instance.logger.error(f"FATAL: MongoDB connection failed: {e}")
+        sys.exit(1)
+
+
+def main():
+    """Entry point for project.scripts."""
+    # Ensure logs show up in the console when run as a script
+    logging.basicConfig(level=logging.INFO)
+
+    print("--- IoT Inspector Packet Collector Starting ---")
+    init_db(app)
+
+    # Run the Flask development server
+    app.run(host='0.0.0.0', port=5000)
+
+
 if __name__ == '__main__':
     """
     For high load production use, consider using a WSGI server like Gunicorn or uWSGI.
     
     gunicorn -w 4 -b 0.0.0.0:5000 src.libinspector.server.packet_collector:app
     """
-    app.run(host='0.0.0.0', port=5000)
+    main()

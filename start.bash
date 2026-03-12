@@ -20,16 +20,14 @@ APP_URL="http://localhost:33721/"
 polling_delay_seconds=3
 max_attempts=20
 
-# --- 1. Dependency Check (Check for 'uv') ---
-echo "Checking for 'uv' command..."
-if ! command -v uv &> /dev/null; then
-    echo "=========================================================="
-    echo "ERROR: 'uv' package manager not found."
-    echo "Please run the dependency setup script first (requires sudo): $INSTALL_SCRIPT"
-    echo "Example: sudo bash $INSTALL_SCRIPT"
-    echo "=========================================================="
+if [ "$EUID" -eq 0 ]; then
+    echo "Error: Do not run this script as root. Please run as a regular user."
     exit 1
 fi
+# --- 1. Dependency Check (Check for 'uv') ---
+echo "Running the install script..."
+bash $INSTALL_SCRIPT
+source $HOME/.local/bin/env
 
 # --- 2. Virtual Environment Setup ---
 if [ ! -d "$VENV_DIR" ]; then
