@@ -7,7 +7,7 @@ import ipaddress
 import logging
 import os
 from dataclasses import dataclass
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 
 from scapy.all import PcapReader
 from scapy.layers.inet import IP, TCP, UDP
@@ -274,7 +274,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main():
     parser = _build_arg_parser()
     args = parser.parse_args()
 
