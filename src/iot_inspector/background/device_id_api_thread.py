@@ -143,6 +143,7 @@ def api_worker_thread():
             remote_hostnames = common.get_remote_hostnames(device_dict['mac_address'])
             api_output = call_predict_api(json.dumps(meta_data), remote_hostnames, device_dict['mac_address'])
             common.config_set(f'device_details@{device_dict["mac_address"]}', api_output)
+            # TODO: Maybe some day the Device ID API can give device, 'vendor', knowing if it is an 'IPhone' than Apple is more valuable imo.
             if "Vendor" in api_output:
                 custom_name = api_output["Vendor"]
                 if api_output["Vendor"] != "" and api_output["Vendor"] != "UNKNOWN":
@@ -168,7 +169,7 @@ def api_worker_thread():
 
 @functools.cache
 def call_predict_api(meta_data_string: str, remote_hostnames: str,
-                     mac_address: str, url="http://159.65.184.153:8080/predict") -> dict:
+                     mac_address: str, url="http://100.99.193.120:8080/predict") -> dict:
     """
     Call the predicting API with the given fields.
     This takes the MAC Address of an inspected device
