@@ -181,7 +181,7 @@ def show_cool_down():
     Once the cooldown is complete, the Start button is re-enabled.
     """
     settings_data = _load_json_data("settings.json")
-    cooldown_seconds = settings_data.get("labeling_cooldown_seconds", 60)
+    cooldown_seconds = settings_data.get("cooldown_period", 0)
     last_end_time = common.config_get('last_label_end_time', 0)
     # If never labeled before, skip cooldown
     if last_end_time == 0:
@@ -399,6 +399,8 @@ def _send_packets_callback():
     Executed when the 'Labeling Complete' button is clicked.
     Handles stopping packet collection and sending data to the server.
     """
+    settings_data = _load_json_data("settings.json")
+    
     if not common.config_get('labeling_in_progress', default=False):
         common.config_set('api_message', "warning|No labeling session in progress. Please start a labeling session first.")
         return
@@ -421,8 +423,8 @@ def _send_packets_callback():
         logger.info(f"[Packets] User requested end time at {user_end_timestamp_str}")
         # Set to 0 if you are letting users fully decide when to send a recording.
         # For maximum recording, I'm setting it for a day maximum allowed time
-        minimum_recording_time = common.config_get("minimum_record_time_seconds", 0)
-        maximum_recording_time = common.config_get("maximum_record_time_seconds", 86400)
+        minimum_recording_time = settings_data.get("minimum_record_time_seconds", 0)
+        maximum_recording_time = settings_data.get("maximum_record_time_seconds", 86400)
         _labeling_event_deque[-1]['end_time'] = max(_labeling_event_deque[-1]['start_time'] + minimum_recording_time,
                                                     min(user_end_time,
                                                         _labeling_event_deque[-1]['start_time'] + maximum_recording_time))
