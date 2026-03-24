@@ -122,22 +122,22 @@
   },
   "Smart Speaker" : {
     "Amazon Echo Show" : [
-      "Use a voice command to ask for time",
-      "Use a voice command to increase volume",
-      "Use a voice command to ask for the current weather today",
-      "Use a voice command to ask for latest news headlines"
+      "ask Alexa what time is it",
+      "ask Alexa increase the volume",
+      "ask Alexa what is the weather",
+      "ask Alexa what is the latest news"
     ],
     "Amazon Echo Spot" : [
-      "Use a voice command to ask for time",
-      "Use a voice command to increase volume",
-      "Use a voice command to ask for the current weather today",
-      "Use a voice command to ask for latest news headlines"
+      "ask Alexa what time is it",
+      "ask Alexa increase the volume",
+      "ask Alexa what is the weather",
+      "ask Alexa what is the latest news"
     ],
     "Amazon Echo - Other" : [
-      "Use a voice command to ask for time",
-      "Use a voice command to increase volume",
-      "Use a voice command to ask for the current weather today",
-      "Use a voice command to ask for latest news headlines"
+      "ask Alexa what time is it",
+      "ask Alexa increase the volume",
+      "ask Alexa what is the weather",
+      "ask Alexa what is the latest news"
     ]
   },
   "Hub" : {
