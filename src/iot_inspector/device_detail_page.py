@@ -699,10 +699,16 @@ def label_activity_workflow(mac_address: str, ip_address: str):
         consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
         requires_confirmation = False
 
+        is_duplicate_ui_selection = (
+            selected_category == last_category and 
+            selected_device == last_device and 
+            selected_label == last_label
+        )
+
         # Check if the duplicate count is at or above the threshold
         # Remember, maximum_duplicate_labels is the number of allowed duplicates, so say you want 5 labels
         # You should set maximum_duplicate_labels=4
-        if consecutive_duplicate_count >= maximum_duplicate_labels:
+        if consecutive_duplicate_count >= maximum_duplicate_labels and is_duplicate_ui_selection:
             logger.info("Maximum duplicate labeling attempts exceeded, requiring user confirmation.")
             requires_confirmation = True
             st.warning(f"""
@@ -718,7 +724,9 @@ def label_activity_workflow(mac_address: str, ip_address: str):
                 key="duplicate_confirm_checkbox",
                 value=st.session_state['confirm_duplicate'] # maintain state across rerun
             )
-
+        else:
+            # If they changed the UI, reset the checkbox state so it's clean for next time
+            st.session_state['confirm_duplicate'] = False
         st.subheader("2. Control Collection")
         show_active_labeling_status(mac_address, settings_data)
         col1, col2, col3 = st.columns(3)
