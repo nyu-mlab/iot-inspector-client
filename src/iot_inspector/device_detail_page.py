@@ -319,9 +319,9 @@ def label_thread():
                 last_label = common.config_get('last_labeled_label', default="")
 
                 # Check if it is a duplicate labeling event
-                if (device_category != last_category and
-                    device_name != last_device and
-                    activity_label != last_label):
+                if (device_category == last_category and
+                    device_name == last_device and
+                    activity_label == last_label):
                     logger.info("A duplicate labeling occurred!")
                     consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
                     consecutive_duplicate_count += 1
@@ -335,9 +335,9 @@ def label_thread():
                         "[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
                     common.config_set('consecutive_duplicate_count', 0)
 
-                common.config_set('last_labeled_category', _labeling_event_deque[-1].get('device_category'))
-                common.config_set('last_labeled_device', _labeling_event_deque[-1].get('device_name'))
-                common.config_set('last_labeled_label', _labeling_event_deque[-1].get('activity_label'))
+                common.config_set('last_labeled_category', device_category)
+                common.config_set('last_labeled_device', device_name)
+                common.config_set('last_labeled_label', activity_label)
 
             else:
                 error_message = response.json()['message']
@@ -598,23 +598,49 @@ def label_activity_workflow(mac_address: str, ip_address: str):
         # Note that start_time is only set by the 'Start' button click
         is_currently_labeling = st.session_state['start_time'] is not None and st.session_state['end_time'] is None
         categories = list(activity_data.keys())
+        try:
+            last_category = common.config_get('last_labeled_category', categories[0])
+            logger.info("Last labeled category from cache: %s", last_category)
+            cat_index = categories.index(last_category)
+        except ValueError:
+            logger.error("Last labeled category not found in cache. Defaulting to first category.")
+            cat_index = 0
         selected_category = st.selectbox("Select device category",
-                                         categories,
-                                         key="category_select",
-                                         disabled=is_currently_labeling)
+                                        categories,
+                                        index=cat_index,
+                                        key="category_select",
+                                        disabled=is_currently_labeling)
 
         devices = list(activity_data[selected_category].keys())
-        selected_device = st.selectbox("Select device", devices,
-                                       key="device_select",
-                                       disabled=is_currently_labeling)
+        try:
+            last_device = common.config_get('last_labeled_device', devices[0])
+            logger.info("Last labeled device from cache: %s", last_device)
+            dev_index = devices.index(last_device)
+        except ValueError:
+            logger.error("Last labeled device not found in cache. Defaulting to first category.")
+            dev_index = 0
+        selected_device = st.selectbox("Select device",
+                                        devices,
+                                        index=dev_index,
+                                        key="device_select",
+                                        disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
         max_idle_time = settings_data.get("max_idle_time_seconds", 600)
         idle_key = f"Idle Time: No Activity, just background traffic for {max_idle_time} seconds"
         if idle_key not in activity_labels:
             activity_labels.append(idle_key)
+
+        try:
+            last_label = common.config_get('last_labeled_label', activity_labels[0])
+            logger.info("Last labeled activity label from cache: %s", last_label)
+            label_index = activity_labels.index(last_label)
+        except ValueError:
+            logger.error("Last label not found in cache. Defaulting to first label.")
+            label_index = 0
         selected_label = st.selectbox("Select activity label",
                                       activity_labels,
+                                      index=label_index,
                                       key="label_select",
                                       disabled=is_currently_labeling)
 
