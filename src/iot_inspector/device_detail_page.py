@@ -282,6 +282,7 @@ def label_thread():
     if 'packet_queue' in payload:
         del payload['packet_queue']
 
+    device_category = payload.get('device_category', 'Unknown Category')
     device_name = payload.get('device_name', 'Unknown Device')
     activity_label = payload.get('activity_label', 'Unknown Activity')
     duration = payload.get('end_time', 0) - payload.get('start_time', 0)
@@ -311,6 +312,32 @@ def label_thread():
 
                 display_message = f"Labeled packets successfully | {label_data}"
                 common.config_set('api_message', f"success|{display_message}")
+
+                # Since the packet send was successful, this is where you should update duplicates, etc.
+                last_category = common.config_get('last_labeled_category', default="")
+                last_device = common.config_get('last_labeled_device', default="")
+                last_label = common.config_get('last_labeled_label', default="")
+
+                # Check if it is a duplicate labeling event
+                if (device_category != last_category and
+                    device_name != last_device and
+                    activity_label != last_label):
+                    logger.info("A duplicate labeling occurred!")
+                    consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
+                    consecutive_duplicate_count += 1
+                    common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
+
+                # Reset the duplicate count if this label is different from the last one
+                if (device_category!= last_category or
+                    device_name != last_device or
+                    activity_label != last_label):
+                    logger.info(
+                        "[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
+                    common.config_set('consecutive_duplicate_count', 0)
+
+                common.config_set('last_labeled_category', _labeling_event_deque[-1].get('device_category'))
+                common.config_set('last_labeled_device', _labeling_event_deque[-1].get('device_name'))
+                common.config_set('last_labeled_label', _labeling_event_deque[-1].get('activity_label'))
 
             else:
                 error_message = response.json()['message']
@@ -362,19 +389,6 @@ def _collect_packets_callback():
         "packet_queue": Queue()
     }
     _labeling_event_deque.append(labeling_event)
-
-    # Check if it is a duplicate labeling event
-    last_category = common.config_get('last_labeled_category', default="")
-    last_device = common.config_get('last_labeled_device', default="")
-    last_label = common.config_get('last_labeled_label', default="")
-    if (st.session_state['device_category'] == last_category and
-        st.session_state['device_name'] == last_device and
-        st.session_state['activity_label'] == last_label):
-
-        logger.info("A duplicate labeling occurred!")
-        consecutive_duplicate_count = common.config_get('consecutive_duplicate_count', default=0)
-        consecutive_duplicate_count += 1
-        common.config_set('consecutive_duplicate_count', consecutive_duplicate_count)
 
 
 def _cancel_label_callback():
@@ -432,20 +446,6 @@ def _send_packets_callback():
     common.config_set('last_label_end_time', st.session_state['end_time'])
     logger.info("[Packets] Labeling session ended, packets will be sent in the background thread.")
     reset_labeling_state()
-
-    # Reset the duplicate count if this label is different from the last one
-    last_category = common.config_get('last_labeled_category', default="")
-    last_device = common.config_get('last_labeled_device', default="")
-    last_label = common.config_get('last_labeled_label', default="")
-    if (_labeling_event_deque[-1].get('device_category', '') != last_category or
-        _labeling_event_deque[-1].get('device_name', '') != last_device or
-        _labeling_event_deque[-1].get('activity_label', '') != last_label):
-        logger.info("[Packets] Activity selection is different from last labeled activity, resetting duplicate count.")
-        common.config_set('consecutive_duplicate_count', 0)
-
-    common.config_set('last_labeled_category', _labeling_event_deque[-1].get('device_category'))
-    common.config_set('last_labeled_device', _labeling_event_deque[-1].get('device_name'))
-    common.config_set('last_labeled_label', _labeling_event_deque[-1].get('activity_label'))
 
 
 def _confirm_mapping_callback(mac_address: str, current_device: str, ip_address: str):

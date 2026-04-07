@@ -44,7 +44,7 @@ class InferenceStats:
 class OfflineBurstAssembler:
     """Assemble bursts offline without relying on live Inspector state."""
 
-    def __init__(self, device_mac: str | None, burst_interval: float) -> None:
+    def __init__(self, device_mac: str, burst_interval: float):
         self.device_mac = device_mac.lower() if device_mac else None
         self.burst_interval = burst_interval
         self.burst_dict_start_time: dict[tuple, float] = {}
@@ -202,7 +202,7 @@ def _run_inference(flow_key, pop_time, pop_burst) -> None:
     predict_event.predict_event_helper(burst, device_name, model_name)
 
 
-def _resolve_model_name(device_name: str | None, model_name: str | None) -> str:
+def _resolve_model_name(device_name: str, model_name: str) -> str:
     if model_name:
         return model_name
     if device_name:
@@ -213,10 +213,10 @@ def _resolve_model_name(device_name: str | None, model_name: str | None) -> str:
 
 def run_offline_inference(
     pcap_path: str,
-    device_mac: str | None = None,
-    device_name: str | None = None,
-    model_name: str | None = None,
-    max_packets: int | None = None,
+    device_mac: str = None,
+    device_name: str = None,
+    model_name: str = None,
+    max_packets: int = None,
 ) -> tuple[List[tuple], InferenceStats]:
     if not os.path.exists(pcap_path):
         raise FileNotFoundError(pcap_path)
