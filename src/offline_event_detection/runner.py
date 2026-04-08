@@ -35,6 +35,9 @@ BurstTuple = Tuple[tuple, float, list]
 
 @dataclass
 class InferenceStats:
+    def __init__(self):
+        pass
+
     packets_seen: int = 0
     packets_filtered: int = 0
     bursts_emitted: int = 0
@@ -216,8 +219,7 @@ def run_offline_inference(
     device_mac: str = None,
     device_name: str = None,
     model_name: str = None,
-    max_packets: int = None,
-) -> tuple[List[tuple], InferenceStats]:
+    max_packets: int = None) -> tuple[List[tuple], InferenceStats]:
     if not os.path.exists(pcap_path):
         raise FileNotFoundError(pcap_path)
 
@@ -267,9 +269,11 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-name", help="Exact model folder name to use for inference.")
     parser.add_argument("--max-packets", type=int, help="Optional limit on number of packets to process.")
     parser.add_argument(
-        "--log-level",
+        "--log-level", "-l",
         default="INFO",
+        type=str,
         help="Logging level (DEBUG, INFO, WARNING, ERROR).",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"]
     )
     return parser
 

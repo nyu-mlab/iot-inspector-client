@@ -124,35 +124,43 @@ This is useful for sharing PCAP files without revealing sensitive information.
 ## PCAP Time Series
 After installing IoT Inspector, you can run the following command:
 ```bash
-time-series -i <PCAP_FILE> -m <TARGET_MAC> -o <OUTPUT_PNG_FILE> --b <BIN_SIZE_IN_SECONDS>
+time-series -i <PCAP_FILE/PCAP_DIRECTORY> -m <TARGET_MAC> --b <BIN_SIZE_IN_SECONDS>
 ```
 
 Here is the help output
 ```text
-usage: time_series [-h] -i INPUT_FILE -m TARGET_MAC [-o OUTPUT] [--interval INTERVAL]
+usage: time_series [-h] -i INPUT_FILE -m TARGET_MAC [--interval INTERVAL]
 
 Analyze PCAP file to plot upload and download traffic over time for a specific MAC address.
 
 options:
   -h, --help            show this help message and exit
-  -i INPUT_FILE, --input INPUT_FILE
-                        The path to the input PCAP file.
+  -i INPUT_FILE, --input INPUT_PATH
+                        The path to the input PCAP file or directory with PCAP files.
   -m TARGET_MAC, --target-mac TARGET_MAC
                         The MAC address of the device to analyze (e.g., 'aa:bb:cc:dd:ee:ff').
-  -o OUTPUT, --output OUTPUT
-                        The path to save the output plot PNG file (default: traffic_timeseries.png).
   -b BIN_SIZE, --bin BIN_SIZE
                         The width of time bins in seconds for aggregating traffic data (default: 0.05 seconds).
 ```
 
-The output will be a PNG file showing the upload and download traffic over time for the specified MAC address. This is useful for visualizing traffic patterns of a device in a PCAP file.
+The output will be a PNG file showing the upload and download traffic over time for the specified MAC address. This is useful for visualizing traffic patterns of a device in a PCAP file. An example is shown [here](https://github.com/nyu-mlab/iot-inspector-client/pull/286).
 
-The output should look something like this on the console.
+To visualize the console output, if you pass a directory it would look something like this:
 ```text
-INFO: Starting analysis for: TEST.pcap
-INFO: Target MAC for analysis: 44:3d:54:e3:4b:6e
+pcap_time_series -i C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano -m <MAC-ADDRESS>
+
+INFO: Starting analysis for: C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-31-52PM_UTC_21.00s.pcap
+INFO: Target MAC for analysis: <MAC-ADDRESS>
 INFO: Time bin size: 0.05 seconds
-INFO: Read 2392 packets. Starting data processing...
+Processing: C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-31-52PM_UTC_21.00s.pcap
+INFO: Read 209 packets. Starting data processing...
 INFO: Generating plot...
-INFO: Successfully saved plot to 'traffic_timeseries.png'
+Processing: C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-33-30PM_UTC_22.00s.pcap
+INFO: Successfully saved plot to 'C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-31-52PM_UTC_21.00s_bin_0.05s.png'
+INFO: Starting analysis for: C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-33-30PM_UTC_22.00s.pcap
+INFO: Target MAC for analysis: <MAC-ADDRESS>
+INFO: Time bin size: 0.05 seconds
+INFO: Read 222 packets. Starting data processing...
+INFO: Generating plot...
+INFO: Successfully saved plot to 'C:/Users/andre/OneDrive/Desktop/packets/AndrewQuijano\Amazon Echo Show\Use a voice command to ask for time\Mar-20-2026_05-33-30PM_UTC_22.00s_bin_0.05s.png'
 ```
