@@ -261,9 +261,10 @@ def main():
         try:
             # Your analyze_traffic function will now use the path-splitting
             # trick to save the PNG in the same 'root' folder as the PCAP
-            analyze_traffic(pcap_path, args.target_mac, args.bin_size)
+            analyze_traffic(pcap_path, args.target_mac.lower(), args.bin_size)
         except Exception as e:
             print(f"Failed to process {pcap_path}: {e}")
+
 
 if __name__ == "__main__":
     main()

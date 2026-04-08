@@ -5,7 +5,7 @@ import logging
 from libinspector import networking
 from .ttl_cache import ttl_cache
 import libinspector.global_state as libinspector_state
-import common
+from iot_inspector import common
 from .model_selection import find_best_match
 
 
