@@ -100,7 +100,8 @@ class OfflineBurstAssembler:
         if not utils.validate_ip_address(src_ip_addr) or not utils.validate_ip_address(dst_ip_addr):
             return []
 
-        time_epoch = pkt.time
+        # Scapy can use EDecimal for timestamps, which is unhashable in dict keys.
+        time_epoch = float(pkt.time)
         frame_len = len(pkt)
         ip_proto = pkt[IP].proto
 

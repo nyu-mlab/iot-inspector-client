@@ -144,3 +144,6 @@ config.json
 
 # ML models
 models/
+
+# Raw PCAPS
+src/offline_event_detection/event_data
