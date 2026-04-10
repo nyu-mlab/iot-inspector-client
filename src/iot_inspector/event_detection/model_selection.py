@@ -101,20 +101,7 @@ def find_best_match(device_name: str, model_names=None, threshold: float = 0.75)
         return device_name, best_match
     else:
         return device_name, "unknown"
- 
-
-def main():
-    test_cases = [
-        ("Hello World", "hello_world", 0.8),
-        ("Hello", "H3llo", 0.6),
-        ("Python", "Java", 0.5),
-        ("GitHub", "GitLab", 0.7)
-    ]
-
-    for str1, str2, threshold in test_cases:
-        result = is_close_match(str1, str2, threshold)
-        print(f"Comparing '{str1}' with '{str2}' at threshold {threshold}: {result}")
 
 
 if __name__ == "__main__":
-    main()
+    download_models()
