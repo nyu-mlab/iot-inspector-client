@@ -24,7 +24,7 @@ dependencies = [
     "flask==3.1.3",
     "pymongo==4.16.0",
     "python-dotenv==1.2.1",
-    "libinspector>=1.0.24",
+    "libinspector==1.0.24",
     "streamlit>=1.52.1",
     "gdown>=5.2.1",
     "matplotlib==3.10.8",
@@ -74,7 +74,7 @@ anonymize = "iot_inspector.analysis.anonymize:main"
 time_series = "iot_inspector.analysis.pcap_time_series:main"
 iot_inspector = "iot_inspector.dashboard:main"
 packet_collector = "iot_inspector.server.packet_collector:main"
-event_inference = "offline_event_detection.runner:main"
+event_inference = "iot_inspector.event_detection.runner:main"
 
 [project.urls]
 Homepage = "https://inspector.engineering.nyu.edu/"

@@ -13,6 +13,15 @@ def show():
     """
     Creating a page that shows what devices have been discovered so far
     """
+    with st.container(border=True):
+        col1, col2 = st.columns([8, 2])
+        with col1:
+            st.markdown("### 🔍 Device Discovery")
+            st.info("Don't see your device? Ensure it is active on the network and click the `Refresh List` button.")
+        with col2:
+            # This is your "Force CTRL+F5" button
+            if st.button("↻ Refresh List", use_container_width=True, help="Force a full device list refresh"):
+                st.rerun()
     toast_obj = st.toast('Discovering devices...')
     show_list(toast_obj)
 

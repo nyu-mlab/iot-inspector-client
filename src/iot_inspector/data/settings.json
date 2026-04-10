@@ -1,7 +1,7 @@
 {
   "Allowed Vendors" : ["Amazon"],
-  "minimum_record_time_seconds" : 20,
-  "max_idle_time_seconds" : 600,
+  "minimum_record_time_seconds" : 25,
+  "max_idle_time_minutes" : 10,
   "max_duplicate_labels" : 4,
   "cooldown_period" : 20
 }

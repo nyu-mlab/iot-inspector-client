@@ -13,18 +13,8 @@ from scapy.all import PcapReader
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.l2 import Ether
 from scapy.layers.tls.all import TLS
-
-from iot_inspector.event_detection import (
-    burst_processor,
-    feature_generation,
-    feature_standardization,
-    model_selection,
-    packet_processor,
-    periodic_filter,
-    predict_event,
-    global_state,
-    utils,
-)
+from iot_inspector.event_detection import utils, feature_standardization, model_selection, predict_event, global_state
+from iot_inspector.event_detection import burst_processor, feature_generation, packet_processor, periodic_filter
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +25,9 @@ BurstTuple = Tuple[tuple, float, list]
 
 @dataclass
 class InferenceStats:
+    def __init__(self):
+        pass
+
     packets_seen: int = 0
     packets_filtered: int = 0
     bursts_emitted: int = 0
@@ -44,7 +37,7 @@ class InferenceStats:
 class OfflineBurstAssembler:
     """Assemble bursts offline without relying on live Inspector state."""
 
-    def __init__(self, device_mac: str | None, burst_interval: float) -> None:
+    def __init__(self, device_mac: str, burst_interval: float):
         self.device_mac = device_mac.lower() if device_mac else None
         self.burst_interval = burst_interval
         self.burst_dict_start_time: dict[tuple, float] = {}
@@ -100,7 +93,7 @@ class OfflineBurstAssembler:
         if not utils.validate_ip_address(src_ip_addr) or not utils.validate_ip_address(dst_ip_addr):
             return []
 
-        time_epoch = pkt.time
+        time_epoch = float(pkt.time)
         frame_len = len(pkt)
         ip_proto = pkt[IP].proto
 
@@ -202,7 +195,7 @@ def _run_inference(flow_key, pop_time, pop_burst) -> None:
     predict_event.predict_event_helper(burst, device_name, model_name)
 
 
-def _resolve_model_name(device_name: str | None, model_name: str | None) -> str:
+def _resolve_model_name(device_name: str, model_name: str) -> str:
     if model_name:
         return model_name
     if device_name:
@@ -213,11 +206,10 @@ def _resolve_model_name(device_name: str | None, model_name: str | None) -> str:
 
 def run_offline_inference(
     pcap_path: str,
-    device_mac: str | None = None,
-    device_name: str | None = None,
-    model_name: str | None = None,
-    max_packets: int | None = None,
-) -> tuple[List[tuple], InferenceStats]:
+    device_mac: str,
+    device_name: str,
+    model_name: str,
+    max_packets: int = None) -> tuple[List[tuple], InferenceStats]:
     if not os.path.exists(pcap_path):
         raise FileNotFoundError(pcap_path)
 
@@ -261,15 +253,27 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Offline event inference from a pcap file using event_detection pipeline.",
     )
-    parser.add_argument("--pcap", required=True, help="Path to the pcap file to analyze.")
-    parser.add_argument("--device-mac", help="MAC address of the device that produced the capture.")
-    parser.add_argument("--device-name", help="Human-readable device name for model matching.")
-    parser.add_argument("--model-name", help="Exact model folder name to use for inference.")
-    parser.add_argument("--max-packets", type=int, help="Optional limit on number of packets to process.")
+    parser.add_argument("-p", "--pcap", dest="pcap", action="store",
+                        type=str, required=True, help="Path to the pcap file to analyze.")
+    parser.add_argument("-m", "--device-mac", dest="device_mac", action="store",
+                        type=str, required=True, help="MAC address of the device that produced the capture.")
+
+    # For the exact model name, see the './models/binary/rf/ and you put the folder name, e.g. 'echoshow5' or 'bulb`'
+    parser.add_argument("--model-name", dest="model_name", action="store",
+                        type=str, help="Exact model folder name to use for inference.")
+    # The device name, you take a string, and you roughly try to match with a model name, e.g. if you provide 'amazon plug' it might infer' amazon-plug' model
+    parser.add_argument("--device-name", dest="device_name", action="store",
+                        type=str, help="Human-readable device name for model matching.")
+
+    # Optional, you can put a limit on number of packets to analyze
+    parser.add_argument("--max-packets", dest="max_packets", type=int,
+                        help="Optional limit on number of packets to process.")
     parser.add_argument(
-        "--log-level",
+        "--log-level", "-l",
         default="INFO",
+        type=str,
         help="Logging level (DEBUG, INFO, WARNING, ERROR).",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"]
     )
     return parser
 
@@ -283,21 +287,46 @@ def main():
 
     logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO))
 
-    events, stats = run_offline_inference(
-        pcap_path=args.pcap,
-        device_mac=args.device_mac,
-        device_name=args.device_name,
-        model_name=args.model_name,
-        max_packets=args.max_packets,
-    )
+    # Assuming -p can now be a directory or a file
+    input_path = args.pcap
 
-    print("--- Offline Event Inference Results ---")
-    print(f"Packets seen: {stats.packets_seen}")
-    print(f"Packets filtered: {stats.packets_filtered}")
-    print(f"Bursts processed: {stats.bursts_emitted}")
-    print(f"Events detected: {stats.events_emitted}")
-    for device, ts, event in events:
-        print(f"{device}\t{ts}\t{event}")
+    if os.path.isfile(input_path):
+        packet_captures = [input_path]
+    else:
+        packet_captures = []
+        for root, _, files in os.walk(input_path):
+            for file in files:
+                # Check for pcap or pcapng extensions
+                if file.lower().endswith(('.pcap', '.pcapng')):
+                    packet_captures.append(os.path.join(str(root), str(file)))
+
+    if not packet_captures:
+        print(f"No PCAP files found at {input_path}")
+        return
+
+    for pcap in packet_captures:
+        logger.info(f"🚀 Processing: {pcap}")
+        events, stats = run_offline_inference(
+            pcap_path=pcap,
+            device_mac=args.device_mac.lower(),
+            device_name=args.device_name,
+            model_name=args.model_name,
+            max_packets=args.max_packets,
+        )
+        file_root, _ = os.path.splitext(pcap)
+        output_file = f"{file_root}_offline_event_inference.txt"
+        try:
+            with open(output_file, "w") as fd:
+                fd.write("--- Offline Event Inference Results ---\n")
+                fd.write(f"Packets seen: {stats.packets_seen}\n")
+                fd.write(f"Packets filtered: {stats.packets_filtered}\n")
+                fd.write(f"Bursts processed: {stats.bursts_emitted}\n")
+                fd.write(f"Events detected: {stats.events_emitted}\n")
+                for device, ts, event in events:
+                    fd.write(f"{device}\t{ts}\t{event}\n")
+            logger.info(f"Successfully saved plot to '{output_file}'")
+        except Exception as e:
+            logger.error(f"Error saving plot to '{output_file}': {e}")
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ from event_detection import model_selection
 
 logger = logging.getLogger(__name__)
 
-def get_page(title: str, material_icon: str, show_page_func):
+def get_page(title: str, material_icon: str, show_page_func) -> st.Page:
     icon = f":material/{material_icon}:"
     url_path = title.lower().replace(' ', '_')
 

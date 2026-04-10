@@ -88,14 +88,14 @@ def bin_traffic(df: pd.DataFrame, bin_size: float) -> tuple:
     return bins, upload_binned, download_binned
 
 
-def analyze_traffic(input_file: str, output_file: str, target_mac: str, bin_size: float):
+def analyze_traffic(input_file: str, target_mac: str, bin_size: float):
     """
     Reads a PCAP file, calculates upload/download traffic for a specific MAC address
     over time, and generates a plot.
 
     Args:
         input_file (str): Path to the input PCAP file.
-        output_file (str): Path to save the output PNG plot.
+
         target_mac (str): The MAC address of the device to analyze (e.g., 'aa:bb:cc:dd:ee:ff').
         bin_size (float): Width of time bins in seconds for aggregating traffic data.
     """
@@ -200,6 +200,8 @@ def analyze_traffic(input_file: str, output_file: str, target_mac: str, bin_size
     plt.tight_layout()
 
     # 4. Save the figure
+    file_root, _ = os.path.splitext(input_file)
+    output_file = f"{file_root}_bin_{bin_size}s.png"
     try:
         fig.savefig(output_file)
         logger.info(f"Successfully saved plot to '{output_file}'")
@@ -209,14 +211,15 @@ def analyze_traffic(input_file: str, output_file: str, target_mac: str, bin_size
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze PCAP file to plot upload and download traffic over time for a specific MAC address."
+        prog='pcap_time_series',
+        description="Analyze PCAP file to plot upload and download traffic over time for a specific MAC address.",
     )
     parser.add_argument(
         "-i", "--input",
-        dest="input_file",
+        dest="input_path",
         action="store",
         type=str,
-        help="The path to the input PCAP file.",
+        help="The path to a PCAP file or a directory containing PCAPs.",
         required=True
     )
     parser.add_argument(
@@ -228,14 +231,6 @@ def main():
         help="The MAC address of the device to analyze (e.g., 'aa:bb:cc:dd:ee:ff')."
     )
     parser.add_argument(
-        "-o", "--output",
-        dest="output",
-        action="store",
-        type=str,
-        default="traffic_timeseries.png",
-        help="The path to save the output plot PNG file (default: traffic_timeseries.png)."
-    )
-    parser.add_argument(
         "-b", "--bin",
         dest="bin_size",
         action="store",
@@ -244,7 +239,31 @@ def main():
         help="The width of time bins in seconds for aggregating traffic data (default: 0.05 seconds)."
     )
     args = parser.parse_args()
-    analyze_traffic(args.input_file, args.output, args.target_mac, args.bin_size)
+
+    if os.path.isfile(args.input_path):
+        process_files = [args.input_path]
+    else:
+        process_files = []
+        for root, _, files in os.walk(args.input_path):
+            for file in files:
+                # Check for pcap or pcapng extensions
+                if file.lower().endswith(('.pcap', '.pcapng')):
+                    process_files.append(os.path.join(str(root), str(file)))
+
+    if not process_files:
+        print(f"No PCAP files found in {args.input_path}")
+        return
+
+    print(f"Found {len(process_files)} files. Starting analysis...")
+
+    for pcap_path in process_files:
+        print(f"Processing: {pcap_path}")
+        try:
+            # Your analyze_traffic function will now use the path-splitting
+            # trick to save the PNG in the same 'root' folder as the PCAP
+            analyze_traffic(pcap_path, args.target_mac.lower(), args.bin_size)
+        except Exception as e:
+            print(f"Failed to process {pcap_path}: {e}")
 
 
 if __name__ == "__main__":
