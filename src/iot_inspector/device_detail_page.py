@@ -144,34 +144,38 @@ def show_active_labeling_status(mac_address: str, settings_data: dict):
     end_time = st.session_state.get('end_time')
 
     if is_currently_labeling and start_time is not None and end_time is None:
-        elapsed_seconds = int(time.time() - start_time)
+        elapsed_total_seconds = int(time.time() - start_time)
+        
+        mins, secs = divmod(elapsed_total_seconds, 60)
+        time_display = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
 
-        # For visual effect, cap the progress bar at a duration (e.g., 2 minutes)
-        max_duration_visual = settings_data.get("max_idle_time_seconds", 600)
-        progress_value = min(elapsed_seconds / max_duration_visual, 1.0)
+        max_minutes = settings_data.get("max_idle_time_minutes", 10)
+        max_seconds = max_minutes * 60
+        progress_value = min(elapsed_total_seconds / max_seconds, 1.0)
 
-        # Ensure the container visually pops
         with st.container(border=True):
             st.markdown("#### ⏱️ Active Labeling Session")
             col_t1, col_t2 = st.columns([1, 3])
             with col_t1:
-                st.metric("Time Elapsed", f"{elapsed_seconds} seconds")
+                # Big digital-style readout
+                st.metric("Time Elapsed", time_display)
             with col_t2:
                 st.info(f"**Device:** {st.session_state.get('device_name', 'N/A')}")
                 st.info(f"**Activity:** {st.session_state.get('activity_label', 'N/A')}")
 
-            # Use a progress bar that cycles when it reaches the visual max
-            progress_text = f"Collecting packets... (Max visual duration {max_duration_visual} seconds)"
             if progress_value >= 1.0:
-                 progress_text = f"Collecting packets... Timer exceeded {max_duration_visual} seconds"
+                 progress_text = f"🔥 Warning: Exceeded visual limit of {max_minutes}m"
+            else:
+                 progress_text = f"Collecting packets... {time_display} / {max_minutes}m"
 
             st.progress(progress_value, text=progress_text)
-            st.caption(f"Traffic for MAC: `{mac_address}` is being queued.")
+            st.caption(f"Traffic for MAC: `{mac_address}` is being queued for analysis.")
 
     elif end_time is not None and start_time is not None:
-        # Show a summary after completion until the 'Label' button is pressed again
-        duration = end_time - start_time
-        st.success(f"✅ Session Completed! Collected **{duration} seconds** of activity.")
+        duration_total = int(end_time - start_time)
+        dmins, dsecs = divmod(duration_total, 60)
+        final_time = f"{dmins}m {dsecs}s" if dmins > 0 else f"{dsecs}s"
+        st.success(f"✅ Session Completed! Total duration: **{final_time}**")
 
 
 @st.fragment(run_every=10)
@@ -626,8 +630,8 @@ def label_activity_workflow(mac_address: str, ip_address: str):
                                         disabled=is_currently_labeling)
 
         activity_labels = activity_data[selected_category][selected_device]
-        max_idle_time = settings_data.get("max_idle_time_seconds", 600)
-        idle_key = f"Idle Time: No Activity, just background traffic for {max_idle_time} seconds"
+        max_idle_time = settings_data.get("max_idle_time_minutes", 10)
+        idle_key = f"Idle Time: No Activity, just background traffic for {max_idle_time} minutes"
         if idle_key not in activity_labels:
             activity_labels.append(idle_key)
 
