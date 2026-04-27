@@ -2,9 +2,19 @@ name: Publish Wheel package to PyPI
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
+    inputs:
+      bump_type:
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+        description: "Select the type of version bump for the release"
+  #push:
+  #  branches:
+  #    - master
 
 # Set no permissions by default. This is the most secure practice.
 # We will grant specific permissions to each job that needs them.
@@ -24,7 +34,7 @@ jobs:
         with:
           release_branch: master
           use_api: true
-          increment: patch
+          increment: ${{ github.event.inputs.bump_type || 'patch' }}
 
   build:
     runs-on: ${{ matrix.os }}
@@ -49,7 +59,7 @@ jobs:
 
     - name: Store the IoT Inspector Python wheel
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: iot-inspector
         path: dist/*.whl
@@ -103,7 +113,7 @@ jobs:
           name: iot-exe
           path: dist/
 
-      - name: Upload wheel and debian packages to release
+      - name: Upload wheel package to release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -27,7 +27,9 @@ fi
 # --- 1. Dependency Check (Check for 'uv') ---
 echo "Running the install script..."
 bash $INSTALL_SCRIPT
-source $HOME/.local/bin/env
+
+# FORCE the path for the current session
+export PATH="$HOME/.local/bin:$PATH"
 
 # --- 2. Virtual Environment Setup ---
 if [ ! -d "$VENV_DIR" ]; then
