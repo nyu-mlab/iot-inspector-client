@@ -76,7 +76,7 @@ echo "Checking for 'uv' and installing if necessary..."
 if ! command_exists uv; then
     echo "'uv' not found. Installing now (this may take a moment)..."
     # Download and execute the uv install script
-    curl -Ls https://astral.sh/uv/install.sh | bash
+    curl -Ls https://astral.sh/uv/install.sh | sh
     # Note: UV is typically installed into $HOME/.cargo/bin,
     # which needs to be in PATH for the next step.
     echo "UV installation complete."

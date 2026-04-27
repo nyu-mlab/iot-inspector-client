@@ -5,7 +5,8 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 # Add both 'src' (for your code) and 'tests'
 pythonpath = [
-  "tests",
+    "src",
+    "tests"
 ]
 
 # Optional: Add this to see your debug prints automatically without typing -s
