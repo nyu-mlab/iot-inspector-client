@@ -41,20 +41,20 @@ LIBCAP_DEPS=()
 case "$MANAGER" in
     "apt")
         echo "Detected Debian/Ubuntu."
-        LIBCAP_DEPS=("libpcap-dev" "tcpdump")
+        LIBCAP_DEPS=("libpcap-dev" "tcpdump" "curl")
         sudo apt-get update
         sudo apt-get install -y "${LIBCAP_DEPS[@]}"
         ;;
     "yum" | "dnf")
         echo "Detected Fedora/RHEL/CentOS."
-        LIBCAP_DEPS=("libpcap" "libpcap-devel" "tcpdump")
+        LIBCAP_DEPS=("libpcap" "libpcap-devel" "tcpdump" "curl")
         # On RHEL/Fedora, access is often granted by default or via /dev/bpf/
         sudo $MANAGER install -y "${LIBCAP_DEPS[@]}"
         ;;
     "brew")
         echo "Detected macOS (Homebrew)."
         # macOS uses BPF devices for network capture, but libpcap is still needed for headers
-        LIBCAP_DEPS=("libpcap" "tcpdump")
+        LIBCAP_DEPS=("libpcap" "tcpdump" "curl")
         if command_exists brew; then
             brew install "${LIBCAP_DEPS[@]}" || true # Allow it to fail if already installed
         else
