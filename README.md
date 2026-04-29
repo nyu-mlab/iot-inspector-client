@@ -22,7 +22,9 @@ It will spawn a new PowerShell admin shell to run IoT Inspector. For first time 
 For a detailed guide, see how to use IoT Inspector for Windows [here](https://github.com/nyu-mlab/iot-inspector-client/wiki/IoT-Inspector-%E2%80%90-Prolific-Guide).
 
 ## Running on Mac
-This assumes that you currently have **brew** installed. Once done, run the `./start.bash` script to both install and run IoT Inspector.
+This assumes that you currently have both [brew](https://docs.brew.sh/Installation) and [Apple Developer Tools](https://developer.apple.com/documentation/xcode/installing-the-command-line-tools) installed.
+
+Once done, run the `./start.bash` script to both install and run IoT Inspector.
 
 ## Running on Linux
 This assumes that you have either `apt`, `yum` of `dnf` package managers first, which should come by default with your Linux distribution.
