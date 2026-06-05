@@ -1,0 +1,52 @@
+name: go-ci
+
+on:
+  push:
+    branches: [go-rewrite]
+    paths: ['go/**', '.github/workflows/go-ci.yml']
+  pull_request:
+    paths: ['go/**', '.github/workflows/go-ci.yml']
+
+defaults:
+  run:
+    working-directory: go
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: go/go.sum
+
+      - name: Install libpcap (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+      - name: Install Npcap SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://npcap.com/dist/npcap-sdk-1.13.zip -OutFile npcap-sdk.zip
+          Expand-Archive npcap-sdk.zip -DestinationPath "$env:GITHUB_WORKSPACE\npcap-sdk"
+          "CGO_CFLAGS=-I$env:GITHUB_WORKSPACE\npcap-sdk\Include"  | Out-File -FilePath $env:GITHUB_ENV -Append
+          "CGO_LDFLAGS=-L$env:GITHUB_WORKSPACE\npcap-sdk\Lib\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
