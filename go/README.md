@@ -1,6 +1,6 @@
 # inspector-go
 
-A small Go rewrite of [IoT Inspector](https://github.com/nyu-mlab/iot-inspector-client).
+a small Go rewrite of [IoT Inspector](https://github.com/nyu-mlab/iot-inspector-client).
 It finds the devices on your network, optionally inspects one, and shows live
 upload/download charts in a web dashboard. Everything stays on your machine.
 
@@ -22,6 +22,3 @@ sudo ./inspector -inspect <mac> -record dev.pcap    # save one device's packets 
 ./inspector -db live.db -browse                     # view a saved run (no root)
 ./inspector -pcap file.pcap -host-mac <mac>         # replay a capture offline
 ```
-
-Use a network you own — it ARP-spoofs to capture traffic, which is disruptive on
-shared/managed networks.
