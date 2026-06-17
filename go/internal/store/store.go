@@ -368,6 +368,33 @@ func (s *Store) InspectAll() (int64, error) {
 	return res.RowsAffected()
 }
 
+// InspectedMACs returns the MAC addresses currently flagged for inspection.
+func (s *Store) InspectedMACs() ([]string, error) {
+	rows, err := s.db.Query(`SELECT mac_address FROM devices WHERE is_inspected = 1`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var mac string
+		if err := rows.Scan(&mac); err != nil {
+			return nil, err
+		}
+		out = append(out, mac)
+	}
+	return out, rows.Err()
+}
+
+// ClearInspected unflags every device, so a fresh -inspect spec is authoritative
+// rather than accumulating with whatever a previous run on this DB inspected.
+func (s *Store) ClearInspected() error {
+	s.lock()
+	defer s.unlock()
+	_, err := s.db.Exec(`UPDATE devices SET is_inspected = 0`)
+	return err
+}
+
 // InspectedDevices returns devices flagged for spoofing (is_inspected=1, not gateway).
 func (s *Store) InspectedDevices() ([]Device, error) {
 	rows, err := s.db.Query(`

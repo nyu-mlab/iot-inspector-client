@@ -5,6 +5,7 @@ package state
 
 import (
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -28,6 +29,11 @@ type State struct {
 	// from ARP traffic. Replaces networking.get_mac_address_from_ip().
 	arpCache map[string]net.HardwareAddr
 
+	// inspectedMACs is the set of devices currently being inspected (lowercase
+	// MAC strings). Kept in sync with is_inspected in the DB; used to scope pcap
+	// recording to only the inspected device(s).
+	inspectedMACs map[string]bool
+
 	Handle  *pcap.Handle
 	Store   *store.Store
 	Traffic *traffic.Buffer // full-resolution rolling window for live charts (nil in browse mode)
@@ -37,9 +43,29 @@ type State struct {
 
 func New(st *store.Store) *State {
 	return &State{
-		arpCache: make(map[string]net.HardwareAddr),
-		Store:    st,
+		arpCache:      make(map[string]net.HardwareAddr),
+		inspectedMACs: make(map[string]bool),
+		Store:         st,
 	}
+}
+
+// SetInspectedMACs replaces the inspected-device set (e.g. after applyInspect
+// refreshes it from the DB).
+func (s *State) SetInspectedMACs(macs []string) {
+	m := make(map[string]bool, len(macs))
+	for _, mac := range macs {
+		m[strings.ToLower(mac)] = true
+	}
+	s.mu.Lock()
+	s.inspectedMACs = m
+	s.mu.Unlock()
+}
+
+// IsInspectedMAC reports whether the given MAC is currently being inspected.
+func (s *State) IsInspectedMAC(mac string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.inspectedMACs[strings.ToLower(mac)]
 }
 
 func (s *State) Running() bool      { return s.running.Load() }

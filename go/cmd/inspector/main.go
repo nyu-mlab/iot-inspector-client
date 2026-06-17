@@ -112,7 +112,7 @@ func runReplay(s *state.State, file, hostMAC, hostIP, gatewayIP string) error {
 	done := make(chan struct{})
 	go func() { proc.Run(packets); close(done) }()
 
-	capture.Run(handle, packets, nil) // reads the whole file, then closes `packets`
+	capture.Run(s, packets, nil) // reads the whole file, then closes `packets`
 	<-done
 
 	if n, err := s.Store.BackfillFlowHostnames(); err == nil {
@@ -170,7 +170,7 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go func() { defer wg.Done(); capture.Run(handle, packets, rec) }() // closes `packets` when handle closes
+	go func() { defer wg.Done(); capture.Run(s, packets, rec) }() // closes `packets` when handle closes
 	go func() { defer wg.Done(); proc.Run(packets) }()
 
 	// Periodic background loops (core.py's SafeLoopThreads).
@@ -184,6 +184,11 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 	// Active SSDP discovery (mDNS is handled passively in the processor).
 	go loop(ctx, 60*time.Second, func() { discovery.SSDP(s, 10*time.Second) })
 	if inspect != "" {
+		// Make -inspect authoritative: drop any inspection left over in this DB
+		// from a previous run, so we spoof/record exactly what was asked for.
+		if err := s.Store.ClearInspected(); err != nil {
+			log.Printf("warning: could not reset prior inspection state: %v", err)
+		}
 		go loop(ctx, 5*time.Second, func() { applyInspect(s, inspect) })
 	} else {
 		log.Println("discovery-only (no -inspect): devices will be listed but not spoofed")
@@ -217,12 +222,16 @@ func applyInspect(s *state.State, spec string) {
 		if n, err := s.Store.InspectAll(); err == nil && n > 0 {
 			log.Printf("[inspect] now inspecting %d newly discovered device(s)", n)
 		}
-		return
-	}
-	for _, mac := range strings.Split(spec, ",") {
-		if mac = strings.TrimSpace(strings.ToLower(mac)); mac != "" {
-			_ = s.Store.SetInspected(mac)
+	} else {
+		for _, mac := range strings.Split(spec, ",") {
+			if mac = strings.TrimSpace(strings.ToLower(mac)); mac != "" {
+				_ = s.Store.SetInspected(mac)
+			}
 		}
+	}
+	// keep the in-memory set (used to scope pcap recording) in sync with the DB
+	if macs, err := s.Store.InspectedMACs(); err == nil {
+		s.SetInspectedMACs(macs)
 	}
 }
 

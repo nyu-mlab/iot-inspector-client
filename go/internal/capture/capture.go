@@ -5,6 +5,7 @@ package capture
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
@@ -46,14 +47,34 @@ func OpenOffline(path string) (*pcap.Handle, error) {
 	return h, nil
 }
 
-// Run reads packets until the handle is closed, sending each to out and, if rec
-// is non-nil, writing each to the pcap file first. It returns when the source is
-// exhausted (handle closed during shutdown, or end of a replayed file).
-func Run(handle *pcap.Handle, out chan<- gopacket.Packet, rec *record.Recorder) {
+// Run reads packets until the handle is closed, sending each to out. If rec is
+// non-nil, it also records packets that involve an inspected device (src or dst
+// MAC) — so -record produces just that device's traffic, not the whole segment's
+// broadcast/multicast chatter. Returns when the source is exhausted (handle
+// closed during shutdown, or end of a replayed file).
+func Run(s *state.State, out chan<- gopacket.Packet, rec *record.Recorder) {
+	handle := s.Handle
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	for pkt := range src.Packets() {
-		rec.Write(pkt) // nil-safe; records the raw packet at full fidelity
+		if rec != nil {
+			recordIfInspected(s, rec, pkt)
+		}
 		out <- pkt
 	}
 	close(out)
+}
+
+// recordIfInspected writes the packet to the pcap only if either ethernet
+// endpoint is an inspected device. Reads the MACs straight from the frame header
+// (dst = bytes 0–6, src = 6–12) to avoid a full decode on the hot path.
+func recordIfInspected(s *state.State, rec *record.Recorder, pkt gopacket.Packet) {
+	data := pkt.Data()
+	if len(data) < 12 {
+		return
+	}
+	dst := net.HardwareAddr(data[0:6]).String()
+	src := net.HardwareAddr(data[6:12]).String()
+	if s.IsInspectedMAC(src) || s.IsInspectedMAC(dst) {
+		rec.Write(pkt)
+	}
 }
