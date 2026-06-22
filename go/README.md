@@ -6,6 +6,8 @@ upload/download charts in a web dashboard. Everything stays on your machine.
 
 ## Build
 
+Make sure to have the latest `go` first before running the build below; see https://go.dev/dl/.
+
 ```
 go build -o inspector ./cmd/inspector
 ```
