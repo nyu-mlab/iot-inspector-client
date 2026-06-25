@@ -48,7 +48,7 @@ func main() {
 	hostMAC := flag.String("host-mac", "", "replay: MAC of the inspector/MITM host (the side traffic is relayed through)")
 	hostIP := flag.String("host-ip", "", "replay: IP of the inspector host")
 	gatewayIP := flag.String("gateway-ip", "", "replay: gateway IP (used to tag the gateway device)")
-	inspect := flag.String("inspect", "", "live: MAC(s) to inspect (spoof+capture), comma-separated, or 'all'")
+	inspect := flag.String("inspect", "", "live: MAC(s) or IP(s) to inspect (spoof+capture), comma-separated, or 'all'")
 	serve := flag.String("serve", "", "serve the live web dashboard at this address (e.g. :8080)")
 	browse := flag.Bool("browse", false, "view an existing -db in the dashboard without capturing (no root)")
 	record := flag.String("record", "", "live: write every captured packet to this .pcap file (full-fidelity research artifact)")
@@ -240,10 +240,24 @@ func applyInspect(s *state.State, spec string) {
 			log.Printf("[inspect] now inspecting %d newly discovered device(s)", n)
 		}
 	} else {
-		for _, mac := range strings.Split(spec, ",") {
-			if mac = strings.TrimSpace(strings.ToLower(mac)); mac != "" {
-				_ = s.Store.SetInspected(mac)
+		for _, tok := range strings.Split(spec, ",") {
+			tok = strings.TrimSpace(strings.ToLower(tok))
+			if tok == "" {
+				continue
 			}
+			// Accept an IP too: resolve it to a MAC via the ARP cache. iOS hands
+			// you the IP in Settings but randomizes the MAC, so IP is the handle
+			// you usually have. The device must have been seen on the wire first;
+			// if not, skip and let the next loop iteration pick it up.
+			if ip := net.ParseIP(tok); ip != nil {
+				mac, ok := s.LookupMAC(ip)
+				if !ok {
+					log.Printf("[inspect] %s not in ARP cache yet; retrying", tok)
+					continue
+				}
+				tok = mac.String()
+			}
+			_ = s.Store.SetInspected(tok)
 		}
 	}
 	// keep the in-memory set (used to scope pcap recording) in sync with the DB
