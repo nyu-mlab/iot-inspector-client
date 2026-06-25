@@ -73,6 +73,7 @@ func Run(s *state.State, out chan<- gopacket.Packet, rec *record.Recorder) {
 	handle := s.Handle
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	for pkt := range src.Packets() {
+		s.Metrics.Captured()
 		if rec != nil {
 			recordIfInspected(s, rec, pkt)
 		}

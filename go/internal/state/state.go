@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/gopacket/pcap"
 
+	"github.com/nyu-mlab/inspector-go/internal/metrics"
 	"github.com/nyu-mlab/inspector-go/internal/store"
 	"github.com/nyu-mlab/inspector-go/internal/traffic"
 )
@@ -36,7 +37,8 @@ type State struct {
 
 	Handle  *pcap.Handle
 	Store   *store.Store
-	Traffic *traffic.Buffer // full-resolution rolling window for live charts (nil in browse mode)
+	Traffic *traffic.Buffer  // full-resolution rolling window for live charts (nil in browse mode)
+	Metrics *metrics.Metrics // capture-pipeline profiler (nil unless -metrics)
 
 	running atomic.Bool
 }
@@ -68,8 +70,8 @@ func (s *State) IsInspectedMAC(mac string) bool {
 	return s.inspectedMACs[strings.ToLower(mac)]
 }
 
-func (s *State) Running() bool      { return s.running.Load() }
-func (s *State) SetRunning(v bool)  { s.running.Store(v) }
+func (s *State) Running() bool     { return s.running.Load() }
+func (s *State) SetRunning(v bool) { s.running.Store(v) }
 
 // LearnARP records an IP→MAC mapping observed on the wire.
 func (s *State) LearnARP(ip net.IP, mac net.HardwareAddr) {

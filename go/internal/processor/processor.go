@@ -25,7 +25,13 @@ func New(st *state.State) *Processor { return &Processor{st: st} }
 // Run consumes packets until the channel closes.
 func (p *Processor) Run(in <-chan gopacket.Packet) {
 	for pkt := range in {
-		p.handle(pkt)
+		if m := p.st.Metrics; m != nil {
+			start := time.Now()
+			p.handle(pkt)
+			m.Processed(time.Since(start))
+		} else {
+			p.handle(pkt)
+		}
 	}
 }
 
@@ -266,9 +272,17 @@ func (p *Processor) processFlow(eth *layers.Ethernet, ip4 *layers.IPv4, pkt gopa
 		return // neither side is us; not a flow we relayed
 	}
 
-	_ = p.st.Store.UpsertFlow(time.Now().Unix(),
-		ip4.SrcIP.String(), ip4.DstIP.String(), srcMAC.String(), dstMAC.String(),
-		srcPort, dstPort, protocol, len(pkt.Data()), tcpSeq)
+	if m := p.st.Metrics; m != nil {
+		start := time.Now()
+		_ = p.st.Store.UpsertFlow(time.Now().Unix(),
+			ip4.SrcIP.String(), ip4.DstIP.String(), srcMAC.String(), dstMAC.String(),
+			srcPort, dstPort, protocol, len(pkt.Data()), tcpSeq)
+		m.DB(time.Since(start))
+	} else {
+		_ = p.st.Store.UpsertFlow(time.Now().Unix(),
+			ip4.SrcIP.String(), ip4.DstIP.String(), srcMAC.String(), dstMAC.String(),
+			srcPort, dstPort, protocol, len(pkt.Data()), tcpSeq)
+	}
 
 	// Also record the packet at full resolution (its real capture time) for the
 	// live charts, so they aren't limited to the 1-second flow buckets above.
