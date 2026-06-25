@@ -54,6 +54,7 @@ func main() {
 	record := flag.String("record", "", "live: write every captured packet to this .pcap file (full-fidelity research artifact)")
 	openReport := flag.Bool("open", true, "open the HTML report in a browser when it's written")
 	metricsOn := flag.Bool("metrics", false, "live: log capture-pipeline profiling stats every second (find whether parsing, SQLite, or the buffer is the bottleneck)")
+	portScan := flag.Bool("port-scan", false, "live: actively port-scan + banner-grab inspected devices for identification (off by default)")
 	flag.Parse()
 
 	st, err := store.Open(*dbPath)
@@ -76,7 +77,7 @@ func main() {
 			log.Fatalf("replay: %v", err)
 		}
 	default:
-		if err := runLive(s, *inspect, *serve, *record); err != nil {
+		if err := runLive(s, *inspect, *serve, *record, *portScan); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}
@@ -135,7 +136,7 @@ func runReplay(s *state.State, file, hostMAC, hostIP, gatewayIP string) error {
 // runLive is the production path: discover, spoof, capture until Ctrl-C.
 // inspect selects which devices to spoof+capture: "" (none, discovery only),
 // "all", or a comma-separated MAC list.
-func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
+func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan bool) error {
 	if os.Geteuid() != 0 {
 		return fmt.Errorf("must run as root/admin (raw packet send + IP forwarding); use -pcap to replay a file without root")
 	}
@@ -207,6 +208,10 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 			log.Printf("warning: could not reset prior inspection state: %v", err)
 		}
 		go loop(ctx, 5*time.Second, func() { applyInspect(s, inspect) })
+		// Opt-in active port scan + banner grab of the inspected devices.
+		if portScan {
+			go loop(ctx, 120*time.Second, func() { discovery.PortScan(s) })
+		}
 	} else {
 		log.Println("discovery-only (no -inspect): devices will be listed but not spoofed")
 	}
