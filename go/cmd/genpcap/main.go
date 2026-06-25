@@ -10,6 +10,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"log"
 	"net"
 	"os"
@@ -39,10 +40,11 @@ var (
 )
 
 func main() {
-	out := "testdata/mitm-sample.pcap"
-	if len(os.Args) > 1 {
-		out = os.Args[1]
-	}
+	out := flag.String("out", "testdata/mitm-sample.pcap", "output pcap path")
+	flood := flag.Int("n", 0, "append N forwarded data frames on one flow (load test for issue #312; 0 = just the sample)")
+	size := flag.Int("size", 1448, "payload bytes per flood data frame (≈ full-MTU TCP segment)")
+	flag.Parse()
+
 	if err := os.MkdirAll("testdata", 0o755); err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +62,7 @@ func main() {
 		tcpFrame(hostMAC, gwMAC, deviceIP, remoteIP, hello),
 	}
 
-	f, err := os.Create(out)
+	f, err := os.Create(*out)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,7 +82,23 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	log.Printf("wrote %s (%d packets)", out, len(frames))
+
+	// Flood: N forwarded data frames on the same 5-tuple, mimicking one
+	// download stream. Each hits processFlow → UpsertFlow (the speed-test hot
+	// path), so replaying this measures the processor ceiling for issue #312.
+	payload := gopacket.Payload(make([]byte, *size))
+	for i := 0; i < *flood; i++ {
+		data := floodFrame(uint32(i+1), payload)
+		ci := gopacket.CaptureInfo{
+			Timestamp:     time.Unix(1700001000, int64(i)),
+			CaptureLength: len(data),
+			Length:        len(data),
+		}
+		if err := w.WritePacket(ci, data); err != nil {
+			log.Fatal(err)
+		}
+	}
+	log.Printf("wrote %s (%d packets)", *out, len(frames)+*flood)
 }
 
 // clientHello returns the raw bytes of a real TLS ClientHello with the given SNI,
@@ -181,4 +199,14 @@ func tcpFrame(srcMAC, dstMAC net.HardwareAddr, srcIP, dstIP net.IP, payload []by
 	tcp := &layers.TCP{SrcPort: 51000, DstPort: 443, PSH: true, ACK: true, Seq: 1, Window: 2057}
 	_ = tcp.SetNetworkLayerForChecksum(ip)
 	return serialize(eth, ip, tcp, gopacket.Payload(payload))
+}
+
+// floodFrame is one forwarded data segment (host→gateway) on the device's flow,
+// with an advancing sequence number so it reads as a continuous stream.
+func floodFrame(seq uint32, payload gopacket.Payload) []byte {
+	eth := &layers.Ethernet{SrcMAC: hostMAC, DstMAC: gwMAC, EthernetType: layers.EthernetTypeIPv4}
+	ip := &layers.IPv4{Version: 4, IHL: 5, TTL: 64, Protocol: layers.IPProtocolTCP, SrcIP: deviceIP, DstIP: remoteIP}
+	tcp := &layers.TCP{SrcPort: 51000, DstPort: 443, PSH: true, ACK: true, Seq: seq, Window: 2057}
+	_ = tcp.SetNetworkLayerForChecksum(ip)
+	return serialize(eth, ip, tcp, payload)
 }
