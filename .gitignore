@@ -27,6 +27,8 @@ user-data*
 3rd-party-software
 *.zip
 *.db
+*.db-wal
+*.db-shm
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

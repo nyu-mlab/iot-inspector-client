@@ -56,7 +56,16 @@ type Store struct {
 }
 
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	// Pragmas go in the DSN so the modernc driver applies them to every pooled
+	// connection (not just the first). WAL gives concurrent readers + one writer,
+	// so the lock-free web reader queries (TrafficSeries, BytesSince,
+	// InspectedCount) stop colliding with the capture writer and dropping flow
+	// rows under load. busy_timeout makes any residual contention wait rather than
+	// fail with SQLITE_BUSY; synchronous=NORMAL is the recommended pairing with WAL.
+	// Writer/writer contention is already handled in Go by the 1-slot semaphore
+	// below, so busy_timeout only ever absorbs reader/writer contention.
+	dsn := path + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=synchronous(NORMAL)"
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +75,7 @@ func Open(path string) (*Store, error) {
 	return &Store{db: db, mu: make(chan struct{}, 1)}, nil
 }
 
-func (s *Store) DB() *sql.DB { return s.db }
+func (s *Store) DB() *sql.DB  { return s.db }
 func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) lock()   { s.mu <- struct{}{} }
