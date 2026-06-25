@@ -219,6 +219,29 @@ func (s *Store) UpsertHostname(ip, hostname, source string) error {
 	return err
 }
 
+// DeviceIPsWithoutHostname lists discovered device IPs that have no hostname row
+// yet, so active PTR lookup only queries what's still unknown and stops once an
+// IP resolves.
+func (s *Store) DeviceIPsWithoutHostname() ([]string, error) {
+	rows, err := s.db.Query(`
+		SELECT ip_address FROM devices
+		WHERE ip_address != ''
+		  AND ip_address NOT IN (SELECT ip_address FROM hostnames)`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var ip string
+		if err := rows.Scan(&ip); err != nil {
+			return nil, err
+		}
+		out = append(out, ip)
+	}
+	return out, rows.Err()
+}
+
 // UpsertFlow increments byte/packet counts for a 5-tuple flow in the current
 // 1-second bucket, tracking min/max TCP sequence numbers in metadata (mirrors
 // process_flow, including its tcp_seq_min/max — used to estimate bytes on wire).

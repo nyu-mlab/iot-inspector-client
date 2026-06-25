@@ -183,6 +183,8 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 	})
 	// Active SSDP discovery (mDNS is handled passively in the processor).
 	go loop(ctx, 60*time.Second, func() { discovery.SSDP(s, 10*time.Second) })
+	// Active reverse-DNS so hostnames don't depend on a passive DHCP lease firing.
+	go loop(ctx, 30*time.Second, func() { discovery.ReverseDNS(s) })
 	if inspect != "" {
 		// Make -inspect authoritative: drop any inspection left over in this DB
 		// from a previous run, so we spoof/record exactly what was asked for.
