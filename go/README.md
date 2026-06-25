@@ -6,7 +6,7 @@ upload/download charts in a web dashboard. Everything stays on your machine.
 
 ## Build
 
-Make sure to have the latest `go` first before running the build below; see https://go.dev/dl/.
+Requires Go 1.22 or newer (older toolchains will fail to build); get it from https://go.dev/dl/.
 
 ```
 go build -o inspector ./cmd/inspector
