@@ -17,15 +17,32 @@ import (
 const (
 	snapLen     = 65536
 	promiscuous = true
+	bufferSize  = 32 << 20 // big kernel buffer so high-rate bursts don't overflow before userland drains
 )
 
 // Open creates the live capture handle on the active interface and stores it on
 // s. The BPF filter keeps ARP (no IP layer) plus all IPv4 traffic that does not
 // involve this host — so we never capture our own forwarded copies.
 func Open(s *state.State) (*pcap.Handle, error) {
-	handle, err := pcap.OpenLive(s.Iface, snapLen, promiscuous, pcap.BlockForever)
+	inactive, err := pcap.NewInactiveHandle(s.Iface)
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", s.Iface, err)
+	}
+	defer inactive.CleanUp()
+	for _, set := range []func() error{
+		func() error { return inactive.SetSnapLen(snapLen) },
+		func() error { return inactive.SetPromisc(promiscuous) },
+		func() error { return inactive.SetTimeout(pcap.BlockForever) },
+		func() error { return inactive.SetBufferSize(bufferSize) },
+		func() error { return inactive.SetImmediateMode(true) }, // deliver as packets arrive, don't batch
+	} {
+		if err := set(); err != nil {
+			return nil, fmt.Errorf("configure %s: %w", s.Iface, err)
+		}
+	}
+	handle, err := inactive.Activate()
+	if err != nil {
+		return nil, fmt.Errorf("activate %s: %w", s.Iface, err)
 	}
 	filter := fmt.Sprintf("arp or (ip and not host %s)", s.HostIP)
 	if err := handle.SetBPFFilter(filter); err != nil {
