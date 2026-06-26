@@ -194,9 +194,13 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 		_ = s.st.DB().QueryRow(`SELECT COUNT(DISTINCT dest_ip_address) FROM network_flows WHERE src_mac_address = ?`, r.mac).Scan(&contacts)
 
 		typeConfirmed := str(r.m["type_confirmed"])
-		name := typeConfirmed
+		// Prefer a user-set name, then a confirmed type, then the neutral letter.
+		name := str(r.m["name"])
 		if name == "" {
-			name = letters[r.mac] // neutral placeholder until labeled
+			name = typeConfirmed
+		}
+		if name == "" {
+			name = letters[r.mac]
 		}
 		list = append(list, apiDevice{
 			MAC: r.mac, IP: r.ip, Name: name,
@@ -208,12 +212,14 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 			TypeConfirmed:   typeConfirmed,
 		})
 	}
-	// Display order: gateways last, then by recent traffic.
+	// Display order: gateways last, then a stable order by MAC so cards never
+	// jump around as traffic shifts (issue #304). Letters are assigned in this
+	// same MAC order, so Device A stays first and new devices append in place.
 	sort.Slice(list, func(i, j int) bool {
 		if list[i].Gateway != list[j].Gateway {
 			return list[j].Gateway
 		}
-		return list[i].Bytes > list[j].Bytes
+		return list[i].MAC < list[j].MAC
 	})
 
 	w.Header().Set("Content-Type", "application/json")
