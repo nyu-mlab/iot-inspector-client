@@ -77,22 +77,12 @@ const base = `
  .label-form .hint { color:var(--mut); font-size:.8rem }
 </style>`
 
-var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctype html><html><head>
-<meta charset="utf-8"><title>inspector-go</title>` + base + `</head><body>
-<header><h1>inspector-go</h1><span class="mut" id="status">connecting…</span></header>
-<main>
-<div class="metrics">
- <div class="metric"><div class="v" id="m-dev">–</div><div class="l">devices seen</div></div>
- <div class="metric"><div class="v" id="m-insp">–</div><div class="l">inspected</div></div>
- <div class="metric"><div class="v" id="m-data">–</div><div class="l">data use · last 10s</div></div>
-</div>
-<div id="devices"></div>
-</main>
-<script>
+// chartJS holds the shared client-side drawing helpers, so the live list and the
+// per-device page draw identical charts and both stay live.
+const chartJS = `
 const C_LINE='#1f77b4';  // matplotlib blue, matching the original
 function hb(n){if(n<1024)return Math.round(n)+' B';const u=['KB','MB','GB','TB'];let i=-1;do{n/=1024;i++}while(n>=1024&&i<3);return n.toFixed(1)+' '+u[i];}
-// chart draws one stacked line panel (white grid, blue line+area) — the PR-275
-// burst-style look, at 1s resolution. series[0]=now, series[n-1]=60s ago.
+// chart draws one stacked line panel (white grid, blue line+area). series[0]=now, series[n-1]=60s ago.
 function chart(series,label){
   const W=640,H=128,padL=46,padR=10,padT=15,padB=16,n=series.length;
   const plotW=W-padL-padR, plotH=H-padT-padB;
@@ -117,6 +107,20 @@ function chart(series,label){
   return g;
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+`
+
+var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctype html><html><head>
+<meta charset="utf-8"><title>inspector-go</title>` + base + `</head><body>
+<header><h1>inspector-go</h1><span class="mut" id="status">connecting…</span></header>
+<main>
+<div class="metrics">
+ <div class="metric"><div class="v" id="m-dev">–</div><div class="l">devices seen</div></div>
+ <div class="metric"><div class="v" id="m-insp">–</div><div class="l">inspected</div></div>
+ <div class="metric"><div class="v" id="m-data">–</div><div class="l">data use · last 10s</div></div>
+</div>
+<div id="devices"></div>
+</main>
+<script>` + chartJS + `
 // Read-only card: the name links to the device page, where inspect + labels live.
 // The live list never mutates state now (issue #304), so the 1.5s poll can't race
 // a click and cards keep a stable MAC order.
@@ -161,7 +165,7 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
 <main>
 <div class="card"><h2>Traffic — last 60s</h2>
 {{if .Inspected}}
-<div class="charts-stack">{{.Upload}}{{.Download}}</div>
+<div class="charts-stack" id="charts" data-mac="{{.MAC}}"><div id="cup">{{.Upload}}</div><div id="cdn">{{.Download}}</div></div>
 {{else}}<p class="empty">Not inspected — start inspection above to capture this device's traffic.</p>{{end}}
 </div>
 {{if .Summary}}<div class="card"><h2>Summary</h2><p>{{.Summary}}</p></div>{{end}}
@@ -201,4 +205,23 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
 
 {{if .MDNS}}<div class="card"><h2>mDNS</h2><pre>{{.MDNS}}</pre></div>{{end}}
 {{if .SSDP}}<div class="card"><h2>SSDP / UPnP</h2><pre>{{.SSDP}}</pre></div>{{end}}
-</main></body></html>`))
+</main>
+<script>` + chartJS + `
+// Live charts: poll this device's series and redraw only the two panels, so the
+// graphs stay live while the inspect toggle and label forms (full-reload) never
+// get clobbered — the click-vs-poll race from issue #304 stays fixed.
+const charts=document.getElementById('charts');
+const cup=document.getElementById('cup'), cdn=document.getElementById('cdn');
+async function tickDev(){
+  if(!charts) return; // not inspected — nothing to draw
+  try{
+    const d = await (await fetch('/api/state')).json();
+    const x = (d.list||[]).find(v=>v.mac===charts.dataset.mac);
+    if(!x) return;
+    cup.innerHTML = chart(x.up,'↑ Upload Traffic (sent by device) — last 60s');
+    cdn.innerHTML = chart(x.down,'↓ Download Traffic (received) — last 60s');
+  }catch(e){}
+}
+tickDev(); setInterval(tickDev, 1500);
+</script>
+</body></html>`))
