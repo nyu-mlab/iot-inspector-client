@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/nyu-mlab/inspector-go/internal/store"
+	"github.com/nyu-mlab/inspector-go/internal/summary"
 	"github.com/nyu-mlab/inspector-go/internal/traffic"
 )
 
@@ -48,6 +49,62 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/label", s.handleLabel)
 	mux.HandleFunc("/api/state", s.handleAPIState)
 	return mux
+}
+
+// deviceSummary composes the plain-language blurb for a device from its facts
+// (#308) — deterministic and local, no model.
+func (s *Server) deviceSummary(mac string, m map[string]any) string {
+	vendor := str(m["vendor_confirmed"])
+	if vendor == "" {
+		vendor = str(m["oui_vendor"])
+	}
+	typ := str(m["type_confirmed"])
+	if typ == "" {
+		typ = inferType(m)
+	}
+	return summary.Describe(displayName(m), vendor, typ, s.topHostnames(mac, 5), portList(m))
+}
+
+// topHostnames returns the device's most-contacted destinations by bytes.
+func (s *Server) topHostnames(mac string, n int) []string {
+	rows, err := s.st.DB().Query(`
+		SELECT COALESCE(NULLIF(f.dest_hostname,''), h.hostname, f.dest_ip_address) AS host, SUM(f.byte_count) b
+		FROM network_flows f
+		LEFT JOIN hostnames h ON h.ip_address = f.dest_ip_address
+		WHERE f.src_mac_address = ?
+		GROUP BY host ORDER BY b DESC LIMIT ?`, mac, n)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var h string
+		var b int64
+		if rows.Scan(&h, &b) == nil && h != "" {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+// portList renders the port_scan metadata (#303, when present) as "port (banner)".
+func portList(m map[string]any) []string {
+	ps, ok := m["port_scan"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	var out []string
+	for port, v := range ps {
+		if info, ok := v.(map[string]any); ok {
+			if b := str(info["banner"]); b != "" {
+				out = append(out, port+" ("+b+")")
+				continue
+			}
+		}
+		out = append(out, port)
+	}
+	return out
 }
 
 // labelFields are the user-confirmable metadata keys (vendor and device type are
@@ -256,6 +313,7 @@ func (s *Server) handleDevice(w http.ResponseWriter, r *http.Request) {
 		"Contacts":  contacts,
 		"Upload":    lineChart(up, "↑ Upload Traffic (sent by device) — last 60s"),
 		"Download":  lineChart(down, "↓ Download Traffic (received) — last 60s"),
+		"Summary": s.deviceSummary(mac, m), // plain-language blurb (#308)
 	})
 }
 

@@ -178,6 +178,7 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
 <div class="charts-stack">{{.Upload}}{{.Download}}</div>
 {{else}}<p class="empty">Not inspected — start inspection above to capture this device's traffic.</p>{{end}}
 </div>
+{{if .Summary}}<div class="card"><h2>Summary</h2><p>{{.Summary}}</p></div>{{end}}
 <div class="card"><h2>Identity</h2>
 <div class="kv">
  <div>IP</div><div>{{.IP}}</div>
