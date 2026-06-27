@@ -113,8 +113,8 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 `
 
 var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctype html><html><head>
-<meta charset="utf-8"><title>inspector-go</title>` + base + `</head><body>
-<header><h1>inspector-go</h1><span class="mut" id="status">connecting…</span></header>
+<meta charset="utf-8"><title>IoT Inspector</title>` + base + `</head><body>
+<header><h1>IoT Inspector</h1><span class="mut" id="status">connecting…</span></header>
 <main>
 <div class="metrics">
  <div class="metric"><div class="v" id="m-dev">–</div><div class="l">devices seen</div></div>
@@ -174,7 +174,7 @@ tick(); setInterval(tick, 1500);
 </body></html>`))
 
 var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doctype html><html><head>
-<meta charset="utf-8"><title>{{if .Name}}{{.Name}}{{else}}{{.MAC}}{{end}} · inspector-go</title>` + base + `</head><body>
+<meta charset="utf-8"><title>{{if .Name}}{{.Name}}{{else}}{{.MAC}}{{end}} · IoT Inspector</title>` + base + `</head><body>
 <header><h1><a href="/">← devices</a></h1>
 <span>{{if .Name}}{{.Name}}{{else}}<span class="empty">unknown device</span>{{end}}</span>
 {{if .IsGateway}}<span class="badge">gateway</span>
