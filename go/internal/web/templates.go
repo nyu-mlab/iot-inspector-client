@@ -75,6 +75,9 @@ const base = `
  .label-form input { flex:1; max-width:22rem; padding:.25rem .45rem; border:1px solid var(--line); border-radius:.3rem; font:inherit }
  .label-form button { padding:.25rem .8rem; border:1px solid var(--line); border-radius:.3rem; background:var(--card); color:var(--fg); cursor:pointer }
  .label-form .hint { color:var(--mut); font-size:.8rem }
+ .consent { background:#fff8e6; border:1px solid #f0d98a; border-radius:.6rem; padding:.8rem 1rem; margin:0 0 1.2rem }
+ .consent label { display:flex; align-items:center; gap:.5rem; font-weight:600; cursor:pointer }
+ .consent .disc { color:#6b7280; font-size:.82rem; margin:.45rem 0 0 }
 </style>`
 
 // chartJS holds the shared client-side drawing helpers, so the live list and the
@@ -118,6 +121,10 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctyp
  <div class="metric"><div class="v" id="m-insp">–</div><div class="l">inspected</div></div>
  <div class="metric"><div class="v" id="m-data">–</div><div class="l">data use · last 10s</div></div>
 </div>
+<div class="consent" id="consent">
+ <label><input type="checkbox" id="consent-box"> Share my data with the research team</label>
+ <div class="disc">We collect data to understand device behavior. Off by default. If you turn this on, when this session ends IoT Inspector uploads the full packet capture (.pcap) of the inspected devices, plus the accompanying device metadata, to the research team's collection endpoint. Only enable this if you understand and consent to sharing your network traffic for research.</div>
+</div>
 <div id="devices"></div>
 </main>
 <script>` + chartJS + `
@@ -149,8 +156,19 @@ async function tick(){
     document.getElementById('m-data').textContent = hb(d.dataUse);
     document.getElementById('devices').innerHTML = (d.list||[]).map(card).join('') || '<p class="empty">No devices yet — discovery in progress.</p>';
     document.getElementById('status').textContent = 'live · updating every 1.5s';
+    // Reflect persisted consent once, so we don't fight the user mid-toggle.
+    if(!consentInit && typeof d.consent === 'boolean'){
+      consentInit = true;
+      document.getElementById('consent-box').checked = d.consent;
+    }
   }catch(e){ document.getElementById('status').textContent = 'disconnected'; }
 }
+// Consent is a single static control outside the polled #devices region, so the
+// 1.5s redraw never clobbers it (issue #304's read-only-list lesson).
+let consentInit = false;
+document.getElementById('consent-box').addEventListener('change', async function(){
+  try{ await fetch('/consent?on=' + (this.checked ? 1 : 0)); }catch(e){}
+});
 tick(); setInterval(tick, 1500);
 </script>
 </body></html>`))
