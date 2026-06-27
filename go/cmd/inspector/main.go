@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -29,6 +30,7 @@ import (
 
 	"github.com/nyu-mlab/inspector-go/internal/arpspoof"
 	"github.com/nyu-mlab/inspector-go/internal/capture"
+	"github.com/nyu-mlab/inspector-go/internal/collect"
 	"github.com/nyu-mlab/inspector-go/internal/discovery"
 	"github.com/nyu-mlab/inspector-go/internal/metrics"
 	"github.com/nyu-mlab/inspector-go/internal/netinfo"
@@ -54,6 +56,9 @@ func main() {
 	record := flag.String("record", "", "live: write every captured packet to this .pcap file (full-fidelity research artifact)")
 	openReport := flag.Bool("open", true, "open the HTML report in a browser when it's written")
 	metricsOn := flag.Bool("metrics", false, "live: log capture-pipeline profiling stats every second (find whether parsing, SQLite, or the buffer is the bottleneck)")
+	share := flag.Bool("share", false, "opt in to uploading the full packet capture (.pcap) + device metadata to the research team on exit. OFF by default. see the dashboard consent notice (#306)")
+	collectEndpoint := flag.String("collect-endpoint", os.Getenv("INSPECTOR_COLLECT_ENDPOINT"), "research data collection endpoint (empty = disabled; nothing uploads without it)")
+	collectKey := flag.String("collect-key", os.Getenv("INSPECTOR_COLLECT_KEY"), "api key for the collection endpoint")
 	flag.Parse()
 
 	st, err := store.Open(*dbPath)
@@ -67,6 +72,15 @@ func main() {
 		s.Metrics = metrics.New()
 	}
 
+	// -share is an explicit CLI opt-in for headless runs (#306): persist consent
+	// before anything captures.
+	if *share {
+		if err := st.SetShareConsent(true); err != nil {
+			log.Printf("warning: could not persist share consent: %v", err)
+		}
+	}
+
+	var livePcap string // set only for a live capture, so only live runs can upload
 	switch {
 	case *browse:
 		runBrowse(s, *serve)
@@ -76,9 +90,16 @@ func main() {
 			log.Fatalf("replay: %v", err)
 		}
 	default:
-		if err := runLive(s, *inspect, *serve, *record); err != nil {
+		// When consent is on, make sure a pcap is actually captured so there's
+		// something to share (the user may not have passed -record themselves).
+		recordPath := *record
+		if st.ShareConsent() && recordPath == "" {
+			recordPath = filepath.Join(os.TempDir(), "inspector-capture.pcap")
+		}
+		if err := runLive(s, *inspect, *serve, recordPath); err != nil {
 			log.Fatalf("%v", err)
 		}
+		livePcap = recordPath
 	}
 
 	if err := report.Generate(st, *reportPath); err != nil {
@@ -89,6 +110,42 @@ func main() {
 			openInBrowser(*reportPath)
 		}
 	}
+
+	// The one place raw packets can leave the machine. Gated on consent.
+	if livePcap != "" {
+		maybeUploadCapture(st, livePcap, *collectEndpoint, *collectKey)
+	}
+}
+
+// maybeUploadCapture uploads the capture to the research endpoint ONLY when the
+// user has explicitly consented (#306) and an endpoint is configured. The
+// consent check here is the hard gate; without it nothing is sent.
+func maybeUploadCapture(st *store.Store, pcapPath, endpoint, apiKey string) {
+	if !st.ShareConsent() {
+		return // no consent -> never upload
+	}
+	if endpoint == "" {
+		log.Printf("[share] consent is on but no -collect-endpoint configured; not uploading")
+		return
+	}
+	info, err := os.Stat(pcapPath)
+	if err != nil || info.Size() == 0 {
+		log.Printf("[share] consent is on but there's no capture to upload yet")
+		return
+	}
+	meta, err := st.ExportMetadata()
+	if err != nil {
+		log.Printf("[share] could not build metadata: %v", err)
+		return
+	}
+	log.Printf("[share] consent given — uploading %s (%d bytes) + metadata to %s", pcapPath, info.Size(), endpoint)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	if err := collect.New(endpoint, apiKey).Upload(ctx, pcapPath, meta); err != nil {
+		log.Printf("[share] upload failed: %v", err)
+		return
+	}
+	log.Printf("[share] upload complete")
 }
 
 // runReplay drives the processor over a pcap file. Because the live processor
