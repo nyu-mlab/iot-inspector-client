@@ -10,8 +10,42 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
+
+// RateLimitError is returned when the endpoint replies 429. RetryAfter is parsed
+// from the Retry-After header (0 if absent), so a caller can back off for that
+// long instead of hammering the API (#309).
+type RateLimitError struct {
+	RetryAfter time.Duration
+}
+
+func (e *RateLimitError) Error() string {
+	if e.RetryAfter > 0 {
+		return fmt.Sprintf("device-id API rate limited; retry after %s", e.RetryAfter)
+	}
+	return "device-id API rate limited"
+}
+
+// parseRetryAfter reads a Retry-After value, which RFC 7231 allows to be either
+// a number of seconds or an HTTP date.
+func parseRetryAfter(h string) time.Duration {
+	h = strings.TrimSpace(h)
+	if h == "" {
+		return 0
+	}
+	if secs, err := strconv.Atoi(h); err == nil && secs >= 0 {
+		return time.Duration(secs) * time.Second
+	}
+	if t, err := http.ParseTime(h); err == nil {
+		if d := time.Until(t); d > 0 {
+			return d
+		}
+	}
+	return 0
+}
 
 const defaultEndpoint = "https://rameen-mahmood--dev-id-predict.modal.run"
 
@@ -79,6 +113,9 @@ func (c *Client) Predict(ctx context.Context, mac string, f Fields) (map[string]
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, &RateLimitError{RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After"))}
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("device-id API returned %s", resp.Status)
 	}
