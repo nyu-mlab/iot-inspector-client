@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS network_flows (
     metadata_json    TEXT DEFAULT '{}',
     PRIMARY KEY (timestamp, src_mac_address, dest_mac_address,
                  src_ip_address, dest_ip_address, src_port, dest_port, protocol)
+);
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );`
 
 type Store struct {
@@ -70,6 +74,42 @@ func Open(path string) (*Store, error) {
 
 func (s *Store) DB() *sql.DB  { return s.db }
 func (s *Store) Close() error { return s.db.Close() }
+
+// shareConsentKey is the settings row that gates research data upload (#306).
+// Absent or anything other than "true" means no consent — uploads never happen.
+const shareConsentKey = "share_consent"
+
+// SetSetting upserts a key/value into the settings table.
+func (s *Store) SetSetting(key, value string) error {
+	s.lock()
+	defer s.unlock()
+	_, err := s.db.Exec(`
+		INSERT INTO settings (key, value) VALUES (?, ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, value)
+	return err
+}
+
+// GetSetting returns the value for key, or "" if it isn't set.
+func (s *Store) GetSetting(key string) (string, error) {
+	var v string
+	err := s.db.QueryRow(`SELECT value FROM settings WHERE key = ?`, key).Scan(&v)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return v, err
+}
+
+// ShareConsent reports whether the user has explicitly consented to uploading
+// raw captures to the research team. Defaults to false (opt-in only).
+func (s *Store) ShareConsent() bool {
+	v, _ := s.GetSetting(shareConsentKey)
+	return v == "true"
+}
+
+// SetShareConsent persists the user's consent decision.
+func (s *Store) SetShareConsent(on bool) error {
+	return s.SetSetting(shareConsentKey, strconv.FormatBool(on))
+}
 
 func (s *Store) lock()   { s.mu <- struct{}{} }
 func (s *Store) unlock() { <-s.mu }
