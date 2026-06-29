@@ -56,7 +56,9 @@ type Store struct {
 }
 
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	// WAL + busy_timeout via DSN (every pooled conn) so dashboard reads stop colliding with the capture writer and dropping flows.
+	dsn := path + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=synchronous(NORMAL)"
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func Open(path string) (*Store, error) {
 	return &Store{db: db, mu: make(chan struct{}, 1)}, nil
 }
 
-func (s *Store) DB() *sql.DB { return s.db }
+func (s *Store) DB() *sql.DB  { return s.db }
 func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) lock()   { s.mu <- struct{}{} }
