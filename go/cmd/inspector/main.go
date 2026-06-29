@@ -17,7 +17,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -49,6 +51,7 @@ func main() {
 	serve := flag.String("serve", "", "serve the live web dashboard at this address (e.g. :8080)")
 	browse := flag.Bool("browse", false, "view an existing -db in the dashboard without capturing (no root)")
 	record := flag.String("record", "", "live: write every captured packet to this .pcap file (full-fidelity research artifact)")
+	openReport := flag.Bool("open", true, "open the HTML report in a browser when it's written")
 	flag.Parse()
 
 	st, err := store.Open(*dbPath)
@@ -77,6 +80,9 @@ func main() {
 		log.Printf("report: %v", err)
 	} else {
 		log.Printf("wrote %s", *reportPath)
+		if *openReport {
+			openInBrowser(*reportPath)
+		}
 	}
 }
 
@@ -257,6 +263,24 @@ func startWebServer(s *state.State, addr string) {
 			log.Printf("web server: %v", err)
 		}
 	}()
+}
+
+// openInBrowser opens path with the OS default handler (issue #305). Best-effort:
+// on a headless box the opener just won't exist, which is fine.
+func openInBrowser(path string) {
+	var cmd string
+	var args []string
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	case "windows":
+		cmd, args = "cmd", []string{"/c", "start", ""}
+	default:
+		cmd = "xdg-open"
+	}
+	if err := exec.Command(cmd, append(args, path)...).Start(); err != nil {
+		log.Printf("could not open report (%s); open %s manually", err, path)
+	}
 }
 
 // loop runs fn immediately, then every interval, until ctx is cancelled.
