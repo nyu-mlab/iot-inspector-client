@@ -69,3 +69,42 @@ func TestUpsertsAndReport(t *testing.T) {
 		t.Errorf("dest_hostname = %q, want example.com", destHost)
 	}
 }
+
+func TestDeviceIPsWithoutHostname(t *testing.T) {
+	st, err := Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer st.Close()
+
+	if err := st.UpsertDeviceSeen("aa:aa:aa:aa:aa:aa", "192.168.1.10", false); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.UpsertDeviceSeen("bb:bb:bb:bb:bb:bb", "192.168.1.11", false); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.UpsertDeviceSeen("cc:cc:cc:cc:cc:cc", "", false); err != nil {
+		t.Fatal(err) // no IP yet -> must be excluded
+	}
+
+	// Both IP'd devices start without a hostname.
+	ips, err := st.DeviceIPsWithoutHostname()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(ips, ","); !strings.Contains(got, "192.168.1.10") || !strings.Contains(got, "192.168.1.11") || strings.Contains(got, ",,") || len(ips) != 2 {
+		t.Errorf("ips = %v, want exactly the two IP'd devices", ips)
+	}
+
+	// Once one resolves, it drops out.
+	if err := st.UpsertHostname("192.168.1.10", "router.lan", "ptr"); err != nil {
+		t.Fatal(err)
+	}
+	ips, err = st.DeviceIPsWithoutHostname()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ips) != 1 || ips[0] != "192.168.1.11" {
+		t.Errorf("ips = %v, want only 192.168.1.11", ips)
+	}
+}
