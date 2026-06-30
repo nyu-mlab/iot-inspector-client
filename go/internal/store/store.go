@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS network_flows (
     metadata_json    TEXT DEFAULT '{}',
     PRIMARY KEY (timestamp, src_mac_address, dest_mac_address,
                  src_ip_address, dest_ip_address, src_port, dest_port, protocol)
+);
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );`
 
 type Store struct {
@@ -70,6 +74,95 @@ func Open(path string) (*Store, error) {
 
 func (s *Store) DB() *sql.DB  { return s.db }
 func (s *Store) Close() error { return s.db.Close() }
+
+// shareConsentKey is the settings row that gates research data upload (#306).
+// Absent or anything other than "true" means no consent — uploads never happen.
+const shareConsentKey = "share_consent"
+
+// SetSetting upserts a key/value into the settings table.
+func (s *Store) SetSetting(key, value string) error {
+	s.lock()
+	defer s.unlock()
+	_, err := s.db.Exec(`
+		INSERT INTO settings (key, value) VALUES (?, ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, value)
+	return err
+}
+
+// GetSetting returns the value for key, or "" if it isn't set.
+func (s *Store) GetSetting(key string) (string, error) {
+	var v string
+	err := s.db.QueryRow(`SELECT value FROM settings WHERE key = ?`, key).Scan(&v)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return v, err
+}
+
+// ShareConsent reports whether the user has explicitly consented to uploading
+// raw captures to the research team. Defaults to false (opt-in only).
+func (s *Store) ShareConsent() bool {
+	v, _ := s.GetSetting(shareConsentKey)
+	return v == "true"
+}
+
+// SetShareConsent persists the user's consent decision.
+func (s *Store) SetShareConsent(on bool) error {
+	return s.SetSetting(shareConsentKey, strconv.FormatBool(on))
+}
+
+// ExportMetadata returns the parsed identification data (devices and hostnames)
+// as JSON — the "metadata" half of the #306 upload payload that accompanies the
+// raw pcap.
+func (s *Store) ExportMetadata() ([]byte, error) {
+	type device struct {
+		MAC       string         `json:"mac"`
+		IP        string         `json:"ip"`
+		Gateway   bool           `json:"gateway"`
+		Inspected bool           `json:"inspected"`
+		Metadata  map[string]any `json:"metadata"`
+	}
+	out := struct {
+		Devices   []device          `json:"devices"`
+		Hostnames map[string]string `json:"hostnames"`
+	}{Hostnames: map[string]string{}}
+
+	dr, err := s.db.Query(`SELECT mac_address, ip_address, is_gateway, is_inspected, metadata_json FROM devices`)
+	if err != nil {
+		return nil, err
+	}
+	for dr.Next() {
+		var d device
+		var gw, insp int
+		var meta string
+		if err := dr.Scan(&d.MAC, &d.IP, &gw, &insp, &meta); err != nil {
+			dr.Close()
+			return nil, err
+		}
+		d.Gateway, d.Inspected = gw == 1, insp == 1
+		d.Metadata = map[string]any{}
+		_ = json.Unmarshal([]byte(meta), &d.Metadata)
+		out.Devices = append(out.Devices, d)
+	}
+	dr.Close()
+	if err := dr.Err(); err != nil {
+		return nil, err
+	}
+
+	hr, err := s.db.Query(`SELECT ip_address, hostname FROM hostnames`)
+	if err != nil {
+		return nil, err
+	}
+	defer hr.Close()
+	for hr.Next() {
+		var ip, h string
+		if err := hr.Scan(&ip, &h); err != nil {
+			return nil, err
+		}
+		out.Hostnames[ip] = h
+	}
+	return json.MarshalIndent(out, "", "  ")
+}
 
 func (s *Store) lock()   { s.mu <- struct{}{} }
 func (s *Store) unlock() { <-s.mu }

@@ -108,3 +108,50 @@ func TestDeviceIPsWithoutHostname(t *testing.T) {
 		t.Errorf("ips = %v, want only 192.168.1.11", ips)
 	}
 }
+
+func TestShareConsent(t *testing.T) {
+	st, err := Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer st.Close()
+
+	if st.ShareConsent() {
+		t.Fatal("consent must default to false (opt-in only)")
+	}
+	if err := st.SetShareConsent(true); err != nil {
+		t.Fatal(err)
+	}
+	if !st.ShareConsent() {
+		t.Error("consent should be true after opt-in")
+	}
+	if err := st.SetShareConsent(false); err != nil {
+		t.Fatal(err)
+	}
+	if st.ShareConsent() {
+		t.Error("consent should be false after opt-out")
+	}
+}
+
+func TestExportMetadata(t *testing.T) {
+	st, err := Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer st.Close()
+
+	_ = st.UpsertDeviceSeen("aa:aa:aa:aa:aa:aa", "192.168.1.9", false)
+	_ = st.MergeDeviceMetadata("aa:aa:aa:aa:aa:aa", "", map[string]any{"oui_vendor": "Acme"})
+	_ = st.UpsertHostname("93.184.216.34", "example.com", "dns")
+
+	b, err := st.ExportMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	js := string(b)
+	for _, want := range []string{"aa:aa:aa:aa:aa:aa", "Acme", "example.com", "192.168.1.9"} {
+		if !strings.Contains(js, want) {
+			t.Errorf("export metadata missing %q\n%s", want, js)
+		}
+	}
+}

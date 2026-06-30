@@ -47,6 +47,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/device", s.handleDevice)
 	mux.HandleFunc("/inspect", s.handleInspect)
 	mux.HandleFunc("/label", s.handleLabel)
+	mux.HandleFunc("/consent", s.handleConsent)
 	mux.HandleFunc("/api/state", s.handleAPIState)
 	return mux
 }
@@ -105,6 +106,17 @@ func portList(m map[string]any) []string {
 		out = append(out, port)
 	}
 	return out
+}
+
+// handleConsent records the user's explicit opt-in/out for research data sharing
+// (#306). Default is off; this is the only way the dashboard turns it on.
+func (s *Server) handleConsent(w http.ResponseWriter, r *http.Request) {
+	on := r.URL.Query().Get("on") == "1"
+	if err := s.st.SetShareConsent(on); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // labelFields are the user-confirmable metadata keys (vendor and device type are
@@ -233,6 +245,7 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 		"devices":   len(list),
 		"inspected": s.st.InspectedCount(),
 		"dataUse":   s.st.BytesSince(now - 10),
+		"consent":   s.st.ShareConsent(),
 		"list":      list,
 	})
 }
