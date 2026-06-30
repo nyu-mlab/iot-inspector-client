@@ -30,6 +30,7 @@ import (
 	"github.com/nyu-mlab/inspector-go/internal/arpspoof"
 	"github.com/nyu-mlab/inspector-go/internal/capture"
 	"github.com/nyu-mlab/inspector-go/internal/discovery"
+	"github.com/nyu-mlab/inspector-go/internal/metrics"
 	"github.com/nyu-mlab/inspector-go/internal/netinfo"
 	"github.com/nyu-mlab/inspector-go/internal/processor"
 	"github.com/nyu-mlab/inspector-go/internal/record"
@@ -47,11 +48,12 @@ func main() {
 	hostMAC := flag.String("host-mac", "", "replay: MAC of the inspector/MITM host (the side traffic is relayed through)")
 	hostIP := flag.String("host-ip", "", "replay: IP of the inspector host")
 	gatewayIP := flag.String("gateway-ip", "", "replay: gateway IP (used to tag the gateway device)")
-	inspect := flag.String("inspect", "", "live: MAC(s) to inspect (spoof+capture), comma-separated, or 'all'")
+	inspect := flag.String("inspect", "", "live: MAC(s) or IP(s) to inspect (spoof+capture), comma-separated, or 'all'")
 	serve := flag.String("serve", "", "serve the live web dashboard at this address (e.g. :8080)")
 	browse := flag.Bool("browse", false, "view an existing -db in the dashboard without capturing (no root)")
 	record := flag.String("record", "", "live: write every captured packet to this .pcap file (full-fidelity research artifact)")
 	openReport := flag.Bool("open", true, "open the HTML report in a browser when it's written")
+	metricsOn := flag.Bool("metrics", false, "live: log capture-pipeline profiling stats every second (find whether parsing, SQLite, or the buffer is the bottleneck)")
 	flag.Parse()
 
 	st, err := store.Open(*dbPath)
@@ -61,6 +63,9 @@ func main() {
 	defer st.Close()
 
 	s := state.New(st)
+	if *metricsOn {
+		s.Metrics = metrics.New()
+	}
 
 	switch {
 	case *browse:
@@ -179,6 +184,10 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 	go func() { defer wg.Done(); capture.Run(s, packets, rec) }() // closes `packets` when handle closes
 	go func() { defer wg.Done(); proc.Run(packets) }()
 
+	if s.Metrics != nil {
+		go runMetrics(ctx, s, packets)
+	}
+
 	// Periodic background loops (core.py's SafeLoopThreads).
 	go loop(ctx, 10*time.Second, func() { arpspoof.Scan(s) })
 	go loop(ctx, 10*time.Second, func() { arpspoof.Spoof(s) })
@@ -231,10 +240,24 @@ func applyInspect(s *state.State, spec string) {
 			log.Printf("[inspect] now inspecting %d newly discovered device(s)", n)
 		}
 	} else {
-		for _, mac := range strings.Split(spec, ",") {
-			if mac = strings.TrimSpace(strings.ToLower(mac)); mac != "" {
-				_ = s.Store.SetInspected(mac)
+		for _, tok := range strings.Split(spec, ",") {
+			tok = strings.TrimSpace(strings.ToLower(tok))
+			if tok == "" {
+				continue
 			}
+			// Accept an IP too: resolve it to a MAC via the ARP cache. iOS hands
+			// you the IP in Settings but randomizes the MAC, so IP is the handle
+			// you usually have. The device must have been seen on the wire first;
+			// if not, skip and let the next loop iteration pick it up.
+			if ip := net.ParseIP(tok); ip != nil {
+				mac, ok := s.LookupMAC(ip)
+				if !ok {
+					log.Printf("[inspect] %s not in ARP cache yet; retrying", tok)
+					continue
+				}
+				tok = mac.String()
+			}
+			_ = s.Store.SetInspected(tok)
 		}
 	}
 	// keep the in-memory set (used to scope pcap recording) in sync with the DB
@@ -296,6 +319,46 @@ func loop(ctx context.Context, interval time.Duration, fn func()) {
 			return
 		case <-t.C:
 			fn()
+		}
+	}
+}
+
+// runMetrics logs the capture-pipeline profile every second so we can tell where
+// packets are lost: a full channel + high db= means SQLite is the bottleneck, a
+// full channel + high parse= means the parser is, and bpf drop climbing while the
+// channel stays empty means the kernel buffer is overflowing before userland.
+func runMetrics(ctx context.Context, s *state.State, packets chan gopacket.Packet) {
+	go func() { // sample channel occupancy faster than we report, for a real average/max
+		t := time.NewTicker(5 * time.Millisecond)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				s.Metrics.SampleChan(len(packets))
+			}
+		}
+	}()
+
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+	var prevRecv, prevDrop, prevIf int64
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			snap := s.Metrics.SnapshotAndReset()
+			var recv, drop, ifd int64
+			if st, err := s.Handle.Stats(); err == nil {
+				recv, drop, ifd = int64(st.PacketsReceived), int64(st.PacketsDropped), int64(st.PacketsIfDropped)
+			}
+			log.Printf("[metrics] cap=%d/s proc=%d/s | chan avg=%.0f max=%.0f/%d | parse=%v db=%v (flows=%d) | bpf recv=%d drop=%d ifdrop=%d",
+				snap.Captured, snap.Processed, snap.ChanAvg, snap.ChanMax, cap(packets),
+				snap.ParsePerPacket().Round(time.Microsecond), snap.DBPerCall().Round(time.Microsecond), snap.DBCalls,
+				recv-prevRecv, drop-prevDrop, ifd-prevIf)
+			prevRecv, prevDrop, prevIf = recv, drop, ifd
 		}
 	}
 }
