@@ -70,24 +70,19 @@ const base = `
  .label-row .ok { color:var(--ok); font-weight:700 }
  .mini { font-size:.72rem; padding:.05rem .45rem; border-radius:.4rem; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer }
  .mini.yes { border-color:var(--ok); color:var(--ok) }
+ .label-form { display:flex; align-items:center; gap:.5rem; margin:.4rem 0 }
+ .label-form label { width:4rem; color:var(--mut) }
+ .label-form input { flex:1; max-width:22rem; padding:.25rem .45rem; border:1px solid var(--line); border-radius:.3rem; font:inherit }
+ .label-form button { padding:.25rem .8rem; border:1px solid var(--line); border-radius:.3rem; background:var(--card); color:var(--fg); cursor:pointer }
+ .label-form .hint { color:var(--mut); font-size:.8rem }
 </style>`
 
-var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctype html><html><head>
-<meta charset="utf-8"><title>inspector-go</title>` + base + `</head><body>
-<header><h1>inspector-go</h1><span class="mut" id="status">connecting…</span></header>
-<main>
-<div class="metrics">
- <div class="metric"><div class="v" id="m-dev">–</div><div class="l">devices seen</div></div>
- <div class="metric"><div class="v" id="m-insp">–</div><div class="l">inspected</div></div>
- <div class="metric"><div class="v" id="m-data">–</div><div class="l">data use · last 10s</div></div>
-</div>
-<div id="devices"></div>
-</main>
-<script>
+// chartJS holds the shared client-side drawing helpers, so the live list and the
+// per-device page draw identical charts and both stay live.
+const chartJS = `
 const C_LINE='#1f77b4';  // matplotlib blue, matching the original
 function hb(n){if(n<1024)return Math.round(n)+' B';const u=['KB','MB','GB','TB'];let i=-1;do{n/=1024;i++}while(n>=1024&&i<3);return n.toFixed(1)+' '+u[i];}
-// chart draws one stacked line panel (white grid, blue line+area) — the PR-275
-// burst-style look, at 1s resolution. series[0]=now, series[n-1]=60s ago.
+// chart draws one stacked line panel (white grid, blue line+area). series[0]=now, series[n-1]=60s ago.
 function chart(series,label){
   const W=640,H=128,padL=46,padR=10,padT=15,padB=16,n=series.length;
   const plotW=W-padL-padR, plotH=H-padT-padB;
@@ -112,32 +107,40 @@ function chart(series,label){
   return g;
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-// one labeling row: confirmed value with edit, or an inferred guess to confirm/correct.
-function row(k, field, inferred, confirmed, mac){
-  const da='data-mac="'+esc(mac)+'" data-field="'+field+'"';
-  if(confirmed){
-    return '<div class="label-row"><span class="k">'+k+'</span><span class="v">'+esc(confirmed)+'</span><span class="ok">✓</span>'
-      +'<a class="mini" data-act="edit" data-cur="'+esc(confirmed)+'" '+da+'>✎ change</a></div>';
-  }
-  const guess = inferred ? esc(inferred)+' <span class="mut">(guess)</span>' : '<span class="mut">unknown</span>';
-  let btns = inferred ? '<a class="mini yes" data-act="confirm" data-val="'+esc(inferred)+'" '+da+'>✓ correct</a> ' : '';
-  btns += '<a class="mini" data-act="edit" data-cur="'+esc(inferred||'')+'" '+da+'>✎ '+(inferred?'fix':'set')+'</a>';
-  return '<div class="label-row"><span class="k">'+k+'</span><span class="v unconfirmed">'+guess+'</span>'+btns+'</div>';
-}
+`
+
+var indexTmpl = template.Must(template.New("index").Funcs(funcs).Parse(`<!doctype html><html><head>
+<meta charset="utf-8"><title>inspector-go</title>` + base + `</head><body>
+<header><h1>inspector-go</h1><span class="mut" id="status">connecting…</span></header>
+<main>
+<div class="metrics">
+ <div class="metric"><div class="v" id="m-dev">–</div><div class="l">devices seen</div></div>
+ <div class="metric"><div class="v" id="m-insp">–</div><div class="l">inspected</div></div>
+ <div class="metric"><div class="v" id="m-data">–</div><div class="l">data use · last 10s</div></div>
+</div>
+<div id="devices"></div>
+</main>
+<script>` + chartJS + `
+// Read-only card: the name links to the device page, where inspect + labels live.
+// The live list never mutates state now (issue #304), so the 1.5s poll can't race
+// a click and cards keep a stable MAC order.
 function card(x){
-  const toggle = x.gateway ? '<span class="badge">gateway</span>'
-    : '<a class="toggle '+(x.inspected?'on':'')+'" href="#" onclick="return tog(\''+x.mac+'\','+(x.inspected?0:1)+')">'+(x.inspected?'inspecting':'inspect')+'</a>';
-  let body = '<div class="dcard"><div class="drow"><a class="dname" href="/device?mac='+encodeURIComponent(x.mac)+'">'+esc(x.name)+'</a>'+toggle+'</div>'
-    +'<div class="caption">'+x.ip+' · <code>'+x.mac+'</code> · '+x.contacts+' contacts · '+hb(x.bytes)+' in 60s</div>';
+  const status = x.gateway ? '<span class="badge">gateway</span>'
+    : (x.inspected ? '<span class="badge">inspecting</span>' : '');
+  let up=0, down=0; for(const v of x.up) up+=v; for(const v of x.down) down+=v;
+  let body = '<div class="dcard"><div class="drow"><a class="dname" href="/device?mac='+encodeURIComponent(x.mac)+'">'+esc(x.name)+'</a>'+status+'</div>'
+    +'<div class="caption">'+esc(x.ip)+' · <code>'+esc(x.mac)+'</code> · '+x.contacts+' contacts · ↑ '+hb(up)+' sent · ↓ '+hb(down)+' received · last 60s</div>';
   if(!x.gateway){
-    body += row('Vendor','vendor_confirmed',x.vendorInferred,x.vendorConfirmed,x.mac)
-         +  row('Type','type_confirmed',x.typeInferred,x.typeConfirmed,x.mac);
+    const vendor = x.vendorConfirmed || x.vendorInferred, type = x.typeConfirmed || x.typeInferred;
+    let id=[];
+    if(vendor) id.push('Vendor: '+esc(vendor)+(x.vendorConfirmed?'':' <span class="mut">(guess)</span>'));
+    if(type) id.push('Type: '+esc(type)+(x.typeConfirmed?'':' <span class="mut">(guess)</span>'));
+    if(id.length) body += '<div class="caption">'+id.join(' · ')+'</div>';
   }
-  body += '<div class="charts-stack">'+chart(x.up,'↑ Upload Traffic (sent by device) — last 60s')+chart(x.down,'↓ Download Traffic (received) — last 60s')+'</div></div>';
+  body += '<div class="charts-stack">'+chart(x.up,'↑ Upload Traffic (sent by device) — last 60s')+chart(x.down,'↓ Download Traffic (received) — last 60s')+'</div>'
+    +'<div class="caption"><a href="/device?mac='+encodeURIComponent(x.mac)+'">open device to inspect or label →</a></div></div>';
   return body;
 }
-async function lab(mac,field,value){ try{ await fetch('/label?mac='+encodeURIComponent(mac)+'&field='+field+'&value='+encodeURIComponent(value)); }catch(e){} tick(); }
-async function tog(mac,on){ try{ await fetch('/inspect?mac='+encodeURIComponent(mac)+'&on='+on); }catch(e){} tick(); return false; }
 async function tick(){
   try{
     const d = await (await fetch('/api/state')).json();
@@ -148,19 +151,6 @@ async function tick(){
     document.getElementById('status').textContent = 'live · updating every 1.5s';
   }catch(e){ document.getElementById('status').textContent = 'disconnected'; }
 }
-// delegated handler for the confirm/edit label buttons (survives the innerHTML redraws)
-document.getElementById('devices').addEventListener('click', function(e){
-  const el = e.target.closest('[data-act]');
-  if(!el) return;
-  e.preventDefault();
-  const mac = el.getAttribute('data-mac'), field = el.getAttribute('data-field');
-  if(el.getAttribute('data-act') === 'confirm'){
-    lab(mac, field, el.getAttribute('data-val'));
-  } else {
-    const v = prompt('Enter value', el.getAttribute('data-cur') || '');
-    if(v !== null && v.trim() !== '') lab(mac, field, v.trim());
-  }
-});
 tick(); setInterval(tick, 1500);
 </script>
 </body></html>`))
@@ -175,7 +165,7 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
 <main>
 <div class="card"><h2>Traffic — last 60s</h2>
 {{if .Inspected}}
-<div class="charts-stack">{{.Upload}}{{.Download}}</div>
+<div class="charts-stack" id="charts" data-mac="{{.MAC}}"><div id="cup">{{.Upload}}</div><div id="cdn">{{.Download}}</div></div>
 {{else}}<p class="empty">Not inspected — start inspection above to capture this device's traffic.</p>{{end}}
 </div>
 {{if .Summary}}<div class="card"><h2>Summary</h2><p>{{.Summary}}</p></div>{{end}}
@@ -189,6 +179,22 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
  <div>JA3</div><div>{{if .JA3}}{{range .JA3}}<code>{{.}}</code> {{end}}{{else}}<span class="empty">—</span>{{end}}</div>
 </div></div>
 
+<div class="card"><h2>Labels</h2>
+<p class="caption">Edit here, off the live list — saving reloads this page.</p>
+<form class="label-form" method="get" action="/label">
+ <input type="hidden" name="mac" value="{{.MAC}}"><input type="hidden" name="field" value="name">
+ <label>Name</label><input name="value" value="{{.NameValue}}" placeholder="{{.Name}}"><button>Save</button>
+</form>
+<form class="label-form" method="get" action="/label">
+ <input type="hidden" name="mac" value="{{.MAC}}"><input type="hidden" name="field" value="vendor_confirmed">
+ <label>Vendor</label><input name="value" value="{{.VendorConfirmed}}" placeholder="{{if .VendorInferred}}{{.VendorInferred}} (guess){{else}}unknown{{end}}"><button>Save</button>
+</form>
+<form class="label-form" method="get" action="/label">
+ <input type="hidden" name="mac" value="{{.MAC}}"><input type="hidden" name="field" value="type_confirmed">
+ <label>Type</label><input name="value" value="{{.TypeConfirmed}}" placeholder="{{if .TypeInferred}}{{.TypeInferred}} (guess){{else}}unknown{{end}}"><button>Save</button>
+</form>
+</div>
+
 <div class="card"><h2>Contacted destinations</h2>
 {{if .Contacts}}
 <table><tr><th>Host</th><th>Proto</th><th>Ports</th><th class="num">Packets</th><th class="num">Bytes</th></tr>
@@ -199,4 +205,23 @@ var deviceTmpl = template.Must(template.New("device").Funcs(funcs).Parse(`<!doct
 
 {{if .MDNS}}<div class="card"><h2>mDNS</h2><pre>{{.MDNS}}</pre></div>{{end}}
 {{if .SSDP}}<div class="card"><h2>SSDP / UPnP</h2><pre>{{.SSDP}}</pre></div>{{end}}
-</main></body></html>`))
+</main>
+<script>` + chartJS + `
+// Live charts: poll this device's series and redraw only the two panels, so the
+// graphs stay live while the inspect toggle and label forms (full-reload) never
+// get clobbered — the click-vs-poll race from issue #304 stays fixed.
+const charts=document.getElementById('charts');
+const cup=document.getElementById('cup'), cdn=document.getElementById('cdn');
+async function tickDev(){
+  if(!charts) return; // not inspected — nothing to draw
+  try{
+    const d = await (await fetch('/api/state')).json();
+    const x = (d.list||[]).find(v=>v.mac===charts.dataset.mac);
+    if(!x) return;
+    cup.innerHTML = chart(x.up,'↑ Upload Traffic (sent by device) — last 60s');
+    cdn.innerHTML = chart(x.down,'↓ Download Traffic (received) — last 60s');
+  }catch(e){}
+}
+tickDev(); setInterval(tickDev, 1500);
+</script>
+</body></html>`))

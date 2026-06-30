@@ -121,7 +121,13 @@ func (s *Server) handleLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = s.st.MergeDeviceMetadata(mac, "", map[string]any{field: value})
-	w.WriteHeader(http.StatusNoContent)
+	// Labeling is done from the static device page (issue #304), so redirect back
+	// to it rather than returning 204; the reloaded page shows the saved value.
+	back := r.Header.Get("Referer")
+	if back == "" {
+		back = "/"
+	}
+	http.Redirect(w, r, back, http.StatusSeeOther)
 }
 
 // apiDevice is one device row in the live JSON the dashboard polls.
@@ -154,9 +160,9 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type raw struct {
-		mac, ip   string
-		gw, insp  int
-		m         map[string]any
+		mac, ip  string
+		gw, insp int
+		m        map[string]any
 	}
 	var raws []raw
 	for rows.Next() {
@@ -194,9 +200,13 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 		_ = s.st.DB().QueryRow(`SELECT COUNT(DISTINCT dest_ip_address) FROM network_flows WHERE src_mac_address = ?`, r.mac).Scan(&contacts)
 
 		typeConfirmed := str(r.m["type_confirmed"])
-		name := typeConfirmed
+		// Prefer a user-set name, then a confirmed type, then the neutral letter.
+		name := str(r.m["name"])
 		if name == "" {
-			name = letters[r.mac] // neutral placeholder until labeled
+			name = typeConfirmed
+		}
+		if name == "" {
+			name = letters[r.mac]
 		}
 		list = append(list, apiDevice{
 			MAC: r.mac, IP: r.ip, Name: name,
@@ -208,12 +218,14 @@ func (s *Server) handleAPIState(w http.ResponseWriter, r *http.Request) {
 			TypeConfirmed:   typeConfirmed,
 		})
 	}
-	// Display order: gateways last, then by recent traffic.
+	// Display order: gateways last, then a stable order by MAC so cards never
+	// jump around as traffic shifts (issue #304). Letters are assigned in this
+	// same MAC order, so Device A stays first and new devices append in place.
 	sort.Slice(list, func(i, j int) bool {
 		if list[i].Gateway != list[j].Gateway {
 			return list[j].Gateway
 		}
-		return list[i].Bytes > list[j].Bytes
+		return list[i].MAC < list[j].MAC
 	})
 
 	w.Header().Set("Content-Type", "application/json")
@@ -304,16 +316,22 @@ func (s *Server) handleDevice(w http.ResponseWriter, r *http.Request) {
 		"IsGateway": gw == 1,
 		"Inspected": insp == 1,
 		"Name":      displayName(m),
-		"Vendor":    str(m["oui_vendor"]),
-		"DHCP":      str(m["dhcp_hostname"]),
-		"UserAgent": str(m["user_agent_info"]),
-		"JA3":       strList(m["ja3"]),
-		"MDNS":      prettyJSON(m["mdns_json"]),
-		"SSDP":      prettyJSON(m["ssdp_json"]),
-		"Contacts":  contacts,
-		"Upload":    lineChart(up, "↑ Upload Traffic (sent by device) — last 60s"),
-		"Download":  lineChart(down, "↓ Download Traffic (received) — last 60s"),
-		"Summary": s.deviceSummary(mac, m), // plain-language blurb (#308)
+		"NameValue": str(m["name"]),
+		// inferred vs confirmed, for the editable label forms
+		"VendorInferred":  str(m["oui_vendor"]),
+		"VendorConfirmed": str(m["vendor_confirmed"]),
+		"TypeInferred":    inferType(m),
+		"TypeConfirmed":   str(m["type_confirmed"]),
+		"Vendor":          str(m["oui_vendor"]),
+		"DHCP":            str(m["dhcp_hostname"]),
+		"UserAgent":       str(m["user_agent_info"]),
+		"JA3":             strList(m["ja3"]),
+		"MDNS":            prettyJSON(m["mdns_json"]),
+		"SSDP":            prettyJSON(m["ssdp_json"]),
+		"Contacts":        contacts,
+		"Upload":          lineChart(up, "↑ Upload Traffic (sent by device) — last 60s"),
+		"Download":        lineChart(down, "↓ Download Traffic (received) — last 60s"),
+		"Summary":         s.deviceSummary(mac, m), // plain-language blurb (#308)
 	})
 }
 
