@@ -59,6 +59,7 @@ func main() {
 	share := flag.Bool("share", false, "opt in to uploading the full packet capture (.pcap) + device metadata to the research team on exit. OFF by default. see the dashboard consent notice (#306)")
 	collectEndpoint := flag.String("collect-endpoint", os.Getenv("INSPECTOR_COLLECT_ENDPOINT"), "research data collection endpoint (empty = disabled; nothing uploads without it)")
 	collectKey := flag.String("collect-key", os.Getenv("INSPECTOR_COLLECT_KEY"), "api key for the collection endpoint")
+	portScan := flag.Bool("port-scan", false, "live: actively port-scan + banner-grab inspected devices for identification (off by default)")
 	flag.Parse()
 
 	st, err := store.Open(*dbPath)
@@ -96,7 +97,7 @@ func main() {
 		if st.ShareConsent() && recordPath == "" {
 			recordPath = filepath.Join(os.TempDir(), "inspector-capture.pcap")
 		}
-		if err := runLive(s, *inspect, *serve, recordPath); err != nil {
+		if err := runLive(s, *inspect, *serve, recordPath, *portScan); err != nil {
 			log.Fatalf("%v", err)
 		}
 		livePcap = recordPath
@@ -192,7 +193,7 @@ func runReplay(s *state.State, file, hostMAC, hostIP, gatewayIP string) error {
 // runLive is the production path: discover, spoof, capture until Ctrl-C.
 // inspect selects which devices to spoof+capture: "" (none, discovery only),
 // "all", or a comma-separated MAC list.
-func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
+func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan bool) error {
 	if os.Geteuid() != 0 {
 		return fmt.Errorf("must run as root/admin (raw packet send + IP forwarding); use -pcap to replay a file without root")
 	}
@@ -264,6 +265,10 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string) error {
 			log.Printf("warning: could not reset prior inspection state: %v", err)
 		}
 		go loop(ctx, 5*time.Second, func() { applyInspect(s, inspect) })
+		// Opt-in active port scan + banner grab of the inspected devices.
+		if portScan {
+			go loop(ctx, 120*time.Second, func() { discovery.PortScan(s) })
+		}
 	} else {
 		log.Println("discovery-only (no -inspect): devices will be listed but not spoofed")
 	}
