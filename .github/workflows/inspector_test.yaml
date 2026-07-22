@@ -24,10 +24,10 @@ jobs:
 
     steps:
     - name: Checkout project sources
-      uses: actions/checkout@v5
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -58,6 +58,6 @@ jobs:
         coverage run --source=src/iot_inspector -m pytest src/tests
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac  # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
