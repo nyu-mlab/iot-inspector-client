@@ -367,11 +367,24 @@ func runBrowse(s *state.State, addr string) {
 func startWebServer(s *state.State, addr string) {
 	srv := &http.Server{Addr: addr, Handler: web.New(s.Store, s.Traffic).Handler()}
 	go func() {
-		log.Printf("dashboard at http://localhost%s", addr)
+		log.Printf("dashboard at %s", dashboardURL(addr))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("web server: %v", err)
 		}
 	}()
+}
+
+// dashboardURL turns a listen address (":8080", "127.0.0.1:8080") into a
+// clickable URL; an empty or wildcard host means localhost.
+func dashboardURL(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "http://" + addr
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "localhost"
+	}
+	return "http://" + net.JoinHostPort(host, port)
 }
 
 // openInBrowser opens path with the OS default handler (issue #305). Best-effort:
