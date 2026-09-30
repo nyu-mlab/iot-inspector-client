@@ -12,7 +12,18 @@ uv sync
 # User guide
 Please review the [User Guide](https://github.com/nyu-mlab/iot-inspector-client/wiki) for instructions how to run IoT Inspector. 
 
-## Running on Windows
+## Quick start (recommended)
+IoT Inspector ships as a single prebuilt program (the [Go version](go/)), so you don't need Go, Python, or `uv` installed.
+
+- Windows: run `start-go.bat`. It asks for admin access and installs the Npcap capture driver the first time.
+- Mac / Linux: run `./start-go.bash`. It asks for your password.
+
+The script downloads the latest release for your machine, checks its SHA256, and opens the dashboard at http://127.0.0.1:8080. Press Ctrl-C to stop; your network is restored on exit.
+
+## Python version
+The original Python version still works:
+
+### Running on Windows
 You have two options
 1. Click `IoT Inspector.lnk`
 2. Run `start.bat` on your terminal
@@ -21,12 +32,12 @@ It will spawn a new PowerShell admin shell to run IoT Inspector. For first time 
 
 For a detailed guide, see how to use IoT Inspector for Windows [here](https://github.com/nyu-mlab/iot-inspector-client/wiki/IoT-Inspector-%E2%80%90-Prolific-Guide).
 
-## Running on Mac
+### Running on Mac
 This assumes that you currently have both [brew](https://docs.brew.sh/Installation) and [Apple Developer Tools](https://developer.apple.com/documentation/xcode/installing-the-command-line-tools) installed.
 
 Once done, run the `./start.bash` script to both install and run IoT Inspector.
 
-## Running on Linux
+### Running on Linux
 This assumes that you have either `apt`, `yum` of `dnf` package managers first, which should come by default with your Linux distribution.
 
 Once done, run the `./start.bash` script to both install and run IoT Inspector.
