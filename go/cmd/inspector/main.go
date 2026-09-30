@@ -43,6 +43,9 @@ import (
 	"github.com/nyu-mlab/inspector-go/internal/web"
 )
 
+// version is stamped at release time via -ldflags "-X main.version=...".
+var version = "dev"
+
 func main() {
 	dbPath := flag.String("db", "inspector.db", "SQLite database path")
 	reportPath := flag.String("report", "report.html", "HTML report written on exit")
@@ -61,7 +64,13 @@ func main() {
 	collectKey := flag.String("collect-key", os.Getenv("INSPECTOR_COLLECT_KEY"), "api key for the collection endpoint")
 	portScan := flag.Bool("port-scan", false, "live: actively port-scan + banner-grab inspected devices for identification (off by default)")
 	duration := flag.Duration("duration", 0, "live: stop cleanly after this long (e.g. 10m); 0 runs until Ctrl-C")
+	showVersion := flag.Bool("version", false, "print the version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
 
 	st, err := store.Open(*dbPath)
 	if err != nil {
