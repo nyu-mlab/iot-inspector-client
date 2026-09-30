@@ -194,7 +194,7 @@ func runReplay(s *state.State, file, hostMAC, hostIP, gatewayIP string) error {
 // inspect selects which devices to spoof+capture: "" (none, discovery only),
 // "all", or a comma-separated MAC list.
 func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan bool) error {
-	if os.Geteuid() != 0 {
+	if !hasCapturePrivilege() {
 		return fmt.Errorf("must run as root/admin (raw packet send + IP forwarding); use -pcap to replay a file without root")
 	}
 
