@@ -1,0 +1,136 @@
+name: go-release
+
+# Prebuilt Go inspector binaries, so users don't need Go installed.
+# Pushing a go-v* tag (e.g. go-v1.0.0) builds every platform and publishes a
+# release; the start-go launchers download from it. Manual runs and PRs that
+# touch the build only produce downloadable artifacts, no release.
+on:
+  push:
+    tags: ['go-v*']
+  pull_request:
+    paths: ['.github/workflows/go-release.yml', 'go/scripts/**']
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    name: ${{ matrix.asset }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 22.04 = older glibc (2.35), so the binary also runs on older distros
+          - { os: ubuntu-22.04,     asset: inspector-linux-amd64 }
+          - { os: ubuntu-22.04-arm, asset: inspector-linux-arm64 }
+          - { os: macos-latest,     asset: inspector-darwin-universal }
+          - { os: windows-latest,   asset: inspector-windows-amd64.exe }
+    defaults:
+      run:
+        working-directory: go
+        shell: bash
+    env:
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: go/go.sum
+
+      - name: Version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/go-v* ]]; then v="$GITHUB_REF_NAME"; else v="dev-${GITHUB_SHA::7}"; fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          echo "GO_LDFLAGS=-s -w -X main.version=$v" >> "$GITHUB_ENV"
+
+      - name: Build static libpcap (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          bash scripts/build-libpcap.sh "$RUNNER_TEMP/pcap"
+          echo "CGO_CFLAGS=-I$RUNNER_TEMP/pcap/include" >> "$GITHUB_ENV"
+          echo "CGO_LDFLAGS=-L$RUNNER_TEMP/pcap/lib" >> "$GITHUB_ENV"
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          go build -trimpath -ldflags "$GO_LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
+          # must not need the distro libpcap
+          ldd "../dist/${{ matrix.asset }}"
+          if ldd "../dist/${{ matrix.asset }}" | grep -q pcap; then echo "binary links libpcap dynamically"; exit 1; fi
+
+      - name: Build (macOS universal)
+        if: runner.os == 'macOS'
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "11.0"
+          CGO_CFLAGS: -mmacosx-version-min=11.0
+          CGO_LDFLAGS: -mmacosx-version-min=11.0
+        run: |
+          GOARCH=arm64 go build -trimpath -ldflags "$GO_LDFLAGS" -o "$RUNNER_TEMP/arm64" ./cmd/inspector
+          GOARCH=amd64 CC="clang -arch x86_64" go build -trimpath -ldflags "$GO_LDFLAGS" -o "$RUNNER_TEMP/amd64" ./cmd/inspector
+          mkdir -p ../dist
+          lipo -create -output "../dist/${{ matrix.asset }}" "$RUNNER_TEMP/arm64" "$RUNNER_TEMP/amd64"
+          lipo -info "../dist/${{ matrix.asset }}"
+          otool -l "$RUNNER_TEMP/arm64" | grep -A3 LC_BUILD_VERSION | grep -q "minos 11.0"
+          # run the intel slice too when rosetta is available on the runner
+          if arch -x86_64 /usr/bin/true 2>/dev/null; then arch -x86_64 "../dist/${{ matrix.asset }}" -version; fi
+
+      - name: Install Npcap SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: .
+        run: |
+          Invoke-WebRequest -Uri https://npcap.com/dist/npcap-sdk-1.13.zip -OutFile npcap-sdk.zip
+          Expand-Archive npcap-sdk.zip -DestinationPath "$env:RUNNER_TEMP\npcap-sdk"
+          "CGO_CFLAGS=-I$env:RUNNER_TEMP\npcap-sdk\Include"  | Out-File -FilePath $env:GITHUB_ENV -Append
+          "CGO_LDFLAGS=-L$env:RUNNER_TEMP\npcap-sdk\Lib\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: go build -trimpath -ldflags "$GO_LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
+
+      - name: Smoke test
+        run: |
+          got=$("../dist/${{ matrix.asset }}" -version)
+          echo "$got"
+          [ "$got" = "$VERSION" ]
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/go-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: |
+          sha256sum inspector-* > SHA256SUMS
+          cat SHA256SUMS
+          [ "$(wc -l < SHA256SUMS)" -eq 4 ]
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Inspector (Go) ${{ github.ref_name }}
+          generate_release_notes: true
+          # keep the python wheel release as the repo's "latest"
+          make_latest: false
+          files: |
+            dist/inspector-*
+            dist/SHA256SUMS

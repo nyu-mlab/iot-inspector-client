@@ -26,7 +26,7 @@ func Discover(s *state.State) error {
 		return err
 	}
 
-	s.Iface = iface.Name
+	s.Iface = pcapDeviceName(iface, hostIP)
 	s.HostIP = hostIP
 	s.HostMAC = iface.HardwareAddr
 	s.HostNet = hostNet

@@ -55,3 +55,17 @@ func TestMaybeUploadGate(t *testing.T) {
 		t.Errorf("uploaded with no endpoint (hits=%d)", n)
 	}
 }
+
+func TestDashboardURL(t *testing.T) {
+	for addr, want := range map[string]string{
+		":8080":          "http://localhost:8080",
+		"127.0.0.1:8080": "http://127.0.0.1:8080",
+		"0.0.0.0:9000":   "http://localhost:9000",
+		"[::1]:8080":     "http://[::1]:8080",
+		"bogus":          "http://bogus",
+	} {
+		if got := dashboardURL(addr); got != want {
+			t.Errorf("dashboardURL(%q) = %q, want %q", addr, got, want)
+		}
+	}
+}

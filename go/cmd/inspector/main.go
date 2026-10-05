@@ -43,6 +43,9 @@ import (
 	"github.com/nyu-mlab/inspector-go/internal/web"
 )
 
+// version is stamped at release time via -ldflags "-X main.version=...".
+var version = "dev"
+
 func main() {
 	dbPath := flag.String("db", "inspector.db", "SQLite database path")
 	reportPath := flag.String("report", "report.html", "HTML report written on exit")
@@ -60,7 +63,14 @@ func main() {
 	collectEndpoint := flag.String("collect-endpoint", os.Getenv("INSPECTOR_COLLECT_ENDPOINT"), "research data collection endpoint (empty = disabled; nothing uploads without it)")
 	collectKey := flag.String("collect-key", os.Getenv("INSPECTOR_COLLECT_KEY"), "api key for the collection endpoint")
 	portScan := flag.Bool("port-scan", false, "live: actively port-scan + banner-grab inspected devices for identification (off by default)")
+	duration := flag.Duration("duration", 0, "live: stop cleanly after this long (e.g. 10m); 0 runs until Ctrl-C")
+	showVersion := flag.Bool("version", false, "print the version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
 
 	st, err := store.Open(*dbPath)
 	if err != nil {
@@ -97,7 +107,7 @@ func main() {
 		if st.ShareConsent() && recordPath == "" {
 			recordPath = filepath.Join(os.TempDir(), "inspector-capture.pcap")
 		}
-		if err := runLive(s, *inspect, *serve, recordPath, *portScan); err != nil {
+		if err := runLive(s, *inspect, *serve, recordPath, *portScan, *duration); err != nil {
 			log.Fatalf("%v", err)
 		}
 		livePcap = recordPath
@@ -193,8 +203,8 @@ func runReplay(s *state.State, file, hostMAC, hostIP, gatewayIP string) error {
 // runLive is the production path: discover, spoof, capture until Ctrl-C.
 // inspect selects which devices to spoof+capture: "" (none, discovery only),
 // "all", or a comma-separated MAC list.
-func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan bool) error {
-	if os.Geteuid() != 0 {
+func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan bool, duration time.Duration) error {
+	if !hasCapturePrivilege() {
 		return fmt.Errorf("must run as root/admin (raw packet send + IP forwarding); use -pcap to replay a file without root")
 	}
 
@@ -233,6 +243,14 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan boo
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// A fixed run length triggers the same clean shutdown as Ctrl-C, so the
+	// network (ARP tables + IP forwarding) is always restored on exit. Used by
+	// the unattended participant deploy.
+	if duration > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, duration)
+		defer cancel()
+	}
 
 	packets := make(chan gopacket.Packet, 1024)
 	proc := processor.New(s)
@@ -273,7 +291,11 @@ func runLive(s *state.State, inspect, serveAddr, recordPath string, portScan boo
 		log.Println("discovery-only (no -inspect): devices will be listed but not spoofed")
 	}
 
-	log.Println("running — Ctrl-C to stop")
+	if duration > 0 {
+		log.Printf("running for %s (Ctrl-C to stop sooner)", duration)
+	} else {
+		log.Println("running — Ctrl-C to stop")
+	}
 	<-ctx.Done()
 
 	// Shutdown: restore victims' ARP tables, stop capture, drain.
@@ -345,11 +367,24 @@ func runBrowse(s *state.State, addr string) {
 func startWebServer(s *state.State, addr string) {
 	srv := &http.Server{Addr: addr, Handler: web.New(s.Store, s.Traffic).Handler()}
 	go func() {
-		log.Printf("dashboard at http://localhost%s", addr)
+		log.Printf("dashboard at %s", dashboardURL(addr))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("web server: %v", err)
 		}
 	}()
+}
+
+// dashboardURL turns a listen address (":8080", "127.0.0.1:8080") into a
+// clickable URL; an empty or wildcard host means localhost.
+func dashboardURL(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "http://" + addr
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "localhost"
+	}
+	return "http://" + net.JoinHostPort(host, port)
 }
 
 // openInBrowser opens path with the OS default handler (issue #305). Best-effort:

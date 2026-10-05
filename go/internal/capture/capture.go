@@ -6,6 +6,7 @@ package capture
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
@@ -18,6 +19,9 @@ const (
 	snapLen     = 65536
 	promiscuous = true
 	bufferSize  = 32 << 20 // big kernel buffer so high-rate bursts don't overflow before userland drains
+	// a finite read timeout lets Close() return on a quiet interface; with
+	// BlockForever the pending read (and so shutdown) waits for the next packet
+	readTimeout = 500 * time.Millisecond
 )
 
 // Open creates the live capture handle on the active interface and stores it on
@@ -32,7 +36,7 @@ func Open(s *state.State) (*pcap.Handle, error) {
 	for _, set := range []func() error{
 		func() error { return inactive.SetSnapLen(snapLen) },
 		func() error { return inactive.SetPromisc(promiscuous) },
-		func() error { return inactive.SetTimeout(pcap.BlockForever) },
+		func() error { return inactive.SetTimeout(readTimeout) },
 		func() error { return inactive.SetBufferSize(bufferSize) },
 		func() error { return inactive.SetImmediateMode(true) }, // deliver as packets arrive, don't batch
 	} {

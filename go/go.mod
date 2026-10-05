@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/google/gopacket v1.1.19
 	github.com/jackpal/gateway v1.0.16
+	golang.org/x/sys v0.28.0
 	modernc.org/sqlite v1.34.1
 )
 
@@ -20,7 +21,6 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.55.3 // indirect
