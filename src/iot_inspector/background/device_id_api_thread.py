@@ -5,10 +5,32 @@ import functools
 import logging
 import os
 import json
+import secrets
 import common
 # NOTE: do NOT use .. for import. This will cause two config_dicts! Do NOT try that again!
 
 logger = logging.getLogger(__name__)
+
+# Per-install identifier for the device-id API. Device ID ships to every install
+# and has to work with no setup, so the client mints its own token on first use
+# and reuses it. It is an identifier, not a secret: it lets the server rate-limit
+# or revoke one install without affecting anyone else. API_KEY overrides it for
+# ops and for issued research keys.
+INSTALL_TOKEN_KEY = "device_id_token"
+
+
+def _get_install_token() -> str:
+    override = os.environ.get("API_KEY")
+    if override:
+        return override
+    token = common.config_get(INSTALL_TOKEN_KEY, "")
+    if not token:
+        token = "ins_" + secrets.token_urlsafe(24)
+        common.config_set(INSTALL_TOKEN_KEY, token)
+        logger.info("Generated per-install device-id token")
+    return token
+
+
 # Define the common TXT record keys that hold the best, most human-readable name,
 # in order of preference (most descriptive first).
 # Keys prioritized from most human-friendly to most technical/model-based.
@@ -187,7 +209,7 @@ def call_predict_api(meta_data_string: str, remote_hostnames: str,
     Returns:
         dict: The response text from the API.
     """
-    api_key = os.environ.get("API_KEY", "momo")
+    api_key = _get_install_token()
     device_tracked_key = f'tracked@{mac_address}'
     meta_data = json.loads(meta_data_string)
 
