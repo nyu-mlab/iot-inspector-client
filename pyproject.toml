@@ -12,6 +12,10 @@ pythonpath = [
 # Optional: Add this to see your debug prints automatically without typing -s
 addopts = "-s"
 
+[tool.ruff.lint]
+# pin the rule set so new ruff releases can't change what ci enforces
+select = ["E4", "E7", "E9", "F"]
+
 [project]
 name = "iot-inspector"
 dynamic = ["version"]
