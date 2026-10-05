@@ -46,7 +46,7 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/go-v* ]]; then v="$GITHUB_REF_NAME"; else v="dev-${GITHUB_SHA::7}"; fi
           echo "VERSION=$v" >> "$GITHUB_ENV"
-          echo "LDFLAGS=-s -w -X main.version=$v" >> "$GITHUB_ENV"
+          echo "GO_LDFLAGS=-s -w -X main.version=$v" >> "$GITHUB_ENV"
 
       - name: Build static libpcap (Linux)
         if: runner.os == 'Linux'
@@ -58,7 +58,7 @@ jobs:
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: |
-          go build -trimpath -ldflags "$LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
+          go build -trimpath -ldflags "$GO_LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
           # must not need the distro libpcap
           ldd "../dist/${{ matrix.asset }}"
           if ldd "../dist/${{ matrix.asset }}" | grep -q pcap; then echo "binary links libpcap dynamically"; exit 1; fi
@@ -70,8 +70,8 @@ jobs:
           CGO_CFLAGS: -mmacosx-version-min=11.0
           CGO_LDFLAGS: -mmacosx-version-min=11.0
         run: |
-          GOARCH=arm64 go build -trimpath -ldflags "$LDFLAGS" -o "$RUNNER_TEMP/arm64" ./cmd/inspector
-          GOARCH=amd64 CC="clang -arch x86_64" go build -trimpath -ldflags "$LDFLAGS" -o "$RUNNER_TEMP/amd64" ./cmd/inspector
+          GOARCH=arm64 go build -trimpath -ldflags "$GO_LDFLAGS" -o "$RUNNER_TEMP/arm64" ./cmd/inspector
+          GOARCH=amd64 CC="clang -arch x86_64" go build -trimpath -ldflags "$GO_LDFLAGS" -o "$RUNNER_TEMP/amd64" ./cmd/inspector
           mkdir -p ../dist
           lipo -create -output "../dist/${{ matrix.asset }}" "$RUNNER_TEMP/arm64" "$RUNNER_TEMP/amd64"
           lipo -info "../dist/${{ matrix.asset }}"
@@ -91,7 +91,7 @@ jobs:
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        run: go build -trimpath -ldflags "$LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
+        run: go build -trimpath -ldflags "$GO_LDFLAGS" -o "../dist/${{ matrix.asset }}" ./cmd/inspector
 
       - name: Smoke test
         run: |
