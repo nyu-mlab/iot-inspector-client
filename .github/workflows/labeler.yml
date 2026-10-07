@@ -13,8 +13,8 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v4
+      - uses: actions/labeler@v6
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"

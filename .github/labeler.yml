@@ -1,26 +1,36 @@
 Documentation:
-  - '**/*.md'
+  - changed-files:
+      - any-glob-to-any-file: '**/*.md'
 
 Github-files:
-  - '.github/**'
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
 
 Tests:
-  - 'src/tests/**'
+  - changed-files:
+      - any-glob-to-any-file: 'src/tests/**'
 
 Core:
-  - 'src/libinspector/**.py'
-  - 'pyproject.toml'
-  - 'setup.py'
-  - 'uv.lock'
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/iot_inspector/**/*.py'
+          - 'pyproject.toml'
+          - 'setup.py'
+          - 'uv.lock'
 
 Scripts:
-  - '**/*.sh'
-  - '**/*.ps1'
-  - '**/*.bat'
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.sh'
+          - '**/*.ps1'
+          - '**/*.bat'
 
 Data:
-  - 'src/libinspector/data/**'
+  - changed-files:
+      - any-glob-to-any-file: 'src/iot_inspector/data/**'
 
 Streamlit:
-  - 'src/libinspector/.streamlit/**'
-  - '.streamlit/**'
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/iot_inspector/.streamlit/**'
+          - '.streamlit/**'
