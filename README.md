@@ -1,13 +1,9 @@
 # IoT Inspector 3
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)[![libinspector_test](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml/badge.svg)](https://github.com/nyu-mlab/iot-inspector-client/actions/workflows/inspector_test.yaml)[![codecov](https://codecov.io/gh/nyu-mlab/iot-inspector-client/graph/badge.svg?token=SFZ2QUJWQW)](https://codecov.io/gh/nyu-mlab/iot-inspector-client)
 
-If the underlying dependencies is updated, please run the following first:
+IoT Inspector shows you what the smart devices on your home network are doing: which devices are there, who they talk to, and how much data they send.
 
-```bash
-uv cache clean
-uv lock
-uv sync
-```
+The main version is now written in Go and lives in [`go/`](go/). The original Python version is still here and still works.
 
 # User guide
 Please review the [User Guide](https://github.com/nyu-mlab/iot-inspector-client/wiki) for instructions how to run IoT Inspector. 
@@ -15,10 +11,14 @@ Please review the [User Guide](https://github.com/nyu-mlab/iot-inspector-client/
 ## Quick start (recommended)
 IoT Inspector ships as a single prebuilt program (the [Go version](go/)), so you don't need Go, Python, or `uv` installed.
 
+Download or clone this repository, then:
+
 - Windows: run `start-go.bat`. It asks for admin access and installs the Npcap capture driver the first time.
 - Mac / Linux: run `./start-go.bash`. It asks for your password.
 
 The script downloads the latest release for your machine, checks its SHA256, and opens the dashboard at http://127.0.0.1:8080. Press Ctrl-C to stop; your network is restored on exit.
+
+The binaries are also on the [releases page](https://github.com/nyu-mlab/iot-inspector-client/releases) (tags starting with `go-v`). See the [Go README](go/README.md) for command-line options and running a downloaded binary directly.
 
 ## Python version
 The original Python version still works:
@@ -45,6 +45,18 @@ Once done, run the `./start.bash` script to both install and run IoT Inspector.
 # Developer Guide
 
 If you are developing IoT Inspector, please read this section.
+
+## Go version
+The code is in [`go/`](go/). See the [Go README](go/README.md) for building, running, and cutting a release.
+
+## Python version
+If the underlying dependencies is updated, please run the following first:
+
+```bash
+uv cache clean
+uv lock
+uv sync
+```
 
 ## Database Schema
 
@@ -105,7 +117,7 @@ CREATE TABLE network_flows (
 ```
 
 # IoT Inspector Helper Scripts
-We also include two scripts to help with development and debugging.
+We also include two scripts to help with development and debugging. Both are part of the Python version.
 
 ## Anonymize
 After installing IoT Inspector, you can run the following command:
