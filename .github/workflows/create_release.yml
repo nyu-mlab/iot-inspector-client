@@ -48,7 +48,7 @@ jobs:
 
     steps:
     - name: Checkout project sources
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Create wheel file
       if: runner.os == 'Linux'
@@ -59,7 +59,7 @@ jobs:
 
     - name: Store the IoT Inspector Python wheel
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: iot-inspector
         path: dist/*.whl
@@ -77,7 +77,7 @@ jobs:
 
     - name: Store the IoT Inspector executable
       if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: iot-exe
         path: ./*.exe
@@ -97,7 +97,7 @@ jobs:
 
     steps:
       - name: Download the wheel file
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: iot-inspector
           path: dist/
@@ -108,13 +108,13 @@ jobs:
           verbose: true
 
       - name: Download all the IoT Inspector executable
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: iot-exe
           path: dist/
 
       - name: Upload wheel package to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
